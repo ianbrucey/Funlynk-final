@@ -85,8 +85,17 @@ export const setupDatabaseSchema = async () => {
         return { success: false, message: 'Please run auth-complete-setup.sql to finish authentication' }
       }
       
-      console.log('Schema and auth mapping ready')
-      return { success: true, message: 'Database ready for secure features' }
+      // Check if RLS is enabled (indicates security policies are in place)
+      const { data: rlsCheck, error: rlsError } = await supabase
+        .rpc('is_admin') // This function exists after RLS setup
+      
+      if (rlsError && rlsError.message.includes('is_admin')) {
+        console.log('RLS policies need to be enabled')
+        return { success: false, message: 'Please run rls-policies.sql to enable security' }
+      }
+      
+      console.log('Database fully secured and ready')
+      return { success: true, message: 'Database secured and ready for features' }
     }
     
     // If we get here, the table doesn't exist, so we need to create the schema
