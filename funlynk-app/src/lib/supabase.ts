@@ -65,7 +65,7 @@ export const setupDatabaseSchema = async () => {
     if (!error) {
       console.log('Database schema already exists')
       
-      // Check if auth mapping exists
+      // Check if auth mapping exists and is properly configured
       const { data: authCheck, error: authError } = await supabase
         .from('users')
         .select('auth_user_id')
@@ -76,8 +76,17 @@ export const setupDatabaseSchema = async () => {
         return { success: false, message: 'Please run auth-mapping-fix.sql for authentication setup' }
       }
       
+      // Check if current_user_id function exists (indicates complete auth setup)
+      const { data: funcCheck, error: funcError } = await supabase
+        .rpc('current_user_id')
+      
+      if (funcError && funcError.message.includes('current_user_id')) {
+        console.log('Auth setup incomplete - missing helper functions')
+        return { success: false, message: 'Please run auth-complete-setup.sql to finish authentication' }
+      }
+      
       console.log('Schema and auth mapping ready')
-      return { success: true, message: 'Schema ready for use' }
+      return { success: true, message: 'Database ready for secure features' }
     }
     
     // If we get here, the table doesn't exist, so we need to create the schema
