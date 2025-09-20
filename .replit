@@ -34,6 +34,10 @@ outputType = "webview"
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 34855
+externalPort = 3000
+
 [deployment]
 deploymentTarget = "autoscale"
 run = ["cd", "funlynk-app", "&&", "npx", "serve", "dist", "-s", "-l"]
