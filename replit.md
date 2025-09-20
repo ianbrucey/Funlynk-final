@@ -1,50 +1,92 @@
-# Funlynk - React Native Expo App
+# Funlynk - Mobile-First Social Network
 
-## Overview
-Funlynk is a React Native mobile application built with Expo that helps users discover and connect through shared experiences. Users can join activities, meet like-minded people, and build meaningful connections in their community.
+## Project Overview
+Funlynk is a mobile-first social network designed for activity-first discovery. Users can discover and participate in niche, spontaneous, or hyper-local activities like pickup basketball, music jam sessions, or workshop events.
 
-## Project Structure
-This repository contains the frontend mobile application built with:
-- React Native 0.81.4
-- Expo SDK 54.0.9  
-- TypeScript 5.9.2
-- React 19.1.0
+## Technology Stack
+- **Frontend (Mobile App)**: React Native with Expo
+- **Frontend (Web)**: Next.js (future - marketing/web app)
+- **Backend & Database**: Supabase (PostgreSQL, Auth, Realtime)
+- **Payments**: Stripe Connect
+- **Infrastructure**: Supabase + Vercel
 
-The main application code is located in the `funlynk-app/` directory.
+## Current Implementation Status
 
-## Development Setup
-The project is configured to run in the Replit environment:
-- Development server runs on port 5000
-- Web preview available through Replit's proxy system
-- Hot reloading enabled for development
+### Epic Planning Status
+- ✅ **E01 Core Infrastructure** - Complete (Database, Auth, Geolocation, Notifications)
+- ✅ **E02 User & Profile Management** - Complete (Profiles, Social Graph, Followers)
+- ✅ **E03 Activity Management** - Complete (CRUD, Tagging, RSVPs)
+- ✅ **E04 Discovery Engine** - Complete (Search, Recommendations, Feed)
+- ✅ **E05 Social Interaction** - Complete (Comments, Sharing, Communities)
+- ✅ **E06 Payments & Monetization** - Complete (Stripe, Subscriptions, Revenue)
+- ✅ **E07 Administration** - Complete (Analytics, Moderation, Monitoring)
 
-## Recent Changes (2025-09-20)
-- Configured Node.js 20 environment
-- Installed all project dependencies with legacy peer deps to resolve React version conflicts
-- Added required web dependencies: react-dom and react-native-web
-- Configured TypeScript with JSX support
-- Set up Expo development server with proper host configuration for Replit
-- Created Metro bundler configuration
-- Configured deployment settings for production builds
-- Added comprehensive .gitignore file
+### Implementation Status
+**Current Phase**: E01 Core Infrastructure Implementation
 
-## Architecture
-This is a frontend-only repository. The project documentation references a Laravel backend with PostgreSQL database, but the backend code is located in a separate repository.
+#### F01 Database Foundation
+- **T01 Supabase Setup**: ⏳ Ready to begin (0% complete)
+- **T02 Database Schema**: ⏳ Problem defined, ready for research
+- **T03 RLS Policies**: ⏳ Pending (depends on T02)
+- **T04 Database Migrations**: ⏳ Pending (depends on T02)
+- **T05 Performance Optimization**: ⏳ Pending (depends on T02)
+- **T06 Backup Procedures**: ⏳ Pending (depends on T01)
 
-## Deployment
-The app is configured for autoscale deployment with:
-- Build command: `npx expo export -p web`
-- Run command: `npx serve dist -s -l`
+## Development Environment Setup
 
-## Key Features (from app.json)
-- Location services integration
-- Camera and photo library access
-- Contact access capabilities
-- Expo Router for navigation
-- Cross-platform support (iOS, Android, Web)
+### Replit Configuration
+- **Framework**: React Native Expo with web support
+- **Development Server**: Running on port 5000 with LAN host access
+- **Workflow**: "Expo Web Server" - `cd funlynk-app && npx expo start --web --port 5000 --host lan`
+- **Dependencies**: Node.js 20, npm with legacy peer deps support
 
-## Development Workflow
-1. The Expo development server automatically starts when the workspace is opened
-2. Web preview is available through the Replit interface
-3. Changes are automatically reflected with hot reloading
-4. Console logs are available in the browser dev tools
+### Key Files
+- `funlynk-app/` - React Native Expo application
+- `context-engine/` - Complete project planning and architecture documentation
+- `funlynk-app/package.json` - Mobile app dependencies
+- `funlynk-app/metro.config.js` - Metro bundler configuration
+- `funlynk-app/app.json` - Expo configuration
+
+### Environment Dependencies
+- Node.js 20.x (installed)
+- React Native web dependencies (react-dom, react-native-web)
+- Expo CLI for development and deployment
+
+## Architecture Decisions
+
+### Mobile-First Strategy
+Primary user experience is the mobile app for on-the-go, spontaneous activity discovery.
+
+### Asymmetrical Follower Model
+One-way "follower" system (like Instagram) to reduce social friction and empower hosts to build audiences.
+
+### Centralized Payments via Stripe Connect
+All payment complexities delegated to Stripe Connect (Express model) for compliance and security.
+
+### Database Architecture
+PostgreSQL with PostGIS via Supabase for ACID compliance, complex relationships, and geospatial queries.
+
+## Next Steps
+
+1. **Complete T01 Supabase Setup** - Create Supabase project and configure environment
+2. **Implement T02 Database Schema** - Create all tables and relationships from epic planning
+3. **Configure Security (T03)** - Implement Row Level Security policies
+4. **Set up Development Workflow** - Configure migrations and version control
+
+## User Preferences
+- Follow existing project architecture and planning documents in `context-engine/`
+- Adhere to coding standards defined in `context-engine/standards/`
+- Use hierarchical Epic→Feature→Task development approach
+- Maintain comprehensive documentation and progress tracking
+
+## Recent Changes
+- **Sept 20, 2025**: Project imported to Replit environment
+- **Sept 20, 2025**: React Native Expo web development server configured
+- **Sept 20, 2025**: Basic project structure setup completed
+- **Sept 20, 2025**: Ready to begin core database implementation
+
+## Development Notes
+- All epic planning is complete with 35 comprehensive planning documents
+- 25 major architectural decisions documented in planning tracker
+- Project ready for implementation phase with complete context
+- Follow `context-engine/global-context.md` for development guidelines
