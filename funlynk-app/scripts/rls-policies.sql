@@ -12,16 +12,30 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.flares ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
 
--- Helper function to check if user is admin (for future admin features)
+-- Create admin roles table (secure admin management)
+CREATE TABLE IF NOT EXISTS public.admin_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  auth_user_id UUID UNIQUE NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  role VARCHAR(50) NOT NULL DEFAULT 'admin',
+  granted_by UUID REFERENCES auth.users(id),
+  granted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  is_active BOOLEAN DEFAULT TRUE
+);
+
+-- Enable RLS on admin table (only admins can see/modify)
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
+
+-- Helper function to check if user is admin (secure implementation)
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean
 LANGUAGE sql
 STABLE
+SECURITY DEFINER
 AS $$
   SELECT EXISTS (
-    SELECT 1 FROM public.users 
+    SELECT 1 FROM public.admin_users 
     WHERE auth_user_id = auth.uid() 
-    AND email IN ('admin@funlynk.com') -- Add admin emails as needed
+    AND is_active = TRUE
   )
 $$;
 
@@ -227,10 +241,12 @@ CREATE POLICY "Users can view own notifications" ON public.notifications
     user_id IN (SELECT id FROM public.users WHERE auth_user_id = auth.uid())
   );
 
--- System can create notifications (handled by triggers/functions)
-CREATE POLICY "System can create notifications" ON public.notifications
+-- Users can create notifications for themselves only (no spam)
+CREATE POLICY "Users can create own notifications" ON public.notifications
   FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (
+    user_id IN (SELECT id FROM public.users WHERE auth_user_id = auth.uid())
+  );
 
 -- Users can update their own notifications (mark as read)
 CREATE POLICY "Users can update own notifications" ON public.notifications
@@ -293,6 +309,20 @@ CREATE POLICY "Users can create reports" ON public.reports
 
 -- Only admins can update reports
 CREATE POLICY "Admins can update reports" ON public.reports
+  FOR UPDATE
+  USING (is_admin())
+  WITH CHECK (is_admin());
+
+-- Admin table policies (only existing admins can manage admin roles)
+CREATE POLICY "Admins can view admin roles" ON public.admin_users
+  FOR SELECT
+  USING (is_admin());
+
+CREATE POLICY "Admins can create admin roles" ON public.admin_users
+  FOR INSERT
+  WITH CHECK (is_admin());
+
+CREATE POLICY "Admins can update admin roles" ON public.admin_users
   FOR UPDATE
   USING (is_admin())
   WITH CHECK (is_admin());
