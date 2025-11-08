@@ -24,10 +24,31 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'username' => Str::slug(fake()->unique()->userName()),
+            'display_name' => fake()->name(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'bio' => fake()->paragraph(),
+            'profile_image_url' => fake()->imageUrl(),
+            'location_name' => fake()->city(),
+            'location_coordinates' => [
+                'lat' => fake()->latitude(),
+                'lng' => fake()->longitude(),
+            ],
+            'interests' => fake()->randomElements(
+                ['sports', 'music', 'outdoors', 'gaming', 'travel'],
+                3
+            ),
+            'is_host' => fake()->boolean(),
+            'stripe_account_id' => fake()->uuid(),
+            'stripe_onboarding_complete' => fake()->boolean(),
+            'follower_count' => fake()->numberBetween(0, 500),
+            'following_count' => fake()->numberBetween(0, 500),
+            'activity_count' => fake()->numberBetween(0, 50),
+            'is_verified' => fake()->boolean(),
+            'is_active' => true,
+            'privacy_level' => fake()->randomElement(['public', 'friends', 'private']),
             'remember_token' => Str::random(10),
         ];
     }

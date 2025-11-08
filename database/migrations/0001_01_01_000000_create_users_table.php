@@ -12,13 +12,32 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
+            $table->uuid('id')->primary();
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('username', 50)->unique();
+            $table->string('display_name', 100);
             $table->string('password');
+            $table->timestamp('email_verified_at')->nullable();
+            $table->text('bio')->nullable();
+            $table->text('profile_image_url')->nullable();
+            $table->string('location_name')->nullable();
+            $table->json('location_coordinates')->nullable();
+            $table->json('interests')->nullable();
+            $table->boolean('is_host')->default(false);
+            $table->string('stripe_account_id')->nullable();
+            $table->boolean('stripe_onboarding_complete')->default(false);
+            $table->unsignedInteger('follower_count')->default(0);
+            $table->unsignedInteger('following_count')->default(0);
+            $table->unsignedInteger('activity_count')->default(0);
+            $table->boolean('is_verified')->default(false);
+            $table->boolean('is_active')->default(true);
+            $table->string('privacy_level', 20)->default('public');
             $table->rememberToken();
-            $table->timestamps();
+            $table->timestampsTz();
+
+            $table->index('username', 'idx_users_username');
+            $table->index('stripe_account_id', 'idx_users_stripe_account');
+            $table->index('is_host', 'idx_users_is_host');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -29,7 +48,11 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            $table->foreignUuid('user_id')
+                ->nullable()
+                ->index()
+                ->constrained('users')
+                ->nullOnDelete();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
@@ -42,8 +65,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
     }
 };

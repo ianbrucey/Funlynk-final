@@ -4,7 +4,7 @@
 
  **Problem Statement** : It is difficult for individuals to discover and participate in niche, spontaneous, or hyper-local activities (e.g., pickup basketball, music jam sessions, drumline practices). Existing platforms are geared towards formal, pre-planned events, leaving a gap for real-time, community-driven discovery.
 
- **Project Scope** : This project is a mobile-first social network designed for activity-first discovery.
+ **Project Scope** : This project is a Laravel web application designed for activity-first discovery.
 
 * **In Scope:** User profiles, a follower-based social graph, creation of free and paid activities, a map-based discovery engine, a "Flare" system for activity inquiries, and integrated payments for hosts.
 * **Out of Scope (for MVP):** Advanced event management tools (e.g., complex ticketing tiers, assigned seating), formal group/club management pages, in-app advertising platforms.
@@ -23,18 +23,18 @@
 
 ## Solution Architecture
 
- **Architecture Pattern** : The backend will follow a Backend-as-a-Service (BaaS) pattern to accelerate development, leveraging a modular, service-oriented structure for any custom logic. The frontend will be a component-based, single-page application.
+ **Architecture Pattern** : Laravel web application with Filament for CRUD operations and custom views for specialized functionality.
 
  **Technology Stack** :
 
-* **Frontend (Mobile App):** React Native with Expo
-* **Frontend (Web):** Next.js (for a marketing landing page and future web app)
-* **Backend & Database:** Supabase (utilizing its integrated PostgreSQL database, Authentication, and Realtime services)
-* **Infrastructure:** Hosted by Supabase (backend) and Vercel (frontend).
+* **Backend & Frontend:** Laravel 12 with Filament v4, Livewire v3, and DaisyUI
+* **Database:** PostgreSQL with PostGIS for geolocation
+* **Testing:** Pest v4 with browser testing capabilities
+* **Future Plans:** React Native mobile app after Laravel completion
 
  **Key Architectural Decisions** :
 
-* **Mobile-First Strategy** : The primary user experience is the mobile app to cater to the on-the-go, spontaneous nature of the platform's use case.
+* **Laravel-First Strategy** : The primary focus is building a robust Laravel web application. All CRUD operations use Filament framework. Custom views are only created for specialized functionality that Filament cannot handle.
 * **Asymmetrical Follower Model** : A one-way "follower" system (like Instagram) is used over a two-way "friend" system to reduce social friction and empower hosts to build audiences.
 * **Centralized Payments via Stripe Connect** : All payment complexities (payouts, KYC, security) are delegated to Stripe Connect (Express model) to minimize development overhead and legal/compliance risk.
 
@@ -51,7 +51,7 @@
 
  **Integration Points** : Modules communicate primarily via internal API calls. Key external integration points are REST APIs and webhooks for Stripe (payments) and push notification services (APNS/FCM).
 
- **Shared Dependencies** : Supabase Client Library, Stripe SDK, React Navigation, Mapbox/MapLibre GL JS.
+ **Shared Dependencies** : Laravel Framework, Filament, Livewire, DaisyUI, Stripe SDK, PostGIS.
 
 ## Project Acceptance Criteria
 
@@ -67,8 +67,8 @@
 
  **Technical Constraints** :
 
-* The mobile application must be cross-platform (iOS and Android) from a single codebase.
-* The system must be able to handle real-time location queries efficiently.
+* The Laravel web application must be performant and scalable.
+* The system must be able to handle real-time location queries efficiently using PostGIS.
 * All payment processing must be PCI compliant by offloading to a certified third party (Stripe).
 
  **Business Constraints** :
@@ -78,10 +78,11 @@
 
  **Coding Standards** :
 
-* Code will be formatted using Prettier.
-* JavaScript/TypeScript will be linted using ESLint with a standard ruleset.
-* All API endpoints must be documented (e.g., using OpenAPI/Swagger).
-* Components should be functional and utilize hooks, adhering to modern React best practices.
+* PHP code will be formatted using Laravel Pint.
+* All tests must be written using Pest v4.
+* Follow Laravel best practices and conventions.
+* Use Filament for all CRUD operations; custom views only for specialized functionality.
+* Use DaisyUI for all UI components and styling.
 
 ## Architectural & Coding Standards
 **Mandatory Adherence**: Before writing or modifying any code, you **MUST** consult the documents within the `context-engine/standards/` directory. These documents define the mandatory coding standards, design patterns, and architectural guidelines for this project.
@@ -171,17 +172,17 @@ F01_User_Management_User_Follows_Another_User/
 - **Enhanced Implementation Tracker**: Progress tracking by technical domain
 
 **Domain Contexts** (automatically applied based on task relevance):
-- **Authentication & Authorization** (Supabase Auth)
-- **Database Operations** (Supabase Client, PostgreSQL)
-- **API Design** (RESTful principles)
-- **Frontend Components** (React Native, Expo)
-- **State Management** (Zustand/Redux)
-- **Geolocation & Mapping** (Mapbox, PostGIS)
+- **Authentication & Authorization** (Laravel Auth, Filament)
+- **Database Operations** (Eloquent ORM, PostgreSQL, PostGIS)
+- **CRUD Operations** (Filament Resources)
+- **Frontend Components** (Livewire, DaisyUI)
+- **Testing** (Pest v4, Browser Testing)
+- **Geolocation & Mapping** (PostGIS)
 - **Payments** (Stripe Connect)
 
 ## Decision History
 
- **September 16, 2025** : Chose Supabase as the BaaS provider to accelerate MVP development. -  **Rationale** : Reduces the need to build a custom backend from scratch, providing auth, database, and real-time capabilities out-of-the-box. -  **Impact** : Faster time-to-market; introduces a dependency on the Supabase ecosystem.
+ **September 16, 2025** : Chose Laravel with Filament as the primary development framework. -  **Rationale** : Provides robust CRUD capabilities through Filament, reducing development time while maintaining flexibility for custom functionality. -  **Impact** : Faster time-to-market for web application; React Native mobile app planned for future phase.
 
  **September 17, 2025** : Enhanced context engineering framework with hierarchical Epic→Feature→Task structure. -  **Rationale** : Conversation analysis revealed need for more granular, domain-specific planning to improve AI agent effectiveness. -  **Impact** : Better task scoping, clearer separation of concerns across UX/Backend/Frontend/Third-party domains.
 

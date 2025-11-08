@@ -3,211 +3,122 @@
 
 # Laravel Boost Guidelines
 
-The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to enhance the user's satisfaction building Laravel applications.
-
 ## Foundational Context
-This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
+This application is a Laravel web application. Main packages & versions:
 
 - php - 8.4.13
 - filament/filament (FILAMENT) - v4
 - laravel/framework (LARAVEL) - v12
-- laravel/prompts (PROMPTS) - v0
 - livewire/livewire (LIVEWIRE) - v3
-- laravel/mcp (MCP) - v0
-- laravel/pint (PINT) - v1
-- laravel/sail (SAIL) - v1
 - pestphp/pest (PEST) - v4
-- phpunit/phpunit (PHPUNIT) - v12
+- laravel/pint (PINT) - v1
+
+## Frontend Framework
+- **DaisyUI** is our CSS framework for all UI components (buttons, forms, modals, etc.)
+- Use DaisyUI classes and components for consistent styling
+- Refer to DaisyUI documentation when implementing UI elements
+
+## UI Design System
+- **Design Standards**: All UI components MUST follow the design system documented in `context-engine/domain-contexts/ui-design-standards.md`
+- **Galaxy Theme**: Use the galaxy background with aurora borealis effects (green, blue, purple layers) and animated stars
+- **Glass Morphism**: Apply glass card styling with backdrop blur and blue borders to all major content containers
+- **Consistency**: The galaxy/aurora theme with glass morphism is the standard design language for ALL pages (landing, auth, dashboard, etc.)
+- **CRITICAL**: Always consult the UI design standards document before building any UI components to ensure visual consistency
+
+## Development Strategy
+- **Primary Focus**: Building Laravel web application with Filament for CRUD operations
+- **Filament First**: Use Filament framework for all CRUD operations
+- **Custom Views**: Only create custom views for specialized functionality that Filament cannot handle
+- **Future Plans**: React Native mobile app after Laravel completion
+- **Current Priority**: 100% focused on Laravel development
+
+## Documentation & Research
+- **CRITICAL**: If you don't know how to implement a feature based on Laravel, Filament, DaisyUI, or other standards:
+  1. Use `web-fetch` tool to get official documentation first
+  2. Use `search-docs` tool for Laravel ecosystem packages
+  3. Never guess or hallucinate implementation details
+- **Testing Frontend**: Use Chrome DevTools to test and verify front-end features you build
 
 ## Conventions
-- You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, naming.
-- Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
-- Check for existing components to reuse before writing a new one.
-
-## Verification Scripts
-- Do not create verification scripts or tinker when tests cover that functionality and prove it works. Unit and feature tests are more important.
-
-## Application Structure & Architecture
-- Stick to existing directory structure - don't create new base folders without approval.
-- Do not change the application's dependencies without approval.
+- Follow existing code conventions - check sibling files for structure, approach, naming
+- Use descriptive names: `isRegisteredForDiscounts`, not `discount()`
+- Reuse existing components before creating new ones
+- Stick to existing directory structure
+- Do not change dependencies without approval
 
 ## Frontend Bundling
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `npm run build`, `npm run dev`, or `composer run dev`. Ask them.
-
-## Replies
-- Be concise in your explanations - focus on what's important rather than explaining obvious details.
+- If frontend changes aren't reflected, user may need to run `npm run build` or `npm run dev`
 
 ## Documentation Files
-- You must only create documentation files if explicitly requested by the user.
+- Only create documentation files if explicitly requested
 
 
 === boost rules ===
 
-## Laravel Boost
-- Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
+## Laravel Boost Tools
+- Use `list-artisan-commands` to check Artisan command parameters
+- Use `tinker` for debugging PHP/Eloquent queries
+- Use `database-query` for read-only database operations
+- Use `browser-logs` to read browser errors and exceptions
+- Use `get-absolute-url` when sharing project URLs
 
-## Artisan
-- Use the `list-artisan-commands` tool when you need to call an Artisan command to double check the available parameters.
-
-## URLs
-- Whenever you share a project URL with the user you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain / IP, and port.
-
-## Tinker / Debugging
-- You should use the `tinker` tool when you need to execute PHP to debug code or query Eloquent models directly.
-- Use the `database-query` tool when you only need to read from the database.
-
-## Reading Browser Logs With the `browser-logs` Tool
-- You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
-- Only recent browser logs will be useful - ignore old logs.
-
-## Searching Documentation (Critically Important)
-- Boost comes with a powerful `search-docs` tool you should use before any other approaches. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation specific for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
-- The 'search-docs' tool is perfect for all Laravel related packages, including Laravel, Inertia, Livewire, Filament, Tailwind, Pest, Nova, Nightwatch, etc.
-- You must use this tool to search for Laravel-ecosystem documentation before falling back to other approaches.
-- Search the documentation before making code changes to ensure we are taking the correct approach.
-- Use multiple, broad, simple, topic based queries to start. For example: `['rate limiting', 'routing rate limiting', 'routing']`.
-- Do not add package names to queries - package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
-
-### Available Search Syntax
-- You can and should pass multiple queries at once. The most relevant results will be returned first.
-
-1. Simple Word Searches with auto-stemming - query=authentication - finds 'authenticate' and 'auth'
-2. Multiple Words (AND Logic) - query=rate limit - finds knowledge containing both "rate" AND "limit"
-3. Quoted Phrases (Exact Position) - query="infinite scroll" - Words must be adjacent and in that order
-4. Mixed Queries - query=middleware "rate limit" - "middleware" AND exact phrase "rate limit"
-5. Multiple Queries - queries=["authentication", "middleware"] - ANY of these terms
+## Documentation Search (CRITICAL)
+- Use `search-docs` tool for Laravel ecosystem packages (Laravel, Livewire, Filament, Pest, etc.)
+- Search documentation BEFORE making code changes
+- Use multiple, broad, topic-based queries: `['rate limiting', 'routing']`
+- Don't add package names to queries: use `test resource table`, not `filament 4 test resource table`
 
 
 === php rules ===
 
-## PHP
-
-- Always use curly braces for control structures, even if it has one line.
-
-### Constructors
-- Use PHP 8 constructor property promotion in `__construct()`.
-    - <code-snippet>public function __construct(public GitHub $github) { }</code-snippet>
-- Do not allow empty `__construct()` methods with zero parameters.
-
-### Type Declarations
-- Always use explicit return type declarations for methods and functions.
-- Use appropriate PHP type hints for method parameters.
-
-<code-snippet name="Explicit Return Types and Method Params" lang="php">
-protected function isAccessible(User $user, ?string $path = null): bool
-{
-    ...
-}
-</code-snippet>
-
-## Comments
-- Prefer PHPDoc blocks over comments. Never use comments within the code itself unless there is something _very_ complex going on.
-
-## PHPDoc Blocks
-- Add useful array shape type definitions for arrays when appropriate.
-
-## Enums
-- Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
+## PHP Standards
+- Always use curly braces for control structures
+- Use PHP 8 constructor property promotion: `public function __construct(public GitHub $github) { }`
+- Always use explicit return type declarations
+- Use appropriate type hints for parameters
+- Prefer PHPDoc blocks over inline comments
+- Enum keys should be TitleCase: `FavoritePerson`, `Monthly`
 
 
 === filament/core rules ===
 
 ## Filament
-- Filament is used by this application, check how and where to follow existing application conventions.
-- Filament is a Server-Driven UI (SDUI) framework for Laravel. It allows developers to define user interfaces in PHP using structured configuration objects. It is built on top of Livewire, Alpine.js, and Tailwind CSS.
-- You can use the `search-docs` tool to get information from the official Filament documentation when needed. This is very useful for Artisan command arguments, specific code examples, testing functionality, relationship management, and ensuring you're following idiomatic practices.
-- Utilize static `make()` methods for consistent component initialization.
+- Filament is a Server-Driven UI (SDUI) framework for Laravel built on Livewire, Alpine.js, and Tailwind CSS
+- Use `search-docs` tool for Filament documentation when needed
+- Use Filament Artisan commands to create files: check with `list-artisan-commands`
+- Always pass `--no-interaction` to Artisan commands
 
-### Artisan
-- You must use the Filament specific Artisan commands to create new files or components for Filament. You can find these with the `list-artisan-commands` tool, or with `php artisan` and the `--help` option.
-- Inspect the required options, always pass `--no-interaction`, and valid arguments for other options when applicable.
-
-### Filament's Core Features
-- Actions: Handle doing something within the application, often with a button or link. Actions encapsulate the UI, the interactive modal window, and the logic that should be executed when the modal window is submitted. They can be used anywhere in the UI and are commonly used to perform one-time actions like deleting a record, sending an email, or updating data in the database based on modal form input.
-- Forms: Dynamic forms rendered within other features, such as resources, action modals, table filters, and more.
-- Infolists: Read-only lists of data.
-- Notifications: Flash notifications displayed to users within the application.
-- Panels: The top-level container in Filament that can include all other features like pages, resources, forms, tables, notifications, actions, infolists, and widgets.
-- Resources: Static classes that are used to build CRUD interfaces for Eloquent models. Typically live in `app/Filament/Resources`.
-- Schemas: Represent components that define the structure and behavior of the UI, such as forms, tables, or lists.
-- Tables: Interactive tables with filtering, sorting, pagination, and more.
-- Widgets: Small component included within dashboards, often used for displaying data in charts, tables, or as a stat.
+### Core Features
+- **Resources**: CRUD interfaces for Eloquent models in `app/Filament/Resources`
+- **Forms**: Dynamic forms in resources, actions, filters
+- **Tables**: Interactive tables with filtering, sorting, pagination
+- **Actions**: Buttons/links with modals for one-time operations
+- **Schemas**: Define UI structure (forms, tables, lists)
 
 ### Relationships
-- Determine if you can use the `relationship()` method on form components when you need `options` for a select, checkbox, repeater, or when building a `Fieldset`:
-
-<code-snippet name="Relationship example for Form Select" lang="php">
-Forms\Components\Select::make('user_id')
-    ->label('Author')
-    ->relationship('author')
-    ->required(),
-</code-snippet>
+- Use `relationship()` method on form components for selects, checkboxes, repeaters
 
 
 ## Testing
-- It's important to test Filament functionality for user satisfaction.
-- Ensure that you are authenticated to access the application within the test.
-- Filament uses Livewire, so start assertions with `livewire()` or `Livewire::test()`.
-
-### Example Tests
-
-<code-snippet name="Filament Table Test" lang="php">
-    livewire(ListUsers::class)
-        ->assertCanSeeTableRecords($users)
-        ->searchTable($users->first()->name)
-        ->assertCanSeeTableRecords($users->take(1))
-        ->assertCanNotSeeTableRecords($users->skip(1))
-        ->searchTable($users->last()->email)
-        ->assertCanSeeTableRecords($users->take(-1))
-        ->assertCanNotSeeTableRecords($users->take($users->count() - 1));
-</code-snippet>
-
-<code-snippet name="Filament Create Resource Test" lang="php">
-    livewire(CreateUser::class)
-        ->fillForm([
-            'name' => 'Howdy',
-            'email' => 'howdy@example.com',
-        ])
-        ->call('create')
-        ->assertNotified()
-        ->assertRedirect();
-
-    assertDatabaseHas(User::class, [
-        'name' => 'Howdy',
-        'email' => 'howdy@example.com',
-    ]);
-</code-snippet>
-
-<code-snippet name="Testing Multiple Panels (setup())" lang="php">
-    use Filament\Facades\Filament;
-
-    Filament::setCurrentPanel('app');
-</code-snippet>
-
-<code-snippet name="Calling an Action in a Test" lang="php">
-    livewire(EditInvoice::class, [
-        'invoice' => $invoice,
-    ])->callAction('send');
-
-    expect($invoice->refresh())->isSent()->toBeTrue();
-</code-snippet>
+- Test Filament functionality with `livewire()` or `Livewire::test()`
+- Ensure authentication in tests
+- Use `fillForm()`, `assertCanSeeTableRecords()`, `callAction()` for Filament tests
 
 
 === filament/v4 rules ===
 
 ## Filament 4
 
-### Important Version 4 Changes
-- File visibility is now `private` by default.
-- The `deferFilters` method from Filament v3 is now the default behavior in Filament v4, so users must click a button before the filters are applied to the table. To disable this behavior, you can use the `deferFilters(false)` method.
-- The `Grid`, `Section`, and `Fieldset` layout components no longer span all columns by default.
-- The `all` pagination page method is not available for tables by default.
-- All action classes extend `Filament\Actions\Action`. No action classes exist in `Filament\Tables\Actions`.
-- The `Form` & `Infolist` layout components have been moved to `Filament\Schemas\Components`, for example `Grid`, `Section`, `Fieldset`, `Tabs`, `Wizard`, etc.
-- A new `Repeater` component for Forms has been added.
-- Icons now use the `Filament\Support\Icons\Heroicon` Enum by default. Other options are available and documented.
+### Key v4 Changes
+- File visibility defaults to `private`
+- `deferFilters` is default (use `deferFilters(false)` to disable)
+- Layout components don't span all columns by default
+- All actions extend `Filament\Actions\Action`
+- Form/Infolist layouts moved to `Filament\Schemas\Components`
+- Use `Schema` type instead of `Form` in Livewire components with `InteractsWithForms`
+- Use `->components([])` instead of `->schema([])` in form methods
 
-### Organize Component Classes Structure
+### Component Organization
 - Schema components: `Schemas/Components/`
 - Table columns: `Tables/Columns/`
 - Table filters: `Tables/Filters/`
@@ -218,68 +129,52 @@ Forms\Components\Select::make('user_id')
 
 ## Do Things the Laravel Way
 
-- Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using the `list-artisan-commands` tool.
-- If you're creating a generic PHP class, use `artisan make:class`.
-- Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
+- Use `php artisan make:` commands to create new files (migrations, controllers, models, etc.)
+- Pass `--no-interaction` to all Artisan commands
 
 ### Database
-- Always use proper Eloquent relationship methods with return type hints. Prefer relationship methods over raw queries or manual joins.
-- Use Eloquent models and relationships before suggesting raw database queries
-- Avoid `DB::`; prefer `Model::query()`. Generate code that leverages Laravel's ORM capabilities rather than bypassing them.
-- Generate code that prevents N+1 query problems by using eager loading.
-- Use Laravel's query builder for very complex database operations.
+- Use Eloquent relationships with return type hints
+- Prefer `Model::query()` over `DB::`
+- Prevent N+1 queries with eager loading
+- Use query builder for complex operations
 
 ### Model Creation
-- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `list-artisan-commands` to check the available options to `php artisan make:model`.
-
-### APIs & Eloquent Resources
-- For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
+- Create factories and seeders with new models
 
 ### Controllers & Validation
-- Always create Form Request classes for validation rather than inline validation in controllers. Include both validation rules and custom error messages.
-- Check sibling Form Requests to see if the application uses array or string based validation rules.
-
-### Queues
-- Use queued jobs for time-consuming operations with the `ShouldQueue` interface.
-
-### Authentication & Authorization
-- Use Laravel's built-in authentication and authorization features (gates, policies, Sanctum, etc.).
-
-### URL Generation
-- When generating links to other pages, prefer named routes and the `route()` function.
+- Create Form Request classes for validation (not inline)
+- Check sibling Form Requests for array vs string validation rules
 
 ### Configuration
-- Use environment variables only in configuration files - never use the `env()` function directly outside of config files. Always use `config('app.name')`, not `env('APP_NAME')`.
+- Use `config('app.name')` not `env('APP_NAME')` outside config files
+
+### URL Generation
+- Prefer named routes: `route('dashboard')`
 
 ### Testing
-- When creating models for tests, use the factories for the models. Check if the factory has custom states that can be used before manually setting up the model.
-- Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
-- When creating tests, make use of `php artisan make:test [options] <name>` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
+- Use model factories in tests
+- Create feature tests with `php artisan make:test --pest <name>`
+- Use `--unit` flag for unit tests
 
 ### Vite Error
-- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
+- Run `npm run build` if Vite manifest error occurs
 
 
 === laravel/v12 rules ===
 
 ## Laravel 12
 
-- Use the `search-docs` tool to get version specific documentation.
-- Since Laravel 11, Laravel has a new streamlined file structure which this project uses.
-
-### Laravel 12 Structure
-- No middleware files in `app/Http/Middleware/`.
-- `bootstrap/app.php` is the file to register middleware, exceptions, and routing files.
-- `bootstrap/providers.php` contains application specific service providers.
-- **No app\Console\Kernel.php** - use `bootstrap/app.php` or `routes/console.php` for console configuration.
-- **Commands auto-register** - files in `app/Console/Commands/` are automatically available and do not require manual registration.
+### Structure Changes
+- No `app/Http/Middleware/` files
+- Use `bootstrap/app.php` for middleware, exceptions, routing
+- No `app/Console/Kernel.php` - commands auto-register from `app/Console/Commands/`
 
 ### Database
-- When modifying a column, the migration must include all of the attributes that were previously defined on the column. Otherwise, they will be dropped and lost.
-- Laravel 11 allows limiting eagerly loaded records natively, without external packages: `$query->latest()->limit(10);`.
+- Include all column attributes when modifying (or they'll be dropped)
+- Limit eager loading: `$query->latest()->limit(10)`
 
 ### Models
-- Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
+- Use `casts()` method instead of `$casts` property (follow existing conventions)
 
 
 === livewire/core rules ===
@@ -295,13 +190,13 @@ Forms\Components\Select::make('user_id')
 - Use `wire:loading` and `wire:dirty` for delightful loading states.
 - Add `wire:key` in loops:
 
-    ```blade
+<code-snippet name="Lifecycle hook examples" lang="php">
     @foreach ($items as $item)
         <div wire:key="item-{{ $item->id }}">
             {{ $item->name }}
         </div>
     @endforeach
-    ```
+</code-snippet>
 
 - Prefer lifecycle hooks like `mount()`, `updatedFoo()` for initialization and reactive side effects:
 

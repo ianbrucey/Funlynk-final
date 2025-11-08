@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FunLynk - Nexus Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.10.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles to achieve the galaxy background and glowing effects */
+        body {
+            background-color: #0d0d1a; /* Very dark base */
+            background-image: url('https://images.unsplash.com/photo-1514829375354-15077227c491?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'); /* Placeholder galaxy image */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* Keeps background fixed on scroll */
+            color: #E0E0E0; /* Light text for dark background */
+        }
+
+        .navbar-custom {
+            backdrop-filter: blur(10px) brightness(0.8); /* Frosted glass effect */
+            background-color: rgba(20, 20, 30, 0.7); /* Slightly transparent dark */
+            border-bottom: 1px solid rgba(120, 120, 150, 0.2);
+        }
+
+        .card-custom {
+            backdrop-filter: blur(8px) brightness(0.8);
+            background-color: rgba(20, 20, 30, 0.6);
+            border: 1px solid rgba(120, 120, 150, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease-in-out;
+        }
+        .card-custom:hover {
+            transform: translateY(-5px);
+        }
+
+        .input-glow:focus {
+            outline: none;
+            border-color: #8B5CF6; /* DaisyUI primary color for glow, or custom purple */
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.5); /* Custom purple glow */
+        }
+
+        /* Custom gradient for FunLynk text if not using image */
+        .funlynx-text-gradient {
+            background-image: linear-gradient(to right, #FDE68A, #EC4899, #8B5CF6); /* Yellow, Pink, Purple */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+
+        /* Avatar border colors matching logo aura */
+        .avatar-border-1 .mask { border: 2px solid #FDE68A; } /* Yellow */
+        .avatar-border-2 .mask { border: 2px solid #EC4899; } /* Pink */
+        .avatar-border-3 .mask { border: 2px solid #8B5CF6; } /* Purple */
+        .avatar-border-4 .mask { border: 2px solid #38BDF8; } /* Blue */
+        .avatar-border-5 .mask { border: 2px solid #4ade80; } /* Neon Green */
+        .avatar-border-6 .mask { border: 2px solid #f97316; } /* Orange */
+
+        /* Glowing icon effect */
+        .glowing-icon {
+            filter: drop-shadow(0 0 5px currentColor);
+            transition: all 0.2s ease-in-out;
+        }
+        .glowing-icon:hover {
+            filter: drop-shadow(0 0 10px currentColor) brightness(1.2);
+            transform: scale(1.05);
+        }
+
+        /* Specific colors for activity icons */
+        .icon-guitar { color: #EC4899; } /* Pink */
+        .icon-rollerblades { color: #4ade80; } /* Neon Green */
+        .icon-book { color: #FDE68A; } /* Yellow */
+        .icon-controller { color: #8B5CF6; } /* Purple */
+
+        /* Using the image as background for activity icons for more realism */
+        .activity-icon-container {
+            width: 4rem; /* Equivalent to w-16 */
+            height: 4rem; /* Equivalent to h-16 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem; /* rounded-lg */
+            backdrop-filter: blur(5px);
+            background-color: rgba(50, 50, 70, 0.4); /* Slightly lighter transparent background */
+            border: 1px solid rgba(120, 120, 150, 0.2);
+            transition: all 0.2s ease-in-out;
+        }
+        .activity-icon-container:hover {
+            background-color: rgba(70, 70, 90, 0.6);
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="font-sans">
+
+    <div class="navbar navbar-custom fixed top-0 w-full z-50 p-4">
+        <div class="flex-1">
+            <a class="btn btn-ghost normal-case text-xl flex items-center gap-2">
+                <img src="YOUR_TRANSPARENT_LOGO_URL_HERE" alt="FunLynk Logo" class="h-10 w-auto">
+                <div>
+                    <span class="funlynx-text-gradient text-2xl font-bold">FunLynk</span>
+                    <span class="block text-xs text-gray-400 opacity-75">SOCIAL ACTIVITY NETWORK</span>
+                </div>
+            </a>
+        </div>
+        <div class="flex-none gap-2">
+            <ul class="menu menu-horizontal px-1">
+                <li><a class="text-gray-300 hover:text-white hover:bg-transparent transition-colors duration-200">Feed</a></li>
+                <li><a class="text-gray-300 hover:text-white hover:bg-transparent transition-colors duration-200">Find Activities</a></li>
+                <li><a class="text-gray-300 hover:text-white hover:bg-transparent transition-colors duration-200">Community</a></li>
+            </ul>
+            <div class="dropdown dropdown-end">
+                <label tabindex="0" class="btn btn-ghost btn-circle avatar">
+                    <div class="w-10 rounded-full border-2 border-green-500 relative">
+                        <img src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+                        <span class="badge badge-success badge-xs absolute bottom-0 right-0 transform translate-x-1/2 translate-y-1/2"></span>
+                    </div>
+                </label>
+                <ul tabindex="0" class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
+                    <li><a class="justify-between">Profile</a></li>
+                    <li><a>Settings</a></li>
+                    <li><a>Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <main class="container mx-auto p-8 mt-24"> <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+            <div class="card card-custom p-6 shadow-xl w-full">
+                <h2 class="card-title text-2xl font-bold mb-6">Trending Activities</h2>
+                <div class="flex gap-4 overflow-x-auto pb-4">
+                    <div class="activity-icon-container">
+                        <img src="https://i.ibb.co/3kS7p5S/guitar-glow.png" alt="Guitar Icon" class="h-10 w-auto glowing-icon icon-guitar">
+                    </div>
+                    <div class="activity-icon-container">
+                        <img src="https://i.ibb.co/L6V2rD3/rollerblades-glow.png" alt="Rollerblades Icon" class="h-10 w-auto glowing-icon icon-rollerblades">
+                    </div>
+                     <div class="activity-icon-container">
+                        <img src="https://i.ibb.co/VMy46H8/book-glow.png" alt="Book Icon" class="h-10 w-auto glowing-icon icon-book">
+                    </div>
+                     <div class="activity-icon-container">
+                        <img src="https://i.ibb.co/P44v2qL/controller-glow.png" alt="Controller Icon" class="h-10 w-auto glowing-icon icon-controller">
+                    </div>
+                    <div class="activity-icon-container">
+                        <img src="https://i.ibb.co/y4L3P0B/hiking-glow.png" alt="Hiking Icon" class="h-10 w-auto glowing-icon icon-book">
+                    </div>
+                     <div class="activity-icon-container">
+                        <img src="https://i.ibb.co/sK43Yj1/camera-glow.png" alt="Camera Icon" class="h-10 w-auto glowing-icon icon-controller">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-custom p-6 shadow-xl w-full col-span-1 md:col-span-2">
+                <h2 class="card-title text-2xl font-bold mb-6">Find Your Crew</h2>
+                <div class="form-control mb-6">
+                    <label class="input input-bordered flex items-center gap-2 input-glow">
+                        <input type="text" class="grow text-lg" placeholder="Search by Interest..." />
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-6 h-6 opacity-70 text-gray-400"><path fill-rule="evenodd" d="M9.965 11.023A5.479 5.479 0 1 1 11.023 9.965a.75.75 0 0 1-.004 1.06Z" clip-rule="evenodd" /></svg>
+                    </label>
+                </div>
+                <div class="grid grid-cols-3 md:grid-cols-6 gap-4 justify-items-center">
+                    <div class="avatar avatar-border-1">
+                        <div class="w-16 rounded-full mask mask-circle">
+                            <img src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+                        </div>
+                    </div>
+                    <div class="avatar avatar-border-2">
+                        <div class="w-16 rounded-full mask mask-circle">
+                            <img src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+                        </div>
+                    </div>
+                    <div class="avatar avatar-border-3">
+                        <div class="w-16 rounded-full mask mask-circle">
+                            <img src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+                        </div>
+                    </div>
+                    <div class="avatar avatar-border-4">
+                        <div class="w-16 rounded-full mask mask-circle">
+                            <img src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+                        </div>
+                    </div>
+                    <div class="avatar avatar-border-5">
+                        <div class="w-16 rounded-full mask mask-circle">
+                            <img src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+                        </div>
+                    </div>
+                    <div class="avatar avatar-border-6">
+                        <div class="w-16 rounded-full mask mask-circle">
+                            <img src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+                        </div>
+                    </div>
+                    <div class="avatar avatar-border-1">
+                        <div class="w-16 rounded-full mask mask-circle">
+                            <img src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+                        </div>
+                    </div>
+                    <div class="avatar avatar-border-2">
+                        <div class="w-16 rounded-full mask mask-circle">
+                            <img src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+                        </div>
+                    </div>
+                    <div class="avatar avatar-border-3">
+                        <div class="w-16 rounded-full mask mask-circle">
+                            <img src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="footer footer-center p-4 bg-transparent text-gray-400 mt-12">
+        <aside>
+            <p>Copyright © 2024 - All right reserved by FunLynk Inc.</p>
+        </aside>
+    </footer>
+
+</body>
+</html>
