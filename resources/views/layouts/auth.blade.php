@@ -107,6 +107,7 @@
                 border-color: rgba(255, 255, 255, 0.1) !important;
                 border-radius: 1rem !important;
                 transition: all 0.3s ease !important;
+                min-height: 3rem !important;
             }
 
             .fi-input-wrp:focus-within {
@@ -117,6 +118,8 @@
             .fi-input {
                 color: white !important;
                 padding: 0.75rem 1rem !important;
+                font-size: 1rem !important;
+                line-height: 1.5rem !important;
             }
 
             .fi-fo-field-wrp-label {
@@ -132,6 +135,9 @@
                 color: white !important;
                 padding: 0.75rem 1rem !important;
                 transition: all 0.3s ease !important;
+                min-height: 3rem !important;
+                font-size: 1rem !important;
+                line-height: 1.5rem !important;
             }
 
             .fi-select:focus {
@@ -147,6 +153,8 @@
                 color: white !important;
                 padding: 0.75rem 1rem !important;
                 transition: all 0.3s ease !important;
+                font-size: 1rem !important;
+                line-height: 1.5rem !important;
             }
 
             .fi-textarea:focus {
@@ -205,6 +213,29 @@
                 color: #f87171 !important;
                 font-size: 0.875rem !important;
                 margin-top: 0.25rem !important;
+            }
+
+            /* Password reveal button styling */
+            .fi-input-wrp-suffix button {
+                color: #9ca3af !important;
+                transition: color 0.3s ease !important;
+            }
+
+            .fi-input-wrp-suffix button:hover {
+                color: #06b6d4 !important;
+            }
+
+            /* Ensure all input wrappers have consistent height */
+            .fi-input-wrp,
+            .fi-select-wrp,
+            .fi-textarea-wrp {
+                display: flex !important;
+                align-items: center !important;
+            }
+
+            /* Grid layout for form fields */
+            .fi-fo-component-ctn {
+                width: 100% !important;
             }
         </style>
     </head>
