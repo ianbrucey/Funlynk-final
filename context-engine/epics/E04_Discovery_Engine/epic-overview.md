@@ -2,88 +2,175 @@
 
 ## Epic Purpose
 
-The Discovery Engine epic transforms the rich data from activities, users, and social connections into intelligent discovery experiences. This epic enables users to find relevant activities through personalized feeds, powerful search capabilities, and smart recommendations that connect people with activities they'll love.
+The Discovery Engine epic transforms FunLynk from a traditional event platform into a **spontaneous, niche-discovery social network**. This epic enables users to discover hard-to-find activities through real-time "energy signals" (Posts), location-aware feeds, and implicit community formation—connecting people with spontaneous experiences they'd never find on Meetup or Eventbrite.
+
+**Core Differentiator**: "From Events to Energy" - We treat posts as spontaneous invitations to connect, not transactional event registrations.
 
 ## Epic Scope
 
 ### In Scope
-- **Search Service**: Comprehensive activity and user search with advanced filtering
-- **Recommendation Engine**: Personalized activity recommendations based on multiple factors
-- **Feed Generation Service**: Personalized activity feeds combining social and algorithmic content
-- **Content Discovery**: Trending activities, popular categories, and discovery features
+- **Posts vs Events Dual Model**: Lightweight posts that can evolve into structured events
+- **Discovery Feed Service**: Real-time nearby feed, personalized "For You" feed, and interactive map view
+- **Temporal Intelligence**: Posts fade quickly (24-48h), events persist until completion
+- **Social Resonance**: "I'm down" / "Join me" interactions instead of passive likes
+- **Implicit Communities**: Auto-generated clusters from activity patterns (e.g., "Atlanta Musicians")
+- **Post-to-Event Evolution**: Conversion flow when posts gain traction
+- **Recommendation Engine**: Multi-factor scoring with temporal decay for posts
 
 ### Out of Scope
-- Basic activity data (handled by E03 Activity Management)
+- Basic event/activity CRUD (handled by E03 Activity Management)
 - User profile data (handled by E02 User & Profile Management)
-- Social interactions on discovered content (handled by E05 Social Interaction)
-- Payment processing for discovered activities (handled by E06 Payments & Monetization)
+- Advanced social features like comments/shares (handled by E05 Social Interaction)
+- Payment processing for events (handled by E06 Payments & Monetization)
+- AI-powered vibe matching (Phase 2 / v2 feature)
+
+## Core Differentiator: Posts vs Events Dual Model
+
+### What Makes FunLynk Different
+
+**The Problem**: Niche activities (jam sessions at random churches, pickup basketball, spontaneous meetups) are invisible unless you're "in the circle." Meetup and Eventbrite focus on professional, structured events—not spontaneous, community-driven experiences.
+
+**FunLynk's Solution**: A dual content model that treats discovery as "energy signals" rather than event transactions.
+
+### Posts: Spontaneous Energy Signals
+**Purpose**: Lightweight, conversational, real-time "what's happening" updates
+
+**Characteristics**:
+- **Ephemeral**: Auto-expire after 24-48 hours
+- **Conversational**: "Open jam at Clark ATL tonight 🎸", "Anyone down for pickup basketball?"
+- **Spontaneous**: Created on-the-fly, minimal friction
+- **Evolvable**: Can convert to structured events if they gain traction
+- **Location-aware**: Geo-tagged for proximity discovery
+- **Mood-tagged**: Creative, social, active, chill, etc.
+
+**Examples**:
+- "Jam session tonight at 8pm, bring your guitar"
+- "Anyone want to hike Arabia Mountain this weekend?"
+- "Pickup basketball at Piedmont Park in 30 mins"
+- "Coffee and coding at Octane, who's in?"
+
+### Events: Structured Experiences
+**Purpose**: Time-anchored activities with RSVPs, payments, and formal planning
+
+**Characteristics**:
+- **Persistent**: Remain active until event completion
+- **Structured**: Clear date/time, location, capacity, pricing
+- **Formal RSVPs**: Confirmed attendance tracking
+- **Payment-enabled**: Can charge admission via Stripe
+- **Originated from**: Either created directly OR evolved from popular posts
+
+**Examples**:
+- "Jazz Night @ High Museum — $10 cover, Friday 8pm"
+- "5K Charity Run — Register by March 1st"
+- "Photography Workshop — $50, limited to 15 people"
+
+### Post-to-Event Evolution Flow
+**The Magic**: Posts that gain traction can evolve into structured events
+
+**Conversion Triggers**:
+- Multiple "I'm down" reactions (threshold: 5+)
+- Host manually converts post to event
+- Time-sensitive posts approaching expiration with high engagement
+
+**Conversion Process**:
+1. Post gains traction (reactions, comments, shares)
+2. System suggests "Convert to Event" to host
+3. Host adds structure (exact time, capacity, pricing)
+4. Post becomes event, original post links to event
+5. Engaged users auto-notified of conversion
 
 ## Component Breakdown
 
-### 4.1 Search Service
-**Purpose**: Provides comprehensive search capabilities for activities, users, and content
+### 4.1 Discovery Feed Service (formerly "Search Service")
+**Purpose**: Real-time discovery of posts and events through location-aware, interest-based feeds
+
 **Responsibilities**:
-- Text-based activity search with relevance ranking
-- Advanced filtering (location, time, price, category, skill level)
-- User search and discovery
-- Search result personalization based on user context
-- Search analytics and query optimization
-- Auto-suggestions and search completion
+- **Nearby Feed**: "What's happening within 5 miles right now"
+- **For You Feed**: Posts/events matching user interests with temporal decay
+- **Map View**: Interactive map with real-time pins for posts/events
+- **Post Discovery**: Geo-proximity + interest matching + temporal weighting
+- **Event Discovery**: Traditional search with advanced filtering
+- **Saved Searches**: Notification preferences for specific activity types
 
 **Key Features**:
-- Full-text search across activity titles, descriptions, and tags
-- Geospatial search with radius-based filtering
-- Multi-criteria filtering with faceted search
-- Real-time search suggestions and autocomplete
-- Search result ranking based on relevance and personalization
-- Search history and saved searches
+- Real-time geo-proximity feed (PostGIS-powered)
+- Temporal decay scoring (recent posts rank higher)
+- Interest-based content matching
+- Interactive map with tap-to-open post/event details
+- Filter by category, time, cost, friends attending
+- Post expiration handling (24-48h auto-removal)
 
 ### 4.2 Recommendation Engine
-**Purpose**: Generates personalized activity recommendations using multiple data sources
+**Purpose**: Personalized post/event recommendations with temporal intelligence and vibe matching
+
 **Responsibilities**:
-- Interest-based activity matching
-- Social graph influence on recommendations
-- Location-based activity suggestions
-- Collaborative filtering based on similar users
-- Trending activity identification
-- Recommendation explanation and transparency
+- **Temporal Weighting**: Recent posts rank higher than older posts
+- **Interest Matching**: Tag-based affinity scoring
+- **Location Intelligence**: Proximity-based relevance
+- **Social Signals**: Friend engagement amplification
+- **Vibe Matching**: Mood + tags + location + time-of-day patterns
+- **Collaborative Filtering**: "Users like you also enjoyed..."
+- **Trending Detection**: Velocity-based trending posts/events
 
 **Key Features**:
-- Multi-factor recommendation scoring (interests, social, location, behavior)
-- Real-time recommendation updates based on user actions
-- Recommendation diversity to avoid filter bubbles
-- A/B testing framework for recommendation algorithms
-- Recommendation feedback loop for continuous improvement
-- Explainable recommendations ("Because you liked...")
+- **Scoring Formula**: `score = (recency * location_proximity * interest_match * social_boost)`
+- Temporal decay for posts (24-48h lifecycle)
+- Persistent scoring for events (no decay)
+- Real-time recommendation updates
+- Diversity optimization to avoid filter bubbles
+- Explainable recommendations ("Because you're into jazz + nearby")
+- Cold start handling for new users
 
-### 4.3 Feed Generation Service
-**Purpose**: Creates personalized activity feeds combining social and algorithmic content
+### 4.3 Social Resonance & Post Evolution Service (formerly "Feed Generation")
+**Purpose**: Enable spontaneous social connections and post-to-event evolution
+
 **Responsibilities**:
-- Personalized home feed generation
-- Social feed from followed users
-- Trending activities feed
-- Category-based feeds
-- Feed ranking and optimization
-- Real-time feed updates
+- **Social Resonance Interactions**: "I'm down" / "Join me" buttons instead of passive likes
+- **Quick Connection**: Instant DM or group chat initiation from posts
+- **Post-to-Event Conversion**: Algorithms and UI for evolution flow
+- **Engagement Tracking**: Monitor post traction for conversion suggestions
+- **Signal Amplification**: Boost posts when friends engage
+- **Group Formation**: Facilitate micro-groups from recurring posts
 
 **Key Features**:
-- Hybrid feed combining social signals and algorithmic recommendations
-- Real-time feed updates when new activities are created
-- Feed personalization based on user engagement patterns
-- Content diversity to maintain user interest
-- Feed performance analytics and optimization
-- Infinite scroll with intelligent pagination
+- "I'm down" button with instant notification to host
+- "Join me" button to invite friends to post
+- Quick chat initiation from post (1-tap DM or group chat)
+- Post-to-event conversion UI with traction metrics
+- Automatic conversion suggestions when posts hit thresholds
+- Friend engagement indicators ("3 friends are interested")
+- Micro-group suggestions for recurring post patterns
+
+### 4.4 Implicit Communities (Phase 2 / v2)
+**Purpose**: Auto-generate communities from activity patterns without manual group creation
+
+**Responsibilities**:
+- **Pattern Detection**: Identify clusters of users with shared tags + locations
+- **Community Naming**: Auto-generate names (e.g., "Atlanta Musicians", "Midtown Runners")
+- **Member Suggestions**: Recommend users join discovered communities
+- **Community Feeds**: Curated feeds for each implicit community
+- **Growth Tracking**: Monitor community health and engagement
+
+**Key Features**:
+- Clustering algorithm based on tags, location, and engagement patterns
+- Auto-generated community names and descriptions
+- Community discovery UI ("You might like: Atlanta Musicians")
+- Community-specific feeds and recommendations
+- No manual group creation required—communities emerge organically
 
 ## Dependencies
 
 ### External Dependencies
-- **E01 Core Infrastructure**: Database, geolocation, notifications
-- **E02 User & Profile Management**: User profiles, interests, social graph
-- **E03 Activity Management**: Activity data, tags, RSVP information
-- **Search Infrastructure**: Elasticsearch or similar for advanced search capabilities
+- **E01 Core Infrastructure**: Database (PostGIS), geolocation, notifications, caching (Redis)
+- **E02 User & Profile Management**: User profiles, interests, social graph, location data
+- **E03 Activity Management**: Event data, tags, RSVP information
+- **Real-time Infrastructure**: WebSocket support for live post updates
 
 ### Internal Dependencies
-- **Activities table**: Core activity data for search and recommendations
+- **Posts table** (NEW): Ephemeral content with expiration and evolution tracking
+- **Events/Activities table**: Structured events (existing from E03)
+- **Post Reactions table** (NEW): "I'm down" / "Join me" interactions
+- **Activity Clusters table** (NEW): Implicit communities data
 - **Users table**: User profiles and interests for personalization
 - **Follows table**: Social graph for social recommendations
 - **RSVPs table**: User behavior data for collaborative filtering
@@ -91,65 +178,85 @@ The Discovery Engine epic transforms the rich data from activities, users, and s
 
 ## Success Criteria
 
-### Search Service
-- [ ] Search results return in under 200ms for 95% of queries
-- [ ] Search relevance score above 85% based on user engagement
-- [ ] Auto-suggestions improve search completion rate by 40%
-- [ ] Advanced filters reduce result set effectively without empty results
-- [ ] Search conversion rate (search → RSVP) above 15%
-- [ ] Search handles 10,000+ concurrent queries without degradation
+### Discovery Feed Service
+- [ ] Nearby feed returns results in under 200ms for 95% of queries
+- [ ] Temporal decay scoring prioritizes posts created within last 6 hours
+- [ ] Map view loads and displays 100+ pins without performance degradation
+- [ ] Post discovery → engagement rate above 30% ("I'm down" clicks)
+- [ ] Geo-proximity accuracy within 100m for location-based discovery
+- [ ] Feed handles 10,000+ concurrent users without degradation
 
 ### Recommendation Engine
+- [ ] Post recommendations prioritize content created within last 24 hours
 - [ ] Recommendation click-through rate above 25%
-- [ ] Recommendation → RSVP conversion rate above 12%
-- [ ] Users engage with recommended activities 3x more than random activities
-- [ ] Recommendation diversity score maintains 70%+ across categories
+- [ ] Recommendation → "I'm down" conversion rate above 15%
+- [ ] Users engage with recommended posts 3x more than random posts
+- [ ] Temporal weighting improves post engagement by 40% vs static scoring
 - [ ] Cold start recommendations work effectively for new users
 - [ ] Recommendation latency under 100ms for real-time updates
 
-### Feed Generation Service
-- [ ] Feed engagement rate above 40% (clicks, RSVPs, shares)
-- [ ] Feed refresh rate keeps content fresh with 20%+ new content daily
-- [ ] Feed loading time under 500ms for initial load
-- [ ] Infinite scroll performance maintains smooth UX
-- [ ] Feed personalization improves engagement by 60% vs generic feed
-- [ ] Real-time updates appear within 30 seconds of activity creation
+### Social Resonance & Post Evolution
+- [ ] "I'm down" button response time under 100ms
+- [ ] Post-to-event conversion rate above 10% for posts with 5+ reactions
+- [ ] Quick chat initiation works within 2 taps from post
+- [ ] Friend engagement signals increase post visibility by 50%
+- [ ] Post expiration system removes 95%+ of expired posts within 1 hour
+- [ ] Conversion suggestions appear when posts hit engagement thresholds
+
+### Implicit Communities (Phase 2)
+- [ ] Community detection identifies 80%+ of recurring activity patterns
+- [ ] Auto-generated community names are relevant 90%+ of the time
+- [ ] Community recommendations increase user engagement by 25%
+- [ ] Community feeds maintain 70%+ user satisfaction
 
 ## Acceptance Criteria
 
 ### Technical Requirements
-- [ ] Search infrastructure scales to 1M+ activities and 100K+ users
+- [ ] Posts table with auto-expiration (24-48h) implemented and tested
+- [ ] Geo-proximity queries (PostGIS) return results in under 200ms
+- [ ] Temporal decay scoring algorithm implemented for posts
+- [ ] Post-to-event conversion tracking and analytics in place
+- [ ] Real-time post updates via WebSocket for live feeds
+- [ ] Discovery feeds scale to 100K+ concurrent users
 - [ ] Recommendation algorithms process user data in real-time
-- [ ] Feed generation handles 50K+ concurrent users
-- [ ] Search indexes update within 5 minutes of content changes
-- [ ] Recommendation models retrain automatically with new data
 - [ ] All services maintain 99.9% uptime during peak usage
 
 ### User Experience Requirements
-- [ ] Search interface is intuitive with clear filtering options
-- [ ] Recommendations feel relevant and personalized
-- [ ] Feed provides engaging mix of social and algorithmic content
-- [ ] Discovery features help users find new interests and communities
-- [ ] Search and recommendations work well for both new and experienced users
-- [ ] Mobile experience is optimized for touch interaction and performance
+- [ ] Nearby feed shows real-time posts within configurable radius (default 5 miles)
+- [ ] For You feed balances posts and events based on user preferences
+- [ ] Map view displays posts/events with tap-to-open details
+- [ ] "I'm down" button provides instant feedback and notifications
+- [ ] Post-to-event conversion UI is intuitive and frictionless
+- [ ] Post expiration is transparent to users (countdown timers)
+- [ ] Mobile experience optimized for spontaneous post creation
+- [ ] Discovery features help users find niche activities in their area
 
 ### Integration Requirements
-- [ ] Discovery data enhances user profiles and social features
-- [ ] Search results integrate seamlessly with RSVP and payment flows
-- [ ] Recommendations drive engagement across all platform features
-- [ ] Feed content supports social interaction and community building
+- [ ] Posts integrate with E05 Social Interaction (comments, shares)
+- [ ] Post reactions ("I'm down") trigger notifications via E01
+- [ ] Post-to-event conversion creates proper event records in E03
+- [ ] Implicit communities feed into E02 user profile recommendations
 - [ ] Discovery analytics inform product and business decisions
+- [ ] Quick chat initiation integrates with messaging system
 
 ## Key Design Decisions
 
-### Search Architecture
-- **Hybrid Search**: Combine database queries with search engine for optimal performance
-- **Real-time Indexing**: Keep search indexes synchronized with live data
-- **Personalized Ranking**: Adjust search results based on user context and preferences
-- **Faceted Search**: Enable multi-dimensional filtering without complex UI
+### Posts vs Events Architecture
+- **Separate Tables**: Posts and Events are distinct entities with different lifecycles
+- **Expiration Strategy**: Posts auto-expire after 24-48h via cron job or TTL
+- **Evolution Tracking**: Posts maintain reference to converted events
+- **Unified Discovery**: Both posts and events appear in feeds with visual distinction
+
+### Discovery Feed Architecture
+- **PostGIS for Geo-Proximity**: Use spatial indexes for fast location-based queries
+- **Temporal Decay Formula**: `score = base_score * (1 / (1 + hours_since_creation))`
+- **Real-time Updates**: WebSocket push for new posts in user's proximity
+- **Hybrid Ranking**: Combine geo-proximity, interest match, and social signals
 
 ### Recommendation Strategy
-- **Multi-Algorithm Approach**: Combine multiple recommendation strategies for better coverage
+- **Multi-Factor Scoring**: `score = (recency * location_proximity * interest_match * social_boost)`
+- **Temporal Intelligence**: Posts decay quickly, events persist
+- **Cold Start Handling**: Use location + popular tags for new users
 - **Real-time Personalization**: Update recommendations based on immediate user actions
 - **Diversity Optimization**: Balance relevance with discovery of new content
 - **Explainable AI**: Provide clear reasons for recommendations to build user trust

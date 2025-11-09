@@ -2,31 +2,214 @@
 
 ## Schema Overview
 
-This document details the database schema requirements specific to Discovery Engine functionality. While the core data tables exist in previous epics, this epic focuses on search optimization, recommendation data structures, and analytics tables needed for intelligent discovery.
+This document details the database schema requirements specific to Discovery Engine functionality, including the **Posts vs Events dual model** that differentiates FunLynk from traditional event platforms. This schema supports spontaneous post discovery, temporal intelligence, social resonance, and post-to-event evolution.
 
-## Search Optimization Schema
+## Core Tables: Posts vs Events
+
+### Posts Table (NEW)
+Ephemeral, spontaneous "energy signals" that auto-expire after 24-48 hours.
+
+```sql
+CREATE TABLE posts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    -- Content
+    content TEXT NOT NULL,
+    tags TEXT[] DEFAULT '{}',
+
+    -- Location (optional but recommended)
+    location_name VARCHAR(255),
+    location_coordinates GEOGRAPHY(POINT, 4326),
+    geo_hash VARCHAR(12), -- For efficient proximity queries
+
+    -- Temporal metadata
+    approximate_time TIMESTAMP, -- "tonight", "this weekend", etc.
+    expires_at TIMESTAMP NOT NULL DEFAULT (NOW() + INTERVAL '48 hours'),
+
+    -- Mood/vibe tagging
+    mood VARCHAR(50), -- creative, social, active, chill, adventurous
+
+    -- Evolution tracking
+    evolved_to_event_id UUID REFERENCES activities(id),
+    conversion_triggered_at TIMESTAMP,
+
+    -- Engagement metrics
+    view_count INTEGER DEFAULT 0,
+    reaction_count INTEGER DEFAULT 0,
+
+    -- Timestamps
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    -- Indexes for discovery
+    INDEX idx_posts_location USING GIST(location_coordinates),
+    INDEX idx_posts_geo_hash (geo_hash),
+    INDEX idx_posts_expires_at (expires_at),
+    INDEX idx_posts_created_at (created_at DESC),
+    INDEX idx_posts_tags USING GIN(tags),
+    INDEX idx_posts_user (user_id),
+    INDEX idx_posts_active (expires_at) WHERE expires_at > NOW()
+);
+
+-- Full-text search for posts
+CREATE INDEX idx_posts_fulltext ON posts
+USING GIN(to_tsvector('english', content));
+
+-- Trigger to update updated_at
+CREATE TRIGGER update_posts_updated_at
+    BEFORE UPDATE ON posts
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+```
+
+### Post Reactions Table (NEW)
+Social resonance interactions: "I'm down" / "Join me" buttons.
+
+```sql
+CREATE TABLE post_reactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    -- Reaction types
+    reaction_type VARCHAR(20) NOT NULL, -- im_down, join_me, interested
+
+    -- Metadata
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    -- Constraints
+    UNIQUE(post_id, user_id, reaction_type),
+
+    -- Indexes
+    INDEX idx_post_reactions_post (post_id, reaction_type),
+    INDEX idx_post_reactions_user (user_id, created_at DESC)
+);
+```
+
+### Post Conversions Table (NEW)
+Track post-to-event evolution metrics.
+
+```sql
+CREATE TABLE post_conversions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID NOT NULL REFERENCES posts(id),
+    event_id UUID NOT NULL REFERENCES activities(id),
+
+    -- Conversion context
+    trigger_type VARCHAR(50) NOT NULL, -- manual, engagement_threshold, time_sensitive
+    reactions_at_conversion INTEGER DEFAULT 0,
+    comments_at_conversion INTEGER DEFAULT 0,
+    views_at_conversion INTEGER DEFAULT 0,
+
+    -- Conversion outcome
+    rsvp_conversion_rate DECIMAL(5,2), -- % of engaged users who RSVP'd
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    -- Indexes
+    INDEX idx_post_conversions_post (post_id),
+    INDEX idx_post_conversions_event (event_id),
+    INDEX idx_post_conversions_trigger (trigger_type)
+);
+```
+
+### Events Table Updates
+Add fields to track events originated from posts.
+
+```sql
+-- Add columns to existing activities table
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS originated_from_post_id UUID REFERENCES posts(id);
+ALTER TABLE activities ADD COLUMN IF NOT EXISTS conversion_date TIMESTAMP WITH TIME ZONE;
+
+-- Add index for post-originated events
+CREATE INDEX IF NOT EXISTS idx_activities_originated_from_post ON activities(originated_from_post_id)
+WHERE originated_from_post_id IS NOT NULL;
+```
+
+## Implicit Communities Schema (Phase 2)
+
+### Activity Clusters Table (NEW)
+Auto-generated communities from activity patterns.
+
+```sql
+CREATE TABLE activity_clusters (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    -- Cluster identity
+    cluster_name VARCHAR(100) NOT NULL, -- e.g., "Atlanta Musicians", "Midtown Runners"
+    cluster_description TEXT,
+
+    -- Cluster characteristics
+    tags TEXT[] DEFAULT '{}',
+    location_center GEOGRAPHY(POINT, 4326),
+    location_radius_km DECIMAL(10,2) DEFAULT 5.0,
+
+    -- Cluster metrics
+    member_count INTEGER DEFAULT 0,
+    post_count INTEGER DEFAULT 0,
+    event_count INTEGER DEFAULT 0,
+    activity_score FLOAT DEFAULT 0, -- Engagement-based scoring
+
+    -- Temporal tracking
+    last_activity_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    -- Indexes
+    INDEX idx_activity_clusters_location USING GIST(location_center),
+    INDEX idx_activity_clusters_tags USING GIN(tags),
+    INDEX idx_activity_clusters_score (activity_score DESC)
+);
+
+-- Cluster membership (implicit, auto-generated)
+CREATE TABLE cluster_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    cluster_id UUID NOT NULL REFERENCES activity_clusters(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    -- Membership strength
+    affinity_score FLOAT DEFAULT 0.5, -- How strongly user matches cluster
+
+    -- Engagement tracking
+    posts_in_cluster INTEGER DEFAULT 0,
+    events_in_cluster INTEGER DEFAULT 0,
+    last_activity_at TIMESTAMP WITH TIME ZONE,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    UNIQUE(cluster_id, user_id),
+    INDEX idx_cluster_members_cluster (cluster_id, affinity_score DESC),
+    INDEX idx_cluster_members_user (user_id)
+);
+```
+
+## Discovery Feed Optimization Schema
 
 ### Full-Text Search Indexes
 ```sql
--- Create full-text search index for activities
-CREATE INDEX idx_activities_fulltext ON activities 
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+-- Full-text search for posts (already created above)
+-- Full-text search for events/activities
+CREATE INDEX IF NOT EXISTS idx_activities_fulltext ON activities
 USING GIN(to_tsvector('english', title || ' ' || COALESCE(description, '') || ' ' || COALESCE(requirements, '')));
 
 -- Create search index for activity location and tags
-CREATE INDEX idx_activities_search_composite ON activities 
+CREATE INDEX IF NOT EXISTS idx_activities_search_composite ON activities
 USING GIN(
-    to_tsvector('english', title || ' ' || COALESCE(description, '')) gin_trgm_ops,
-    location_coordinates
+    to_tsvector('english', title || ' ' || COALESCE(description, ''))
 ) WHERE status = 'published' AND start_time > NOW();
 
 -- Create user search index
-CREATE INDEX idx_users_search ON users 
+CREATE INDEX IF NOT EXISTS idx_users_search ON users
 USING GIN(to_tsvector('english', username || ' ' || display_name || ' ' || COALESCE(bio, '')))
 WHERE is_active = TRUE;
 
 -- Create tag search index with trigram support for autocomplete
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE INDEX idx_tags_trigram ON tags USING GIN(name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_tags_trigram ON tags USING GIN(name gin_trgm_ops);
 ```
 
 ### Search Analytics Tables
@@ -66,6 +249,22 @@ CREATE TABLE search_suggestions (
 
 ### User Behavior Tracking
 ```sql
+-- Track interactions with both posts and events
+CREATE TABLE user_post_interactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    interaction_type VARCHAR(20) NOT NULL, -- view, click, reaction, share, dm
+    interaction_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    session_id VARCHAR(255),
+    source VARCHAR(50), -- nearby_feed, for_you_feed, map_view, notification
+    context_data JSONB, -- Additional context like feed position, recommendation reason
+
+    INDEX idx_user_post_interactions_user_time (user_id, interaction_time DESC),
+    INDEX idx_user_post_interactions_post (post_id, interaction_type),
+    INDEX idx_user_post_interactions_type_time (interaction_type, interaction_time DESC)
+);
+
 CREATE TABLE user_activity_interactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -75,7 +274,7 @@ CREATE TABLE user_activity_interactions (
     session_id VARCHAR(255),
     source VARCHAR(50), -- search, feed, recommendation, social
     context_data JSONB, -- Additional context like search query, recommendation reason
-    
+
     INDEX idx_user_interactions_user_time (user_id, interaction_time DESC),
     INDEX idx_user_interactions_activity (activity_id, interaction_type),
     INDEX idx_user_interactions_type_time (interaction_type, interaction_time DESC)
@@ -194,6 +393,20 @@ CREATE TABLE feed_generation_logs (
 
 ### Trending and Popular Content
 ```sql
+-- Trending posts (velocity-based)
+CREATE TABLE trending_posts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    trend_score FLOAT NOT NULL,
+    trend_factors JSONB, -- reaction_velocity, view_count, share_count, etc.
+    time_window VARCHAR(20) NOT NULL, -- hourly, 6hour, 12hour
+    calculated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    UNIQUE(post_id, time_window, calculated_at::date),
+    INDEX idx_trending_posts_score (trend_score DESC, calculated_at DESC),
+    INDEX idx_trending_posts_window (time_window, calculated_at DESC)
+);
+
 CREATE TABLE trending_activities (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     activity_id UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
@@ -201,7 +414,7 @@ CREATE TABLE trending_activities (
     trend_factors JSONB, -- rsvp_velocity, view_count, share_count, etc.
     time_window VARCHAR(20) NOT NULL, -- hourly, daily, weekly
     calculated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     UNIQUE(activity_id, time_window, calculated_at::date),
     INDEX idx_trending_activities_score (trend_score DESC, calculated_at DESC),
     INDEX idx_trending_activities_window (time_window, calculated_at DESC)
@@ -214,7 +427,7 @@ CREATE TABLE popular_tags (
     usage_velocity FLOAT NOT NULL, -- Rate of recent usage
     time_window VARCHAR(20) NOT NULL,
     calculated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     UNIQUE(tag_id, time_window, calculated_at::date),
     INDEX idx_popular_tags_score (popularity_score DESC, calculated_at DESC),
     INDEX idx_popular_tags_velocity (usage_velocity DESC, calculated_at DESC)
@@ -225,11 +438,40 @@ CREATE TABLE popular_tags (
 
 ### Content Performance Tracking
 ```sql
+-- Post discovery metrics
+CREATE TABLE post_discovery_metrics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    metric_date DATE NOT NULL DEFAULT CURRENT_DATE,
+
+    -- Discovery metrics
+    nearby_feed_impressions INTEGER DEFAULT 0,
+    nearby_feed_clicks INTEGER DEFAULT 0,
+    for_you_feed_impressions INTEGER DEFAULT 0,
+    for_you_feed_clicks INTEGER DEFAULT 0,
+    map_view_impressions INTEGER DEFAULT 0,
+    map_view_clicks INTEGER DEFAULT 0,
+
+    -- Engagement metrics
+    im_down_count INTEGER DEFAULT 0,
+    join_me_count INTEGER DEFAULT 0,
+    dm_initiated_count INTEGER DEFAULT 0,
+    share_count INTEGER DEFAULT 0,
+
+    -- Conversion metrics
+    converted_to_event BOOLEAN DEFAULT FALSE,
+    conversion_trigger VARCHAR(50),
+
+    UNIQUE(post_id, metric_date),
+    INDEX idx_post_metrics_date (metric_date DESC),
+    INDEX idx_post_metrics_post (post_id)
+);
+
 CREATE TABLE activity_discovery_metrics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     activity_id UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
     metric_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    
+
     -- Discovery metrics
     search_impressions INTEGER DEFAULT 0,
     search_clicks INTEGER DEFAULT 0,
@@ -237,16 +479,16 @@ CREATE TABLE activity_discovery_metrics (
     recommendation_clicks INTEGER DEFAULT 0,
     feed_impressions INTEGER DEFAULT 0,
     feed_clicks INTEGER DEFAULT 0,
-    
+
     -- Conversion metrics
     views_to_rsvp_rate FLOAT DEFAULT 0,
     discovery_to_rsvp_count INTEGER DEFAULT 0,
-    
+
     -- Engagement metrics
     average_view_duration_seconds INTEGER DEFAULT 0,
     share_count INTEGER DEFAULT 0,
     save_count INTEGER DEFAULT 0,
-    
+
     UNIQUE(activity_id, metric_date),
     INDEX idx_activity_metrics_date (metric_date DESC),
     INDEX idx_activity_metrics_performance (search_clicks + recommendation_clicks + feed_clicks DESC)
@@ -340,7 +582,75 @@ END;
 $$ LANGUAGE plpgsql;
 ```
 
-### Recommendation Scoring Function
+### Post Discovery Scoring Function (NEW)
+```sql
+-- Temporal decay scoring for posts
+CREATE OR REPLACE FUNCTION calculate_post_discovery_score(
+    p_user_id UUID,
+    p_post_id UUID
+)
+RETURNS TABLE(
+    score FLOAT,
+    reasoning JSONB
+) AS $$
+DECLARE
+    user_profile RECORD;
+    post_record RECORD;
+    final_score FLOAT := 0;
+    score_breakdown JSONB := '{}';
+    recency_score FLOAT := 0;
+    location_score FLOAT := 0;
+    interest_score FLOAT := 0;
+    social_score FLOAT := 0;
+    hours_since_creation FLOAT;
+BEGIN
+    -- Get user and post data
+    SELECT * INTO user_profile FROM users WHERE id = p_user_id;
+    SELECT * INTO post_record FROM posts WHERE id = p_post_id;
+
+    -- Calculate hours since creation
+    hours_since_creation := EXTRACT(EPOCH FROM (NOW() - post_record.created_at)) / 3600;
+
+    -- Temporal decay (40% weight) - CRITICAL for posts
+    -- Formula: 1 / (1 + hours_since_creation)
+    recency_score := 1.0 / (1.0 + hours_since_creation);
+    final_score := final_score + (recency_score * 0.40);
+    score_breakdown := jsonb_set(score_breakdown, '{recency_score}', to_jsonb(recency_score));
+    score_breakdown := jsonb_set(score_breakdown, '{hours_old}', to_jsonb(hours_since_creation));
+
+    -- Location proximity (30% weight)
+    IF user_profile.location_coordinates IS NOT NULL AND post_record.location_coordinates IS NOT NULL THEN
+        location_score := 1.0 - LEAST(1.0, ST_Distance(user_profile.location_coordinates, post_record.location_coordinates) / 8000); -- 8km max for posts
+        final_score := final_score + (location_score * 0.30);
+    END IF;
+    score_breakdown := jsonb_set(score_breakdown, '{location_score}', to_jsonb(location_score));
+
+    -- Interest matching (20% weight)
+    IF user_profile.interests IS NOT NULL AND array_length(user_profile.interests, 1) > 0 AND post_record.tags IS NOT NULL THEN
+        SELECT COUNT(*) * 1.0 / array_length(user_profile.interests, 1) INTO interest_score
+        FROM unnest(user_profile.interests) AS user_interest
+        WHERE user_interest = ANY(post_record.tags);
+    END IF;
+    final_score := final_score + (interest_score * 0.20);
+    score_breakdown := jsonb_set(score_breakdown, '{interest_score}', to_jsonb(interest_score));
+
+    -- Social boost (10% weight) - friends who reacted
+    SELECT COUNT(*) * 0.1 INTO social_score
+    FROM post_reactions pr
+    JOIN follows f ON pr.user_id = f.following_id
+    WHERE pr.post_id = p_post_id
+    AND f.follower_id = p_user_id;
+
+    final_score := final_score + (social_score * 0.10);
+    score_breakdown := jsonb_set(score_breakdown, '{social_score}', to_jsonb(social_score));
+
+    -- Return final score and breakdown
+    RETURN QUERY SELECT GREATEST(0, LEAST(1, final_score)), score_breakdown;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+### Event Recommendation Scoring Function
 ```sql
 CREATE OR REPLACE FUNCTION calculate_recommendation_score(
     p_user_id UUID,
@@ -363,38 +673,38 @@ BEGIN
     -- Get user and activity data
     SELECT * INTO user_profile FROM users WHERE id = p_user_id;
     SELECT * INTO activity_record FROM activities WHERE id = p_activity_id;
-    
+
     -- Interest matching (35% weight)
     IF user_profile.interests IS NOT NULL AND array_length(user_profile.interests, 1) > 0 THEN
         SELECT COUNT(*) * 1.0 / array_length(user_profile.interests, 1) INTO interest_score
         FROM unnest(user_profile.interests) AS user_interest
         WHERE user_interest = ANY(
-            SELECT t.name FROM activity_tags at 
-            JOIN tags t ON at.tag_id = t.id 
+            SELECT t.name FROM activity_tags at
+            JOIN tags t ON at.tag_id = t.id
             WHERE at.activity_id = p_activity_id
         );
     END IF;
     final_score := final_score + (interest_score * 0.35);
     score_breakdown := jsonb_set(score_breakdown, '{interest_score}', to_jsonb(interest_score));
-    
+
     -- Social signals (30% weight)
     SELECT COUNT(*) * 1.0 / GREATEST(1, (SELECT following_count FROM users WHERE id = p_user_id)) INTO social_score
     FROM follows f
-    WHERE f.follower_id = p_user_id 
+    WHERE f.follower_id = p_user_id
     AND f.following_id = activity_record.host_id;
-    
+
     -- Add social boost for activities with RSVPs from followed users
     social_score := social_score + (
         SELECT COUNT(*) * 0.1 FROM rsvps r
         JOIN follows f ON r.user_id = f.following_id
-        WHERE r.activity_id = p_activity_id 
+        WHERE r.activity_id = p_activity_id
         AND f.follower_id = p_user_id
         AND r.status = 'confirmed'
     );
-    
+
     final_score := final_score + (social_score * 0.30);
     score_breakdown := jsonb_set(score_breakdown, '{social_score}', to_jsonb(social_score));
-    
+
     -- Location proximity (20% weight)
     IF user_profile.location_coordinates IS NOT NULL AND activity_record.location_coordinates IS NOT NULL THEN
         location_score := 1.0 - LEAST(1.0, ST_Distance(user_profile.location_coordinates, activity_record.location_coordinates) / 25000); -- 25km max
