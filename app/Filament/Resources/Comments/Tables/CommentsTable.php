@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Filament\Resources\Comments\Tables;
+
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+
+class CommentsTable
+{
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('id')
+                    ->label('ID'),
+                TextColumn::make('activity.title')
+                    ->searchable(),
+                TextColumn::make('user.id')
+                    ->searchable(),
+                TextColumn::make('parent_comment_id'),
+                IconColumn::make('is_edited')
+                    ->boolean(),
+                IconColumn::make('is_deleted')
+                    ->boolean(),
+                TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                //
+            ])
+            ->recordActions([
+                EditAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+}

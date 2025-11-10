@@ -32,10 +32,8 @@ class UserFactory extends Factory
             'bio' => fake()->paragraph(),
             'profile_image_url' => fake()->imageUrl(),
             'location_name' => fake()->city(),
-            'location_coordinates' => [
-                'lat' => fake()->latitude(),
-                'lng' => fake()->longitude(),
-            ],
+            // location_coordinates is a PostGIS geography column; set via raw SQL when needed
+            'location_coordinates' => null,
             'interests' => fake()->randomElements(
                 ['sports', 'music', 'outdoors', 'gaming', 'travel'],
                 3

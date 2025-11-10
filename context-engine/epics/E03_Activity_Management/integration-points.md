@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document defines how Activity Management services integrate with other epics and external systems. It establishes the data flow patterns, shared functionality, and integration requirements that enable seamless activity lifecycle management across the platform.
+This document defines how Activity Management (Event Management) services integrate with other epics and external systems. It establishes the data flow patterns, shared functionality, and integration requirements that enable seamless event lifecycle management across the platform.
+
+**Important**: This epic handles **Events** (structured, time-anchored experiences), NOT **Posts** (ephemeral content from E04). See E04 Discovery Engine for Posts integration.
 
 ## Integration Architecture
 
@@ -117,20 +119,26 @@ class ActivityEnrichmentService {
 
 ### E04 Discovery Engine Integration
 
-**Activity Data Powers Discovery**:
-- Activity metadata enables search and filtering
+**Event Data Powers Discovery**:
+- Event metadata enables search and filtering
 - Tag data supports category-based discovery
-- RSVP data influences activity popularity ranking
+- RSVP data influences event popularity ranking
 - Location data enables proximity-based recommendations
+
+**Post-to-Event Conversion** (Critical Integration):
+- E04 initiates post-to-event conversion when posts gain traction
+- E03 creates events with `originated_from_post_id` and `conversion_date`
+- E03 notifies users who reacted to the original post
+- E04 tracks conversion metrics and success rates
 
 **Integration Points**:
 ```typescript
-// Discovery Engine uses Activity Management for search
+// Discovery Engine uses Activity Management for event search
 class ActivityDiscoveryService {
   async searchActivities(query: SearchQuery, userId: string): Promise<SearchResult[]> {
     // Get user context for personalization
     const userProfile = await this.profileService.getProfile(userId);
-    
+
     // Build search filters
     const filters: ActivityFilters = {
       text_query: query.text,
@@ -141,10 +149,10 @@ class ActivityDiscoveryService {
       price_range: query.price_range,
       skill_level: query.skill_level
     };
-    
+
     // Execute search with ranking
     const activities = await this.activityService.searchActivities(filters);
-    
+
     // Enhance with user-specific data
     const enhancedActivities = await Promise.all(
       activities.map(async (activity) => {
@@ -188,6 +196,64 @@ class ActivityDiscoveryService {
       ...interestActivities.map(a => ({ ...a, source: 'interests', weight: 0.7 })),
       ...trendingActivities.map(a => ({ ...a, source: 'trending', weight: 0.3 }))
     ]);
+  }
+}
+```
+
+**Post-to-Event Conversion Flow**:
+```typescript
+// E04 Discovery Engine initiates conversion
+class PostConversionService {
+  async convertPostToEvent(postId: string, hostId: string): Promise<Activity> {
+    // Get post data from E04
+    const post = await this.postService.getPost(postId);
+
+    // Validate conversion eligibility
+    if (post.reaction_count < 5) {
+      throw new Error('Post needs at least 5 reactions to convert');
+    }
+
+    // Call E03 Activity Management to create event
+    const eventData: ActivityCreate = {
+      host_id: hostId,
+      title: this.extractTitleFromPost(post.content),
+      description: post.content,
+      location_name: post.location_name,
+      location_coordinates: post.location_coordinates,
+      start_time: post.approximate_time || this.suggestStartTime(),
+      tags: post.tags,
+      status: 'draft', // Host can review before publishing
+
+      // Conversion tracking
+      originated_from_post_id: postId,
+      conversion_date: new Date()
+    };
+
+    const event = await this.activityCRUDService.createActivity(eventData);
+
+    // Record conversion in E04
+    await this.postConversionTracker.recordConversion({
+      post_id: postId,
+      event_id: event.id,
+      trigger_type: 'manual',
+      reactions_at_conversion: post.reaction_count,
+      comments_at_conversion: 0,
+      views_at_conversion: post.view_count
+    });
+
+    // Notify users who reacted to the post
+    const reactedUsers = await this.postReactionService.getUsersWhoReacted(postId);
+    await this.notificationService.sendBulkNotifications(reactedUsers, {
+      type: 'post_converted_to_event',
+      title: 'Post Became an Event!',
+      message: `"${post.content.substring(0, 50)}..." is now a full event. RSVP now!`,
+      data: { event_id: event.id, post_id: postId }
+    });
+
+    // Mark post as evolved in E04
+    await this.postService.markPostAsEvolved(postId, event.id);
+
+    return event;
   }
 }
 ```

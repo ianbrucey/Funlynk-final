@@ -2,12 +2,16 @@
 
 ## Schema Overview
 
-This document defines the complete database schema for the Funlynk platform. The schema is designed to support all features across all epics while maintaining data integrity, performance, and scalability.
+This document defines the complete database schema for the FunLynk platform. The schema is designed to support all features across all epics while maintaining data integrity, performance, and scalability.
+
+**Important**: This schema supports the **Posts vs Events dual model**:
+- **Posts**: Ephemeral content (24-48h lifespan) for spontaneous discovery - E04
+- **Events**: Structured activities with RSVPs and payments - E03
 
 ## Database Technology
 
 - **Primary Database**: PostgreSQL (via Supabase)
-- **Extensions**: PostGIS (for geospatial queries)
+- **Extensions**: PostGIS (for geospatial queries - critical for post/event discovery)
 - **Authentication**: Supabase Auth (extends PostgreSQL with auth schema)
 
 ## Core Tables
@@ -44,8 +48,55 @@ CREATE INDEX idx_users_stripe_account ON users(stripe_account_id);
 CREATE INDEX idx_users_is_host ON users(is_host) WHERE is_host = TRUE;
 ```
 
-### Activities Table
+### Posts Table (E04 Discovery Engine)
 ```sql
+-- Ephemeral content for spontaneous discovery (24-48h lifespan)
+CREATE TABLE posts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    -- Content
+    content TEXT NOT NULL,
+    tags TEXT[] DEFAULT '{}',
+
+    -- Location (optional but recommended)
+    location_name VARCHAR(255),
+    location_coordinates GEOGRAPHY(POINT, 4326),
+    geo_hash VARCHAR(12), -- For efficient proximity queries
+
+    -- Temporal metadata
+    approximate_time TIMESTAMP, -- "tonight", "this weekend", etc.
+    expires_at TIMESTAMP NOT NULL DEFAULT (NOW() + INTERVAL '48 hours'),
+
+    -- Mood/vibe tagging
+    mood VARCHAR(50), -- creative, social, active, chill, adventurous
+
+    -- Evolution tracking
+    evolved_to_event_id UUID REFERENCES activities(id),
+    conversion_triggered_at TIMESTAMP,
+
+    -- Engagement metrics
+    view_count INTEGER DEFAULT 0,
+    reaction_count INTEGER DEFAULT 0,
+
+    -- Timestamps
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Indexes for discovery
+CREATE INDEX idx_posts_location ON posts USING GIST(location_coordinates);
+CREATE INDEX idx_posts_geo_hash ON posts(geo_hash);
+CREATE INDEX idx_posts_expires_at ON posts(expires_at);
+CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
+CREATE INDEX idx_posts_tags ON posts USING GIN(tags);
+CREATE INDEX idx_posts_user ON posts(user_id);
+CREATE INDEX idx_posts_active ON posts(expires_at) WHERE expires_at > NOW();
+```
+
+### Activities Table (E03 Activity Management)
+```sql
+-- Structured events with RSVPs and payments
 CREATE TABLE activities (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     host_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -67,12 +118,17 @@ CREATE TABLE activities (
     tags TEXT[] NOT NULL DEFAULT '{}',
     images TEXT[], -- Array of image URLs
     status VARCHAR(20) DEFAULT 'active', -- active, cancelled, completed
+
+    -- Post-to-Event Conversion (E04 integration)
+    originated_from_post_id UUID REFERENCES posts(id),
+    conversion_date TIMESTAMP WITH TIME ZONE,
+
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     -- Constraints
     CONSTRAINT valid_price CHECK (
-        (is_paid = FALSE AND price_cents IS NULL) OR 
+        (is_paid = FALSE AND price_cents IS NULL) OR
         (is_paid = TRUE AND price_cents > 0)
     ),
     CONSTRAINT valid_times CHECK (end_time IS NULL OR end_time > start_time),
@@ -87,6 +143,48 @@ CREATE INDEX idx_activities_tags ON activities USING GIN(tags);
 CREATE INDEX idx_activities_type ON activities(activity_type);
 CREATE INDEX idx_activities_status ON activities(status);
 CREATE INDEX idx_activities_is_paid ON activities(is_paid);
+CREATE INDEX idx_activities_originated_from_post ON activities(originated_from_post_id) WHERE originated_from_post_id IS NOT NULL;
+```
+
+### Post Reactions Table (E04 Discovery Engine)
+```sql
+-- "I'm down" / "Join me" reactions for posts
+CREATE TABLE post_reactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reaction_type VARCHAR(20) NOT NULL, -- im_down, join_me, interested
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    UNIQUE(post_id, user_id)
+);
+
+-- Indexes
+CREATE INDEX idx_post_reactions_post ON post_reactions(post_id);
+CREATE INDEX idx_post_reactions_user ON post_reactions(user_id);
+CREATE INDEX idx_post_reactions_type ON post_reactions(reaction_type);
+```
+
+### Post Conversions Table (E04 Discovery Engine)
+```sql
+-- Track post-to-event evolution
+CREATE TABLE post_conversions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    event_id UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
+    trigger_type VARCHAR(20) NOT NULL, -- manual, automatic, threshold
+    reactions_at_conversion INTEGER DEFAULT 0,
+    comments_at_conversion INTEGER DEFAULT 0,
+    views_at_conversion INTEGER DEFAULT 0,
+    rsvp_conversion_rate FLOAT, -- % of reactors who RSVP'd
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    UNIQUE(post_id)
+);
+
+-- Indexes
+CREATE INDEX idx_post_conversions_post ON post_conversions(post_id);
+CREATE INDEX idx_post_conversions_event ON post_conversions(event_id);
 ```
 
 ### Follows Table (Social Graph)
@@ -107,8 +205,9 @@ CREATE INDEX idx_follows_follower ON follows(follower_id);
 CREATE INDEX idx_follows_following ON follows(following_id);
 ```
 
-### RSVPs Table (Activity Attendance)
+### RSVPs Table (Event Attendance - E03)
 ```sql
+-- RSVPs are for EVENTS only (not posts - posts use reactions)
 CREATE TABLE rsvps (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -119,7 +218,7 @@ CREATE TABLE rsvps (
     payment_status VARCHAR(20), -- pending, succeeded, failed, refunded
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     -- Constraints
     UNIQUE(user_id, activity_id)
 );

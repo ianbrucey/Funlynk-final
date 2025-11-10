@@ -4,17 +4,19 @@
 
 The Core Infrastructure epic establishes the foundational services that all other system components depend on. This epic provides the bedrock data layer, security, location services, and communication infrastructure that enables all user-facing features.
 
+**Note**: This epic defines the database schema for both **Posts** (ephemeral content from E04) and **Events** (structured activities from E03). The dual content model is a core architectural decision.
+
 ## Epic Scope
 
 ### In Scope
-- **Database Schema & Models**: Complete data structure for the entire application
+- **Database Schema & Models**: Complete data structure for the entire application (including posts and events)
 - **Authentication Service**: User identity, registration, login, session management
-- **Geolocation Service**: Location-based logic, spatial queries, distance calculations
+- **Geolocation Service**: Location-based logic, spatial queries, distance calculations (for both posts and events)
 - **Notification Service**: Centralized communication hub for push notifications and emails
 
 ### Out of Scope
 - User-facing features (handled by other epics)
-- Business logic specific to activities, payments, or social features
+- Business logic specific to posts, events, payments, or social features
 - Admin dashboard UI (handled by E07 Administration)
 
 ## Component Breakdown
@@ -23,22 +25,31 @@ The Core Infrastructure epic establishes the foundational services that all othe
 **Purpose**: Defines the complete data structure of the application
 **Responsibilities**:
 - User data models (profiles, authentication)
-- Activity data models (events, RSVPs, comments)
+- **Posts data models** (ephemeral content, reactions, conversions) - E04
+- **Events data models** (structured activities, RSVPs, comments) - E03
 - Social graph models (follows, relationships)
 - Payment data models (transactions, stripe accounts)
 - System data models (tags, notifications, moderation)
 
 **Key Tables to Define**:
 - `users` - Core user identity and profile data
-- `activities` - Event/activity core data
+- **`posts`** - Ephemeral content (24-48h lifespan) - E04
+- **`post_reactions`** - "I'm down" / "Join me" interactions - E04
+- **`post_conversions`** - Post-to-event evolution tracking - E04
+- `activities` - Structured events with RSVPs - E03
 - `follows` - Social graph relationships
-- `rsvps` - Activity attendance tracking
-- `comments` - User discussions on activities
-- `tags` - Categorization system
+- `rsvps` - Event attendance tracking (not for posts)
+- `comments` - User discussions on events
+- `tags` - Categorization system (shared by posts and events)
 - `notifications` - Communication tracking
 - `payments` - Transaction records
 - `stripe_accounts` - Payment provider integration
 - `reports` - Content moderation system
+
+**Posts vs Events Architecture**:
+- **Posts**: Ephemeral, spontaneous "energy signals" (E04 Discovery Engine)
+- **Events**: Structured, time-anchored experiences (E03 Activity Management)
+- **Conversion**: Posts can evolve into events based on traction
 
 ### 1.2 Authentication Service
 **Purpose**: Manages user identity and security across the platform
@@ -57,19 +68,23 @@ The Core Infrastructure epic establishes the foundational services that all othe
 - User verification workflow
 
 ### 1.3 Geolocation Service
-**Purpose**: Handles all location-based functionality
+**Purpose**: Handles all location-based functionality for both posts and events
 **Responsibilities**:
 - Process and validate coordinates
 - Calculate distances between points
-- Perform spatial queries (find activities within radius)
-- Optimize geospatial database queries
+- Perform spatial queries (find posts/events within radius)
+- Optimize geospatial database queries (PostGIS)
 - Handle location privacy and permissions
 
 **Key Decisions Needed**:
 - PostGIS extension setup and configuration
-- Spatial indexing strategy for performance
+- Spatial indexing strategy for performance (critical for post discovery)
 - Location precision and privacy levels
 - Distance calculation algorithms
+
+**Posts vs Events Considerations**:
+- **Posts**: Tighter radius (5-10km) for spontaneous, local discovery
+- **Events**: Wider radius (25-50km) for planned activities worth traveling to
 
 ### 1.4 Notification Service
 **Purpose**: Centralized service for all platform communications

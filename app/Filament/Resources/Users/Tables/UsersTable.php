@@ -7,8 +7,6 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class UsersTable
@@ -17,49 +15,53 @@ class UsersTable
     {
         return $table
             ->columns([
-                TextColumn::make('display_name')
-                    ->label('Display name')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('username')
-                    ->searchable()
-                    ->sortable(),
+                TextColumn::make('id')
+                    ->label('ID'),
                 TextColumn::make('email')
                     ->label('Email address')
-                    ->searchable()
+                    ->searchable(),
+                TextColumn::make('username')
+                    ->searchable(),
+                TextColumn::make('display_name')
+                    ->searchable(),
+                TextColumn::make('email_verified_at')
+                    ->dateTime()
+                    ->sortable(),
+                TextColumn::make('location_name')
+                    ->searchable(),
+                IconColumn::make('is_host')
+                    ->boolean(),
+                TextColumn::make('stripe_account_id')
+                    ->searchable(),
+                IconColumn::make('stripe_onboarding_complete')
+                    ->boolean(),
+                TextColumn::make('follower_count')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('following_count')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('activity_count')
+                    ->numeric()
                     ->sortable(),
                 IconColumn::make('is_verified')
-                    ->boolean()
-                    ->label('Verified'),
+                    ->boolean(),
                 IconColumn::make('is_active')
-                    ->boolean()
-                    ->label('Active'),
-                IconColumn::make('is_host')
-                    ->boolean()
-                    ->label('Host'),
+                    ->boolean(),
                 TextColumn::make('privacy_level')
-                    ->badge()
-                    ->sortable(),
+                    ->searchable(),
                 TextColumn::make('created_at')
-                    ->dateTime('M j, Y')
+                    ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
-                    ->dateTime('M j, Y')
+                    ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('location_coordinates'),
             ])
             ->filters([
-                TernaryFilter::make('is_active')
-                    ->label('Active'),
-                TernaryFilter::make('is_verified')
-                    ->label('Verified'),
-                SelectFilter::make('privacy_level')
-                    ->options([
-                        'public' => 'Public',
-                        'friends' => 'Friends only',
-                        'private' => 'Private',
-                    ]),
+                //
             ])
             ->recordActions([
                 EditAction::make(),

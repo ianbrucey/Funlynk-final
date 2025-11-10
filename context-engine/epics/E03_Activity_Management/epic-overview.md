@@ -2,41 +2,63 @@
 
 ## Epic Purpose
 
-The Activity Management epic provides the core functionality for creating, managing, and participating in activities. This epic enables hosts to create engaging activities, participants to discover and join activities, and the platform to manage the entire activity lifecycle from creation to completion.
+The Activity Management epic provides the core functionality for creating, managing, and participating in **structured events** (referred to as "activities" in the database). This epic enables hosts to create formal events with RSVPs, participants to register and attend, and the platform to manage the entire event lifecycle from creation to completion.
+
+**Important Distinction**: This epic handles **Events** (structured, time-anchored experiences with RSVPs/payments), NOT **Posts** (ephemeral, spontaneous invitations). See E04 Discovery Engine for the Posts vs Events architecture.
 
 ## Epic Scope
 
 ### In Scope
-- **Activity CRUD Service**: Complete activity creation, reading, updating, and deletion
-- **Tagging & Category System**: Flexible tagging and categorization for activity discovery
+- **Activity CRUD Service**: Complete event creation, reading, updating, and deletion
+- **Tagging & Category System**: Flexible tagging and categorization for event discovery
 - **RSVP & Attendance Service**: Registration, attendance tracking, and capacity management
 - **Activity Lifecycle Management**: Status transitions, cancellations, and completions
+- **Post-to-Event Conversion**: Handle events that originated from posts (created via E04)
 
 ### Out of Scope
+- **Posts** (ephemeral content handled by E04 Discovery Engine)
 - Activity discovery algorithms (handled by E04 Discovery Engine)
 - Payment processing for paid activities (handled by E06 Payments & Monetization)
 - Social interactions on activities (handled by E05 Social Interaction)
 - Administrative moderation (handled by E07 Administration)
 
+## Posts vs Events: Terminology Clarification
+
+**In FunLynk's Architecture**:
+- **Posts** = Ephemeral, spontaneous "energy signals" (24-48h lifespan) - handled by E04
+- **Events** = Structured, time-anchored experiences with RSVPs - handled by E03 (this epic)
+- **Activities** = Database table name for Events (legacy naming from before Posts existed)
+
+**In This Epic**:
+- "Activity" and "Event" are used interchangeably
+- All references to "activities" mean **structured events**, not posts
+- Posts are explicitly out of scope for this epic
+
 ## Component Breakdown
 
 ### 3.1 Activity CRUD Service
-**Purpose**: Manages the complete lifecycle of activities from creation to deletion
+**Purpose**: Manages the complete lifecycle of structured events from creation to deletion
 **Responsibilities**:
-- Activity creation with validation and enrichment
-- Activity updates and modifications by hosts
-- Activity deletion and cancellation workflows
-- Activity status management (draft, published, cancelled, completed)
-- Activity image upload and management
-- Activity location validation and geocoding
+- Event creation with validation and enrichment (direct creation OR post-to-event conversion)
+- Event updates and modifications by hosts
+- Event deletion and cancellation workflows
+- Event status management (draft, published, cancelled, completed)
+- Event image upload and management
+- Event location validation and geocoding
+- Post-to-event conversion handling (when events originate from posts)
 
 **Key Features**:
-- Rich activity creation with title, description, location, time, capacity
-- Multiple activity images with automatic optimization
+- Rich event creation with title, description, location, time, capacity
+- Multiple event images with automatic optimization
 - Flexible scheduling (one-time, recurring, multi-day events)
 - Capacity management with waitlists
-- Host-controlled activity settings and permissions
-- Activity templates for common activity types
+- Host-controlled event settings and permissions
+- Event templates for common event types
+- **Post-originated events**: Track events that evolved from posts (via `originated_from_post_id`)
+
+**Event Creation Paths**:
+1. **Direct Creation**: Host creates event from scratch (traditional flow)
+2. **Post Conversion**: Host converts popular post to event (via E04 Discovery Engine)
 
 ### 3.2 Tagging & Category System
 **Purpose**: Provides flexible categorization and tagging for activity organization and discovery
@@ -79,24 +101,35 @@ The Activity Management epic provides the core functionality for creating, manag
 ### External Dependencies
 - **E01 Core Infrastructure**: Database, authentication, geolocation, notifications
 - **E02 User & Profile Management**: User profiles, social graph, host verification
+- **E04 Discovery Engine**: Post-to-event conversion flow (posts table, conversion tracking)
 - **Supabase Storage**: Activity image storage and CDN
 - **External APIs**: Geocoding services, weather APIs (optional)
 
 ### Internal Dependencies
-- **Activities table**: Core activity data from E01
+- **Activities table**: Core event data from E01 (with post conversion fields)
+- **Posts table**: Source posts for converted events (from E04)
+- **Post Conversions table**: Tracking post-to-event evolution (from E04)
 - **RSVPs table**: Participant registration data from E01
 - **Tags table**: Activity categorization from E01
 - **Users table**: Host and participant profiles from E01/E02
 
+### Integration with E04 Discovery Engine
+- **Post-to-Event Conversion**: E04 initiates conversion, E03 creates the event
+- **Conversion Tracking**: E03 records `originated_from_post_id` and `conversion_date`
+- **Engaged User Notification**: E03 notifies users who reacted to the original post
+- **Post Linking**: Converted events maintain reference to original post for context
+
 ## Success Criteria
 
 ### Activity CRUD Service
-- [ ] Hosts can create activities in under 2 minutes
-- [ ] Activity creation has 95%+ success rate
-- [ ] Activity updates reflect immediately for all participants
-- [ ] Activity images upload and optimize within 10 seconds
+- [ ] Hosts can create events in under 2 minutes (direct creation)
+- [ ] Post-to-event conversion completes in under 30 seconds
+- [ ] Event creation has 95%+ success rate
+- [ ] Event updates reflect immediately for all participants
+- [ ] Event images upload and optimize within 10 seconds
 - [ ] Location validation provides accurate geocoding
-- [ ] Activity templates reduce creation time by 50%
+- [ ] Event templates reduce creation time by 50%
+- [ ] Post-originated events properly track `originated_from_post_id`
 
 ### Tagging & Category System
 - [ ] Tag suggestions are relevant and helpful

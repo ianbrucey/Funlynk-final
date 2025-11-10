@@ -2,15 +2,17 @@
 
 ## Schema Overview
 
-This document details the database schema requirements specific to Activity Management. The core `activities`, `rsvps`, `tags`, and `activity_tags` tables were defined in E01 Core Infrastructure. This epic focuses on schema optimizations, additional tables, and specific queries needed for activity management functionality.
+This document details the database schema requirements specific to Activity Management (structured events). The core `activities`, `rsvps`, `tags`, and `activity_tags` tables were defined in E01 Core Infrastructure. This epic focuses on schema optimizations, additional tables, and specific queries needed for event management functionality.
+
+**Important**: This schema handles **Events** (structured, time-anchored experiences), NOT **Posts** (ephemeral content). See E04 Discovery Engine for Posts schema.
 
 ## Core Tables Review
 
 ### Activities Table (from E01)
-The activities table from E01 Core Infrastructure provides the foundation:
+The activities table from E01 Core Infrastructure provides the foundation for **structured events**:
 
 ```sql
--- Core activity data (defined in E01)
+-- Core activity/event data (defined in E01)
 CREATE TABLE activities (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     host_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -32,13 +34,24 @@ CREATE TABLE activities (
     skill_level VARCHAR(20),
     is_recurring BOOLEAN DEFAULT FALSE,
     recurring_pattern JSONB,
+
+    -- Post-to-Event Conversion Fields (added for E04 integration)
+    originated_from_post_id UUID REFERENCES posts(id), -- NULL if created directly
+    conversion_date TIMESTAMP WITH TIME ZONE, -- When post was converted to event
+
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Index for post-originated events
+CREATE INDEX idx_activities_originated_from_post ON activities(originated_from_post_id)
+WHERE originated_from_post_id IS NOT NULL;
 ```
 
+**Note**: The `activities` table stores **Events** (structured experiences), not **Posts** (ephemeral content from E04).
+
 ### RSVPs Table (from E01)
-The participant registration foundation:
+The participant registration foundation for **events**:
 
 ```sql
 -- RSVP data (defined in E01)
@@ -54,10 +67,12 @@ CREATE TABLE rsvps (
     special_requests TEXT,
     payment_status VARCHAR(20) DEFAULT 'pending',
     payment_intent_id VARCHAR(255),
-    
+
     UNIQUE(activity_id, user_id)
 );
 ```
+
+**Note**: RSVPs are for **Events** only. Posts use "reactions" (see E04 Discovery Engine for `post_reactions` table).
 
 ### Tags and Activity_Tags Tables (from E01)
 The tagging system foundation:
@@ -544,7 +559,78 @@ ORDER BY usage_count DESC, name ASC
 LIMIT 10;
 ```
 
+### Post-to-Event Conversion Queries
+```sql
+-- Get events that originated from posts
+SELECT
+    a.*,
+    p.content as original_post_content,
+    p.created_at as post_created_at,
+    p.reaction_count as post_reactions,
+    pc.trigger_type as conversion_trigger,
+    pc.reactions_at_conversion,
+    pc.rsvp_conversion_rate
+FROM activities a
+JOIN posts p ON a.originated_from_post_id = p.id
+LEFT JOIN post_conversions pc ON pc.event_id = a.id
+WHERE a.originated_from_post_id IS NOT NULL
+ORDER BY a.conversion_date DESC;
+
+-- Get conversion metrics for a specific event
+SELECT
+    a.id as event_id,
+    a.title as event_title,
+    p.id as post_id,
+    p.content as post_content,
+    pc.reactions_at_conversion,
+    pc.comments_at_conversion,
+    pc.views_at_conversion,
+    pc.rsvp_conversion_rate,
+    a.rsvp_count as current_rsvp_count,
+    EXTRACT(EPOCH FROM (a.conversion_date - p.created_at)) / 3600 as hours_to_conversion
+FROM activities a
+JOIN posts p ON a.originated_from_post_id = p.id
+JOIN post_conversions pc ON pc.event_id = a.id
+WHERE a.id = $1;
+
+-- Get users who reacted to post but haven't RSVP'd to converted event
+SELECT
+    pr.user_id,
+    u.username,
+    u.display_name,
+    pr.reaction_type,
+    pr.created_at as reaction_time
+FROM post_reactions pr
+JOIN users u ON pr.user_id = u.id
+LEFT JOIN rsvps r ON r.user_id = pr.user_id AND r.activity_id = $1
+WHERE pr.post_id = (
+    SELECT originated_from_post_id
+    FROM activities
+    WHERE id = $1
+)
+AND r.id IS NULL
+ORDER BY pr.created_at ASC;
+```
+
 ---
 
-**Database Schema Status**: ✅ Complete - Additional tables and optimizations for activity management
+## Integration with E04 Discovery Engine
+
+### Post-to-Event Conversion Flow
+
+**When E04 converts a post to an event**:
+1. E04 calls E03 Activity CRUD API with post context
+2. E03 creates event with `originated_from_post_id` and `conversion_date`
+3. E03 records conversion in `post_conversions` table (E04 schema)
+4. E03 notifies users who reacted to the original post
+5. Original post is marked as "evolved" and links to new event
+
+**Data Flow**:
+```
+E04 Posts → Conversion Trigger → E03 Event Creation → E04 Conversion Tracking
+```
+
+---
+
+**Database Schema Status**: ✅ Complete - Additional tables and optimizations for event management with post conversion support
 **Next Steps**: Define service architecture for activity, tagging, and RSVP services

@@ -1,0 +1,41 @@
+You are rebuilding F03 Geolocation Services task documentation for a Laravel 12 + Filament v4 project.
+
+CONTEXT:
+- Project: FunLynk - spontaneous social discovery platform
+- Stack: Laravel 12, Filament v4, PostGIS, Livewire v3
+- Architecture: Posts vs Events dual model (Posts = tighter radius 5-10km, Events = wider radius 25-50km)
+
+INPUT FILES TO READ:
+1. context-engine/epics/E01_Core_Infrastructure/epic-overview.md
+2. context-engine/epics/E01_Core_Infrastructure/database-schema.md
+3. context-engine/tasks/E01_Core_Infrastructure/F03_Geolocation_Services/README.md
+
+TASK:
+Rewrite the F03 Geolocation Services feature documentation to reflect Laravel + PostGIS approach instead of React Native/Supabase approach.
+
+KEY CHANGES NEEDED:
+1. Focus on PostGIS setup for Laravel
+2. Remove React Native map component references
+3. Add Laravel service classes for geolocation
+4. Update geocoding to use Laravel HTTP client with Google Maps API
+5. Reference both Posts and Events proximity search (different radii)
+6. Update map integration for web (Leaflet/Mapbox)
+7. Focus on Laravel Eloquent spatial queries
+8. Update time estimates for Laravel approach
+
+STRUCTURE TO MAINTAIN:
+- Keep the README.md format
+- Keep the 5 tasks (T01-T05) structure
+- Update task descriptions for Laravel
+- Keep success criteria (update for Laravel context)
+- Keep dependencies section
+
+OUTPUT:
+Save the updated documentation to: context-engine/tasks/E01_Core_Infrastructure/F03_Geolocation_Services/README.md
+
+VALIDATION:
+- Ensure PostGIS setup is for Laravel
+- Ensure all React Native references are removed
+- Ensure Posts vs Events different radii are mentioned
+- Ensure Laravel service class patterns are used
+- Ensure file is valid Markdown

@@ -68,6 +68,168 @@ This application is a Laravel web application. Main packages & versions:
 - Use multiple, broad, topic-based queries: `['rate limiting', 'routing']`
 - Don't add package names to queries: use `test resource table`, not `filament 4 test resource table`
 
+## Parallel Task Execution with Subagents (CRITICAL)
+
+### Purpose
+Execute **multiple independent tasks in parallel** using `spawn_sub_agent.py`. **ALWAYS evaluate** whether a task can be parallelized BEFORE starting sequential work.
+
+### How It Works
+- **Script**: `python spawn_sub_agent.py gemini "YOUR COMPLETE PROMPT HERE"`
+- **Returns**: `job_id` (e.g., `20250109_143022_a3f8b1`)
+- **Output**: `./subagent_runs/{job_id}/` with status, logs, and results
+- **Agent**: Gemini 2.5 Flash model
+
+**CRITICAL: Subagents are STATELESS**
+- No memory of previous conversations or context
+- Instructions must be COMPLETE and SELF-CONTAINED
+- Provide ALL necessary context in the prompt or reference specific files to read
+- Specify exact file paths for inputs and outputs
+- Include step-by-step procedures, not just high-level goals
+
+### Decision-Making Checklist
+
+**BEFORE starting any multi-step task, ask yourself:**
+
+1. ✅ **Are there multiple independent subtasks?**
+2. ✅ **Do the subtasks have NO dependencies on each other?**
+3. ✅ **Would parallel execution significantly reduce total time?**
+4. ✅ **Is each subtask well-defined enough to be delegated?**
+
+**If YES to all 4 questions → USE SUBAGENT SPAWNING**
+
+### Best Practices for Writing Subagent Prompts
+
+**✅ GOOD Prompt Structure**:
+```
+1. Context: "You are updating Epic E03 Activity Management documentation."
+2. Input: "Read the file context-engine/epics/E03_Activity_Management/epic-overview.md"
+3. Task: "Add a new section called 'Post-to-Event Conversion' after the 'Component Breakdown' section."
+4. Details: "Include these subsections: [list specific subsections]"
+5. Output: "Save the updated file to the same location."
+6. Validation: "Ensure the file is valid Markdown and all existing content is preserved."
+```
+
+**❌ BAD Prompt Examples**:
+- "Update the documentation we discussed earlier" (no context, no file path)
+- "Fix the issues in the epic files" (not specific, no clear output)
+- "Make the changes like we did for E04" (assumes shared memory)
+- "Analyze the codebase and suggest improvements" (too open-ended, no output path)
+
+**Key Principles**:
+1. **Be Explicit**: Specify exact file paths, section names, formats
+2. **Be Complete**: Include all context needed (no references to "earlier" or "previous")
+3. **Be Specific**: Define exact outputs, formats, validation criteria
+4. **Be Sequential**: Break down the task into numbered steps
+5. **Be Verifiable**: Make success/failure easy to determine
+
+### Example Use Cases
+
+**Example 1: Parallel Documentation Updates**
+```bash
+# Task: Update 5 epic documentation files to add "Posts vs Events" clarification
+
+# Spawn 5 subagents in parallel:
+python spawn_sub_agent.py gemini "Read context-engine/epics/E01_Core_Infrastructure/epic-overview.md. Add a new section at line 50 titled 'Posts vs Events Architecture' with this content: [full content]. Save to the same file path."
+
+python spawn_sub_agent.py gemini "Read context-engine/epics/E02_User_Profile_Management/epic-overview.md. Add a new section at line 60 titled 'Posts vs Events Architecture' with this content: [full content]. Save to the same file path."
+
+# ... spawn 3 more for E05, E06, E07
+```
+
+**Example 2: Parallel Test File Creation**
+```bash
+# Task: Create 4 new test files for different features
+
+python spawn_sub_agent.py gemini "Create a new Pest test file at tests/Feature/PostCreationTest.php. Test the post creation functionality with these test cases: [list cases]. Use the existing test structure from tests/Feature/ActivityCreationTest.php as a reference. Include setup, teardown, and all assertions."
+
+python spawn_sub_agent.py gemini "Create a new Pest test file at tests/Feature/PostReactionTest.php. Test the post reaction functionality with these test cases: [list cases]. Use the existing test structure from tests/Feature/ActivityCreationTest.php as a reference. Include setup, teardown, and all assertions."
+
+# ... spawn 2 more for PostConversionTest and PostExpirationTest
+```
+
+**Example 3: Parallel Code Refactoring**
+```bash
+# Task: Refactor 3 similar service classes to use a new base class
+
+# First, create the base class (sequential, required first)
+# ... create BaseDiscoveryService ...
+
+# Then spawn 3 subagents to refactor each service:
+python spawn_sub_agent.py gemini "Read app/Services/NearbyFeedService.php. Refactor it to extend BaseDiscoveryService (located at app/Services/BaseDiscoveryService.php). Move common methods to the base class: [list methods]. Preserve all existing functionality. Save to the same file path."
+
+python spawn_sub_agent.py gemini "Read app/Services/ForYouFeedService.php. Refactor it to extend BaseDiscoveryService (located at app/Services/BaseDiscoveryService.php). Move common methods to the base class: [list methods]. Preserve all existing functionality. Save to the same file path."
+
+# ... spawn 1 more for MapViewService
+```
+
+### When NOT to Use Subagents
+
+**❌ DO NOT use subagents for:**
+
+1. **Sequential Dependencies**: Task B needs Task A's output
+   - Example: "Create migration, then create model, then create controller"
+   - Solution: Do sequentially or spawn only the independent parts
+
+2. **Shared State Modifications**: Multiple tasks editing the same file
+   - Example: "Add 3 different sections to the same file"
+   - Solution: Do sequentially or combine into one task
+
+3. **Complex Coordination**: Tasks require back-and-forth communication
+   - Example: "Refactor code and update tests to match"
+   - Solution: Do as a single coordinated task
+
+4. **Simple/Quick Tasks**: Overhead exceeds benefit
+   - Example: "Update 2 lines in a file"
+   - Solution: Just do it directly
+
+5. **Exploratory Work**: Task requires discovery/analysis first
+   - Example: "Find all files that need updating and update them"
+   - Solution: Do discovery first, then spawn updates
+
+6. **User Interaction Required**: Task needs user input/approval
+   - Example: "Propose changes and wait for approval"
+   - Solution: Get approval first, then spawn implementation
+
+### Integration with Task Management
+
+**Recommended Approach**:
+1. **Create parent task**: "Update all epic documentation files"
+2. **Mark as IN_PROGRESS**: Before spawning subagents
+3. **Spawn subagents**: For each independent subtask
+4. **Monitor completion**: Check `status.json` files
+5. **Verify results**: Review `report.md` files
+6. **Mark as COMPLETE**: After all subagents succeed
+
+**Do NOT create separate task list entries for each subagent** - they are implementation details of the parent task.
+
+### Monitoring and Verification
+
+**After spawning subagents**:
+1. **Wait briefly**: Give subagents time to complete (30-60 seconds for simple tasks)
+2. **Check status**: `cat subagent_runs/{job_id}/status.json`
+3. **Review output**: `cat subagent_runs/{job_id}/report.md`
+4. **Verify files**: Check that output files were created/modified correctly
+5. **Handle failures**: If a subagent fails, review `run.log` and retry with improved prompt
+
+**Status Values**:
+- `"running"`: Subagent is still executing
+- `"completed"`: Subagent finished successfully (exit_code: 0)
+- `"failed"`: Subagent encountered an error (exit_code: 1)
+
+### Performance Guidelines
+
+**Optimal Parallelization**:
+- **2-10 subagents**: Sweet spot for most tasks
+- **10+ subagents**: Possible but monitor system resources
+- **1 subagent**: Only use if you need async execution (rare)
+
+**Time Estimates**:
+- Simple file updates: 30-60 seconds per subagent
+- Code generation: 60-120 seconds per subagent
+- Complex refactoring: 120-300 seconds per subagent
+
+**Always consider**: Is the parallelization worth the coordination overhead?
+
 
 === php rules ===
 

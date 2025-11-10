@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -21,8 +22,8 @@ return new class extends Migration
             $table->text('bio')->nullable();
             $table->text('profile_image_url')->nullable();
             $table->string('location_name')->nullable();
-            $table->json('location_coordinates')->nullable();
-            $table->json('interests')->nullable();
+            // location_coordinates will be added as PostGIS GEOGRAPHY type after table creation
+            $table->text('interests')->nullable(); // Array of interest tags (stored as JSON)
             $table->boolean('is_host')->default(false);
             $table->string('stripe_account_id')->nullable();
             $table->boolean('stripe_onboarding_complete')->default(false);
@@ -39,6 +40,10 @@ return new class extends Migration
             $table->index('stripe_account_id', 'idx_users_stripe_account');
             $table->index('is_host', 'idx_users_is_host');
         });
+
+        // Add PostGIS geography column for location coordinates
+        DB::statement('ALTER TABLE users ADD COLUMN location_coordinates GEOGRAPHY(POINT, 4326)');
+        DB::statement('CREATE INDEX idx_users_location ON users USING GIST(location_coordinates)');
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

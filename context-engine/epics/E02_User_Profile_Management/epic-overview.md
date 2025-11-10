@@ -2,7 +2,9 @@
 
 ## Epic Purpose
 
-The User & Profile Management epic builds on Core Infrastructure to provide comprehensive user identity management and social networking capabilities. This epic enables users to create rich profiles, discover and connect with other users, and build their social network within the Funlynk platform.
+The User & Profile Management epic builds on Core Infrastructure to provide comprehensive user identity management and social networking capabilities. This epic enables users to create rich profiles, discover and connect with other users, and build their social network within the FunLynk platform.
+
+**Note**: User profiles support both **Posts** (ephemeral content from E04) and **Events** (structured activities from E03). Profile data (interests, location, social graph) powers discovery for both content types.
 
 ## Epic Scope
 
@@ -14,7 +16,8 @@ The User & Profile Management epic builds on Core Infrastructure to provide comp
 
 ### Out of Scope
 - Basic authentication (handled by E01 Core Infrastructure)
-- Activity-related user interactions (handled by E03 Activity Management)
+- **Posts** (ephemeral content handled by E04 Discovery Engine)
+- **Events** (structured activities handled by E03 Activity Management)
 - Payment-related user data (handled by E06 Payments & Monetization)
 
 ## Component Breakdown
@@ -67,13 +70,19 @@ The User & Profile Management epic builds on Core Infrastructure to provide comp
 - **Follows table**: Social graph relationships from E01
 - **Notifications service**: Follow notifications from E01
 
+### Integration with Posts vs Events Model
+- **Profile interests**: Used by E04 for post discovery and E03 for event recommendations
+- **Profile location**: Powers geo-proximity for both posts (E04) and events (E03)
+- **Social graph**: Influences both post feeds (E04) and event discovery (E03)
+- **User preferences**: Apply to both ephemeral posts and structured events
+
 ## Success Criteria
 
 ### Profile Service
 - [ ] Users can create and update comprehensive profiles
 - [ ] Profile images upload and display correctly across all devices
-- [ ] Interest tagging enables accurate activity recommendations
-- [ ] Location data supports discovery while respecting privacy
+- [ ] Interest tagging enables accurate recommendations for both posts and events
+- [ ] Location data supports discovery for both posts and events while respecting privacy
 - [ ] Profile privacy controls work as expected
 - [ ] Profile completion encourages user engagement
 
@@ -81,7 +90,7 @@ The User & Profile Management epic builds on Core Infrastructure to provide comp
 - [ ] Follow/unfollow operations are instant and reliable
 - [ ] Follower counts update accurately in real-time
 - [ ] Follow recommendations are relevant and engaging
-- [ ] Social graph supports activity discovery and feeds
+- [ ] Social graph supports both post feeds (E04) and event discovery (E03)
 - [ ] Privacy controls protect user relationships
 - [ ] Block functionality prevents unwanted interactions
 
