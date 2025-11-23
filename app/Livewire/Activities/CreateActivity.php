@@ -148,6 +148,7 @@ class CreateActivity extends Component
 
     public function render()
     {
-        return view('livewire.activities.create-activity');
+        return view('livewire.activities.create-activity')
+            ->layout('layouts.app');
     }
 }

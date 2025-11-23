@@ -27,7 +27,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::get('/dashboard', \App\Livewire\Dashboard::class)->name('dashboard');
     Route::get('/profile', ShowProfile::class)->name('profile.show');
     Route::get('/profile/edit', EditProfile::class)->name('profile.edit');
     Route::get('/u/{username}', ShowProfile::class)->name('profile.view');

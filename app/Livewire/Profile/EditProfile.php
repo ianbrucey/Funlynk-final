@@ -230,7 +230,7 @@ class EditProfile extends Component
     public function render()
     {
         return view('livewire.profile.edit-profile')
-            ->layout('layouts.auth', [
+            ->layout('layouts.app', [
                 'title' => 'Edit Profile',
             ]);
     }

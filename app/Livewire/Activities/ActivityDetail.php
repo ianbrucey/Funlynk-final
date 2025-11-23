@@ -50,6 +50,7 @@ class ActivityDetail extends Component
 
     public function render()
     {
-        return view('livewire.activities.activity-detail');
+        return view('livewire.activities.activity-detail')
+            ->layout('layouts.app');
     }
 }

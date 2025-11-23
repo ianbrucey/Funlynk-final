@@ -192,6 +192,7 @@ class EditActivity extends Component
 
     public function render()
     {
-        return view('livewire.activities.edit-activity');
+        return view('livewire.activities.edit-activity')
+            ->layout('layouts.app');
     }
 }

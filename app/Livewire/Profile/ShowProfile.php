@@ -22,6 +22,6 @@ class ShowProfile extends Component
     public function render()
     {
         return view('livewire.profile.show-profile')
-            ->layout('layouts.auth', ['title' => $this->user->display_name ?? $this->user->name]);
+            ->layout('layouts.app', ['title' => $this->user->display_name ?? $this->user->name]);
     }
 }
