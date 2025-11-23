@@ -22,6 +22,8 @@ class Rsvp extends Model
     {
         return [
             'is_paid' => 'boolean',
+            'attended' => 'boolean',
+            'payment_amount' => 'integer',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

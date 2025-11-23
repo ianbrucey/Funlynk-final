@@ -19,12 +19,12 @@
             {{-- Main Content (Left Column) --}}
             <div class="lg:col-span-2 space-y-8">
                 
-                {{-- Hero / Title Card --}}
+                {{-- Hero / Title Card with Image Carousel --}}
                 <div class="relative p-8 glass-card overflow-hidden">
                     <div class="top-accent"></div>
-                    
+
                     {{-- Status Badge --}}
-                    <div class="absolute top-6 right-6">
+                    <div class="absolute top-6 right-6 z-10">
                         @if($activity->status === 'draft')
                             <span class="px-3 py-1 bg-gray-500/30 border border-gray-500/50 rounded-full text-xs font-bold text-gray-300 uppercase tracking-wider">Draft</span>
                         @elseif($activity->status === 'published')
@@ -39,7 +39,7 @@
                     </div>
 
                     <h1 class="text-4xl font-bold mb-4 text-white">{{ $activity->title }}</h1>
-                    
+
                     <div class="flex flex-wrap gap-4 text-sm text-gray-300 mb-6">
                         <div class="flex items-center gap-2">
                             <span class="text-2xl">{{ match($activity->activity_type) {
@@ -68,7 +68,7 @@
 
                     {{-- Tags --}}
                     @if(count($activity->tags) > 0)
-                        <div class="flex flex-wrap gap-2">
+                        <div class="flex flex-wrap gap-2 mb-6">
                             @foreach($activity->tags as $tag)
                                 <span class="px-3 py-1 bg-slate-800/50 border border-white/10 rounded-lg text-sm text-purple-300">
                                     #{{ $tag['name'] ?? $tag->name }}
@@ -76,99 +76,134 @@
                             @endforeach
                         </div>
                     @endif
-                </div>
 
-                {{-- Images Gallery --}}
-                @if($activity->images && count($activity->images) > 0)
-                    <div class="glass-card p-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            @foreach($activity->images as $image)
-                                <img src="{{ Storage::url($image) }}" class="w-full h-64 object-cover rounded-xl border border-white/10 hover:scale-[1.02] transition-transform duration-300">
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                {{-- Description --}}
-                <div class="relative p-8 glass-card">
-                    <h2 class="text-2xl font-bold mb-4 text-white">About this Activity</h2>
-                    <div class="prose prose-invert max-w-none text-gray-300">
-                        {{ $activity->description }}
-                    </div>
-                </div>
-
-            </div>
-
-            {{-- Sidebar (Right Column) --}}
-            <div class="space-y-8">
-                
-                {{-- Action Card --}}
-                <div class="relative p-6 glass-card">
-                    <div class="top-accent"></div>
-                    
-                    {{-- Date & Time --}}
-                    <div class="mb-6">
-                        <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">When</h3>
-                        <div class="flex items-start gap-3">
-                            <div class="p-2 bg-slate-800 rounded-lg border border-white/10">
-                                <span class="text-2xl font-bold text-cyan-400">{{ $activity->start_time->format('d') }}</span>
+                    {{-- Image Carousel --}}
+                    @if($activity->images && count($activity->images) > 0)
+                        <div class="relative mt-6" x-data="{ currentSlide: 0, totalSlides: {{ count($activity->images) }} }">
+                            {{-- Carousel Container --}}
+                            <div class="relative overflow-hidden rounded-xl border border-white/10 bg-slate-900/50">
+                                <div class="flex transition-transform duration-500 ease-out"
+                                     :style="`transform: translateX(-${currentSlide * 100}%)`">
+                                    @foreach($activity->images as $image)
+                                        <div class="w-full flex-shrink-0 flex items-center justify-center" style="height: 300px;">
+                                            <img src="{{ Storage::url($image) }}"
+                                                 class="max-w-full max-h-full object-contain"
+                                                 alt="Activity image">
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
-                            <div>
-                                <div class="text-lg font-bold text-white">{{ $activity->start_time->format('F Y') }}</div>
-                                <div class="text-gray-300">{{ $activity->start_time->format('l, g:i A') }}</div>
-                                @if($activity->end_time)
-                                    <div class="text-sm text-gray-500 mt-1">
-                                        to {{ $activity->end_time->format('g:i A') }}
-                                    </div>
+
+                            {{-- Navigation Arrows (only show if more than 1 image) --}}
+                            @if(count($activity->images) > 1)
+                                {{-- Previous Button --}}
+                                <button @click="currentSlide = currentSlide === 0 ? totalSlides - 1 : currentSlide - 1"
+                                        class="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900/80 hover:bg-slate-800 border border-white/20 rounded-full transition-all hover:scale-110">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                    </svg>
+                                </button>
+
+                                {{-- Next Button --}}
+                                <button @click="currentSlide = currentSlide === totalSlides - 1 ? 0 : currentSlide + 1"
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900/80 hover:bg-slate-800 border border-white/20 rounded-full transition-all hover:scale-110">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+
+                                {{-- Dots Indicator --}}
+                                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                                    @foreach($activity->images as $index => $image)
+                                        <button @click="currentSlide = {{ $index }}"
+                                                class="w-2 h-2 rounded-full transition-all"
+                                                :class="currentSlide === {{ $index }} ? 'bg-cyan-400 w-6' : 'bg-white/50 hover:bg-white/80'">
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+
+                {{-- About & Details Card --}}
+                <div class="relative p-8 glass-card">
+                    <div class="top-accent"></div>
+
+                    <h2 class="text-2xl font-bold mb-6 text-white">About this Activity</h2>
+
+                    {{-- Key Details Grid --}}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 pb-8 border-b border-white/10">
+
+                        {{-- Date & Time --}}
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">When</h3>
+                            <div class="flex items-start gap-3">
+                                <div class="p-2 bg-slate-800 rounded-lg border border-white/10">
+                                    <span class="text-2xl font-bold text-cyan-400">{{ $activity->start_time->format('d') }}</span>
+                                </div>
+                                <div>
+                                    <div class="text-lg font-bold text-white">{{ $activity->start_time->format('F Y') }}</div>
+                                    <div class="text-gray-300">{{ $activity->start_time->format('l, g:i A') }}</div>
+                                    @if($activity->end_time)
+                                        <div class="text-sm text-gray-500 mt-1">
+                                            to {{ $activity->end_time->format('g:i A') }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Price --}}
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Price</h3>
+                            <div class="text-3xl font-bold text-white">
+                                @if($activity->is_paid)
+                                    ${{ number_format($activity->price_cents / 100, 2) }}
+                                @else
+                                    <span class="text-green-400">Free</span>
                                 @endif
                             </div>
                         </div>
-                    </div>
 
-                    {{-- Price --}}
-                    <div class="mb-6">
-                        <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Price</h3>
-                        <div class="text-2xl font-bold text-white">
-                            @if($activity->is_paid)
-                                ${{ number_format($activity->price_cents / 100, 2) }}
-                            @else
-                                <span class="text-green-400">Free</span>
-                            @endif
-                        </div>
-                    </div>
-
-                    {{-- Capacity --}}
-                    <div class="mb-8">
-                        <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Availability</h3>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-gray-300">{{ $activity->current_attendees }} attending</span>
-                            @if($activity->max_attendees)
-                                <span class="text-gray-400">{{ $spotsRemaining }} spots left</span>
-                            @endif
-                        </div>
-                        @if($activity->max_attendees)
-                            <div class="w-full bg-slate-800 rounded-full h-2">
-                                <div class="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full" 
-                                     style="width: {{ ($activity->current_attendees / $activity->max_attendees) * 100 }}%"></div>
+                        {{-- Capacity --}}
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Availability</h3>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-gray-300">{{ $activity->current_attendees }} attending</span>
+                                @if($activity->max_attendees)
+                                    <span class="text-gray-400">{{ $spotsRemaining }} spots left</span>
+                                @endif
                             </div>
-                        @endif
+                            @if($activity->max_attendees)
+                                <div class="w-full bg-slate-800 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full"
+                                         style="width: {{ ($activity->current_attendees / $activity->max_attendees) * 100 }}%"></div>
+                                </div>
+                            @endif
+                        </div>
                     </div>
 
-                    {{-- RSVP Button (Placeholder) --}}
-                    <button class="w-full py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-bold text-white hover:scale-105 transition-all shadow-lg mb-4">
-                        Join Activity
-                    </button>
+                    {{-- Description --}}
+                    <div class="prose prose-invert max-w-none text-gray-300 mb-8">
+                        {{ $activity->description }}
+                    </div>
+
+                    {{-- RSVP Button --}}
+                    @if(!$isHost)
+                        <livewire:activities.rsvp-button :activity="$activity" />
+                    @endif
 
                     {{-- Host Actions --}}
                     @if($isHost)
-                        <div class="pt-4 border-t border-white/10 flex gap-2">
-                            <a href="{{ route('activities.edit', $activity->id) }}" class="flex-1 py-2 text-center bg-slate-800/50 border border-white/10 rounded-lg hover:border-cyan-500/50 transition text-sm font-semibold">
+                        <div class="flex gap-2">
+                            <a href="{{ route('activities.edit', $activity->id) }}" class="flex-1 py-3 text-center bg-slate-800/50 border border-white/10 rounded-lg hover:border-cyan-500/50 transition font-semibold">
                                 Edit
                             </a>
-                            <button 
+                            <button
                                 wire:click="deleteActivity"
                                 wire:confirm="Are you sure you want to delete this activity?"
-                                class="flex-1 py-2 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition text-sm font-semibold text-red-400"
+                                class="flex-1 py-3 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition font-semibold text-red-400"
                             >
                                 Delete
                             </button>
@@ -176,13 +211,22 @@
                     @endif
                 </div>
 
+            </div>
+
+            {{-- Sidebar (Right Column) --}}
+            <div class="space-y-8">
+
                 {{-- Host Info --}}
                 <div class="relative p-6 glass-card">
                     <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Hosted By</h3>
                     <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold text-white">
-                            {{ substr($activity->host->name, 0, 1) }}
-                        </div>
+                        @if($activity->host->profile_image_url)
+                            <img src="{{ Storage::url($activity->host->profile_image_url) }}" class="w-12 h-12 rounded-full object-cover border-2 border-white/10">
+                        @else
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold text-white">
+                                {{ substr($activity->host->name, 0, 1) }}
+                            </div>
+                        @endif
                         <div>
                             <div class="font-bold text-white">{{ $activity->host->name }}</div>
                             <div class="text-xs text-gray-400">Member since {{ $activity->host->created_at->format('M Y') }}</div>
@@ -190,19 +234,9 @@
                     </div>
                 </div>
 
-                {{-- Map Placeholder --}}
-                <div class="relative p-1 glass-card overflow-hidden h-48">
-                    <div class="absolute inset-0 bg-slate-800 flex items-center justify-center">
-                        <div class="text-center">
-                            <div class="text-4xl mb-2">🗺️</div>
-                            <div class="text-sm text-gray-400">Map View</div>
-                            <div class="text-xs text-gray-500">
-                                @if($activity->location_coordinates instanceof \MatanYadaev\EloquentSpatial\Objects\Point)
-                                    {{ $activity->location_coordinates->latitude }}, {{ $activity->location_coordinates->longitude }}
-                                @endif
-                            </div>
-                        </div>
-                    </div>
+                {{-- Map --}}
+                <div class="relative p-1 glass-card overflow-hidden h-64">
+                    <div id="activity-map" class="w-full h-full rounded-xl"></div>
                 </div>
 
             </div>
@@ -226,4 +260,132 @@
             border-radius: 9999px;
         }
     </style>
+    @if($activity->location_coordinates instanceof \MatanYadaev\EloquentSpatial\Objects\Point)
+    <script>
+        const activityMapData = {
+            lat: {{ $activity->location_coordinates->latitude }},
+            lng: {{ $activity->location_coordinates->longitude }},
+            title: @json($activity->title),
+            locationName: @json($activity->location_name)
+        };
+
+        function initActivityMap() {
+            const mapElement = document.getElementById('activity-map');
+            if (!mapElement) {
+                console.log('Map element not found');
+                return;
+            }
+
+            console.log('Initializing map with position:', activityMapData);
+
+            const position = {
+                lat: activityMapData.lat,
+                lng: activityMapData.lng
+            };
+
+            const map = new google.maps.Map(mapElement, {
+                center: position,
+                zoom: 15,
+                styles: [
+                    { elementType: "geometry", stylers: [{ color: "#1e293b" }] },
+                    { elementType: "labels.text.stroke", stylers: [{ color: "#0f172a" }] },
+                    { elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
+                    {
+                        featureType: "administrative.locality",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#cbd5e1" }],
+                    },
+                    {
+                        featureType: "poi",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#64748b" }],
+                    },
+                    {
+                        featureType: "poi.park",
+                        elementType: "geometry",
+                        stylers: [{ color: "#1e3a2e" }],
+                    },
+                    {
+                        featureType: "poi.park",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#6b9080" }],
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "geometry",
+                        stylers: [{ color: "#334155" }],
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "geometry.stroke",
+                        stylers: [{ color: "#1e293b" }],
+                    },
+                    {
+                        featureType: "road.highway",
+                        elementType: "geometry",
+                        stylers: [{ color: "#475569" }],
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "geometry",
+                        stylers: [{ color: "#0c1e2e" }],
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#475569" }],
+                    },
+                ],
+                disableDefaultUI: true,
+                zoomControl: true,
+            });
+
+            // Custom marker with gradient
+            const marker = new google.maps.Marker({
+                position: position,
+                map: map,
+                title: activityMapData.locationName,
+                animation: google.maps.Animation.DROP,
+            });
+
+            // Info window
+            const infoWindow = new google.maps.InfoWindow({
+                content: `
+                    <div style="padding: 8px; color: #1e293b;">
+                        <h3 style="margin: 0 0 4px 0; font-weight: bold;">${activityMapData.title}</h3>
+                        <p style="margin: 0; font-size: 14px;">${activityMapData.locationName}</p>
+                    </div>
+                `
+            });
+
+            marker.addListener('click', () => {
+                infoWindow.open(map, marker);
+            });
+
+            console.log('Map initialized successfully');
+        }
+
+        // Load Google Maps API
+        if (!window.google || !window.google.maps) {
+            console.log('Loading Google Maps API...');
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&callback=initActivityMap`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        } else {
+            console.log('Google Maps API already loaded');
+            initActivityMap();
+        }
+    </script>
+    @else
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mapElement = document.getElementById('activity-map');
+            if (mapElement) {
+                mapElement.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">Location not available</div>';
+            }
+        });
+    </script>
+    @endif
 </div>

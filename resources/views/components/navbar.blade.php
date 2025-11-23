@@ -12,14 +12,14 @@
                     <div class="text-xl font-bold">
                         <span class="text-yellow-400">Fun</span><span class="text-cyan-400">Lynk</span>
                     </div>
-                    <div class="text-xs text-gray-400 font-mono tracking-wider">SOCIAL ACTIVITY NETWORK</div>
+                    <div class="text-xs text-white font-bold font-mono tracking-wider">SOCIAL ACTIVITY NETWORK</div>
                 </div>
             </a>
 
             <!-- Navigation Icons -->
             <div class="flex items-center gap-2 md:gap-4">
                 <!-- Timeline/Feed -->
-                <a href="{{ route('dashboard') }}" 
+                <a href="{{ route('dashboard') }}"
                    class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('dashboard') ? 'bg-white/10' : '' }}"
                    title="Timeline">
                     <svg class="w-6 h-6 {{ request()->routeIs('dashboard') ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,7 +41,7 @@
                 </a>
 
                 <!-- Notifications -->
-                <button 
+                <button
                     onclick="alert('Notifications feature coming soon!')"
                     class="p-3 hover:bg-white/10 rounded-xl transition-all group relative"
                     title="Notifications">
@@ -70,7 +70,7 @@
 
                 <!-- Logout (Mobile Menu Toggle) -->
                 <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" 
+                    <button @click="open = !open"
                             class="p-3 hover:bg-white/10 rounded-xl transition-all"
                             title="Menu">
                         <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,7 +79,7 @@
                     </button>
 
                     <!-- Dropdown Menu -->
-                    <div x-show="open" 
+                    <div x-show="open"
                          @click.away="open = false"
                          x-transition
                          class="absolute right-0 mt-2 w-48 glass-card border border-white/10 rounded-xl overflow-hidden">

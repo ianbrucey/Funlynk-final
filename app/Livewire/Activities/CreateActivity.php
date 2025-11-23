@@ -23,7 +23,7 @@ class CreateActivity extends Component
     public $end_time = '';
     public $max_attendees = '';
     public $is_paid = false;
-    public $price_cents = '';
+    public $price = '';
     public $is_public = true;
     public $requires_approval = false;
     public $selectedTags = [];
@@ -55,7 +55,8 @@ class CreateActivity extends Component
             'start_time' => 'required|date|after:now',
             'end_time' => 'nullable|date|after:start_time',
             'max_attendees' => 'nullable|integer|min:1',
-            'price_cents' => 'required_if:is_paid,true|nullable|integer|min:1',
+            'max_attendees' => 'nullable|integer|min:1',
+            'price' => 'required_if:is_paid,true|nullable|numeric|min:0.01',
             'images.*' => 'nullable|image|max:2048',
         ];
     }
@@ -73,14 +74,17 @@ class CreateActivity extends Component
             'start_time.required' => 'Please specify when the activity starts',
             'start_time.after' => 'Activity must start in the future',
             'end_time.after' => 'End time must be after start time',
-            'price_cents.required_if' => 'Please specify a price for paid activities',
+            'end_time.after' => 'End time must be after start time',
+            'price.required_if' => 'Please specify a price for paid activities',
         ];
     }
 
     public function updatedIsPaid($value)
     {
         if (!$value) {
-            $this->price_cents = '';
+        if (!$value) {
+            $this->price = '';
+        }
         }
     }
 
@@ -113,7 +117,7 @@ class CreateActivity extends Component
                 'max_attendees' => $this->max_attendees ?: null,
                 'current_attendees' => 0,
                 'is_paid' => $this->is_paid,
-                'price_cents' => $this->is_paid ? $this->price_cents : null,
+                'price_cents' => $this->is_paid ? (int) round($this->price * 100) : null,
                 'currency' => 'USD',
                 'is_public' => $this->is_public,
                 'requires_approval' => $this->requires_approval,
@@ -160,25 +164,24 @@ class CreateActivity extends Component
         }
 
         $tagName = trim($this->newTag);
-        
+
         // Check if tag already selected
         foreach ($this->selectedTags as $tag) {
             if (strcasecmp($tag['name'], $tagName) === 0) {
-                $this->newTag = '';
+                $this->reset('newTag');
                 return;
             }
         }
 
         // Find or create tag
         $tag = \App\Models\Tag::firstOrCreate(['name' => $tagName]);
-        
-        $this->selectedTags[] = [
-            'id' => $tag->id,
-            'name' => $tag->name,
-            'category' => $tag->category
-        ];
-
-        $this->newTag = '';
+        if ($tag) {
+            $this->selectedTags[] = [
+                'id' => $tag->id,
+                'name' => $tag->name
+            ];
+            $this->newTag = '';
+        }
     }
 
     public function removeTag($index)

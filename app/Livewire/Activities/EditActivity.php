@@ -27,7 +27,7 @@ class EditActivity extends Component
     public $end_time = '';
     public $max_attendees = '';
     public $is_paid = false;
-    public $price_cents = '';
+    public $price = '';
     public $is_public = true;
     public $requires_approval = false;
     public $status = '';
@@ -73,7 +73,7 @@ class EditActivity extends Component
         
         $this->max_attendees = $activity->max_attendees;
         $this->is_paid = $activity->is_paid;
-        $this->price_cents = $activity->price_cents;
+        $this->price = $activity->price_cents ? $activity->price_cents / 100 : '';
         $this->is_public = $activity->is_public;
         $this->requires_approval = $activity->requires_approval;
         $this->status = $activity->status;
@@ -102,16 +102,24 @@ class EditActivity extends Component
             'start_time' => 'required|date',
             'end_time' => 'nullable|date|after:start_time',
             'max_attendees' => 'nullable|integer|min:1',
-            'price_cents' => 'required_if:is_paid,true|nullable|integer|min:1',
+            'price' => 'required_if:is_paid,true|nullable|numeric|min:0.01',
             'newImages.*' => 'nullable|image|max:2048',
             'status' => 'required|in:draft,published,active,completed,cancelled',
+        ];
+    }
+
+    protected function messages()
+    {
+        return [
+            'end_time.after' => 'End time must be after start time',
+            'price.required_if' => 'Please specify a price for paid activities',
         ];
     }
 
     public function updatedIsPaid($value)
     {
         if (!$value) {
-            $this->price_cents = '';
+            $this->price = '';
         }
     }
 
@@ -154,7 +162,7 @@ class EditActivity extends Component
                 'end_time' => $this->end_time ?: null,
                 'max_attendees' => $this->max_attendees ?: null,
                 'is_paid' => $this->is_paid,
-                'price_cents' => $this->is_paid ? $this->price_cents : null,
+                'price_cents' => $this->is_paid ? (int) round($this->price * 100) : null,
                 'is_public' => $this->is_public,
                 'requires_approval' => $this->requires_approval,
                 'status' => $this->status,
@@ -204,25 +212,25 @@ class EditActivity extends Component
         }
 
         $tagName = trim($this->newTag);
-        
+
         // Check if tag already selected
         foreach ($this->selectedTags as $tag) {
             if (strcasecmp($tag['name'], $tagName) === 0) {
-                $this->newTag = '';
+                $this->reset('newTag');
                 return;
             }
         }
 
         // Find or create tag
         $tag = \App\Models\Tag::firstOrCreate(['name' => $tagName]);
-        
-        $this->selectedTags[] = [
-            'id' => $tag->id,
-            'name' => $tag->name,
-            'category' => $tag->category
-        ];
-
-        $this->newTag = '';
+        if ($tag) {
+            $this->selectedTags[] = [
+                'id' => $tag->id,
+                'name' => $tag->name,
+                'category' => $tag->category
+            ];
+            $this->reset('newTag');
+        }
     }
 
     public function removeTag($index)

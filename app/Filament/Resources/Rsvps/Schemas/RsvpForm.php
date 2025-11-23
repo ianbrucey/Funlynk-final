@@ -14,18 +14,45 @@ class RsvpForm
         return $schema
             ->components([
                 Select::make('user_id')
-                    ->relationship('user', 'id')
+                    ->relationship('user', 'display_name')
+                    ->searchable()
+                    ->preload()
                     ->required(),
                 Select::make('activity_id')
                     ->relationship('activity', 'title')
+                    ->searchable()
+                    ->preload()
                     ->required(),
-                TextInput::make('status')
+                Select::make('status')
+                    ->options([
+                        'attending' => 'Attending',
+                        'maybe' => 'Maybe',
+                        'declined' => 'Declined',
+                        'waitlist' => 'Waitlist',
+                    ])
                     ->required()
                     ->default('attending'),
                 Toggle::make('is_paid')
-                    ->required(),
-                TextInput::make('payment_intent_id'),
-                TextInput::make('payment_status'),
+                    ->label('Paid RSVP')
+                    ->reactive(),
+                TextInput::make('payment_amount')
+                    ->numeric()
+                    ->prefix('$')
+                    ->formatStateUsing(fn ($state) => $state ? number_format($state / 100, 2) : null)
+                    ->dehydrateStateUsing(fn ($state) => $state ? (int) ($state * 100) : null)
+                    ->visible(fn ($get) => $get('is_paid')),
+                TextInput::make('payment_intent_id')
+                    ->visible(fn ($get) => $get('is_paid')),
+                Select::make('payment_status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'succeeded' => 'Succeeded',
+                        'failed' => 'Failed',
+                        'refunded' => 'Refunded',
+                    ])
+                    ->visible(fn ($get) => $get('is_paid')),
+                Toggle::make('attended')
+                    ->label('Checked In'),
             ]);
     }
 }

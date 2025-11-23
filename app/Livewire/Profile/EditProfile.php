@@ -136,7 +136,7 @@ class EditProfile extends Component
             $this->interests[] = $interest;
         }
 
-        $this->newInterest = '';
+        $this->reset('newInterest');
     }
 
     public function removeInterest($index)

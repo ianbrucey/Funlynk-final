@@ -105,10 +105,17 @@
                 <div class="form-control md:col-span-2">
                     <label class="label pb-3"><span class="label-text text-gray-300 font-medium">Interests</span></label>
                     <div class="flex gap-2 mb-3">
-                        <input type="text" wire:model="newInterest" wire:keydown.enter.prevent="addInterest"
+                        <input type="text"
+                               id="interest-input"
+                               wire:model="newInterest"
+                               wire:keydown.enter.prevent="addInterest"
+                               x-on:keydown.enter="$nextTick(() => $el.value = '')"
                                placeholder="Add interest (Enter)"
                                class="input input-bordered w-full bg-white text-gray-900 border-white/10 focus:border-cyan-500 focus:outline-none placeholder-gray-400" />
-                        <button type="button" wire:click="addInterest" class="btn btn-primary bg-gradient-to-r from-pink-500 to-purple-500 border-none text-white">Add</button>
+                        <button type="button"
+                                wire:click="addInterest"
+                                x-on:click="$nextTick(() => document.getElementById('interest-input').value = '')"
+                                class="btn btn-primary bg-gradient-to-r from-pink-500 to-purple-500 border-none text-white">Add</button>
                     </div>
                     
                     @if(count($interests) > 0)

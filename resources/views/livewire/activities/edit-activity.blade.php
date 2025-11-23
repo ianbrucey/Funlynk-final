@@ -231,17 +231,18 @@
                     {{-- Price --}}
                     @if ($is_paid)
                         <div>
-                            <label class="block text-sm font-semibold text-gray-300 mb-2">Price (in cents) *</label>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Price ($) *</label>
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
                                 <input 
                                     type="number" 
-                                    wire:model="price_cents"
-                                    min="1"
+                                    step="0.01"
+                                    wire:model="price"
+                                    min="0.01"
                                     class="w-full pl-8 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                                 />
                             </div>
-                            @error('price_cents') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                            @error('price') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                         </div>
                     @endif
                 </div>
@@ -311,10 +312,17 @@
 
                 <div class="form-control">
                     <div class="flex gap-2 mb-3">
-                        <input type="text" wire:model="newTag" wire:keydown.enter.prevent="addTag"
+                        <input type="text"
+                               id="tag-input-edit"
+                               wire:model.live="newTag"
+                               wire:keydown.enter.prevent="addTag"
+                               x-on:keydown.enter="$nextTick(() => $el.value = '')"
                                placeholder="Add tag (Enter)"
                                class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white" />
-                        <button type="button" wire:click="addTag" class="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-white">Add</button>
+                        <button type="button"
+                                wire:click="addTag"
+                                x-on:click="$nextTick(() => document.getElementById('tag-input-edit').value = '')"
+                                class="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-white">Add</button>
                     </div>
                     
                     @if(count($selectedTags) > 0)

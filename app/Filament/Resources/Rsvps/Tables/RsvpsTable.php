@@ -15,31 +15,47 @@ class RsvpsTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID'),
-                TextColumn::make('user.id')
-                    ->searchable(),
+                TextColumn::make('user.display_name')
+                    ->label('User')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('activity.title')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('status')
-                    ->searchable(),
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'attending' => 'success',
+                        'maybe' => 'warning',
+                        'declined' => 'danger',
+                        'waitlist' => 'gray',
+                    }),
+                IconColumn::make('attended')
+                    ->boolean()
+                    ->sortable(),
                 IconColumn::make('is_paid')
-                    ->boolean(),
-                TextColumn::make('payment_intent_id')
-                    ->searchable(),
+                    ->boolean()
+                    ->sortable(),
+                TextColumn::make('payment_amount')
+                    ->money('USD', divideBy: 100)
+                    ->sortable(),
                 TextColumn::make('payment_status')
-                    ->searchable(),
+                    ->badge(),
                 TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                \Filament\Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'attending' => 'Attending',
+                        'maybe' => 'Maybe',
+                        'declined' => 'Declined',
+                        'waitlist' => 'Waitlist',
+                    ]),
+                \Filament\Tables\Filters\TernaryFilter::make('attended'),
+                \Filament\Tables\Filters\TernaryFilter::make('is_paid'),
             ])
             ->recordActions([
                 EditAction::make(),
