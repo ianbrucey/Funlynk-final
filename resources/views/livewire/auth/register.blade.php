@@ -79,3 +79,42 @@
         </div>
     </div>
 </div>
+
+@script
+<script>
+    // Load Google Places API
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    script.onload = () => {
+        // Wait for Filament to render the form
+        setTimeout(() => {
+            const locationInput = document.querySelector('input[wire\\:model\\.live="data.location_name"]');
+            if (!locationInput) return;
+
+            const autocomplete = new google.maps.places.Autocomplete(locationInput, {
+                types: ['(cities)'],
+                fields: ['formatted_address', 'geometry', 'name']
+            });
+
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+
+                if (!place.geometry) return;
+
+                const lat = place.geometry.location.lat();
+                const lng = place.geometry.location.lng();
+                const name = place.formatted_address || place.name;
+
+                // Update Livewire data
+                $wire.set('data.location_name', name);
+                $wire.set('data.latitude', lat);
+                $wire.set('data.longitude', lng);
+            });
+        }, 500);
+    };
+</script>
+@endscript

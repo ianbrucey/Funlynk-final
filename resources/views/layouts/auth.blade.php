@@ -259,7 +259,7 @@
             {{ $slot }}
         </div>
 
-        @livewireScripts
-        @filamentScripts
+        <!-- @livewireScripts -->
+        <!-- @filamentScripts -->
     </body>
 </html>

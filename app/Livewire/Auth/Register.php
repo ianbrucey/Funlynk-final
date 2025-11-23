@@ -20,9 +20,22 @@ class Register extends Component implements HasForms
 
     public ?array $data = [];
 
+    public ?bool $usernameAvailable = null;
+
     public function mount(): void
     {
         $this->form->fill();
+    }
+
+    public function updatedDataUsername($value): void
+    {
+        if (strlen($value) >= 3) {
+            $username = Str::lower(Str::slug($value));
+            $exists = User::where('username', $username)->exists();
+            $this->usernameAvailable = !$exists;
+        } else {
+            $this->usernameAvailable = null;
+        }
     }
 
     public function form(Schema $schema): Schema
@@ -39,7 +52,23 @@ class Register extends Component implements HasForms
                     ->required()
                     ->maxLength(50)
                     ->rules(['alpha_dash'])
-                    ->unique(User::class, 'username'),
+                    ->unique(User::class, 'username')
+                    ->live(debounce: 300)
+                    ->helperText(fn () => match ($this->usernameAvailable) {
+                        true => '✓ Username is available',
+                        false => '✗ Username is already taken',
+                        default => 'Choose a unique username (letters, numbers, dashes, underscores)',
+                    })
+                    ->suffixIcon(fn () => match ($this->usernameAvailable) {
+                        true => 'heroicon-o-check-circle',
+                        false => 'heroicon-o-x-circle',
+                        default => null,
+                    })
+                    ->suffixIconColor(fn () => match ($this->usernameAvailable) {
+                        true => 'success',
+                        false => 'danger',
+                        default => null,
+                    }),
                 TextInput::make('password')
                     ->password()
                     ->required()
@@ -53,7 +82,14 @@ class Register extends Component implements HasForms
                     ->label('Confirm password'),
                 TextInput::make('location_name')
                     ->label('Location (optional)')
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->helperText('We\'ll use this to show you nearby activities'),
+                TextInput::make('latitude')
+                    ->hidden()
+                    ->numeric(),
+                TextInput::make('longitude')
+                    ->hidden()
+                    ->numeric(),
             ])
             ->statePath('data');
     }
@@ -72,6 +108,17 @@ class Register extends Component implements HasForms
         $payload['display_name'] = $payload['username'];
         $payload['privacy_level'] = 'public';
         $payload['is_host'] = false;
+
+        // Handle location coordinates if provided
+        if (!empty($payload['latitude']) && !empty($payload['longitude'])) {
+            $payload['location_coordinates'] = new \MatanYadaev\EloquentSpatial\Objects\Point(
+                $payload['latitude'],
+                $payload['longitude']
+            );
+        }
+
+        // Remove latitude/longitude from payload as they're not direct columns
+        unset($payload['latitude'], $payload['longitude']);
 
         $user = User::create($payload);
 

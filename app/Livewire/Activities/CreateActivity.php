@@ -89,7 +89,7 @@ class CreateActivity extends Component
 
         try {
             // Create location point
-            $locationPoint = new Point($this->latitude, $this->longitude);
+            $locationPoint = new Point((float)$this->latitude, (float)$this->longitude);
 
             // Upload images
             $imagePaths = [];
@@ -108,7 +108,7 @@ class CreateActivity extends Component
                 'location_name' => $this->location_name,
                 'location_coordinates' => $locationPoint,
                 'start_time' => $this->start_time,
-                'end_time' => $this->end_time,
+                'end_time' => $this->end_time ?: null,
                 'max_attendees' => $this->max_attendees ?: null,
                 'current_attendees' => 0,
                 'is_paid' => $this->is_paid,
@@ -130,7 +130,7 @@ class CreateActivity extends Component
             
             return redirect()->route('activities.show', $activity->id);
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to create activity: ' . $e->getMessage());
+            session()->flash('error', 'Error creating activity: ' . $e->getMessage());
         }
     }
 

@@ -138,3 +138,60 @@ test('display name cannot exceed 100 characters', function () {
         ->call('save')
         ->assertHasErrors(['display_name']);
 });
+
+test('user can update username', function () {
+    $user = User::factory()->create(['username' => 'oldusername']);
+
+    Livewire::actingAs($user)
+        ->test('profile.edit-profile')
+        ->set('username', 'newusername')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $user->refresh();
+    expect($user->username)->toBe('newusername');
+});
+
+test('username must be unique', function () {
+    $existingUser = User::factory()->create(['username' => 'takenusername']);
+    $user = User::factory()->create(['username' => 'myusername']);
+
+    Livewire::actingAs($user)
+        ->test('profile.edit-profile')
+        ->set('username', 'takenusername')
+        ->call('save')
+        ->assertHasErrors(['username']);
+
+    $user->refresh();
+    expect($user->username)->toBe('myusername');
+});
+
+test('username availability check works', function () {
+    $existingUser = User::factory()->create(['username' => 'takenusername']);
+    $user = User::factory()->create(['username' => 'myusername']);
+
+    $component = Livewire::actingAs($user)
+        ->test('profile.edit-profile');
+
+    // Check available username
+    $component->set('username', 'availableusername');
+    expect($component->get('usernameAvailable'))->toBeTrue();
+
+    // Check taken username
+    $component->set('username', 'takenusername');
+    expect($component->get('usernameAvailable'))->toBeFalse();
+
+    // Check own username (should be available)
+    $component->set('username', 'myusername');
+    expect($component->get('usernameAvailable'))->toBeTrue();
+});
+
+test('username must be at least 3 characters', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('profile.edit-profile')
+        ->set('username', 'ab')
+        ->call('save')
+        ->assertHasErrors(['username']);
+});

@@ -1,151 +1,146 @@
-# me
 
-Okay, so earlier I was thinking about how not only do I need to build this MVP, but the whole product needs to have a unique value proposition because one question that I get from people often is like, well, what's different about your idea from Meetup.com or Eventbrite? And the difference is this. I'll try to explain what I think the difference is. As a musician, when I was really in the scene like 10 years ago, I used to go to jam sessions all the time. And they might be at some random church. They might be at some random college in a music room. It might be at some auditorium. It could happen anywhere. And if you were a musician in the circle, sometimes you would get wind of it. You would come. You might even play. And so that's a niche activity that is very hard to find unless you know people directly in those circles. Or you just happen to follow musicians and they just happen to post it. There's no way for you to really find stuff like that to do. And even on Eventbrite, Eventbrite to me seems like a more professionally tailored event platform rather than a social activity and connection network where people can post things on the fly like, hey, we're doing a jam session. And you're searching for posts based on location and your interests, you know what I mean? So my question is, like, how do I build a post-creation and post-discovery system that really helps people find their niches?
+This error (`Public method [toJSON] not found`) is a specific and somewhat obscure conflict in Livewire 3.
 
-# gpt
+It occurs when **JavaScript tries to serialize the Livewire component object** (via `JSON.stringify`).
 
+In your case, the conflict is happening in the **Google Maps Autocomplete** section. You have `wire:model` bound to the same input that Google Maps is hijacking. When the page loads (or when autofill runs), Google Maps manipulates the DOM element. Livewire detects this change and tries to sync, but because Google Maps attaches complex objects to that DOM node, the Livewire proxy gets confused, attempts to serialize itself, and sends a request to the server asking to run a method named `toJSON`.
 
-That’s a  **brilliant and very grounded differentiation** , Ian — you’re touching on a real social discovery problem that **Meetup** and **Eventbrite** never solved: *casual, hyper-local, niche, trust-based activities that don’t fit the “professional event” mold.*
+Here is the fix.
 
-Let’s break down how to build your **post-creation and post-discovery system** to serve that goal — helping people find “micro-cultures” and spontaneous experiences like jam sessions, open mics, skating meetups, etc.
+### The Solution
 
----
+You need to decouple Livewire's DOM tracking from the Google Maps input using `wire:ignore`.
 
-## 🧭 The Conceptual Shift: “From Events to Energy”
+**Changes made:**
 
-Platforms like Meetup and Eventbrite treat events as *transactions* (register → attend).
+1. Added `wire:ignore` to the parent `div` of the location input. This tells Livewire: "Do not re-render this HTML or track its DOM changes."
+2. Removed `wire:model="location_name"` from the input. Since you are already using `$wire.call('setLocationData'...)` in your script, the `wire:model` is redundant and causing the crash.
+3. Added `value="{{ $location_name }}"` so the input still shows the current value from the database on page load.
+4. Added a `change` event listener to the script to handle manual typing (not just autocomplete selection).
 
-You want to treat posts as *energy signals* — spontaneous invitations to connect, discover, or join a vibe.
+Here is the corrected code block for the Location section and the Script:
 
-Your post system should make it easy to:
+**HTML**
 
-* **Broadcast intent** (“who’s down to jam tonight?”)
-* **Attract alignment** (other musicians nearby see it in real time)
-* **Convert energy** into action (chat, RSVP, or form an event cluster)
+```
+<div class="md:col-span-2">
+    <div class="form-control">
+        <label class="label pb-3"><span class="label-text text-gray-300 font-medium">Location</span></label>
 
----
+        <div class="relative" wire:ignore>
+            <input
+                type="text"
+                id="location-autocomplete-input"
+                {{-- 2. Remove wire:model. Use value attribute for initial state --}}
+                value="{{ $location_name }}"
+                placeholder="Search for your city..."
+                class="input input-bordered w-full bg-white text-gray-900 border-white/10 focus:border-cyan-500 focus:outline-none placeholder-gray-400"
+                autocomplete="off"
+            />
 
-## ⚙️ Architecture Overview
+            <button
+                type="button"
+                onclick="getCurrentLocation()"
+                class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-cyan-500 transition"
+                title="Use my current location">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </button>
+        </div>
 
-You’ll need  **two parallel content types** :
+        <p class="text-xs text-gray-500 mt-1">Start typing to search for a location</p>
+        @error('location_name') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+    </div>
+</div>
 
-| Type             | Purpose                                                              | Examples                                                                  |
-| ---------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| **Posts**  | lightweight, conversational, real-time “what’s happening” updates | “Open jam at Clark ATL tonight 🎸”, “Anyone want to hike Arabia Mtn?” |
-| **Events** | structured, time-anchored experiences with RSVPs or payments         | “Jazz Night @ High Museum — $10 cover”                                 |
+@script
+<script>
+    // Load Google Places API
+    if (!window.google || !window.google.maps || !window.google.maps.places) {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&libraries=places`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
 
-The *magic* lies in making **post discovery** location-aware, interest-aware, and *ambiently social.*
+        script.onload = () => {
+            initializeAutocomplete();
+        };
+    } else {
+        initializeAutocomplete();
+    }
 
----
+    function initializeAutocomplete() {
+        const input = document.getElementById('location-autocomplete-input');
+        if (!input) return;
 
-## 💡 Core Design for Niche Discovery
+        const autocomplete = new google.maps.places.Autocomplete(input, {
+            types: ['(cities)'],
+            fields: ['formatted_address', 'geometry', 'name']
+        });
 
-### 1. **Tagged Intents (Interests & Activity Types)**
+        // Handle Autocomplete Selection
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (!place.geometry) return;
 
-Every post or event carries metadata like:
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            const name = place.formatted_address || place.name;
 
-```json
-{
-  "category": "music",
-  "tags": ["jam session", "live improv", "atlanta"],
-  "mood": "creative"
-}
+            $wire.call('setLocationData', name, lat, lng);
+        });
+
+        // Handle manual typing (since we removed wire:model)
+        input.addEventListener('input', (e) => {
+            // Optional: debounce this if you want to save partial typing
+            // For now, we just sync the name, lat/lng will be null until they pick a place
+            // You might want to create a specific method for "just updating name"
+            // $wire.set('location_name', e.target.value); 
+        });
+    }
+
+    window.getCurrentLocation = function() {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode(
+                    { location: { lat, lng } },
+                    (results, status) => {
+                        if (status === 'OK' && results[0]) {
+                            // Update Input Visually
+                            document.getElementById('location-autocomplete-input').value = results[0].formatted_address;
+                            // Update Livewire
+                            $wire.call('setLocationData', results[0].formatted_address, lat, lng);
+                        }
+                    }
+                );
+            },
+            (error) => {
+                alert('Unable to get your location.');
+            }
+        );
+    };
+</script>
+@endscript
 ```
 
-* When users create posts, suggest tags from their interests or past activity.
-* Use these tags for search, recommendations, and proximity filtering.
+### Why `wire:ignore` is mandatory here
 
----
+Third-party libraries like Google Maps, Select2, or CKEditor manipulate the DOM directly. Livewire also tries to manipulate the DOM.
 
-### 2. **Location Intelligence**
-
-Add **geo-tagging** to every post:
-
-* `latitude`, `longitude`, and a computed `geo_hash`
-* Supabase can index spatial queries with PostGIS
-* Feed query: `SELECT * FROM posts WHERE distance(user_location, post_location) < 10km ORDER BY timestamp DESC`
-
-💥 This lets users see *what’s happening nearby right now.*
-
----
-
-### 3. **Temporal Weighting (Recency + Relevance)**
-
-Posts should fade in relevance quickly — unlike static events.
-
-* Use a ranking score:
-
-  **score = (recency * location proximity * interest match)**
-* This keeps the feed alive, local, and serendipitous.
-
----
-
-### 4. **Communities Through Interest Graphs**
-
-Instead of pre-made “groups” like Meetup, your system can build  **implicit communities** :
-
-* When multiple posts share similar tags/locations → show “clusters”
-  * e.g., “Atlanta Musicians” auto-generated by shared activity
-* Later, these clusters can evolve into **hubs or circles**
-
----
-
-### 5. **Discovery UI**
-
-Build a *“vibe map”* or *activity feed* instead of a traditional event list:
-
-* **Nearby Feed:** “What’s happening within 5 miles right now”
-* **For You Feed:** posts matching interests
-* **Map View:** pins representing real posts/events (tap to open)
-* **Filters:** category, time, cost (free/paid), friends attending
-
----
-
-### 6. **Social Resonance**
-
-Encourage engagement with:
-
-* **“I’m down” or “Join me” buttons** instead of likes
-* **Quick DM/Group chat** initiation from a post
-* **Signal amplification:** if multiple friends RSVP or engage, the post ranks higher in your feed
-
----
-
-### 7. **Hybrid Post→Event Flow**
-
-Let posts *evolve* into structured events:
-
-* A jam session post gets traction → creator converts it to an event (with date, location, price)
-* That’s where you connect to Stripe for payments or RSVPs
-
----
-
-## 🧩 Implementation Layer (Supabase + React Native)
-
-* **Tables:**
-  * `posts` (id, user_id, content, tags[], location, expires_at)
-  * `events` (id, post_id, title, start_time, end_time, price)
-  * `post_tags`, `user_interests`, `post_reactions`
-* **Functions:**
-  * Edge Function for geo-distance filtering
-  * Feed ranking function combining interest + location
-  * Webhook to auto-expire posts after 24–48h
-* **Frontend:**
-  * “Create Post” screen with tags + location picker
-  * “Discover” feed + map mode
-  * “Post Detail” → comment or “Join” CTA
-
----
-
-## 🔮 Future Differentiators (v2+)
-
-* AI-powered “Interest matching” → suggest posts based on vibe (“creative + social + nearby”)
-* Auto-detect activity type from text (“jam tonight at” → Music / Live / Local)
-* Micro-groups that form dynamically around recurring posts (“Wednesday jammers”)
-* “Spark” system — gamified XP for attending or hosting activities (fits your Spark experiential layer perfectly)
-
----
-
-If you want, I can now map out the **Supabase schema and query structure** for this *niche-discovery feed* — including how to rank, filter, and evolve posts into events.
-
-Would you like me to draft that next?
+1. Google Maps changes the input.
+2. Livewire sees the change (because of `wire:model`).
+3. Livewire tries to inspect the change to send it to the server.
+4. Livewire encounters the heavy Google Maps object attached to the input, fails to parse it, mistakenly treats it as a method call, and crashes.
+5. `wire:ignore` tells Livewire to back off and let JavaScript handle that specific DOM element.

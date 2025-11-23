@@ -7,6 +7,7 @@ use App\Models\Post;
 use App\Models\PostConversion;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class ActivityService
@@ -23,15 +24,15 @@ class ActivityService
         // Check if conversion already exists (idempotency)
         $existingConversion = PostConversion::where('post_id', $post->id)->first();
         
-        if ($existingConversion && $existingConversion->activity_id) {
-            return Activity::find($existingConversion->activity_id);
+        if ($existingConversion && $existingConversion->event_id) {
+            return Activity::find($existingConversion->event_id);
         }
 
         return DB::transaction(function () use ($post, $host) {
             // Create activity with data from post
             $activity = Activity::create([
                 'host_id' => $host?->id ?? $post->user_id,
-                'title' => $post->title ?? 'Activity from Post',
+                'title' => Str::limit($post->content, 50) ?? 'Activity from Post',
                 'description' => $post->content,
                 'activity_type' => $post->activity_type ?? 'social',
                 'location_name' => $post->location_name,
@@ -53,9 +54,12 @@ class ActivityService
             PostConversion::updateOrCreate(
                 ['post_id' => $post->id],
                 [
-                    'activity_id' => $activity->id,
-                    'reaction_count_at_conversion' => $post->reaction_count ?? 0,
-                    'converted_at' => now(),
+                    'event_id' => $activity->id,
+                    'reactions_at_conversion' => $post->reaction_count ?? 0,
+                    'comments_at_conversion' => 0, // Default
+                    'views_at_conversion' => $post->view_count ?? 0,
+                    'trigger_type' => 'manual', // Default to manual
+                    'created_at' => now(),
                 ]
             );
 

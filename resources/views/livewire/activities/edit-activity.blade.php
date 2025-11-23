@@ -3,9 +3,9 @@
         {{-- Header --}}
         <div class="mb-8 text-center">
             <h1 class="text-4xl font-bold mb-2">
-                <span class="gradient-text">Create Activity</span>
+                <span class="gradient-text">Edit Activity</span>
             </h1>
-            <p class="text-gray-400">Share your passion and connect with others</p>
+            <p class="text-gray-400">Update your activity details</p>
         </div>
 
         {{-- Flash Messages --}}
@@ -21,14 +21,14 @@
             </div>
         @endif
 
-        <form wire:submit="createActivity" class="max-w-4xl mx-auto space-y-6">
+        <form wire:submit="updateActivity" class="max-w-4xl mx-auto space-y-6">
             {{-- Basic Information --}}
             <div class="relative p-8 glass-card">
                 <div class="top-accent-center"></div>
                 
                 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
                     <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                     </svg>
                     Basic Information
                 </h2>
@@ -40,7 +40,6 @@
                         <input 
                             type="text" 
                             wire:model="title"
-                            placeholder="e.g., Pickup Basketball Game"
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                         />
                         @error('title') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
@@ -73,7 +72,6 @@
                         <textarea 
                             wire:model="description"
                             rows="4"
-                            placeholder="Tell people what to expect..."
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                         ></textarea>
                         @error('description') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
@@ -82,15 +80,36 @@
                     {{-- Images --}}
                     <div>
                         <label class="block text-sm font-semibold text-gray-300 mb-2">Activity Images</label>
+                        
+                        {{-- Existing Images --}}
+                        @if (count($existingImages) > 0)
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                @foreach ($existingImages as $index => $image)
+                                    <div class="relative group">
+                                        <img src="{{ Storage::url($image) }}" class="w-full h-24 object-cover rounded-lg border border-white/10">
+                                        <button 
+                                            type="button"
+                                            wire:click="removeExistingImage({{ $index }})"
+                                            class="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-white opacity-0 group-hover:opacity-100 transition"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
                         <input 
                             type="file" 
-                            wire:model="images"
+                            wire:model="newImages"
                             multiple
                             accept="image/*"
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-pink-500 file:to-purple-500 file:text-white hover:file:scale-105 file:transition-all"
                         />
-                        <p class="text-xs text-gray-400 mt-1">Max 5 images, 2MB each</p>
-                        @error('images.*') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        <p class="text-xs text-gray-400 mt-1">Add more images (Max 5 total)</p>
+                        @error('newImages.*') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>
@@ -114,7 +133,6 @@
                         <input 
                             type="text" 
                             wire:model="location_name"
-                            placeholder="e.g., Central Park Basketball Courts"
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                         />
                         @error('location_name') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
@@ -128,7 +146,6 @@
                                 type="number" 
                                 step="any"
                                 wire:model="latitude"
-                                placeholder="40.7829"
                                 class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                             />
                             @error('latitude') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
@@ -139,7 +156,6 @@
                                 type="number" 
                                 step="any"
                                 wire:model="longitude"
-                                placeholder="-73.9654"
                                 class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                             />
                             @error('longitude') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
@@ -151,7 +167,7 @@
                         wire:click="useCurrentLocation"
                         class="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition text-sm"
                     >
-                        📍 Use My Current Location
+                        📍 Update to Current Location
                     </button>
                 </div>
             </div>
@@ -211,7 +227,6 @@
                             min="1"
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                         />
-                        <p class="text-xs text-gray-400 mt-1">Leave empty for unlimited capacity</p>
                         @error('max_attendees') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
@@ -235,12 +250,10 @@
                                 <input 
                                     type="number" 
                                     wire:model="price_cents"
-                                    placeholder="1500 (for $15.00)"
                                     min="1"
                                     class="w-full pl-8 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                                 />
                             </div>
-                            <p class="text-xs text-gray-400 mt-1">Enter amount in cents (e.g., 1500 for $15.00)</p>
                             @error('price_cents') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                         </div>
                     @endif
@@ -267,10 +280,7 @@
                             id="is_public"
                             class="w-5 h-5 rounded bg-slate-800/50 border-white/10 text-cyan-500 focus:ring-cyan-500/50"
                         />
-                        <label for="is_public" class="text-sm font-semibold text-gray-300">
-                            Public Activity
-                            <span class="block text-xs text-gray-400 font-normal">Appears in discovery feeds</span>
-                        </label>
+                        <label for="is_public" class="text-sm font-semibold text-gray-300">Public Activity</label>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -280,10 +290,23 @@
                             id="requires_approval"
                             class="w-5 h-5 rounded bg-slate-800/50 border-white/10 text-cyan-500 focus:ring-cyan-500/50"
                         />
-                        <label for="requires_approval" class="text-sm font-semibold text-gray-300">
-                            Require Approval
-                            <span class="block text-xs text-gray-400 font-normal">You must approve each RSVP</span>
-                        </label>
+                        <label for="requires_approval" class="text-sm font-semibold text-gray-300">Require Approval</label>
+                    </div>
+
+                    {{-- Status --}}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">Status</label>
+                        <select 
+                            wire:model="status"
+                            class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
+                        >
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        @error('status') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>
@@ -305,7 +328,7 @@
             {{-- Submit Button --}}
             <div class="flex gap-4 justify-center">
                 <a 
-                    href="{{ route('activities.index') }}"
+                    href="{{ route('activities.show', $activity->id) }}"
                     class="px-8 py-4 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition font-semibold"
                 >
                     Cancel
@@ -314,7 +337,7 @@
                     type="submit"
                     class="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all shadow-lg"
                 >
-                    Create Activity
+                    Update Activity
                 </button>
             </div>
         </form>

@@ -56,6 +56,32 @@
                     </div>
                 </div>
 
+                <!-- Username -->
+                <div class="form-control md:col-span-2">
+                    <label class="label pb-3"><span class="label-text text-gray-300 font-medium">Username</span></label>
+                    <div class="relative">
+                        <input type="text" wire:model.live.debounce.300ms="username" placeholder="e.g. cosmic_explorer"
+                               class="input input-bordered w-full bg-white text-gray-900 border-white/10 focus:border-cyan-500 focus:outline-none placeholder-gray-400 pr-10" />
+                        @if($usernameAvailable === true)
+                            <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        @elseif($usernameAvailable === false)
+                            <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        @endif
+                    </div>
+                    @if($usernameAvailable === true)
+                        <span class="text-green-400 text-xs mt-1">✓ Username is available</span>
+                    @elseif($usernameAvailable === false)
+                        <span class="text-red-400 text-xs mt-1">✗ Username is already taken</span>
+                    @else
+                        <span class="text-gray-500 text-xs mt-1">Your profile URL: funlynk.com/u/{{ $username }}</span>
+                    @endif
+                    @error('username') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                </div>
+
                 <!-- Display Name -->
                 <div class="form-control md:col-span-2">
                     <label class="label pb-3"><span class="label-text text-gray-300 font-medium">Display Name</span></label>
@@ -66,12 +92,12 @@
 
                 <!-- Bio -->
                 <div class="form-control md:col-span-2">
-                    <label class="label pb-3"><span class="label-text text-gray-300 font-medium">Bio</span></label>
+                    <label class="block text-gray-300 font-medium mb-3">Bio</label>
                     <textarea wire:model="bio" class="textarea textarea-bordered h-28 bg-white text-gray-900 border-white/10 focus:border-cyan-500 focus:outline-none placeholder-gray-400"
                               placeholder="Tell us about yourself..."></textarea>
-                    <div class="label">
-                        <span class="label-text-alt text-gray-500">{{ strlen($bio ?? '') }}/500</span>
-                        @error('bio') <span class="label-text-alt text-red-400">{{ $message }}</span> @enderror
+                    <div class="flex justify-between items-center mt-1">
+                        <span class="text-xs text-gray-500">{{ strlen($bio ?? '') }}/500</span>
+                        @error('bio') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -103,27 +129,36 @@
                     </div>
                 </div>
 
-                <!-- Location Name -->
-                <div class="form-control md:col-span-2">
-                    <label class="label pb-3"><span class="label-text text-gray-300 font-medium">Location Name</span></label>
-                    <input type="text" wire:model="location_name" placeholder="e.g. San Francisco, CA"
-                           class="input input-bordered w-full bg-white text-gray-900 border-white/10 focus:border-cyan-500 focus:outline-none placeholder-gray-400" />
-                    @error('location_name') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
-                </div>
+                <!-- Location -->
+                <div class="md:col-span-2">
+                    <div class="form-control">
+                        <label class="label pb-3"><span class="label-text text-gray-300 font-medium">Location</span></label>
 
-                <!-- Coordinates -->
-                <div class="form-control">
-                    <label class="label pb-3"><span class="label-text text-gray-300 font-medium">Latitude</span></label>
-                    <input type="number" step="any" wire:model="latitude" placeholder="37.7749"
-                           class="input input-bordered w-full bg-white text-gray-900 border-white/10 focus:border-cyan-500 focus:outline-none placeholder-gray-400" />
-                    @error('latitude') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
-                </div>
+                        <div class="relative" wire:ignore>
+                            <input
+                                type="text"
+                                id="location-autocomplete-input"
+                                value="{{ $location_name }}"
+                                placeholder="Search for your city..."
+                                class="input input-bordered w-full bg-white text-gray-900 border-white/10 focus:border-cyan-500 focus:outline-none placeholder-gray-400"
+                                autocomplete="off"
+                            />
 
-                <div class="form-control">
-                    <label class="label pb-3"><span class="label-text text-gray-300 font-medium">Longitude</span></label>
-                    <input type="number" step="any" wire:model="longitude" placeholder="-122.4194"
-                           class="input input-bordered w-full bg-white text-gray-900 border-white/10 focus:border-cyan-500 focus:outline-none placeholder-gray-400" />
-                    @error('longitude') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                            <button
+                                type="button"
+                                onclick="getCurrentLocation()"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-cyan-500 transition"
+                                title="Use my current location">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <p class="text-xs text-gray-500 mt-1">Start typing to search for a location</p>
+                        @error('location_name') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                    </div>
                 </div>
 
                 <!-- Buttons -->
@@ -138,3 +173,85 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('livewire:init', () => {
+    // Load Google Places API
+    if (!window.google || !window.google.maps || !window.google.maps.places) {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&libraries=places`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+
+        script.onload = () => {
+            initializeAutocomplete();
+        };
+    } else {
+        initializeAutocomplete();
+    }
+
+    function initializeAutocomplete() {
+        const input = document.getElementById('location-autocomplete-input');
+        if (!input) return;
+
+        const autocomplete = new google.maps.places.Autocomplete(input, {
+            types: ['(cities)'],
+            fields: ['formatted_address', 'geometry', 'name']
+        });
+
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+
+            if (!place.geometry) return;
+
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            const name = place.formatted_address || place.name;
+
+            // Get Livewire component instance
+            const component = Livewire.find(input.closest('[wire\\:id]').getAttribute('wire:id'));
+            component.call('setLocationData', name, lat, lng);
+        });
+    }
+
+    // Handle current location request
+    window.getCurrentLocation = function() {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const input = document.getElementById('location-autocomplete-input');
+                const component = Livewire.find(input.closest('[wire\\:id]').getAttribute('wire:id'));
+
+                // Reverse geocode to get location name
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode(
+                    { location: { lat, lng } },
+                    (results, status) => {
+                        if (status === 'OK' && results[0]) {
+                            // Update input visually
+                            input.value = results[0].formatted_address;
+                            // Update Livewire
+                            component.call('setLocationData', results[0].formatted_address, lat, lng);
+                        } else {
+                            // Update input visually
+                            input.value = 'Current Location';
+                            // Update Livewire
+                            component.call('setLocationData', 'Current Location', lat, lng);
+                        }
+                    }
+                );
+            },
+            (error) => {
+                alert('Unable to get your location. Please check your browser permissions.');
+            }
+        );
+    };
+});
+</script>

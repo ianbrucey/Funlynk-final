@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\UsernameController;
 use App\Http\Controllers\Auth\SocialLoginController;
 use App\Livewire\Auth\Login as LoginForm;
 use App\Livewire\Auth\Register as RegisterForm;
@@ -15,6 +16,11 @@ Route::view('/', 'welcome')->name('home');
 Route::view('/samples/gemini', 'samples.gemini-style')->name('samples.gemini');
 Route::view('/samples/claude', 'samples.claude-style')->name('samples.claude');
 
+// API Routes
+Route::post('/api/check-username', [UsernameController::class, 'checkAvailability'])
+    ->middleware('throttle:60,1')
+    ->name('api.check-username');
+
 Route::middleware('guest')->group(function () {
     Route::get('/register', RegisterForm::class)->name('register');
     Route::get('/login', LoginForm::class)->name('login');
@@ -25,6 +31,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', ShowProfile::class)->name('profile.show');
     Route::get('/profile/edit', EditProfile::class)->name('profile.edit');
     Route::get('/u/{username}', ShowProfile::class)->name('profile.view');
+
+    // Activity Routes
+    Route::get('/activities', function () {
+        return 'Activities Index Placeholder'; // Placeholder for now
+    })->name('activities.index');
+    Route::get('/activities/create', \App\Livewire\Activities\CreateActivity::class)->name('activities.create');
+    Route::get('/activities/{activity}', \App\Livewire\Activities\ActivityDetail::class)->name('activities.show');
+    Route::get('/activities/{activity}/edit', \App\Livewire\Activities\EditActivity::class)->name('activities.edit');
 
     Route::post('/logout', function (Request $request) {
         Auth::logout();

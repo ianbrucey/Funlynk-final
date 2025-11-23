@@ -32,7 +32,6 @@ class Activity extends Model
             'price_cents' => 'integer',
             'max_attendees' => 'integer',
             'current_attendees' => 'integer',
-            'tags' => 'array',
             'images' => 'array',
         ];
     }

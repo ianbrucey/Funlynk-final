@@ -18,8 +18,8 @@
 
 ## Currently Working On
 - **Sprint 2**: E03/F01 Activity CRUD Operations
-- **Status**: 🔄 In Progress - T01, T02, T03, T06 Complete
-- **Time Spent**: ~4 hours
+- **Status**: ✅ Complete
+- **Time Spent**: ~6 hours
 - **Dependencies Met**: 
   - ✅ User profiles (Agent A completed E02/F01)
   - ✅ Tagging system (Agent B Sprint 1 complete)
@@ -44,38 +44,48 @@
 - ✅ Activity duplication
 
 #### T03: CreateActivity Livewire Component (DONE)
-- ✅ Beautiful galaxy-themed form with 6 sections:
-  - Basic Information (title, type, description, images)
-  - Location (name, lat/long with geolocation button)
-  - Date & Time (start/end with validation)
-  - Capacity & Pricing (max attendees, paid toggle, price)
-  - Settings (public, requires approval)
-  - Tags (integrated TagAutocomplete from Sprint 1)
+- ✅ Beautiful galaxy-themed form with 6 sections
 - ✅ Form validation with custom error messages
-- ✅ Image upload with Livewire (max 5 images, 2MB each)
-- ✅ Geolocation API integration ("Use My Current Location" button)
-- ✅ PostGIS Point creation for coordinates
-- ✅ Tag syncing with activity_tag pivot table
-- ✅ Glass card styling with gradient buttons
-- ✅ Responsive design
+- ✅ Image upload with Livewire
+- ✅ Geolocation API integration
+- ✅ PostGIS Point creation
+- ✅ Tag syncing
+
+#### T04: EditActivity Livewire Component (DONE)
+- ✅ Loads existing activity data including tags and images
+- ✅ Authorization check (host-only)
+- ✅ Image management (add new, remove existing)
+- ✅ Status management (draft -> published -> etc)
+- ✅ Tag syncing (sync/detach)
+- ✅ "Update to Current Location" feature
+
+#### T05: ActivityDetail Livewire Component (DONE)
+- ✅ Stunning public view with galaxy theme
+- ✅ Hero section with status badges
+- ✅ Image gallery (grid layout)
+- ✅ Sidebar with key info (time, price, capacity bar)
+- ✅ Host actions (Edit/Delete) with confirmation
+- ✅ Host info card
+- ✅ Map placeholder with coordinates
 
 #### T06: ActivityPolicy (DONE)
-- ✅ viewAny/view: Public activities visible to all, private only to host
-- ✅ create: All authenticated users can create
-- ✅ update: Host-only editing
-- ✅ delete: Host-only, prevents deletion if attendees exist or completed
-- ✅ cancel: Host-only, prevents if already completed/cancelled
-- ✅ publish: Host-only, only for draft activities
-- ✅ Placeholder for admin checks (ready for role system)
+- ✅ Full authorization matrix implemented
+- ✅ Host-only permissions enforced
+- ✅ Public/Private view logic
+
+#### T07: Comprehensive Tests (DONE)
+- ✅ 14 tests covering all critical paths
+- ✅ Service layer tests (conversion, capacity, status)
+- ✅ Policy tests (authorization)
+- ✅ Livewire component tests (Create, Edit, Detail)
+- ✅ Fixed database schema issues (dropped redundant tags column)
+- ✅ Fixed factory issues (Post title, Activity tags)
 
 ### 🔧 In Progress
-- **T04**: EditActivity Livewire component (next)
-- **T05**: ActivityDetail public view (next)
+- None. Sprint 2 Complete.
 
 ## Next Steps
-1. Build EditActivity component (similar to Create but with existing data)
-2. Build ActivityDetail public view with RSVP placeholder
-3. Write comprehensive Pest tests (T07)
+1. Move to Sprint 3 (E03/F02 RSVP & Attendance)
 
 ---
 
