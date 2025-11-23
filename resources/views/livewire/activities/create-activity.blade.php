@@ -108,51 +108,35 @@
                 </h2>
 
                 <div class="space-y-4">
-                    {{-- Location Name --}}
-                    <div>
+                    <div class="form-control">
                         <label class="block text-sm font-semibold text-gray-300 mb-2">Location Name *</label>
-                        <input 
-                            type="text" 
-                            wire:model="location_name"
-                            placeholder="e.g., Central Park Basketball Courts"
-                            class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
-                        />
-                        @error('location_name') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
-                    </div>
 
-                    {{-- Coordinates --}}
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-300 mb-2">Latitude *</label>
-                            <input 
-                                type="number" 
-                                step="any"
-                                wire:model="latitude"
-                                placeholder="40.7829"
+                        <div class="relative" wire:ignore>
+                            <input
+                                type="text"
+                                id="location-autocomplete-input"
+                                value="{{ $location_name }}"
+                                placeholder="Search for a location..."
                                 class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
+                                autocomplete="off"
                             />
-                            @error('latitude') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-300 mb-2">Longitude *</label>
-                            <input 
-                                type="number" 
-                                step="any"
-                                wire:model="longitude"
-                                placeholder="-73.9654"
-                                class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
-                            />
-                            @error('longitude') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
 
-                    <button 
-                        type="button"
-                        wire:click="useCurrentLocation"
-                        class="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition text-sm"
-                    >
-                        📍 Use My Current Location
-                    </button>
+                            <button
+                                type="button"
+                                onclick="getCurrentLocation()"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-cyan-500 transition"
+                                title="Use my current location">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <p class="text-xs text-gray-500 mt-1">Start typing to search for a location</p>
+                        @error('location_name') <span class="text-red-400 text-sm mt-1 block">{{ $message }}</span> @enderror
+                        @error('latitude') <span class="text-red-400 text-sm mt-1 block">Please select a valid location from the list</span> @enderror
+                    </div>
                 </div>
             </div>
 
@@ -299,7 +283,31 @@
                     Tags
                 </h2>
 
-                @livewire('tags.tag-autocomplete', ['selectedTags' => $selectedTags])
+                <div class="form-control">
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" wire:model="newTag" wire:keydown.enter.prevent="addTag"
+                               placeholder="Add tag (Enter)"
+                               class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white" />
+                        <button type="button" wire:click="addTag" class="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-white">Add</button>
+                    </div>
+                    
+                    @if(count($selectedTags) > 0)
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($selectedTags as $index => $tag)
+                                <div class="badge badge-lg gap-2 bg-purple-500/20 text-purple-300 border-purple-500/30 p-3 rounded-lg flex items-center">
+                                    {{ $tag['name'] }}
+                                    <button type="button" wire:click="removeTag({{ $index }})" class="hover:text-white ml-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-4 h-4 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                    <div class="label mt-2">
+                        <span class="text-xs text-gray-500">{{ count($selectedTags) }}/10 tags</span>
+                        @error('selectedTags') <span class="text-xs text-red-400 ml-2">{{ $message }}</span> @enderror
+                    </div>
+                </div>
             </div>
 
             {{-- Submit Button --}}
@@ -346,22 +354,84 @@
     </style>
 
     <script>
-        // Get current location
-        document.addEventListener('livewire:initialized', () => {
-            Livewire.on('getCurrentLocation', () => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            @this.setLocation(position.coords.latitude, position.coords.longitude);
-                        },
-                        (error) => {
-                            alert('Unable to get your location. Please enter coordinates manually.');
+    document.addEventListener('livewire:init', () => {
+        // Load Google Places API
+        if (!window.google || !window.google.maps || !window.google.maps.places) {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&libraries=places`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+
+            script.onload = () => {
+                initializeAutocomplete();
+            };
+        } else {
+            initializeAutocomplete();
+        }
+
+        function initializeAutocomplete() {
+            const input = document.getElementById('location-autocomplete-input');
+            if (!input) return;
+
+            const autocomplete = new google.maps.places.Autocomplete(input, {
+                types: ['establishment', 'geocode'],
+                fields: ['formatted_address', 'geometry', 'name']
+            });
+
+            autocomplete.addListener('place_changed', () => {
+                const place = autocomplete.getPlace();
+
+                if (!place.geometry) return;
+
+                const lat = place.geometry.location.lat();
+                const lng = place.geometry.location.lng();
+                const name = place.name || place.formatted_address;
+
+                // Get Livewire component instance
+                const component = Livewire.find(input.closest('[wire\\:id]').getAttribute('wire:id'));
+                component.call('setLocationData', name, lat, lng);
+            });
+        }
+
+        // Handle current location request
+        window.getCurrentLocation = function() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const input = document.getElementById('location-autocomplete-input');
+                    const component = Livewire.find(input.closest('[wire\\:id]').getAttribute('wire:id'));
+
+                    // Reverse geocode to get location name
+                    const geocoder = new google.maps.Geocoder();
+                    geocoder.geocode(
+                        { location: { lat, lng } },
+                        (results, status) => {
+                            if (status === 'OK' && results[0]) {
+                                // Update input visually
+                                input.value = results[0].formatted_address;
+                                // Update Livewire
+                                component.call('setLocationData', results[0].formatted_address, lat, lng);
+                            } else {
+                                // Update input visually
+                                input.value = 'Current Location';
+                                // Update Livewire
+                                component.call('setLocationData', 'Current Location', lat, lng);
+                            }
                         }
                     );
-                } else {
-                    alert('Geolocation is not supported by your browser.');
+                },
+                (error) => {
+                    alert('Unable to get your location. Please check your browser permissions.');
                 }
-            });
-        });
+            );
+        };
+    });
     </script>
 </div>

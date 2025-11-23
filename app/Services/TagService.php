@@ -72,19 +72,8 @@ class TagService
      */
     public function createTag(string $name, ?string $category = null, ?string $description = null): Tag
     {
-        $slug = Str::slug($name);
-        
-        // Ensure unique slug
-        $originalSlug = $slug;
-        $counter = 1;
-        while (Tag::where('slug', $slug)->exists()) {
-            $slug = $originalSlug . '-' . $counter;
-            $counter++;
-        }
-
         return Tag::create([
             'name' => $name,
-            'slug' => $slug,
             'category' => $category,
             'description' => $description,
             'usage_count' => 0,

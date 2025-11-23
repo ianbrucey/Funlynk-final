@@ -32,6 +32,7 @@ class EditActivity extends Component
     public $requires_approval = false;
     public $status = '';
     public $selectedTags = [];
+    public $newTag = '';
     
     // Image handling
     public $newImages = [];
@@ -184,10 +185,50 @@ class EditActivity extends Component
         $this->dispatch('getCurrentLocation');
     }
 
-    public function setLocation($latitude, $longitude)
+    public function setLocationData($name, $lat, $lng)
     {
-        $this->latitude = $latitude;
-        $this->longitude = $longitude;
+        $this->location_name = $name;
+        $this->latitude = $lat ? (float) $lat : null;
+        $this->longitude = $lng ? (float) $lng : null;
+    }
+
+    public function addTag()
+    {
+        if (empty($this->newTag)) {
+            return;
+        }
+
+        if (count($this->selectedTags) >= 10) {
+            $this->addError('selectedTags', 'Maximum 10 tags allowed.');
+            return;
+        }
+
+        $tagName = trim($this->newTag);
+        
+        // Check if tag already selected
+        foreach ($this->selectedTags as $tag) {
+            if (strcasecmp($tag['name'], $tagName) === 0) {
+                $this->newTag = '';
+                return;
+            }
+        }
+
+        // Find or create tag
+        $tag = \App\Models\Tag::firstOrCreate(['name' => $tagName]);
+        
+        $this->selectedTags[] = [
+            'id' => $tag->id,
+            'name' => $tag->name,
+            'category' => $tag->category
+        ];
+
+        $this->newTag = '';
+    }
+
+    public function removeTag($index)
+    {
+        unset($this->selectedTags[$index]);
+        $this->selectedTags = array_values($this->selectedTags);
     }
 
     public function render()
