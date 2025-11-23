@@ -27,4 +27,10 @@ class Tag extends Model
             'created_at' => 'datetime',
         ];
     }
+
+    // Relationships
+    public function activities()
+    {
+        return $this->belongsToMany(Activity::class, 'activity_tag');
+    }
 }

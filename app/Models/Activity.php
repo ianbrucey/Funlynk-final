@@ -22,6 +22,7 @@ class Activity extends Model
     protected function casts(): array
     {
         return [
+            'location_coordinates' => \MatanYadaev\EloquentSpatial\Objects\Point::class,
             'start_time' => 'datetime',
             'end_time' => 'datetime',
             'conversion_date' => 'datetime',
@@ -54,5 +55,10 @@ class Activity extends Model
     public function postOrigin(): BelongsTo
     {
         return $this->belongsTo(Post::class, 'originated_from_post_id');
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'activity_tag');
     }
 }

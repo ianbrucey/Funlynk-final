@@ -1,117 +1,176 @@
-# F01 Search Service - Feature Overview
+# F01 Discovery Feed Service (formerly "Search Service")
 
-## Feature Purpose
+## Feature Overview
 
-This feature provides comprehensive search capabilities for activities, users, and content with advanced filtering, geospatial search, and personalized ranking. It enables users to quickly find relevant activities through intuitive search interfaces and powerful backend search infrastructure.
+Provide location-aware discovery feeds for Posts and Events: Nearby, For You, and Map View. Uses PostGIS for spatial queries, temporal decay for posts, and Redis caching. Builds on E01 `posts`, `activities`, `post_reactions`.
+
+**Key Architecture**: Different radii: Posts 5–10km; Events 25–50km. Posts are ephemeral (24–48h), events persist.
 
 ## Feature Scope
 
 ### In Scope
-- Full-text search across activity titles, descriptions, and tags
-- Advanced filtering (location, time, price, category, skill level)
-- Geospatial search with radius-based filtering
-- User search and discovery capabilities
-- Search result personalization based on user context
-- Real-time search suggestions and autocomplete
-- Search analytics and performance optimization
+- **Nearby feed**: Proximity queries with PostGIS
+- **For You feed**: Personalized blending (interests + social)
+- **Map view**: Interactive map with posts/events pins
+- **Temporal decay**: Posts decay, events persist until start
+- **Caching**: Redis layer for hot queries
 
 ### Out of Scope
-- Activity creation and management (handled by E03)
-- User profile management (handled by E02)
-- Social interactions on search results (handled by E05)
-- Payment processing for found activities (handled by E06)
+- Recommendation model details (E04/F02)
+- Post-to-event conversion (E04/F03), activity CRUD (E03)
 
-## Task Breakdown
+## Tasks Breakdown
 
-### T01 Search System UX Design & Interface
-**Focus**: User experience design for search interfaces and result presentation
-**Deliverables**: Search UI wireframes, filter design, result layout specifications
-**Estimated Time**: 3-4 hours
-
-### T02 Search Infrastructure & Backend APIs
-**Focus**: Search engine setup, indexing, and backend API implementation
-**Deliverables**: Search APIs, indexing pipeline, query processing engine
-**Estimated Time**: 4 hours
-
-### T03 Search Frontend Implementation & Filters
-**Focus**: Frontend search components with filtering and result display
-**Deliverables**: Search components, filter UI, result presentation
-**Estimated Time**: 4 hours
-
-### T04 Advanced Search Features & Personalization
-**Focus**: Advanced search capabilities and personalized result ranking
-**Deliverables**: Personalization engine, advanced filters, search customization
-**Estimated Time**: 3-4 hours
-
-### T05 Search Analytics & Performance Optimization
-**Focus**: Search performance monitoring and optimization
-**Deliverables**: Analytics tracking, performance optimization, query analysis
-**Estimated Time**: 3-4 hours
-
-### T06 Search Integration & Real-time Updates
-**Focus**: Integration with platform features and real-time search updates
-**Deliverables**: Platform integration, real-time indexing, search synchronization
-**Estimated Time**: 3-4 hours
-
-## Dependencies
-
-### External Dependencies
-- **E01.F01**: Database schema with activities and users tables
-- **E01.F03**: Geolocation service for location-based search
-- **E03**: Activity management for searchable content
-- **E02**: User profiles for personalized search
-- **Search Infrastructure**: Elasticsearch or similar search engine
-
-### Internal Dependencies
-- T01 → T03 (UX design before frontend implementation)
-- T02 → T03 (Backend APIs before frontend integration)
-- T02 → T04 (Core search before advanced features)
-- T03 → T05 (Basic search before analytics)
-- T04 → T06 (Advanced features before integration)
-
-## Acceptance Criteria
-
-### Technical Requirements
-- [ ] Search results return in under 200ms for 95% of queries
-- [ ] Search handles 10,000+ concurrent queries without degradation
-- [ ] Search indexes update within 5 minutes of content changes
-- [ ] Advanced filters work efficiently without empty results
-- [ ] Geospatial search performs well with large datasets
-
-### User Experience Requirements
-- [ ] Search interface is intuitive with clear filtering options
-- [ ] Auto-suggestions improve search completion rate by 40%
-- [ ] Search results are relevant and well-ranked
-- [ ] Advanced filters are discoverable and easy to use
-- [ ] Search works well on mobile devices
-
-### Integration Requirements
-- [ ] Search integrates seamlessly with RSVP and activity flows
-- [ ] Search results respect user privacy settings
-- [ ] Search data enhances user profiles and recommendations
-- [ ] Search analytics inform product decisions
-- [ ] Real-time updates keep search results current
-
-## Success Metrics
-
-- **Search Performance**: 95% of queries under 200ms response time
-- **Search Relevance**: 85%+ relevance score based on user engagement
-- **Search Conversion**: 15%+ conversion rate from search to RSVP
-- **Auto-suggestions**: 40% improvement in search completion rate
-- **User Satisfaction**: 4.5+ stars for search experience
+### T01: DiscoveryFeedService Foundation
+**Estimated Time**: 6-7 hours
+**Dependencies**: None
+**Artisan Commands**:
+```bash
+php artisan make:class Services/DiscoveryFeedService --no-interaction
+php artisan make:class Services/NearbyFeedService --no-interaction
+php artisan make:test --pest Feature/DiscoveryFeedServiceTest --no-interaction
+```
+**Description**: Implement base service with composable providers for Nearby, For You, and Map feeds.
+**Key Implementation Details**:
+- Spatial queries with `whereDistance('location_coordinates', $point, '<=', $radius)`
+- Posts radius 5–10km; events radius 25–50km
+- Filter expired posts: `where('expires_at', '>', now())`
+**Deliverables**:
+- [ ] Service classes with unit tests
+- [ ] Configurable radii and limits
 
 ---
 
-**Feature**: F01 Search Service
-**Epic**: E04 Discovery Engine
-**Status**: ✅ Task Creation Complete
-**Progress**: 6/6 tasks created
-**Next**: Begin implementation with T01 Problem Definition Phase
+### T02: Temporal Decay Scoring
+**Estimated Time**: 4-5 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:class Services/ScoringService --no-interaction
+php artisan make:test --pest Unit/TemporalDecayTest --no-interaction
+```
+**Description**: Apply decay to post ranking; events use start_time proximity.
+**Deliverables**:
+- [ ] Scoring helpers and tests
 
-## Created Tasks
-- [x] **T01**: Search System UX Design & Interface
-- [x] **T02**: Search Infrastructure & Backend APIs
-- [x] **T03**: Search Frontend Implementation & Filters
-- [x] **T04**: Advanced Search Features & Personalization
-- [x] **T05**: Search Analytics & Performance Optimization
-- [x] **T06**: Search Integration & Real-time Updates
+---
+
+### T03: Nearby Feed Livewire Component
+**Estimated Time**: 5-6 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:livewire Discovery/NearbyFeed --no-interaction
+php artisan make:test --pest Feature/NearbyFeedTest --no-interaction
+```
+**Description**: Render mixed posts/events; filters for distance, time, tags.
+**Deliverables**:
+- [ ] Component with pagination and loading states
+- [ ] Filters wired to service
+
+---
+
+### T04: For You Feed
+**Estimated Time**: 5-6 hours
+**Dependencies**: T01, T02
+**Artisan Commands**:
+```bash
+php artisan make:class Services/ForYouFeedService --no-interaction
+php artisan make:livewire Discovery/ForYouFeed --no-interaction
+```
+**Description**: Blend interests (E02), social signals (follows), and recency.
+**Deliverables**:
+- [ ] Service + component
+
+---
+
+### T05: Map View
+**Estimated Time**: 6-7 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:livewire Discovery/MapView --no-interaction
+php artisan make:test --pest Feature/MapViewTest --no-interaction
+```
+**Description**: Map visualization of nearby posts/events with clustering and pin details.
+**Deliverables**:
+- [ ] Component with map library integration
+- [ ] Tests for data endpoints
+
+---
+
+### T06: Redis Caching Strategy
+**Estimated Time**: 4-5 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:job CacheFeedResults --no-interaction
+```
+**Description**: Cache hot feed results for 5–10 minutes; invalidate on new posts/events.
+**Deliverables**:
+- [ ] Cache keys and invalidation hooks
+- [ ] Basic metrics on hit rate
+
+---
+
+### T07: Tests & Performance
+**Estimated Time**: 4-5 hours
+**Dependencies**: T01–T06
+**Artisan Commands**:
+```bash
+php artisan make:test --pest Feature/DiscoveryFeedPerformanceTest --no-interaction
+```
+**Description**: Load test spatial queries; ensure <200ms typical.
+**Deliverables**:
+- [ ] Passing load/perf tests
+
+## Success Criteria
+
+### Database & Models
+- [ ] Spatial queries return correct results at different radii
+- [ ] Posts filtered by expiration
+
+### Filament Resources
+- [ ] Admin can view diagnostics/metrics widgets
+
+### Business Logic & Services
+- [ ] Nearby/ForYou/Map services return expected items
+- [ ] Caching improves p95 latency
+
+### User Experience
+- [ ] Smooth scrolling, loading states, empty states
+
+### Integration
+- [ ] Uses E02 interests and follows
+- [ ] Uses E03 activities for event feed
+
+## Dependencies
+
+### Blocks
+- **E04/F02 Recommendation**: Enhances personalization
+
+### External Dependencies
+- **E01 Core**: Posts, Activities tables
+- **predis/predis**: Redis client
+
+## Technical Notes
+
+### Laravel 12
+- Use `casts()` and configure in `bootstrap/app.php`
+
+### Filament v4
+- Use `->components([])`; widgets for diagnostics
+
+### PostGIS
+- Spatial indexes; `geography(POINT,4326)`; performance tuning
+
+### Testing
+- Pest v4 + `RefreshDatabase`
+
+---
+
+**Feature Status**: 🔄 Ready for Implementation
+**Priority**: P1
+**Epic**: E04 Discovery Engine
+**Estimated Total Time**: 35-45 hours
+**Dependencies**: E01/E02/E03 ready

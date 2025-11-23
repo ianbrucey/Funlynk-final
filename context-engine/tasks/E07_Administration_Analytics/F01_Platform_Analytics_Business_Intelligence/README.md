@@ -1,117 +1,298 @@
-# F01 Platform Analytics & Business Intelligence - Feature Overview
+# F01 Platform Analytics & Business Intelligence
 
-## Feature Purpose
+## Feature Overview
 
-This feature provides comprehensive analytics and business intelligence capabilities that enable data-driven decision making across all aspects of the Funlynk platform. It delivers real-time insights, predictive analytics, and strategic business intelligence that drive growth, optimization, and competitive advantage.
+Build comprehensive analytics dashboards for platform administrators using Laravel 12, Filament v4 widgets, and `maatwebsite/excel`. This feature provides real-time insights into user growth, activity engagement, revenue metrics, and platform health through interactive dashboards and custom report generation.
+
+**Key Architecture**: Filament widgets display KPI cards and charts on admin dashboard. Analytics queries aggregate data from all tables. Report builder allows custom date ranges and export to Excel/CSV. Caching improves performance for expensive queries.
 
 ## Feature Scope
 
 ### In Scope
-- Real-time platform metrics and KPI tracking
-- User behavior analytics and cohort analysis
-- Business intelligence dashboards and executive reporting
-- Predictive analytics and trend forecasting
-- Custom analytics and data exploration tools
-- A/B testing framework and experiment management
-- Performance benchmarking and competitive analysis
+- **Executive dashboard**: Key metrics (MAU, revenue, growth rate)
+- **User analytics**: Acquisition, engagement, retention cohorts
+- **Activity analytics**: Post vs event performance, popular categories
+- **Revenue analytics**: MRR, transaction volume, platform fees
+- **Geographic insights**: Activity heatmaps, user distribution
+- **Custom report builder**: Date ranges, filters, Excel export
 
 ### Out of Scope
-- Basic payment analytics (handled by E06 F01)
-- Social interaction analytics (handled by E05 F02, F05)
-- Activity-specific analytics (handled by E03 F05)
-- User profile analytics (handled by E02 F05)
+- **Predictive analytics**: ML-based forecasting (Phase 2)
+- **Real-time streaming**: Batch analytics only
+- **External BI tools**: Standalone Filament dashboards only
 
-## Task Breakdown
+## Tasks Breakdown
 
-### T01 Analytics UX Design & Business Intelligence Interface
-**Focus**: User experience design for analytics dashboards and business intelligence interfaces
-**Deliverables**: Analytics UI wireframes, dashboard designs, BI interface specifications
-**Estimated Time**: 3-4 hours
+### T01: Analytics Database Schema
+**Estimated Time**: 2-3 hours
+**Dependencies**: None
+**Artisan Commands**:
+```bash
+php artisan make:migration create_analytics_events_table --no-interaction
+php artisan make:migration create_daily_metrics_table --no-interaction
+```
 
-### T02 Analytics Backend Infrastructure & Data Pipeline
-**Focus**: Backend analytics infrastructure and real-time data processing pipeline
-**Deliverables**: Analytics APIs, data pipeline, real-time processing, data warehouse
-**Estimated Time**: 4 hours
+**Description**: Create tables for tracking custom analytics events and aggregated daily metrics.
 
-### T03 Analytics Frontend Dashboards & Visualization
-**Focus**: Frontend analytics dashboards and interactive data visualization
-**Deliverables**: Dashboard components, visualization tools, interactive analytics
-**Estimated Time**: 4 hours
+**Key Implementation Details**:
+- `analytics_events`: `id`, `event_type`, `user_id`, `properties` (JSON), `created_at`
+- `daily_metrics`: `id`, `date`, `metric_name`, `value`, `metadata` (JSON)
+- Track events: page_view, activity_view, rsvp_created, payment_completed
+- Aggregate daily: DAU, new_users, new_activities, revenue
 
-### T04 Advanced Analytics & Machine Learning Insights
-**Focus**: Advanced analytics, machine learning models, and predictive insights
-**Deliverables**: ML models, predictive analytics, advanced insights, forecasting
-**Estimated Time**: 3-4 hours
+**Deliverables**:
+- [ ] Analytics tables created
+- [ ] Event tracking schema
+- [ ] Daily aggregation schema
+- [ ] Schema tests
 
-### T05 Reporting Automation & Business Intelligence
-**Focus**: Automated reporting systems and comprehensive business intelligence
-**Deliverables**: Automated reports, BI tools, executive dashboards, strategic insights
-**Estimated Time**: 3-4 hours
+---
 
-### T06 Analytics Optimization & Performance Tuning
-**Focus**: Analytics performance optimization and system efficiency
-**Deliverables**: Performance optimization, query tuning, scalability improvements
-**Estimated Time**: 3-4 hours
+### T02: AnalyticsService with Metrics Calculation
+**Estimated Time**: 6-7 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:class Services/AnalyticsService --no-interaction
+php artisan make:job CalculateDailyMetricsJob --no-interaction
+php artisan make:test --pest Feature/AnalyticsServiceTest --no-interaction
+```
+
+**Description**: Build service class calculating KPIs, growth rates, retention cohorts, and trends.
+
+**Key Implementation Details**:
+- `getMAU()`: Monthly Active Users (distinct users in last 30 days)
+- `getGrowthRate($metric, $period)`: Calculate MoM or WoW growth
+- `getRetentionCohort($cohortMonth)`: User retention by signup cohort
+- `getRevenueMetrics()`: MRR, average transaction value, LTV
+- `getTopActivities($limit)`: Most popular activities by RSVPs
+- Cache results for 1 hour (expensive queries)
+
+**Deliverables**:
+- [ ] AnalyticsService with KPI calculations
+- [ ] CalculateDailyMetricsJob for aggregation
+- [ ] Retention cohort analysis
+- [ ] Tests for all metrics
+
+---
+
+### T03: Filament Dashboard Widgets
+**Estimated Time**: 7-8 hours
+**Dependencies**: T02
+**Artisan Commands**:
+```bash
+php artisan make:filament-widget StatsOverview --no-interaction
+php artisan make:filament-widget UserGrowthChart --no-interaction
+php artisan make:filament-widget RevenueChart --no-interaction
+php artisan make:filament-widget ActivityHeatmap --no-interaction
+```
+
+**Description**: Create Filament widgets displaying analytics on admin dashboard.
+
+**Key Implementation Details**:
+- Use Filament v4 widget classes
+- `StatsOverview`: KPI cards (MAU, revenue, growth %)
+- `UserGrowthChart`: Line chart showing user acquisition over time
+- `RevenueChart`: Bar chart showing daily/weekly/monthly revenue
+- `ActivityHeatmap`: Geographic distribution of activities
+- Add date range filters to widgets
+- Cache widget data (15 minute TTL)
+
+**Deliverables**:
+- [ ] Stats overview widget with KPIs
+- [ ] User growth chart widget
+- [ ] Revenue chart widget
+- [ ] Activity heatmap widget
+- [ ] Widget tests
+
+---
+
+### T04: Custom Report Builder
+**Estimated Time**: 6-7 hours
+**Dependencies**: T02
+**Artisan Commands**:
+```bash
+php artisan make:filament-page CustomReports --no-interaction
+composer require maatwebsite/excel
+php artisan vendor:publish --provider="Maatwebsite\Excel\ExcelServiceProvider"
+```
+
+**Description**: Build custom report interface allowing admins to generate and export reports.
+
+**Key Implementation Details**:
+- Filament custom page with form: select metrics, date range, filters
+- Available reports: User Acquisition, Activity Performance, Revenue Breakdown, Engagement
+- Export formats: Excel, CSV
+- Use `maatwebsite/excel` for export
+- Queue large report generation
+- Email download link when ready
+
+**Deliverables**:
+- [ ] CustomReports Filament page
+- [ ] Report generation logic
+- [ ] Excel/CSV export
+- [ ] Queued report processing
+- [ ] Tests for report generation
+
+---
+
+### T05: Analytics Export Functionality
+**Estimated Time**: 4-5 hours
+**Dependencies**: T04
+**Artisan Commands**:
+```bash
+php artisan make:export UsersExport --model=User --no-interaction
+php artisan make:export ActivitiesExport --model=Activity --no-interaction
+php artisan make:job GenerateReportJob --no-interaction
+```
+
+**Description**: Implement data export functionality for all major entities with filtering.
+
+**Key Implementation Details**:
+- Create Export classes for Users, Activities, Transactions, RSVPs
+- Support filtering by date range, status, type
+- Chunk large exports to prevent memory issues
+- Generate download URL stored temporarily
+- Clean up old exports (7 day retention)
+
+**Deliverables**:
+- [ ] Export classes for all entities
+- [ ] GenerateReportJob for async processing
+- [ ] Download URL generation
+- [ ] Cleanup job for old exports
+- [ ] Export tests
+
+---
+
+### T06: Analytics Caching Strategy
+**Estimated Time**: 4-5 hours
+**Dependencies**: T02, T03
+**Artisan Commands**:
+```bash
+php artisan make:command CacheAnalytics --no-interaction
+```
+
+**Description**: Implement intelligent caching for analytics queries to improve dashboard performance.
+
+**Key Implementation Details**:
+- Cache daily metrics: 24 hour TTL
+- Cache widgets: 15 minute TTL
+- Cache expensive queries (retention cohorts): 1 hour TTL
+- Invalidate cache on new data (transactions, users, activities)
+- Use Redis for caching
+- Create `php artisan analytics:cache` command to warm cache
+
+**Deliverables**:
+- [ ] Cache strategy implemented
+- [ ] Cache invalidation on updates
+- [ ] CacheAnalytics command
+- [ ] Performance benchmarks
+- [ ] Cache tests
+
+---
+
+### T07: Analytics Tests
+**Estimated Time**: 4-5 hours
+**Dependencies**: T01-T06
+**Artisan Commands**:
+```bash
+php artisan make:test --pest Feature/AnalyticsDashboardTest --no-interaction
+php artisan make:test --pest Feature/ReportGenerationTest --no-interaction
+php artisan test --filter=Analytics
+```
+
+**Description**: Comprehensive testing of analytics calculations, widget displays, and report generation.
+
+**Key Implementation Details**:
+- Test MAU calculation accuracy
+- Test growth rate calculations
+- Test retention cohort logic
+- Test widget data rendering
+- Test report export formats
+- Test cache invalidation
+
+**Deliverables**:
+- [ ] Analytics calculation tests
+- [ ] Widget rendering tests
+- [ ] Report generation tests
+- [ ] All tests passing with >80% coverage
+
+---
+
+## Success Criteria
+
+### Functional Requirements
+- [ ] Executive dashboard displays key metrics
+- [ ] User growth tracked and visualized
+- [ ] Revenue metrics accurate and current
+- [ ] Custom reports can be generated and exported
+- [ ] Geographic insights show activity distribution
+- [ ] Analytics update in near real-time
+
+### Technical Requirements
+- [ ] Analytics queries optimized with caching
+- [ ] Daily metrics aggregated via scheduled job
+- [ ] Report generation queued for large exports
+- [ ] Excel exports formatted correctly
+- [ ] Cache invalidation works properly
+
+### User Experience Requirements
+- [ ] Dashboard loads quickly (<2 seconds)
+- [ ] Charts and graphs clear and interactive
+- [ ] Report builder intuitive
+- [ ] Export downloads work reliably
+
+### Performance Requirements
+- [ ] Dashboard queries cached effectively
+- [ ] Large exports don't timeout
+- [ ] Daily aggregation completes in <5 minutes
+- [ ] Widget updates don't block UI
 
 ## Dependencies
 
 ### External Dependencies
-- **E01-E06**: All platform data sources for comprehensive analytics
-- **Analytics Platforms**: Integration with external analytics tools
-- **Data Warehouse**: Scalable data storage and processing infrastructure
-- **Machine Learning**: ML platforms for advanced analytics
+- **All epics**: Analytics aggregates data from entire platform
+- **maatwebsite/excel**: Excel export functionality
 
-### Internal Dependencies
-- T01 → T03 (UX design before frontend implementation)
-- T02 → T03 (Backend infrastructure before frontend integration)
-- T02 → T04 (Data pipeline before advanced analytics)
-- T04 → T05 (Advanced analytics before automated reporting)
-- T05 → T06 (Reporting systems before optimization)
+## Technical Notes
 
-## Acceptance Criteria
+### Laravel 12 Conventions
+- Use `casts()` method in models
+- Schedule daily aggregation with Task Scheduler
 
-### Technical Requirements
-- [ ] Analytics processing handles 10M+ events per day
-- [ ] Real-time analytics dashboard with <5 second load times
-- [ ] Custom analytics queries execute in <10 seconds
-- [ ] A/B testing framework supports 100+ concurrent experiments
-- [ ] 95%+ data accuracy across all analytics and reporting
+### Filament Widget Example
+```php
+use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 
-### User Experience Requirements
-- [ ] Analytics dashboards provide clear, actionable insights
-- [ ] Business intelligence interfaces are intuitive for executives
-- [ ] Data exploration tools enable self-service analytics
-- [ ] Visualization tools support complex data relationships
-- [ ] Mobile analytics access with responsive design
+class StatsOverview extends BaseWidget
+{
+    protected function getStats(): array
+    {
+        return [
+            Stat::make('Monthly Active Users', $this->analyticsService->getMAU())
+                ->description('32% increase')
+                ->descriptionIcon('heroicon-m-arrow-trending-up')
+                ->chart([7, 2, 10, 3, 15, 4, 17])
+                ->color('success'),
+        ];
+    }
+}
+```
 
-### Integration Requirements
-- [ ] Analytics integrate data from all platform services
-- [ ] Business intelligence insights drive strategic decisions
-- [ ] Predictive analytics inform product optimization
-- [ ] A/B testing supports continuous improvement
-- [ ] External analytics tools enhance platform insights
+### Report Export
+```php
+return Excel::download(new UsersExport($filters), 'users.xlsx');
+```
 
-## Success Metrics
-
-- **Data Processing**: Handle 10M+ events per day with real-time processing
-- **Dashboard Performance**: <5 second load times for all analytics dashboards
-- **Query Performance**: <10 second execution for custom analytics queries
-- **Data Accuracy**: 95%+ accuracy across all analytics and reporting
-- **Business Impact**: 20%+ improvement in key metrics through BI insights
-- **User Adoption**: 80%+ of stakeholders actively use analytics tools
+### Testing Considerations
+- Seed realistic data for accurate calculations
+- Test edge cases (no data, single user, etc.)
+- Run tests with: `php artisan test --filter=Analytics`
 
 ---
 
-**Feature**: F01 Platform Analytics & Business Intelligence
-**Epic**: E07 Administration & Analytics  
-**Status**: ✅ Task Creation Complete
-**Progress**: 6/6 tasks created
-**Next**: Begin implementation with T01 Problem Definition Phase
-
-## Created Tasks
-- [x] **T01**: Analytics UX Design & Business Intelligence Interface
-- [x] **T02**: Analytics Backend Infrastructure & Data Pipeline
-- [x] **T03**: Analytics Frontend Dashboards & Visualization
-- [x] **T04**: Advanced Analytics & Machine Learning Insights
-- [x] **T05**: Reporting Automation & Business Intelligence
-- [x] **T06**: Analytics Optimization & Performance Tuning
+**Feature Status**: 🔄 Ready for Implementation
+**Priority**: P1
+**Epic**: E07 Administration
+**Estimated Total Time**: 34-41 hours
+**Dependencies**: E01-E06 data available for aggregation

@@ -6,7 +6,10 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class UsersTable
@@ -15,53 +18,82 @@ class UsersTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID'),
-                TextColumn::make('email')
-                    ->label('Email address')
-                    ->searchable(),
-                TextColumn::make('username')
-                    ->searchable(),
+                ImageColumn::make('profile_image_url')
+                    ->label('Avatar')
+                    ->circular()
+                    ->defaultImageUrl(fn () => 'https://ui-avatars.com/api/?name=User&color=7F9CF5&background=EBF4FF'),
                 TextColumn::make('display_name')
-                    ->searchable(),
-                TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
+                    ->label('Name')
+                    ->searchable()
+                    ->sortable()
+                    ->description(fn ($record) => '@'.$record->username),
+                TextColumn::make('email')
+                    ->label('Email')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('location_name')
-                    ->searchable(),
-                IconColumn::make('is_host')
-                    ->boolean(),
-                TextColumn::make('stripe_account_id')
-                    ->searchable(),
-                IconColumn::make('stripe_onboarding_complete')
-                    ->boolean(),
-                TextColumn::make('follower_count')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('following_count')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('activity_count')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Location')
+                    ->searchable()
+                    ->icon('heroicon-o-map-pin')
+                    ->placeholder('Not set'),
+                TextColumn::make('interests')
+                    ->label('Interests')
+                    ->badge()
+                    ->separator(',')
+                    ->limit(3)
+                    ->placeholder('None')
+                    ->toggleable(),
                 IconColumn::make('is_verified')
-                    ->boolean(),
+                    ->label('Verified')
+                    ->boolean()
+                    ->toggleable(),
+                IconColumn::make('is_host')
+                    ->label('Host')
+                    ->boolean()
+                    ->toggleable(),
+                TextColumn::make('follower_count')
+                    ->label('Followers')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('activity_count')
+                    ->label('Activities')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(),
                 IconColumn::make('is_active')
-                    ->boolean(),
-                TextColumn::make('privacy_level')
-                    ->searchable(),
+                    ->label('Active')
+                    ->boolean()
+                    ->sortable(),
                 TextColumn::make('created_at')
+                    ->label('Joined')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('location_coordinates'),
             ])
             ->filters([
-                //
+                TernaryFilter::make('is_verified')
+                    ->label('Verified Users')
+                    ->placeholder('All users')
+                    ->trueLabel('Verified only')
+                    ->falseLabel('Unverified only'),
+                TernaryFilter::make('is_host')
+                    ->label('Hosts')
+                    ->placeholder('All users')
+                    ->trueLabel('Hosts only')
+                    ->falseLabel('Non-hosts only'),
+                TernaryFilter::make('is_active')
+                    ->label('Status')
+                    ->placeholder('All users')
+                    ->trueLabel('Active only')
+                    ->falseLabel('Inactive only'),
+                SelectFilter::make('privacy_level')
+                    ->label('Privacy Level')
+                    ->options([
+                        'public' => 'Public',
+                        'friends' => 'Friends Only',
+                        'private' => 'Private',
+                    ]),
             ])
             ->recordActions([
                 EditAction::make(),
@@ -70,6 +102,7 @@ class UsersTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc');
     }
 }

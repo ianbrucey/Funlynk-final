@@ -1,193 +1,196 @@
-# F02: Privacy & Settings - Feature Overview
+# F02 Privacy Settings
 
-## Feature Description
+## Feature Overview
 
-The Privacy & Settings feature provides users with comprehensive control over their privacy preferences, account settings, and platform behavior. This feature builds upon the profile privacy controls (T05) to create a centralized settings management system that covers all aspects of user privacy, security, and personalization across the Funlynk platform.
+Provide granular privacy controls for profile visibility, discovery, and notifications using Laravel 12 policies, global scopes, and Filament v4 forms. Builds on E01 `users` + `follows` tables and E02/F01 profile foundation.
 
-## Business Value
+## Feature Scope
 
-### Why This Feature Matters
-- **User Trust**: Comprehensive privacy controls build user confidence and platform trust
-- **Regulatory Compliance**: Essential for GDPR, CCPA, and other privacy regulations
-- **User Retention**: Users stay longer when they have control over their experience
-- **Platform Safety**: Privacy settings reduce harassment and improve community safety
-- **Competitive Advantage**: Superior privacy controls differentiate Funlynk from competitors
-- **Premium Features**: Advanced privacy settings can drive subscription upgrades
+### In Scope
+- **Privacy columns** on `users` (e.g., `is_profile_public`, `show_location_level`, `dm_permissions`)
+- **Policies & scopes** enforcing visibility at query level
+- **Filament settings UI** for admins and user-facing Livewire form
+- **Blocked users management** and enforcement hooks
+- **Notification preferences** (respect E01 notifications)
 
-### Success Metrics
-- Settings page engagement >75% of users visit within first month
-- Privacy settings configuration >80% of users customize at least 3 settings
-- User satisfaction with privacy controls >4.5/5
-- Privacy-related support tickets <2% of total support volume
-- Compliance audit success rate 100% for privacy regulations
-- User retention improvement >12% with enhanced privacy features
+### Out of Scope
+- Comments/messaging (E05)
+- Payments (E06)
+- Feed ranking (E04)
 
-## Technical Architecture
+## Tasks Breakdown
 
-### Core Components
-1. **Global Privacy Management** - Platform-wide privacy preferences and controls
-2. **Account Security Settings** - Password, 2FA, login security, and session management
-3. **Notification Preferences** - Granular control over all notification types and channels
-4. **Data Management** - Data export, deletion, and retention preferences
-5. **Platform Behavior Settings** - UI preferences, accessibility, and personalization
-6. **Third-Party Integrations** - External service connections and data sharing controls
-
-### Integration Points
-- **Profile Privacy System** (T05): Extends profile-specific privacy controls
-- **Notification Infrastructure** (E01.F04): Manages notification preferences
-- **Authentication System** (E01.F02): Integrates with security settings
-- **Social Features** (T04): Controls social interaction preferences
-- **Activity Management** (E03): Privacy settings for activity participation
-
-## Task Breakdown
-
-### T01: Global Privacy Management
-**Estimated Effort**: 2-3 hours | **Priority**: P0 (Critical)
-- Platform-wide privacy preferences and default settings
-- Privacy level presets (Public, Friends, Private, Custom)
-- Cross-feature privacy synchronization and inheritance
-- Privacy dashboard with clear explanations and controls
-
-### T02: Account Security Settings
-**Estimated Effort**: 2-3 hours | **Priority**: P0 (Critical)
-- Password management and strength requirements
-- Two-factor authentication setup and management
-- Login security with device management and suspicious activity alerts
-- Session management and active session monitoring
-
-### T03: Notification Preferences
-**Estimated Effort**: 2-3 hours | **Priority**: P1 (High)
-- Granular notification controls for all notification types
-- Channel preferences (push, email, SMS, in-app)
-- Notification scheduling and quiet hours
-- Bulk notification management and smart defaults
-
-### T04: Data Management & Rights
-**Estimated Effort**: 3-4 hours | **Priority**: P1 (High)
-- Data export in multiple formats (JSON, CSV, PDF)
-- Account deletion with data retention options
-- Data portability and migration tools
-- Privacy compliance reporting and audit trails
-
-### T05: Platform Behavior Settings
-**Estimated Effort**: 2-3 hours | **Priority**: P2 (Medium)
-- UI preferences and theme settings
-- Accessibility options and assistive technology support
-- Language and localization preferences
-- Performance and data usage settings
-
-### T06: Third-Party Integration Controls
-**Estimated Effort**: 2-3 hours | **Priority**: P2 (Medium)
-- External service connection management
-- Data sharing permissions and revocation
-- API access control and third-party app management
-- Social media integration privacy settings
-
-## Dependencies
-
-### Prerequisites
-- E01.F02: Authentication System (for security settings integration)
-- E01.F04: Notification Infrastructure (for notification preferences)
-- T05: Profile Privacy and Visibility (for privacy system foundation)
-- Legal framework for privacy compliance and data rights
-
-### Dependent Features
-- All social features depend on privacy and notification settings
-- Activity management requires privacy and behavior settings
-- Premium features may offer advanced privacy controls
-- Admin tools need access to privacy compliance data
-
-## Technical Considerations
-
-### Privacy by Design
-- Default to most private settings with opt-in for sharing
-- Clear explanations of what each setting controls
-- Granular controls without overwhelming complexity
-- Immediate effect of privacy changes across platform
-
-### Security Requirements
-- Secure storage of sensitive settings and preferences
-- Audit trail for all privacy and security setting changes
-- Protection against unauthorized setting modifications
-- Secure handling of data export and deletion requests
-
-### Performance Requirements
-- Settings changes apply within 2 seconds
-- Privacy checks complete within 100ms
-- Settings dashboard loads within 3 seconds
-- Bulk operations complete within 30 seconds
-
-### Compliance Requirements
-- GDPR Article 7 (consent management)
-- GDPR Article 20 (data portability)
-- GDPR Article 17 (right to erasure)
-- CCPA consumer rights implementation
-- SOC 2 Type II compliance for security controls
-
-## User Experience Design
-
-### Settings Organization
-- Logical grouping of related settings
-- Progressive disclosure of advanced options
-- Search functionality for finding specific settings
-- Quick access to most commonly changed settings
-
-### Privacy Education
-- Clear explanations of privacy implications
-- Visual indicators of privacy levels
-- Guided privacy setup for new users
-- Regular privacy checkup reminders
-
-### Accessibility
-- Keyboard navigation for all settings
-- Screen reader compatibility
-- High contrast and large text options
-- Voice control integration
-
-## Risk Assessment
-
-### High Risk
-- **Privacy Violations**: Incorrect settings could expose user data
-- **Compliance Failures**: Non-compliance could result in regulatory fines
-- **Security Vulnerabilities**: Weak security settings could compromise accounts
-
-### Medium Risk
-- **User Confusion**: Complex settings could overwhelm users
-- **Performance Impact**: Privacy checks could slow platform performance
-- **Data Loss**: Incorrect deletion processes could lose user data
-
-### Mitigation Strategies
-- Comprehensive testing of privacy controls and data handling
-- Regular compliance audits and legal review
-- User education and clear setting explanations
-- Robust backup and recovery systems for data operations
-- Performance optimization for privacy enforcement
-
-## Success Criteria
-
-### Technical Success
-- All privacy settings work correctly and consistently
-- Security features protect user accounts effectively
-- Data management complies with all regulations
-- Performance meets requirements for settings operations
-
-### User Success
-- Users can easily find and configure privacy settings
-- Privacy controls provide expected protection
-- Security features are usable and effective
-- Data management tools work reliably
-
-### Business Success
-- Increased user trust and platform confidence
-- Regulatory compliance maintained
-- Reduced privacy-related support burden
-- Competitive advantage in privacy features
+### T01: Migration for Privacy Columns
+**Estimated Time**: 2-3 hours
+**Dependencies**: None
+**Artisan Commands**:
+```bash
+php artisan make:migration add_privacy_columns_to_users_table --no-interaction
+php artisan make:test --pest Feature/PrivacyMigrationTest --no-interaction
+```
+**Description**: Add fields like `is_profile_public` (bool, default true), `show_location_level` (enum: exact, city, hidden), `dm_permissions` (enum), `notification_prefs` (json).
+**Key Implementation Details**:
+- Include all attributes when modifying tables (Laravel 12)
+- Backfill sensible defaults
+- Add indexes where appropriate
+**Deliverables**:
+- [ ] Migration created and ran
+- [ ] Tests covering defaults and schema
 
 ---
 
-**Feature**: F02 Privacy & Settings  
-**Epic**: E02 User Profile Management  
-**Total Tasks**: 6  
-**Total Estimated Effort**: 13-19 hours  
-**Dependencies**: E01.F02, E01.F04, T05 Profile Privacy  
-**Status**: Ready for Task Planning
+### T02: ProfilePolicy & Authorization
+**Estimated Time**: 3-4 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:policy ProfilePolicy --model=User --no-interaction
+php artisan make:test --pest Feature/ProfilePolicyTest --no-interaction
+```
+**Description**: Enforce privacy in `view`, `update`, and related abilities.
+**Key Implementation Details**:
+- Respect blocks and mutual follows
+- Deny precise location when `hidden` or `city` only
+- Centralize checks to avoid duplication
+**Deliverables**:
+- [ ] Policy with comprehensive rules
+- [ ] Passing policy tests
+
+---
+
+### T03: Global Scopes & Query Filters
+**Estimated Time**: 3-4 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:class Services/PrivacyService --no-interaction
+```
+**Description**: Apply visibility at query layer to avoid leaking private data.
+**Key Implementation Details**:
+- Add local scopes on `User` (e.g., `publicProfiles()`)
+- Apply conditional select/hiding of sensitive fields
+- Integrate with discovery queries (E02/F03, E04 feeds)
+**Deliverables**:
+- [ ] Scopes/services wired
+- [ ] Unit tests for scope behavior
+
+---
+
+### T04: Filament Admin Privacy Settings
+**Estimated Time**: 3-4 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:filament-resource PrivacySetting --generate --no-interaction
+```
+**Description**: Provide admin-level management of privacy defaults and overrides.
+**Key Implementation Details**:
+- Use `->components([])` with Toggles/Selects
+- Audit changes (simple activity log)
+**Deliverables**:
+- [ ] Resource for reviewing privacy fields
+- [ ] Filters/actions for moderation
+
+---
+
+### T05: User-Facing Livewire Privacy Form
+**Estimated Time**: 3-4 hours
+**Dependencies**: T01, T02
+**Artisan Commands**:
+```bash
+php artisan make:livewire Profile/PrivacySettings --no-interaction
+php artisan make:test --pest Feature/PrivacySettingsUiTest --no-interaction
+```
+**Description**: Users configure privacy and notification preferences.
+**Key Implementation Details**:
+- Validate preferences; persist JSON fields
+- Show location granularity options
+- DaisyUI toggles for consistent design
+**Deliverables**:
+- [ ] Livewire form with validation
+- [ ] Tests for updates and enforcement
+
+---
+
+### T06: Blocked Users Management
+**Estimated Time**: 4-5 hours
+**Dependencies**: T02, T03
+**Artisan Commands**:
+```bash
+php artisan make:model BlockedUser --no-interaction
+php artisan make:migration create_blocked_users_table --no-interaction
+php artisan make:test --pest Feature/BlockedUsersTest --no-interaction
+```
+**Description**: Pivot table and enforcement hooks preventing access/interactions.
+**Key Implementation Details**:
+- Unique constraint on blocker/blockee
+- Policy checks integrated into queries
+**Deliverables**:
+- [ ] Table, model, relations
+- [ ] Enforcement in policies/scopes
+- [ ] Tests for blocked behavior
+
+---
+
+### T07: Notifications Preferences Service
+**Estimated Time**: 3-4 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:class Services/NotificationPreferencesService --no-interaction
+```
+**Description**: Centralize logic for opt-in/out and channels.
+**Deliverables**:
+- [ ] Service with tests
+- [ ] Integration points for E01 notifications
+
+## Success Criteria
+
+### Database & Models
+- [ ] Privacy fields added with defaults
+- [ ] Blocked users pivot enforced
+
+### Filament Resources
+- [ ] Admin resource with filters/actions
+- [ ] Forms use v4 patterns
+
+### Business Logic & Services
+- [ ] Policies/scopes enforce privacy reliably
+- [ ] Notification prefs respected
+
+### User Experience
+- [ ] Clear privacy choices and help text
+- [ ] Changes immediately reflected
+
+### Integration
+- [ ] Discovery (E02/F03, E04) respects privacy
+- [ ] Activities (E03) respect blocked users
+
+## Dependencies
+
+### Blocks
+- **E04 Discovery**: Needs privacy-aware queries
+- **E03 Activity**: RSVP visibility depends on profile privacy
+
+### External Dependencies
+- **E01 Core**: Users, notifications
+
+## Technical Notes
+
+### Laravel 12
+- Use `casts()` for JSON
+- Configure in `bootstrap/app.php`
+
+### Filament v4
+- `->components([])` and `relationship()` fields
+
+### Testing
+- Pest v4 + `RefreshDatabase`
+
+---
+
+**Feature Status**: 🔄 Ready for Implementation
+**Priority**: P1
+**Epic**: E02 User & Profile Management
+**Estimated Total Time**: 26-34 hours
+**Dependencies**: E01 foundation

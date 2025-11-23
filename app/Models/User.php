@@ -77,7 +77,7 @@ class User extends Authenticatable implements FilamentHasName
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'interests' => 'array',
-            'location_coordinates' => 'array',
+            'location_coordinates' => \MatanYadaev\EloquentSpatial\Objects\Point::class,
             'is_host' => 'boolean',
             'stripe_onboarding_complete' => 'boolean',
             'is_verified' => 'boolean',

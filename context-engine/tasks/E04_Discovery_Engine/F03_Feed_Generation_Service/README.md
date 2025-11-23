@@ -1,117 +1,170 @@
-# F03 Feed Generation Service - Feature Overview
+# F03 Social Resonance & Post Evolution (formerly "Feed Generation")
 
-## Feature Purpose
+## Feature Overview
 
-This feature provides personalized activity feeds that combine algorithmic recommendations, social content, and trending activities into cohesive, engaging feed experiences. It enables users to discover activities through curated feeds that adapt to their preferences and behavior patterns.
+Track post engagement ("I'm down", "Join me", "Interested") and trigger post-to-event conversion when posts gain traction. E04 detects conversion, E03 creates the activity and links via `originated_from_post_id`. Uses E01 `post_reactions`, `post_conversions`, `posts`, `activities`.
 
 ## Feature Scope
 
 ### In Scope
-- Personalized home feed generation combining multiple content sources
-- Social activity feeds showing friend activities and social interactions
-- Trending and popular activity feeds based on platform-wide data
-- Real-time feed updates and content refresh capabilities
-- Feed personalization and customization controls
-- Infinite scroll and pagination for large feed datasets
-- Feed analytics and engagement optimization
+- **Reaction tracking** and counters
+- **Conversion detection** thresholds and scoring
+- **Conversion trigger** calling E03 `ActivityConversionService`
+- **Conversion analytics** persisted to `post_conversions`
+- **Notifications** to creators and engaged users
 
 ### Out of Scope
-- Basic recommendation algorithms (handled by F02)
-- Social networking features (handled by E05)
-- Activity creation and management (handled by E03)
-- User profile management (handled by E02)
+- Event CRUD after conversion (E03)
+- Feed ranking (F01/F02)
 
-## Task Breakdown
+## Tasks Breakdown
 
-### T01 Feed System UX Design & Navigation
-**Focus**: User experience design for feed interfaces and navigation patterns
-**Deliverables**: Feed UI wireframes, navigation design, interaction patterns
-**Estimated Time**: 3-4 hours
-
-### T02 Feed Generation Backend & Algorithms
-**Focus**: Backend feed generation algorithms and content aggregation
-**Deliverables**: Feed algorithms, content scoring, aggregation pipeline
-**Estimated Time**: 4 hours
-
-### T03 Feed Frontend Implementation & Infinite Scroll
-**Focus**: Frontend feed components with infinite scroll and real-time updates
-**Deliverables**: Feed components, infinite scroll, real-time updates
-**Estimated Time**: 4 hours
-
-### T04 Social Feed Integration & Following
-**Focus**: Social feed features and following-based content curation
-**Deliverables**: Social feeds, following integration, social content curation
-**Estimated Time**: 3-4 hours
-
-### T05 Feed Analytics & Engagement Optimization
-**Focus**: Feed performance tracking and engagement optimization
-**Deliverables**: Feed analytics, engagement tracking, optimization algorithms
-**Estimated Time**: 3-4 hours
-
-### T06 Real-time Feed Updates & Performance
-**Focus**: Real-time feed updates and performance optimization
-**Deliverables**: Real-time updates, performance optimization, caching strategies
-**Estimated Time**: 3-4 hours
-
-## Dependencies
-
-### External Dependencies
-- **F02**: Recommendation engine for personalized content
-- **E02**: User profiles and interests for feed personalization
-- **E03**: Activity data for feed content
-- **E05**: Social features for social feed content
-- **Real-time Infrastructure**: WebSockets for live feed updates
-
-### Internal Dependencies
-- T01 → T03 (UX design before frontend implementation)
-- T02 → T03 (Backend algorithms before frontend integration)
-- T02 → T04 (Core feed generation before social integration)
-- T03 → T05 (Basic feeds before analytics)
-- T04 → T06 (Social features before real-time optimization)
-
-## Acceptance Criteria
-
-### Technical Requirements
-- [ ] Feed generation completes in under 500ms for 95% of requests
-- [ ] Feed handles 10,000+ concurrent users without degradation
-- [ ] Real-time updates propagate within 30 seconds
-- [ ] Infinite scroll performs smoothly with large datasets
-- [ ] Feed personalization adapts to user behavior within 24 hours
-
-### User Experience Requirements
-- [ ] Feed content is relevant and engaging for 85%+ of users
-- [ ] Feed navigation is intuitive with clear content organization
-- [ ] Infinite scroll provides seamless content discovery
-- [ ] Real-time updates don't disrupt user reading experience
-- [ ] Feed customization options are discoverable and useful
-
-### Integration Requirements
-- [ ] Feeds integrate seamlessly with recommendation and search systems
-- [ ] Social feeds respect privacy settings and user preferences
-- [ ] Feed analytics provide actionable insights for optimization
-- [ ] Feed content drives activity discovery and engagement
-- [ ] Performance scales with platform growth
-
-## Success Metrics
-
-- **Feed Engagement**: 60%+ of users engage with feed content daily
-- **Content Discovery**: 40%+ of activity RSVPs originate from feeds
-- **Session Duration**: 25% increase in time spent on platform through feeds
-- **Content Relevance**: 80%+ user satisfaction with feed content quality
-- **Real-time Engagement**: 30% increase in engagement with real-time updates
+### T01: SocialResonanceService
+**Estimated Time**: 4-5 hours
+**Dependencies**: None
+**Artisan Commands**:
+```bash
+php artisan make:class Services/SocialResonanceService --no-interaction
+php artisan make:test --pest Unit/SocialResonanceServiceTest --no-interaction
+```
+**Description**: Track reactions per post; update counters; expose engagement metrics.
+**Deliverables**:
+- [ ] Service with methods to record reactions
+- [ ] Counter updates and tests
 
 ---
 
-**Feature**: F03 Feed Generation Service
-**Epic**: E04 Discovery Engine
-**Status**: ✅ Task Creation Complete
-**Progress**: 6/6 tasks created
-**Next**: Begin implementation with T01 Problem Definition Phase
+### T02: ConversionDetectionService
+**Estimated Time**: 5-6 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:class Services/ConversionDetectionService --no-interaction
+php artisan make:job DetectPostConversions --no-interaction
+php artisan make:test --pest Feature/ConversionDetectionTest --no-interaction
+```
+**Description**: Evaluate thresholds (e.g., 5+ "I'm down" in 2h suggest; 10+ in 4h auto-prompt). Compute `conversion_score`.
+**Deliverables**:
+- [ ] Service + job with schedule
+- [ ] Tests for thresholds
 
-## Created Tasks
-- [x] **T01**: Feed System UX Design & Navigation
-- [x] **T02**: Feed Generation Backend & Algorithms
-- [x] **T03**: Feed Frontend Implementation & Infinite Scroll
-- [x] **T04**: Social Feed Integration & Following
-- [x] **T05**: Feed Analytics & Engagement Optimization
-- [x] **T06**: Real-time Feed Updates & Performance
+---
+
+### T03: Post-to-Event Conversion Trigger
+**Estimated Time**: 4-5 hours
+**Dependencies**: T01, T02
+**Artisan Commands**:
+```bash
+php artisan make:test --pest Feature/PostConversionTriggerTest --no-interaction
+```
+**Description**: Call `app(ActivityConversionService::class)->createFromPost($post)`; persist `PostConversion` with score and trigger reason; notify creator.
+**Deliverables**:
+- [ ] Trigger wired with retries/idempotency
+- [ ] PostConversion record created
+
+---
+
+### T04: Reaction Livewire Components
+**Estimated Time**: 5-6 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:livewire Post/PostReactions --no-interaction
+php artisan make:test --pest Feature/PostReactionsUiTest --no-interaction
+```
+**Description**: Buttons for reactions with loading/disabled states and optimistic UI.
+**Deliverables**:
+- [ ] Component with counts and state
+- [ ] Tests for reaction flows
+
+---
+
+### T05: Conversion Notifications
+**Estimated Time**: 3-4 hours
+**Dependencies**: T03
+**Artisan Commands**:
+```bash
+php artisan make:job DetectConversionOpportunities --no-interaction
+php artisan make:test --pest Feature/ConversionNotificationsTest --no-interaction
+```
+**Description**: Notify post creator and engaged users when conversion suggested/created.
+**Deliverables**:
+- [ ] Jobs integrated; notifications dispatched
+- [ ] Tests verifying notifications
+
+---
+
+### T06: Analytics & Dashboards
+**Estimated Time**: 4-5 hours
+**Dependencies**: T01–T05
+**Artisan Commands**:
+```bash
+php artisan make:test --pest Feature/ConversionAnalyticsTest --no-interaction
+```
+**Description**: Basic analytics on conversion rates and time-to-conversion; Filament widgets.
+**Deliverables**:
+- [ ] Metrics and cached summaries
+
+---
+
+### T07: Policies & Guardrails
+**Estimated Time**: 3-4 hours
+**Dependencies**: T01–T04
+**Artisan Commands**:
+```bash
+php artisan make:policy PostPolicy --model=Post --no-interaction
+```
+**Description**: Ensure only authorized users can trigger or approve conversion prompts.
+**Deliverables**:
+- [ ] Policy rules; tests
+
+## Success Criteria
+
+### Database & Models
+- [ ] Reactions tracked; counters consistent
+- [ ] PostConversion records created with scores
+
+### Filament Resources
+- [ ] Admin can view conversion analytics widgets
+
+### Business Logic & Services
+- [ ] Detection thresholds fire reliably
+- [ ] Conversion trigger calls E03 and persists linkage
+
+### User Experience
+- [ ] Reaction UI responsive and clear
+- [ ] Helpful prompts for conversion
+
+### Integration
+- [ ] E03 activity created with `originated_from_post_id`
+- [ ] Notifications via E01
+
+## Dependencies
+
+### Blocks
+- **E03 Activity Management**: Creates the activity
+
+### External Dependencies
+- **E01 Core**: Posts, PostReactions, PostConversions, Activities
+
+## Technical Notes
+
+### Laravel 12
+- Use `casts()`; configure in `bootstrap/app.php`
+
+### Filament v4
+- Use `->components([])`; widgets for analytics
+
+### PostGIS
+- Use radii logic consistent with feeds (F01)
+
+### Testing
+- Pest v4 + `RefreshDatabase`
+
+---
+
+**Feature Status**: 🔄 Ready for Implementation
+**Priority**: P1
+**Epic**: E04 Discovery Engine
+**Estimated Total Time**: 30-40 hours
+**Dependencies**: E01/E03 ready

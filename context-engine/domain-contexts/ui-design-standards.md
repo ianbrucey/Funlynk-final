@@ -449,3 +449,265 @@ When creating a new page, ensure:
 - [ ] All colors from the palette
 - [ ] Responsive grid layouts
 
+---
+
+## Agent Implementation Guide
+
+### How to Ensure Styling Consistency
+
+**CRITICAL**: Every Livewire component, Blade view, and page MUST follow these standards. No exceptions.
+
+### Step 1: Use the Base Layout Template
+
+All user-facing pages should extend one of these layouts:
+
+**For Auth Pages** (login, register):
+```blade
+<x-layouts.auth>
+    <!-- Your content here -->
+</x-layouts.auth>
+```
+
+**For App Pages** (dashboard, profiles, activities):
+Create `resources/views/layouts/app.blade.php` following the same pattern as `auth.blade.php`:
+- Galaxy background gradient
+- Aurora layers (3)
+- Animated stars (150)
+- Tech grid overlay
+- Filament form styling (if using Filament forms)
+
+### Step 2: Always Use Glass Cards
+
+**Every major content section** must be wrapped in a glass card:
+
+```blade
+<div class="relative p-8 glass-card">
+    <div class="top-accent-center"></div>
+    <!-- Your content -->
+</div>
+```
+
+**For smaller cards** (activity cards, user cards):
+```blade
+<div class="relative p-4 rounded-2xl bg-slate-800/50 border border-white/10 hover:border-purple-500/50 transition-all">
+    <!-- Your content -->
+</div>
+```
+
+### Step 3: Button Styling
+
+**Primary Actions** (submit, create, confirm):
+```blade
+<button class="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
+    Action Text
+</button>
+```
+
+**Secondary Actions** (cancel, back, view):
+```blade
+<button class="px-6 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition">
+    Action Text
+</button>
+```
+
+### Step 4: Form Inputs
+
+**Text Inputs**:
+```blade
+<input type="text"
+       class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
+       placeholder="Enter text..."/>
+```
+
+**Textareas**:
+```blade
+<textarea
+    class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
+    rows="4"
+    placeholder="Enter description..."></textarea>
+```
+
+**Select Dropdowns**:
+```blade
+<select class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white">
+    <option>Option 1</option>
+</select>
+```
+
+### Step 5: Typography
+
+**Headings**:
+```blade
+<h1 class="text-5xl font-bold mb-6">Main Heading</h1>
+<h2 class="text-4xl font-bold mb-4">Section Heading</h2>
+<h3 class="text-2xl font-bold mb-3">Subsection Heading</h3>
+```
+
+**Body Text**:
+```blade
+<p class="text-lg text-gray-300 mb-4">Regular paragraph text</p>
+<p class="text-sm text-gray-400">Smaller secondary text</p>
+```
+
+**Brand Text** (for logo/branding):
+```blade
+<span class="text-yellow-400">Fun</span><span class="text-cyan-400">Lynk</span>
+```
+
+### Step 6: Livewire Component Styling
+
+When creating Livewire components, **always include the base layout**:
+
+```blade
+<div>
+    <!-- Aurora layers (if not in layout) -->
+    <div class="aurora aurora-layer-1"></div>
+    <div class="aurora aurora-layer-2"></div>
+    <div class="aurora aurora-layer-3"></div>
+
+    <!-- Content in glass card -->
+    <div class="container mx-auto px-6 py-8">
+        <div class="relative p-8 glass-card max-w-4xl mx-auto">
+            <div class="top-accent-center"></div>
+
+            <!-- Your component content -->
+
+        </div>
+    </div>
+</div>
+```
+
+### Step 7: DaisyUI Integration
+
+FunLynk uses **DaisyUI with dark theme**. When using DaisyUI components:
+
+```blade
+<!-- Card -->
+<div class="card bg-base-100/80 backdrop-blur-lg border border-white/10">
+    <div class="card-body">
+        <!-- Content -->
+    </div>
+</div>
+
+<!-- Button -->
+<button class="btn btn-primary">
+    <!-- Will be styled with gradient via custom CSS -->
+</button>
+
+<!-- Badge -->
+<div class="badge badge-primary">New</div>
+```
+
+**IMPORTANT**: DaisyUI classes are **enhanced** with custom CSS for galaxy theme. Don't override the base styles.
+
+### Step 8: Reference Implementation
+
+**Before creating any new UI**, review these files:
+1. `resources/views/welcome.blade.php` - Landing page with all effects
+2. `resources/views/layouts/auth.blade.php` - Base layout with aurora/stars
+3. `resources/views/livewire/auth/login.blade.php` - Form styling example
+
+**Copy the exact CSS** from these files for:
+- Aurora animations
+- Glass card styling
+- Form input styling
+- Button gradients
+
+### Step 9: Testing Your Styling
+
+After creating a component, verify:
+1. ✅ Background has galaxy gradient
+2. ✅ Aurora layers are visible and animating
+3. ✅ Stars are twinkling
+4. ✅ Tech grid is subtle in background
+5. ✅ Glass cards have blur effect and borders
+6. ✅ Buttons have gradient or glass styling
+7. ✅ Forms have proper focus states (cyan glow)
+8. ✅ Hover effects work smoothly
+9. ✅ Text is readable (white/gray on dark)
+10. ✅ Responsive on mobile (test at 375px width)
+
+### Step 10: Common Mistakes to Avoid
+
+❌ **DON'T**:
+- Use plain white backgrounds
+- Use default Tailwind buttons without gradients
+- Forget the aurora layers
+- Use black text on dark backgrounds
+- Skip the glass-card wrapper
+- Use sharp corners (always use rounded-xl or rounded-2xl)
+- Forget hover states
+- Use colors outside the palette
+
+✅ **DO**:
+- Always use galaxy gradient background
+- Always wrap content in glass cards
+- Always use gradient buttons for primary actions
+- Always include aurora layers and stars
+- Always use colors from the defined palette
+- Always add smooth transitions
+- Always test hover states
+- Always make it responsive
+
+---
+
+## Quick Copy-Paste Snippets
+
+### Full Page Template
+```blade
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Page Title</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Copy all CSS from layouts/auth.blade.php lines 15-240 */
+    </style>
+</head>
+<body class="font-sans antialiased">
+    <!-- Aurora Layers -->
+    <div class="aurora aurora-layer-1"></div>
+    <div class="aurora aurora-layer-2"></div>
+    <div class="aurora aurora-layer-3"></div>
+
+    <!-- Stars -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        @for($i = 0; $i < 150; $i++)
+        <div class="star" style="left: {{ rand(0, 100) }}%; top: {{ rand(0, 100) }}%; animation-delay: {{ rand(0, 3000) }}ms; opacity: {{ rand(20, 80) / 100 }};"></div>
+        @endfor
+    </div>
+
+    <!-- Tech Grid -->
+    <div class="tech-grid"></div>
+
+    <!-- Content -->
+    <div class="relative z-10">
+        <!-- Your content here -->
+    </div>
+</body>
+</html>
+```
+
+### Livewire Component Template
+```blade
+<div class="min-h-screen">
+    <div class="container mx-auto px-6 py-8">
+        <div class="relative p-8 glass-card max-w-4xl mx-auto">
+            <div class="top-accent-center"></div>
+
+            <h2 class="text-3xl font-bold mb-6">Component Title</h2>
+
+            <!-- Your content -->
+
+        </div>
+    </div>
+</div>
+```
+
+---
+
+**Last Updated**: 2025-11-20
+**Status**: Production Standard - All new UI must follow these guidelines
+

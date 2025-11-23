@@ -1,192 +1,177 @@
-# F03: User Discovery & Search - Feature Overview
+# F03 User Discovery & Search
 
-## Feature Description
+## Feature Overview
 
-The User Discovery & Search feature provides comprehensive tools for users to find and connect with other community members through advanced search capabilities, intelligent recommendations, location-based discovery, and social network analysis. This feature enables meaningful connections while respecting privacy preferences and providing personalized discovery experiences.
+Enable users to discover other users using proximity (PostGIS), shared interests, and social graph. Built with Laravel 12 services, Livewire UI, and Filament v4 admin. Builds on E01 `users`, `follows` and E02/F01 profile fields.
 
-## Business Value
+## Feature Scope
 
-### Why This Feature Matters
-- **Community Growth**: Effective discovery drives user connections and platform engagement
-- **User Retention**: Users who find relevant connections stay 60% longer on the platform
-- **Network Effects**: Strong discovery features create valuable network effects and viral growth
-- **Activity Participation**: Better user discovery leads to 40% higher activity participation rates
-- **Platform Stickiness**: Social connections through discovery increase user lifetime value
-- **Organic Growth**: Word-of-mouth from discovered connections drives organic user acquisition
+### In Scope
+- **Nearby discovery**: Spatial queries on `users.location_coordinates`
+- **Interest matching**: JSON overlap on `users.interests`
+- **Search**: Name/keywords; optional Laravel Scout
+- **Discovery feed UI**: Livewire component with filters
+- **Admin settings**: Filament resource for discovery configuration
 
-### Success Metrics
-- User discovery engagement >70% of users use search/discovery features monthly
-- Connection success rate >25% of discovered users result in follows or connections
-- Search satisfaction score >4.3/5 for search result relevance
-- Location-based discovery adoption >45% of users enable location features
-- Recommendation click-through rate >15% for suggested users
-- Discovery-driven activity participation >30% increase in activity sign-ups
+### Out of Scope
+- Post/Event feeds (E04)
+- RSVP logic (E03)
+- Messaging/comments (E05)
 
-## Technical Architecture
+## Tasks Breakdown
 
-### Core Components
-1. **Advanced Search Engine** - Multi-criteria search with filters, sorting, and faceted search
-2. **Intelligent Recommendations** - AI-powered user suggestions based on interests and behavior
-3. **Location-Based Discovery** - Proximity-based user discovery with privacy controls
-4. **Social Network Analysis** - Friend-of-friend suggestions and network mapping
-5. **Interest-Based Matching** - Discovery based on shared interests, activities, and preferences
-6. **Privacy-Aware Discovery** - Respects user privacy settings and visibility preferences
-
-### Integration Points
-- **Profile System** (F01): Uses profile data for search indexing and matching
-- **Privacy Controls** (F02): Respects user privacy settings and visibility preferences
-- **Social Features** (T04): Integrates with follow/following relationships
-- **Activity System** (E03): Discovers users based on activity participation and interests
-- **Location Services** (E01.F03): Uses geolocation for proximity-based discovery
-
-## Task Breakdown
-
-### T01: Advanced Search Engine
-**Estimated Effort**: 3-4 hours | **Priority**: P0 (Critical)
-- Multi-criteria search with text, filters, and advanced queries
-- Search indexing and optimization for fast, relevant results
-- Faceted search with dynamic filters and result refinement
-- Search analytics and query optimization
-
-### T02: Intelligent User Recommendations
-**Estimated Effort**: 3-4 hours | **Priority**: P1 (High)
-- AI-powered recommendation engine based on user behavior and preferences
-- Collaborative filtering and content-based recommendation algorithms
-- Real-time recommendation updates and personalization
-- Recommendation explanation and feedback mechanisms
-
-### T03: Location-Based Discovery
-**Estimated Effort**: 2-3 hours | **Priority**: P1 (High)
-- Proximity-based user discovery with configurable radius
-- Location privacy controls and opt-in mechanisms
-- Geofencing and location-based notifications
-- Map-based discovery interface with clustering
-
-### T04: Social Network Analysis
-**Estimated Effort**: 2-3 hours | **Priority**: P1 (High)
-- Friend-of-friend discovery and mutual connection analysis
-- Social graph analysis for connection recommendations
-- Network clustering and community detection
-- Social influence and connection strength analysis
-
-### T05: Interest-Based Matching
-**Estimated Effort**: 2-3 hours | **Priority**: P2 (Medium)
-- Interest similarity calculation and matching algorithms
-- Activity-based compatibility scoring
-- Preference-based user clustering and discovery
-- Interest trend analysis and discovery optimization
-
-### T06: Privacy-Aware Discovery
-**Estimated Effort**: 2-3 hours | **Priority**: P1 (High)
-- Privacy setting integration and visibility controls
-- Anonymous discovery and privacy-preserving recommendations
-- Consent management for discovery features
-- Privacy impact assessment and user education
-
-## Dependencies
-
-### Prerequisites
-- F01: Profile Creation & Management (for profile data and search content)
-- F02: Privacy & Settings (for privacy controls and user preferences)
-- E01.F03: Geolocation Services (for location-based discovery)
-- E01.F01: Database Foundation (for search indexing and performance)
-
-### Dependent Features
-- Activity discovery and recommendation systems (E03)
-- Social features and connection suggestions (E04)
-- Messaging and communication features (E05)
-- Community and group discovery features (E04)
-
-## Technical Considerations
-
-### Search Performance
-- Elasticsearch or similar search engine for fast, scalable search
-- Real-time indexing of profile updates and activity changes
-- Search result caching and optimization for common queries
-- Faceted search with dynamic filter generation
-
-### Privacy and Security
-- Privacy-first design with opt-in discovery features
-- Granular visibility controls for different discovery methods
-- Anonymous search and discovery options
-- Compliance with privacy regulations and user preferences
-
-### Recommendation Quality
-- Machine learning models for personalized recommendations
-- A/B testing framework for recommendation algorithm optimization
-- Feedback loops for continuous recommendation improvement
-- Diversity and serendipity in recommendation results
-
-### Scalability Requirements
-- Support for millions of users with real-time search and discovery
-- Efficient algorithms for large-scale social network analysis
-- Distributed processing for recommendation generation
-- Caching strategies for frequently accessed discovery data
-
-## User Experience Design
-
-### Search Interface
-- Intuitive search with autocomplete and query suggestions
-- Advanced search filters with easy-to-use interface
-- Search result presentation with relevant user information
-- Search history and saved searches for power users
-
-### Discovery Experience
-- Personalized discovery dashboard with multiple discovery methods
-- Swipe-based discovery interface for mobile users
-- Discovery notifications and alerts for relevant users
-- Discovery analytics showing connection success and engagement
-
-### Privacy Controls
-- Clear privacy settings with impact explanations
-- Granular controls for different discovery methods
-- Privacy dashboard showing discovery visibility status
-- Easy opt-out mechanisms for all discovery features
-
-## Risk Assessment
-
-### High Risk
-- **Privacy Violations**: Discovery features could inadvertently expose private information
-- **Spam and Abuse**: Discovery could be used for harassment or unwanted contact
-- **Performance Issues**: Search and recommendation algorithms could impact platform performance
-
-### Medium Risk
-- **Recommendation Quality**: Poor recommendations could frustrate users and reduce engagement
-- **Location Privacy**: Location-based discovery could compromise user privacy
-- **Scalability Challenges**: Large user base could strain discovery algorithms
-
-### Mitigation Strategies
-- Comprehensive privacy controls and user education
-- Robust spam detection and abuse prevention systems
-- Performance optimization and monitoring for discovery features
-- A/B testing and continuous improvement of recommendation quality
-- Clear consent mechanisms for location-based features
-
-## Success Criteria
-
-### Technical Success
-- Search results are fast, relevant, and comprehensive
-- Recommendations are personalized and lead to meaningful connections
-- Location-based discovery works accurately while protecting privacy
-- Social network analysis provides valuable connection insights
-
-### User Success
-- Users can easily find relevant people and make meaningful connections
-- Discovery features feel helpful rather than intrusive
-- Privacy controls give users confidence in using discovery features
-- Discovery leads to increased activity participation and engagement
-
-### Business Success
-- Increased user engagement and connection rates
-- Higher activity participation through better user discovery
-- Improved user retention through meaningful connections
-- Positive user feedback on discovery feature quality
+### T01: UserDiscoveryService with PostGIS
+**Estimated Time**: 5-6 hours
+**Dependencies**: None
+**Artisan Commands**:
+```bash
+php artisan make:class Services/UserDiscoveryService --no-interaction
+php artisan make:test --pest Feature/UserDiscoveryServiceTest --no-interaction
+```
+**Description**: Implement spatial queries for nearby users with privacy-aware filters.
+**Key Implementation Details**:
+- `whereDistance('location_coordinates', $point, '<=', $radius)`
+- Respect privacy scopes from E02/F02
+- Limit eager loading (`latest()->limit(10)`) per Laravel 12 guidance
+**Deliverables**:
+- [ ] Service with `nearby()` and `search()` methods
+- [ ] Unit tests with seeded data
 
 ---
 
-**Feature**: F03 User Discovery & Search  
-**Epic**: E02 User Profile Management  
-**Total Tasks**: 6  
-**Total Estimated Effort**: 14-20 hours  
-**Dependencies**: F01 Profile Management, F02 Privacy & Settings, E01.F03 Geolocation  
-**Status**: Ready for Task Planning
+### T02: Interest Matching Algorithm
+**Estimated Time**: 3-4 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:test --pest Unit/InterestMatchingTest --no-interaction
+```
+**Description**: Score users by Jaccard similarity on interests JSON arrays.
+**Deliverables**:
+- [ ] Helper for similarity scoring
+- [ ] Tests for various overlap cases
+
+---
+
+### T03: Optional Scout Search Integration
+**Estimated Time**: 4-5 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan scout:import "App\\Models\\User" --no-interaction || true
+```
+**Description**: If enabled, integrate Scout for full-text name/username search.
+**Deliverables**:
+- [ ] Index mapping and searchable fields
+- [ ] Fallback to DB search when disabled
+
+---
+
+### T04: Discovery Livewire Component
+**Estimated Time**: 5-6 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:livewire Discovery/UserDiscoveryFeed --no-interaction
+php artisan make:test --pest Feature/UserDiscoveryFeedTest --no-interaction
+```
+**Description**: Paginated list with filters (distance, interests, mutuals).
+**Key Implementation Details**:
+- `wire:loading` states; DaisyUI filters
+- Use `wire:key` in loops
+- Privacy-aware query inputs
+**Deliverables**:
+- [ ] Component rendering and pagination
+- [ ] Filters wired to service
+- [ ] Tests for filters and pagination
+
+---
+
+### T05: Social Graph Optimization
+**Estimated Time**: 3-4 hours
+**Dependencies**: None
+**Artisan Commands**:
+```bash
+php artisan make:test --pest Unit/SocialGraphQueriesTest --no-interaction
+```
+**Description**: Efficient follower/following queries with indexes and eager loading.
+**Deliverables**:
+- [ ] Optimized queries for mutuals
+- [ ] N+1 eliminated via eager loading
+
+---
+
+### T06: Filament Admin Settings
+**Estimated Time**: 3-4 hours
+**Dependencies**: T01
+**Artisan Commands**:
+```bash
+php artisan make:filament-resource DiscoverySetting --generate --no-interaction
+```
+**Description**: Admin controls for default radius, interest weights, toggles.
+**Deliverables**:
+- [ ] Resource with forms/tables (`->components([])`)
+- [ ] Policies and guards
+
+---
+
+### T07: Tests & Performance
+**Estimated Time**: 4-5 hours
+**Dependencies**: T01–T06
+**Artisan Commands**:
+```bash
+php artisan make:test --pest Feature/UserDiscoveryPerformanceTest --no-interaction
+```
+**Description**: Load tests for spatial queries; caching hot results.
+**Deliverables**:
+- [ ] Passing feature and unit tests
+- [ ] Basic caching for frequent queries
+
+## Success Criteria
+
+### Database & Models
+- [ ] Spatial queries return expected nearby users
+- [ ] Interests JSON queried correctly
+
+### Filament Resources
+- [ ] Admin resource functional with policies
+
+### Business Logic & Services
+- [ ] DiscoveryService scores and ranks results
+- [ ] Privacy enforcement applied
+
+### User Experience
+- [ ] Smooth filters and pagination
+- [ ] Loading states and empty states handled
+
+### Integration
+- [ ] E04 can reuse discovery inputs
+- [ ] E02 privacy respected throughout
+
+## Dependencies
+
+### Blocks
+- **E04 Discovery Engine**: Needs discovery primitives
+
+### External Dependencies
+- **E01 Core**: Users, Follows; PostGIS via spatial package
+
+## Technical Notes
+
+### Laravel 12
+- `casts()` usage; `bootstrap/app.php` configuration
+- Limit eager loading: `latest()->limit(10)`
+
+### Filament v4
+- `->components([])`, `relationship()` selects
+
+### Testing
+- Pest v4 + `RefreshDatabase`
+
+---
+
+**Feature Status**: 🔄 Ready for Implementation
+**Priority**: P1
+**Epic**: E02 User & Profile Management
+**Estimated Total Time**: 28-36 hours
+**Dependencies**: E01 foundation

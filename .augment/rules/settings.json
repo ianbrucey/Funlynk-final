@@ -1,0 +1,8 @@
+{
+  "sharedRules": [
+    {
+      "path": "/Users/ianbruce/Herd/funlynk/.augment/rules/AGENTS.md",
+      "type": "always_apply"
+    }
+  ]
+}
