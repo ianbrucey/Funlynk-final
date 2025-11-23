@@ -1,5 +1,5 @@
 <div class="min-h-screen py-12">
-    <div class="container mx-auto px-6">
+    <div class="container mx-auto">
         
         {{-- Flash Messages --}}
         @if (session()->has('success'))
@@ -17,9 +17,9 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             {{-- Main Content (Left Column) --}}
-            <div class="lg:col-span-2 space-y-8">
-                
-                {{-- Hero / Title Card with Image Carousel --}}
+            <div class="lg:col-span-2 space-y-6">
+
+                {{-- Title, Details & Description Card --}}
                 <div class="relative p-8 glass-card overflow-hidden">
                     <div class="top-accent"></div>
 
@@ -38,9 +38,11 @@
                         @endif
                     </div>
 
+                    {{-- Title --}}
                     <h1 class="text-4xl font-bold mb-4 text-white">{{ $activity->title }}</h1>
 
-                    <div class="flex flex-wrap gap-4 text-sm text-gray-300 mb-6">
+                    {{-- Short Details --}}
+                    <div class="flex flex-wrap gap-4 text-sm text-gray-300 mb-4">
                         <div class="flex items-center gap-2">
                             <span class="text-2xl">{{ match($activity->activity_type) {
                                 'sports' => '🏀',
@@ -79,13 +81,13 @@
 
                     {{-- Image Carousel --}}
                     @if($activity->images && count($activity->images) > 0)
-                        <div class="relative mt-6" x-data="{ currentSlide: 0, totalSlides: {{ count($activity->images) }} }">
+                        <div class="relative mb-6" x-data="{ currentSlide: 0, totalSlides: {{ count($activity->images) }} }">
                             {{-- Carousel Container --}}
                             <div class="relative overflow-hidden rounded-xl border border-white/10 bg-slate-900/50">
                                 <div class="flex transition-transform duration-500 ease-out"
                                      :style="`transform: translateX(-${currentSlide * 100}%)`">
                                     @foreach($activity->images as $image)
-                                        <div class="w-full flex-shrink-0 flex items-center justify-center" style="height: 300px;">
+                                        <div class="w-full flex-shrink-0 flex items-center justify-center" style="height: 400px;">
                                             <img src="{{ Storage::url($image) }}"
                                                  class="max-w-full max-h-full object-contain"
                                                  alt="Activity image">
@@ -98,7 +100,7 @@
                             @if(count($activity->images) > 1)
                                 {{-- Previous Button --}}
                                 <button @click="currentSlide = currentSlide === 0 ? totalSlides - 1 : currentSlide - 1"
-                                        class="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900/80 hover:bg-slate-800 border border-white/20 rounded-full transition-all hover:scale-110">
+                                        class="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900/80 hover:bg-slate-800 border border-white/20 rounded-full transition-all hover:scale-110 z-10">
                                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                                     </svg>
@@ -106,14 +108,14 @@
 
                                 {{-- Next Button --}}
                                 <button @click="currentSlide = currentSlide === totalSlides - 1 ? 0 : currentSlide + 1"
-                                        class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900/80 hover:bg-slate-800 border border-white/20 rounded-full transition-all hover:scale-110">
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900/80 hover:bg-slate-800 border border-white/20 rounded-full transition-all hover:scale-110 z-10">
                                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                     </svg>
                                 </button>
 
                                 {{-- Dots Indicator --}}
-                                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                                     @foreach($activity->images as $index => $image)
                                         <button @click="currentSlide = {{ $index }}"
                                                 class="w-2 h-2 rounded-full transition-all"
@@ -124,6 +126,11 @@
                             @endif
                         </div>
                     @endif
+
+                    {{-- Description --}}
+                    <div class="prose prose-invert max-w-none text-gray-300 leading-relaxed">
+                        {{ $activity->description }}
+                    </div>
                 </div>
 
                 {{-- About & Details Card --}}
