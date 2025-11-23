@@ -35,6 +35,11 @@ class RsvpButton extends Component
             return redirect()->route('login');
         }
 
+        // If activity is paid and user doesn't have RSVP, redirect to checkout
+        if ($this->activity->is_paid && !$this->userRsvp) {
+            return redirect()->route('activities.checkout', $this->activity);
+        }
+
         $this->loading = true;
 
         try {
@@ -46,7 +51,7 @@ class RsvpButton extends Component
                 $this->userRsvp = null;
                 session()->flash('success', 'RSVP cancelled successfully.');
             } else {
-                // Create new RSVP
+                // Create new RSVP (free activities only)
                 $this->userRsvp = $rsvpService->createRsvp($this->activity, Auth::user());
                 
                 if ($this->userRsvp->status === 'waitlist') {

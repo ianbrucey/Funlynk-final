@@ -29,12 +29,24 @@ class CreateActivity extends Component
     public $selectedTags = [];
     public $newTag = '';
     public $images = [];
+    public $stripeError = '';
 
     protected ActivityService $activityService;
 
     public function boot(ActivityService $activityService)
     {
         $this->activityService = $activityService;
+    }
+
+    public function getCanCreatePaidActivityProperty()
+    {
+        $user = auth()->user();
+        
+        if (!$user->stripeAccount) {
+            return false;
+        }
+
+        return $user->stripeAccount->canAcceptPayments();
     }
 
     public function mount()
@@ -81,10 +93,14 @@ class CreateActivity extends Component
 
     public function updatedIsPaid($value)
     {
-        if (!$value) {
-        if (!$value) {
-            $this->price = '';
-        }
+        if ($value && !$this->canCreatePaidActivity) {
+            $this->is_paid = false;
+            $this->stripeError = 'You must connect your Stripe account before creating paid activities.';
+        } else {
+            $this->stripeError = '';
+            if (!$value) {
+                $this->price = '';
+            }
         }
     }
 

@@ -1,7 +1,7 @@
-<div class="min-h-screen py-12">
-    <div class="container mx-auto px-6">
+<div class="min-h-screen lg:py-12">
+    <div class="container mx-auto lg:px-6">
         {{-- Header --}}
-        <div class="mb-8 text-center">
+        <div class="mb-6 lg:mb-8 text-center px-6 lg:px-0 pt-6 lg:pt-0">
             <h1 class="text-4xl font-bold mb-2">
                 <span class="gradient-text">Edit Activity</span>
             </h1>
@@ -10,20 +10,20 @@
 
         {{-- Flash Messages --}}
         @if (session()->has('success'))
-            <div class="mb-6 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-300">
+            <div class="mb-6 mx-4 lg:mx-0 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-300">
                 {{ session('success') }}
             </div>
         @endif
 
         @if (session()->has('error'))
-            <div class="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-300">
+            <div class="mb-6 mx-4 lg:mx-0 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-300">
                 {{ session('error') }}
             </div>
         @endif
 
-        <form wire:submit="updateActivity" class="max-w-4xl mx-auto space-y-6">
+        <form wire:submit="updateActivity" class="max-w-4xl mx-auto space-y-6 lg:space-y-6">
             {{-- Basic Information --}}
-            <div class="relative p-8 glass-card">
+            <div class="relative p-6 lg:p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
                 
                 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -115,7 +115,7 @@
             </div>
 
             {{-- Location --}}
-            <div class="relative p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
                 
                 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -160,7 +160,7 @@
             </div>
 
             {{-- Date & Time --}}
-            <div class="relative p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
                 
                 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -193,7 +193,7 @@
             </div>
 
             {{-- Capacity & Pricing --}}
-            <div class="relative p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
                 
                 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -249,7 +249,7 @@
             </div>
 
             {{-- Settings --}}
-            <div class="relative p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
                 
                 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -300,7 +300,7 @@
             </div>
 
             {{-- Tags --}}
-            <div class="relative p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
                 
                 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -369,12 +369,7 @@
             background-clip: text;
         }
 
-        .glass-card {
-            background: rgba(15, 23, 42, 0.5);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 1.5rem;
-        }
+        
 
         .top-accent-center {
             position: absolute;

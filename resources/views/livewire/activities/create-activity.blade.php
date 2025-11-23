@@ -1,7 +1,7 @@
-<div class="min-h-screen py-12">
-    <div class="container mx-auto px-6">
+<div class="min-h-screen lg:py-12">
+    <div class="container mx-auto lg:px-6">
         {{-- Header --}}
-        <div class="mb-8 text-center">
+        <div class="mb-6 lg:mb-8 text-center px-6 lg:px-0 pt-6 lg:pt-0">
             <h1 class="text-4xl font-bold mb-2">
                 <span class="gradient-text">Create Activity</span>
             </h1>
@@ -10,20 +10,20 @@
 
         {{-- Flash Messages --}}
         @if (session()->has('success'))
-            <div class="mb-6 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-300">
+            <div class="mb-6 mx-4 lg:mx-0 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-300">
                 {{ session('success') }}
             </div>
         @endif
 
         @if (session()->has('error'))
-            <div class="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-300">
+            <div class="mb-6 mx-4 lg:mx-0 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-300">
                 {{ session('error') }}
             </div>
         @endif
 
-        <form wire:submit="createActivity" class="max-w-4xl mx-auto space-y-6">
+        <form wire:submit="createActivity" class="max-w-4xl mx-auto space-y-6 lg:space-y-6">
             {{-- Basic Information --}}
-            <div class="relative p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
                 
                 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -106,9 +106,9 @@
             </div>
 
             {{-- Location --}}
-            <div class="relative p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
-                
+
                 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
                     <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -151,9 +151,9 @@
             </div>
 
             {{-- Date & Time --}}
-            <div class="relative p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
-                
+
                 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
                     <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -184,9 +184,9 @@
             </div>
 
             {{-- Capacity & Pricing --}}
-            <div class="relative p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
-                
+
                 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
                     <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -220,6 +220,16 @@
                         <label for="is_paid" class="text-sm font-semibold text-gray-300">This is a paid activity</label>
                     </div>
 
+                    {{-- Stripe Error --}}
+                    @if($stripeError)
+                        <div class="p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-xl text-yellow-300">
+                            <p class="font-semibold mb-2">{{ $stripeError }}</p>
+                            <a href="{{ route('stripe.onboarding') }}" class="inline-block px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg text-white font-semibold hover:scale-105 transition-all text-sm">
+                                Connect Stripe Account
+                            </a>
+                        </div>
+                    @endif
+
                     {{-- Price --}}
                     @if ($is_paid)
                         <div>
@@ -243,9 +253,9 @@
             </div>
 
             {{-- Settings --}}
-            <div class="relative p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
-                
+
                 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
                     <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -284,7 +294,7 @@
             </div>
 
             {{-- Tags --}}
-            <div class="relative p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
                 
                 <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -353,12 +363,7 @@
             background-clip: text;
         }
 
-        .glass-card {
-            background: rgba(15, 23, 42, 0.5);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 1.5rem;
-        }
+        
 
         .top-accent-center {
             position: absolute;

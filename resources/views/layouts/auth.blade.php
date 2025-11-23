@@ -84,13 +84,7 @@
                 background-size: 50px 50px;
             }
 
-            .glass-card {
-                background: rgba(15, 23, 42, 0.5);
-                backdrop-filter: blur(20px);
-                border: 1px solid rgba(59, 130, 246, 0.3);
-                border-radius: 1.5rem;
-            }
-
+           
             .top-accent-center {
                 position: absolute;
                 top: 0;

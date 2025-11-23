@@ -1,8 +1,8 @@
-<div class="container mx-auto px-4 py-12 flex items-center justify-center">
-    <div class="card w-full max-w-2xl glass-card shadow-2xl relative overflow-hidden">
+<div class="container mx-auto lg:px-4 lg:py-12 flex items-center justify-center">
+    <div class="card w-full max-w-2xl glass-card lg:rounded-xl shadow-2xl relative overflow-hidden">
         <div class="top-accent-center"></div>
-        
-        <div class="card-body p-8 sm:p-10">
+
+        <div class="card-body p-6 sm:p-8 lg:p-10">
             <h2 class="card-title text-3xl font-bold mb-2 text-white">Edit Profile</h2>
             <p class="text-gray-400 mb-8">Update your personal information and preferences.</p>
 

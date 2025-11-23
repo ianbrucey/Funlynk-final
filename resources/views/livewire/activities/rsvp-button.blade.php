@@ -35,7 +35,13 @@
                 wire:loading.attr="disabled"
                 class="w-full py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-bold text-white hover:scale-105 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                <span wire:loading.remove>Join Activity</span>
+                <span wire:loading.remove>
+                    @if($activity->is_paid)
+                        Pay & Join (${{ number_format($activity->price_cents / 100, 2) }})
+                    @else
+                        Join Activity
+                    @endif
+                </span>
                 <span wire:loading>Processing...</span>
             </button>
         @endif

@@ -1,26 +1,26 @@
 <div class="min-h-screen py-12">
-    <div class="container mx-auto">
-        
+    <div class="container mx-auto lg:px-6 lg:py-12">
+
         {{-- Flash Messages --}}
         @if (session()->has('success'))
-            <div class="mb-6 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-300">
+            <div class="mb-6 mx-4 lg:mx-0 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-300">
                 {{ session('success') }}
             </div>
         @endif
 
         @if (session()->has('error'))
-            <div class="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-300">
+            <div class="mb-6 mx-4 lg:mx-0 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-300">
                 {{ session('error') }}
             </div>
         @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+        <div class="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
+
             {{-- Main Content (Left Column) --}}
-            <div class="lg:col-span-2 space-y-6">
+            <div class="lg:col-span-2 space-y-6 lg:space-y-6">
 
                 {{-- Title, Details & Description Card --}}
-                <div class="relative p-8 glass-card overflow-hidden">
+                <div class="relative p-6 lg:p-8 glass-card lg:rounded-xl overflow-hidden">
                     <div class="top-accent"></div>
 
                     {{-- Status Badge --}}
@@ -39,7 +39,7 @@
                     </div>
 
                     {{-- Title --}}
-                    <h1 class="text-4xl font-bold mb-4 text-white">{{ $activity->title }}</h1>
+                    <h1 class="text-4xl font-bold mb-4 text-white pr-24">{{ $activity->title }}</h1>
 
                     {{-- Short Details --}}
                     <div class="flex flex-wrap gap-4 text-sm text-gray-300 mb-4">
@@ -83,11 +83,11 @@
                     @if($activity->images && count($activity->images) > 0)
                         <div class="relative mb-6" x-data="{ currentSlide: 0, totalSlides: {{ count($activity->images) }} }">
                             {{-- Carousel Container --}}
-                            <div class="relative overflow-hidden rounded-xl border border-white/10 bg-slate-900/50">
+                            <div class="relative overflow-hidden lg:rounded-xl border-y lg:border border-white/10 bg-slate-900/50">
                                 <div class="flex transition-transform duration-500 ease-out"
                                      :style="`transform: translateX(-${currentSlide * 100}%)`">
                                     @foreach($activity->images as $image)
-                                        <div class="w-full flex-shrink-0 flex items-center justify-center" style="height: 400px;">
+                                        <div class="w-full flex-shrink-0 flex items-center justify-center" >
                                             <img src="{{ Storage::url($image) }}"
                                                  class="max-w-full max-h-full object-contain"
                                                  alt="Activity image">
@@ -134,7 +134,7 @@
                 </div>
 
                 {{-- About & Details Card --}}
-                <div class="relative p-8 glass-card">
+                <div class="relative p-6 lg:p-8 glass-card lg:rounded-xl">
                     <div class="top-accent"></div>
 
                     <h2 class="text-2xl font-bold mb-6 text-white">About this Activity</h2>
@@ -221,10 +221,10 @@
             </div>
 
             {{-- Sidebar (Right Column) --}}
-            <div class="space-y-8">
+            <div class="space-y-6 lg:space-y-8">
 
                 {{-- Host Info --}}
-                <div class="relative p-6 glass-card">
+                <div class="relative p-6 glass-card lg:rounded-xl">
                     <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Hosted By</h3>
                     <div class="flex items-center gap-4">
                         @if($activity->host->profile_image_url)
@@ -242,20 +242,15 @@
                 </div>
 
                 {{-- Map --}}
-                <div class="relative p-1 glass-card overflow-hidden h-64">
-                    <div id="activity-map" class="w-full h-full rounded-xl"></div>
+                <div class="relative p-1 glass-card lg:rounded-xl overflow-hidden h-64">
+                    <div id="activity-map" class="w-full h-full lg:rounded-xl"></div>
                 </div>
 
             </div>
         </div>
     </div>
     <style>
-        .glass-card {
-            background: rgba(15, 23, 42, 0.5);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 1.5rem;
-        }
+       
 
         .top-accent {
             position: absolute;

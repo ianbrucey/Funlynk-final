@@ -39,6 +39,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/activities/create', \App\Livewire\Activities\CreateActivity::class)->name('activities.create');
     Route::get('/activities/{activity}', \App\Livewire\Activities\ActivityDetail::class)->name('activities.show');
     Route::get('/activities/{activity}/edit', \App\Livewire\Activities\EditActivity::class)->name('activities.edit');
+    Route::get('/activities/{activity}/checkout', \App\Livewire\Payments\CheckoutForm::class)->name('activities.checkout');
+
+    // Stripe Connect Routes
+    Route::get('/host/stripe-onboarding', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding');
+    Route::get('/host/stripe-return', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding.return');
+    Route::get('/host/stripe-refresh', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding.refresh');
 
     Route::post('/logout', function (Request $request) {
         Auth::logout();

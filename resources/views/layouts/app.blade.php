@@ -94,7 +94,13 @@
             background: rgba(15, 23, 42, 0.5);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 1.5rem;
+        }
+
+        /* Responsive border radius for glass cards */
+        @media (min-width: 1024px) {
+            /* .glass-card {
+                border-radius: 1.5rem;
+            } */
         }
 
         .gradient-border {

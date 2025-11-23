@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -148,9 +149,15 @@ class User extends Authenticatable implements FilamentHasName
         return $this->hasMany(Follow::class, 'following_id');
     }
 
+
     public function followingEdges(): HasMany
     {
         return $this->hasMany(Follow::class, 'follower_id');
+    }
+
+    public function stripeAccount(): HasOne
+    {
+        return $this->hasOne(StripeAccount::class);
     }
 
     public function getFilamentName(): string
