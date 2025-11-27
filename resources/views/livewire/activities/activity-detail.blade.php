@@ -19,6 +19,16 @@
             {{-- Main Content (Left Column) --}}
             <div class="lg:col-span-2 space-y-6 lg:space-y-6">
 
+                {{-- Back Button --}}
+                <div class="px-4 lg:px-0">
+                    <a href="{{ route('feed.nearby') }}" class="inline-flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Feed
+                    </a>
+                </div>
+
                 {{-- Title, Details & Description Card --}}
                 <div class="relative p-6 lg:p-8 glass-card lg:rounded-xl overflow-hidden">
                     <div class="top-accent"></div>
@@ -216,14 +226,6 @@
                             </button>
                         </div>
                     @endif
-                </div>
-
-                {{-- Comments Section --}}
-                <div class="relative p-6 lg:p-8 glass-card lg:rounded-xl">
-                    <livewire:comments.comment-section
-                        :commentable-type="'App\\Models\\Activity'"
-                        :commentable-id="$activity->id"
-                    />
                 </div>
 
             </div>

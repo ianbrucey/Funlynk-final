@@ -17,47 +17,71 @@ class FeedService
      * - Posts: capped at 10km radius
      * - Events: up to provided $radius (typically 25–50km)
      * - Optional keyword search via Meilisearch
+     * - Supports pagination for infinite scroll
      */
     public function getNearbyFeed(
         User $user,
         int $radius = 10,
         string $contentType = 'all',
         string $timeFilter = 'all',
-        string $searchQuery = ''
-    ): Collection {
+        string $searchQuery = '',
+        int $page = 1,
+        int $perPage = 20
+    ): array {
         $userLocation = $user->location_coordinates;
 
         // If user has no coordinates, just fall back to simple recency-based lists
         if (! $userLocation instanceof Point) {
-            return $this->getFallbackNearbyFeed($contentType, $timeFilter, $searchQuery);
+            return $this->getFallbackNearbyFeed($contentType, $timeFilter, $searchQuery, $page, $perPage);
         }
 
         $items = collect();
+        $totalPosts = 0;
+        $totalEvents = 0;
+
+        // Calculate how many of each type to fetch based on content type
+        // For 'all', we want a mix, so fetch equal amounts and merge
+        $postsPerPage = $contentType === 'events' ? 0 : ($contentType === 'all' ? (int) ceil($perPage / 2) : $perPage);
+        $eventsPerPage = $contentType === 'posts' ? 0 : ($contentType === 'all' ? (int) floor($perPage / 2) : $perPage);
 
         // Posts within 5–10km
         if ($contentType !== 'events') {
-            $posts = $this->queryNearbyPosts($userLocation, $radius, $timeFilter, $searchQuery)
-                ->map(fn (Post $p) => ['type' => 'post', 'data' => $p]);
+            $postsResult = $this->queryNearbyPosts($userLocation, $radius, $timeFilter, $searchQuery, $page, $postsPerPage);
+            $posts = $postsResult['items']->map(fn (Post $p) => ['type' => 'post', 'data' => $p]);
+            $totalPosts = $postsResult['total'];
 
             $items = $items->merge($posts);
         }
 
         // Events within desired radius
         if ($contentType !== 'posts') {
-            $events = $this->queryNearbyEvents($userLocation, $radius, $timeFilter, $searchQuery)
-                ->map(fn (Activity $e) => ['type' => 'event', 'data' => $e]);
+            $eventsResult = $this->queryNearbyEvents($userLocation, $radius, $timeFilter, $searchQuery, $page, $eventsPerPage);
+            $events = $eventsResult['items']->map(fn (Activity $e) => ['type' => 'event', 'data' => $e]);
+            $totalEvents = $eventsResult['total'];
 
             $items = $items->merge($events);
         }
 
         // Sort by temporal relevance – posts get a boost so they show higher
-        return $items->sortByDesc(function (array $item) {
+        $sortedItems = $items->sortByDesc(function (array $item) {
             if ($item['type'] === 'post') {
                 return $item['data']->created_at->timestamp + 100000; // boost posts
             }
 
             return $item['data']->start_time->timestamp;
         })->values();
+
+        // Calculate if there are more items
+        $totalItems = $totalPosts + $totalEvents;
+        $currentlyLoaded = ($page - 1) * $perPage + $sortedItems->count();
+        $hasMore = $currentlyLoaded < $totalItems && $currentlyLoaded < 200; // Cap at 200 items
+
+        return [
+            'items' => $sortedItems,
+            'hasMore' => $hasMore,
+            'total' => $totalItems,
+            'page' => $page,
+        ];
     }
 
     /**
@@ -138,9 +162,9 @@ class FeedService
         $markers = [];
 
         if ($contentType !== 'events') {
-            $posts = $this->queryNearbyPosts($userLocation, $radius, 'all');
+            $postsResult = $this->queryNearbyPosts($userLocation, $radius, 'all', '', 1, 100);
 
-            foreach ($posts as $post) {
+            foreach ($postsResult['items'] as $post) {
                 $markers[] = [
                     'type' => 'post',
                     'id' => $post->id,
@@ -155,9 +179,9 @@ class FeedService
         }
 
         if ($contentType !== 'posts') {
-            $events = $this->queryNearbyEvents($userLocation, $radius, 'all');
+            $eventsResult = $this->queryNearbyEvents($userLocation, $radius, 'all', '', 1, 100);
 
-            foreach ($events as $event) {
+            foreach ($eventsResult['items'] as $event) {
                 $markers[] = [
                     'type' => 'event',
                     'id' => $event->id,
@@ -186,9 +210,16 @@ class FeedService
     /**
      * Internal: query nearby active posts using Meilisearch.
      */
-    protected function queryNearbyPosts(Point $userLocation, int $radiusKm, string $timeFilter, string $searchQuery = ''): EloquentCollection
-    {
+    protected function queryNearbyPosts(
+        Point $userLocation,
+        int $radiusKm,
+        string $timeFilter,
+        string $searchQuery = '',
+        int $page = 1,
+        int $perPage = 20
+    ): array {
         $radiusMeters = $radiusKm * 1000;
+        $offset = ($page - 1) * $perPage;
 
         // Build Meilisearch filters
         $filters = ['status = active'];
@@ -212,10 +243,11 @@ class FeedService
         }
 
         // Search using Meilisearch with optional keyword
-        $results = Post::search($searchQuery, function ($meilisearch, $query, $options) use ($filters, $userLocation) {
+        $results = Post::search($searchQuery, function ($meilisearch, $query, $options) use ($filters, $userLocation, $offset, $perPage) {
             $options['filter'] = implode(' AND ', $filters);
             $options['sort'] = ['_geoPoint('.$userLocation->latitude.', '.$userLocation->longitude.'):asc'];
-            $options['limit'] = 100;
+            $options['limit'] = $perPage;
+            $options['offset'] = $offset;
 
             return $meilisearch->search($query, $options);
         })->raw();
@@ -224,23 +256,38 @@ class FeedService
         $ids = collect($results['hits'] ?? [])->pluck('id')->toArray();
 
         if (empty($ids)) {
-            return new EloquentCollection;
+            return [
+                'items' => new EloquentCollection,
+                'total' => 0,
+            ];
         }
 
-        return Post::with('user')->whereIn('id', $ids)
+        $posts = Post::with('user')->whereIn('id', $ids)
             ->get()
             ->sortBy(function ($post) use ($ids) {
                 return array_search($post->id, $ids);
             })
             ->values();
+
+        return [
+            'items' => $posts,
+            'total' => $results['estimatedTotalHits'] ?? 0,
+        ];
     }
 
     /**
      * Internal: query nearby upcoming events using Meilisearch.
      */
-    protected function queryNearbyEvents(Point $userLocation, int $radiusKm, string $timeFilter, string $searchQuery = ''): EloquentCollection
-    {
+    protected function queryNearbyEvents(
+        Point $userLocation,
+        int $radiusKm,
+        string $timeFilter,
+        string $searchQuery = '',
+        int $page = 1,
+        int $perPage = 20
+    ): array {
         $radiusMeters = $radiusKm * 1000;
+        $offset = ($page - 1) * $perPage;
 
         // Build Meilisearch filters
         $filters = [
@@ -267,10 +314,11 @@ class FeedService
         }
 
         // Search using Meilisearch with optional keyword
-        $results = Activity::search($searchQuery, function ($meilisearch, $query, $options) use ($filters, $userLocation) {
+        $results = Activity::search($searchQuery, function ($meilisearch, $query, $options) use ($filters, $userLocation, $offset, $perPage) {
             $options['filter'] = implode(' AND ', $filters);
             $options['sort'] = ['_geoPoint('.$userLocation->latitude.', '.$userLocation->longitude.'):asc'];
-            $options['limit'] = 100;
+            $options['limit'] = $perPage;
+            $options['offset'] = $offset;
 
             return $meilisearch->search($query, $options);
         })->raw();
@@ -279,18 +327,26 @@ class FeedService
         $ids = collect($results['hits'] ?? [])->pluck('id')->toArray();
 
         if (empty($ids)) {
-            return new EloquentCollection;
+            return [
+                'items' => new EloquentCollection,
+                'total' => 0,
+            ];
         }
 
-        return Activity::with('host')->whereIn('id', $ids)
+        $events = Activity::with('host')->whereIn('id', $ids)
             ->get()
             ->sortBy(function ($activity) use ($ids) {
                 return array_search($activity->id, $ids);
             })
             ->values();
+
+        return [
+            'items' => $events,
+            'total' => $results['estimatedTotalHits'] ?? 0,
+        ];
     }
 
-    protected function getFallbackNearbyFeed(string $contentType, string $timeFilter, string $searchQuery = ''): Collection
+    protected function getFallbackNearbyFeed(string $contentType, string $timeFilter, string $searchQuery = '', int $page = 1, int $perPage = 20): array
     {
         $items = collect();
 
@@ -401,6 +457,15 @@ class FeedService
             $items = $items->merge($events);
         }
 
-        return $items->values();
+        // For fallback, we don't have accurate totals, so just return what we have
+        // and assume there might be more if we got a full page
+        $hasMore = $items->count() >= $perPage && $page < 10; // Cap at 10 pages for fallback
+
+        return [
+            'items' => $items->values(),
+            'hasMore' => $hasMore,
+            'total' => $items->count(), // Approximate
+            'page' => $page,
+        ];
     }
 }

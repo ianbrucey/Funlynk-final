@@ -97,3 +97,4 @@ Route::controller(SocialLoginController::class)
             ->name('social.callback')
             ->whereIn('provider', ['google', 'facebook']);
     });
+Route::get('/chat-demo', function () { return view('chat-demo'); });

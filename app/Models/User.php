@@ -113,15 +113,13 @@ class User extends Authenticatable implements FilamentHasName
         return $this->hasMany(PostReaction::class);
     }
 
-    public function rsvps(): HasMany
+    public function conversations(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->hasMany(Rsvp::class);
+        return $this->belongsToMany(Conversation::class, 'conversation_participants')
+            ->withPivot(['role', 'is_muted', 'last_read_at'])
+            ->withTimestamps();
     }
 
-    public function comments(): HasMany
-    {
-        return $this->hasMany(Comment::class);
-    }
 
     public function notifications(): HasMany
     {

@@ -46,15 +46,11 @@ class Activity extends Model
         return $this->belongsTo(User::class, 'host_id');
     }
 
-    public function rsvps(): HasMany
+    public function conversation(): \Illuminate\Database\Eloquent\Relations\MorphOne
     {
-        return $this->hasMany(Rsvp::class);
+        return $this->morphOne(Conversation::class, 'conversationable');
     }
 
-    public function comments(): MorphMany
-    {
-        return $this->morphMany(Comment::class, 'commentable');
-    }
 
     public function postOrigin(): BelongsTo
     {
@@ -64,6 +60,11 @@ class Activity extends Model
     public function tags()
     {
         return $this->belongsToMany(Tag::class, 'activity_tag');
+    }
+
+    public function rsvps(): HasMany
+    {
+        return $this->hasMany(Rsvp::class);
     }
 
     // Scopes

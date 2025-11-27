@@ -6,7 +6,7 @@
         </svg>
 
         @if($unreadCount > 0)
-            <span class="absolute top-0 right-0 w-5 h-5 bg-pink-500 rounded-full text-xs text-white flex items-center justify-center font-semibold animate-pulse">
+            <span class="absolute top-0 right-0 w-5 h-5 bg-pink-500 rounded-full text-xs text-white flex items-center justify-center font-semibold">
                 {{ $unreadCount > 9 ? '9+' : $unreadCount }}
             </span>
         @endif

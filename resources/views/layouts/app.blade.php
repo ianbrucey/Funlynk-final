@@ -49,7 +49,7 @@
             opacity: 0.4;
         }
 
-        .aurora-layer-1 {
+        /* .aurora-layer-1 {
             background: radial-gradient(ellipse at 30% 20%, rgba(16, 185, 129, 0.18) 0%, transparent 50%);
             animation: aurora 8s ease-in-out infinite;
         }
@@ -62,7 +62,7 @@
         .aurora-layer-3 {
             background: radial-gradient(ellipse at 50% 60%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
             animation: aurora 12s ease-in-out infinite 4s;
-        }
+        } */
 
         /* Animated stars */
         @keyframes twinkle {

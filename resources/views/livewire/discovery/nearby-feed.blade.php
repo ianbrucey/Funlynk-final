@@ -86,11 +86,11 @@
         </div>
 
         {{-- Feed Content --}}
-        <div class="space-y-6">
+        <div class="space-y-6" wire:loading.class="opacity-50">
             @forelse($items as $item)
                 @if($item['type'] === 'post')
                     {{-- Post Card --}}
-                    <div class="lg:px-0">
+                    <div class="lg:px-0 py-6">
                         <x-post-card :post="$item['data']" />
                     </div>
                 @else
@@ -216,21 +216,6 @@
                                 </div>
                             </div>
 
-                            {{-- Comment Count --}}
-                            @php
-                                $commentCount = $item['data']->comments_count ?? $item['data']->comments()->count();
-                            @endphp
-                            <div class="mb-3 pt-3 border-t border-white/10">
-                                <a href="{{ route('activities.show', $item['data']) }}" class="flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                    </svg>
-                                    <span class="text-sm">
-                                        {{ $commentCount }} {{ $commentCount === 1 ? 'comment' : 'comments' }}
-                                    </span>
-                                </a>
-                            </div>
-
                             {{-- Action Button --}}
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('activities.show', $item['data']) }}"
@@ -277,6 +262,49 @@
                 </div>
             @endforelse
         </div>
+
+        {{-- Load More Button / Infinite Scroll Trigger --}}
+        @if($hasMore && count($items) > 0)
+            <div class="px-6 lg:px-0 mt-8" x-data="{
+                observe() {
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                @this.call('loadMore');
+                            }
+                        });
+                    }, { threshold: 0.5 });
+                    observer.observe(this.$el);
+                }
+            }" x-init="observe()">
+                <div class="relative p-6 glass-card lg:rounded-xl text-center">
+                    <div wire:loading.remove wire:target="loadMore">
+                        <button
+                            wire:click="loadMore"
+                            class="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold hover:scale-105 transition-all">
+                            Load More
+                        </button>
+                        <p class="text-sm text-gray-400 mt-2">
+                            Showing {{ count($items) }} of {{ $totalItems }} items
+                        </p>
+                    </div>
+                    <div wire:loading wire:target="loadMore" class="flex items-center justify-center gap-3">
+                        <svg class="animate-spin h-6 w-6 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-gray-400">Loading more...</span>
+                    </div>
+                </div>
+            </div>
+        @elseif(count($items) >= 200)
+            <div class="px-6 lg:px-0 mt-8">
+                <div class="relative p-6 glass-card lg:rounded-xl text-center">
+                    <p class="text-gray-400 mb-4">You've reached the maximum of 200 items.</p>
+                    <p class="text-sm text-gray-500">Try refining your filters to see more specific results.</p>
+                </div>
+            </div>
+        @endif
 
     </div>
 

@@ -43,9 +43,9 @@ class Report extends Model
         return $this->belongsTo(Activity::class, 'reported_activity_id');
     }
 
-    public function reportedComment(): BelongsTo
+    public function reportedPost(): BelongsTo
     {
-        return $this->belongsTo(Comment::class, 'reported_comment_id');
+        return $this->belongsTo(Post::class, 'reported_post_id');
     }
 
     public function reviewedBy(): BelongsTo

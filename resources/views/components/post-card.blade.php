@@ -79,7 +79,6 @@
         @php
             $userHasReacted = $post->reactions->where('user_id', auth()->id())->where('reaction_type', 'im_down')->isNotEmpty();
             $reactionCount = $post->reactions->where('reaction_type', 'im_down')->count();
-            $commentCount = $post->comments_count ?? $post->comments()->count();
         @endphp
         <button
             wire:click="reactToPost('{{ $post->id }}', 'im_down')"
@@ -108,18 +107,5 @@
                 @endif
             </span>
         </button>
-    </div>
-
-    {{-- Comment Count --}}
-    <div class="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
-        <a href="{{ route('posts.show', $post->id) }}" class="flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            <span class="text-sm">
-                {{ $commentCount }} {{ $commentCount === 1 ? 'comment' : 'comments' }}
-            </span>
-        </a>
-    </div>
 </div>
 

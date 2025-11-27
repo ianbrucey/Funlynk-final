@@ -1,8 +1,5 @@
 #!/bin/bash
 
-npm run storage:copy
-
-
 # Sync Capacitor and remove Laravel storage symlinks
 # iOS doesn't allow symlinks in app bundles
 

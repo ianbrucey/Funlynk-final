@@ -79,14 +79,15 @@ class Post extends Model
         return $this->hasOne(PostConversion::class, 'post_id');
     }
 
+    public function conversation(): MorphOne
+    {
+        return $this->morphOne(Conversation::class, 'conversationable');
+    }
+
+
     public function convertedActivity(): BelongsTo
     {
         return $this->belongsTo(Activity::class, 'converted_to_activity_id');
-    }
-
-    public function comments(): MorphMany
-    {
-        return $this->morphMany(Comment::class, 'commentable');
     }
 
     // Helper Methods

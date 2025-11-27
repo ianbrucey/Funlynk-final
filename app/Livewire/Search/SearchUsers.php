@@ -8,12 +8,9 @@ use App\Services\MeilisearchUserSearchService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 class SearchUsers extends Component
 {
-    use WithPagination;
-
     #[Url(as: 'q')]
     public string $query = '';
 
@@ -27,6 +24,15 @@ class SearchUsers extends Component
 
     public array $followingIds = [];
 
+    public string $customInterestInput = '';
+
+    // Infinite scroll properties
+    public $page = 1;
+    public $perPage = 15; // Initial load: 15 users
+    public $hasMore = true;
+    public $users = [];
+    public $totalUsers = 0;
+
     public function mount()
     {
         $service = app(MeilisearchUserSearchService::class);
@@ -38,21 +44,32 @@ class SearchUsers extends Component
         }
 
         $this->loadFollowingIds();
+
+        // Load initial users
+        $this->loadUsers();
     }
 
     public function updatedQuery()
     {
-        $this->resetPage();
+        $this->resetSearch();
     }
 
     public function updatedSelectedInterests()
     {
-        $this->resetPage();
+        $this->resetSearch();
     }
 
     public function updatedDistance()
     {
-        $this->resetPage();
+        $this->resetSearch();
+    }
+
+    protected function resetSearch()
+    {
+        $this->page = 1;
+        $this->users = [];
+        $this->hasMore = true;
+        $this->loadUsers();
     }
 
     public function toggleInterest(string $interest)
@@ -64,17 +81,85 @@ class SearchUsers extends Component
         } else {
             $this->selectedInterests[] = $interest;
         }
-        $this->resetPage();
+        $this->resetSearch();
+    }
+
+    public function addCustomInterest()
+    {
+        $interest = trim($this->customInterestInput);
+
+        if (empty($interest)) {
+            return;
+        }
+
+        // Capitalize first letter of each word
+        $interest = ucwords(strtolower($interest));
+
+        // Check if already selected
+        if (!in_array($interest, $this->selectedInterests)) {
+            $this->selectedInterests[] = $interest;
+            $this->resetSearch();
+        }
+
+        // Clear input
+        $this->customInterestInput = '';
+    }
+
+    public function removeInterest(string $interest)
+    {
+        $this->selectedInterests = array_values(
+            array_filter($this->selectedInterests, fn ($i) => $i !== $interest)
+        );
+        $this->resetSearch();
     }
 
     public function clearFilters()
     {
         $this->query = '';
         $this->selectedInterests = [];
+        $this->customInterestInput = '';
         $this->distance = Auth::user()->location_coordinates
             ? config('search.default_radius', 25)
             : null;
-        $this->resetPage();
+        $this->resetSearch();
+    }
+
+    public function loadMore()
+    {
+        // Cap at 200 users total
+        if (count($this->users) >= 200) {
+            $this->hasMore = false;
+            return;
+        }
+
+        $this->page++;
+        $this->perPage = 20; // Subsequent loads: 20 users
+        $this->loadUsers(true);
+    }
+
+    protected function loadUsers($append = false)
+    {
+        $service = app(MeilisearchUserSearchService::class);
+
+        $result = $service->search(
+            $this->query,
+            $this->selectedInterests,
+            $this->distance,
+            Auth::user(),
+            $this->page,
+            $this->perPage
+        );
+
+        if ($append) {
+            // Append new users to existing users
+            $this->users = array_merge($this->users, $result['users']->toArray());
+        } else {
+            // Replace users (for initial load or filter changes)
+            $this->users = $result['users']->toArray();
+        }
+
+        $this->hasMore = $result['hasMore'];
+        $this->totalUsers = $result['total'];
     }
 
     public function follow(string $userId)
@@ -100,6 +185,9 @@ class SearchUsers extends Component
             $this->followingIds[] = $userId;
 
             $this->dispatch('user-followed', userId: $userId);
+
+            // Reload current page to update follower counts
+            $this->loadUsers();
         }
     }
 
@@ -123,6 +211,9 @@ class SearchUsers extends Component
             );
 
             $this->dispatch('user-unfollowed', userId: $userId);
+
+            // Reload current page to update follower counts
+            $this->loadUsers();
         }
     }
 
@@ -137,18 +228,7 @@ class SearchUsers extends Component
 
     public function render()
     {
-        $service = app(MeilisearchUserSearchService::class);
-
-        $results = $service->search(
-            $this->query,
-            $this->selectedInterests,
-            $this->distance,
-            Auth::user()
-        );
-
-        return view('livewire.search.search-users', [
-            'results' => $results,
-        ])->layout('layouts.app', [
+        return view('livewire.search.search-users')->layout('layouts.app', [
             'title' => 'Find People',
         ]);
     }
