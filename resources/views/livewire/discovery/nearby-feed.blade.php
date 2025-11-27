@@ -85,160 +85,126 @@
             </div>
         </div>
 
-        {{-- Feed Content --}}
-        <div class="space-y-6" wire:loading.class="opacity-50">
+        {{-- Feed Content - 3 Grid Layout --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" wire:loading.class="opacity-50">
             @forelse($items as $item)
                 @if($item['type'] === 'post')
-                    {{-- Post Card --}}
-                    <div class="lg:px-0 py-6">
-                        <x-post-card :post="$item['data']" />
-                    </div>
+                    {{-- Post Card (Compact) --}}
+                    <x-post-card-compact :post="$item['data']" />
                 @else
-                    {{-- Event Card --}}
-                    <div class="lg:px-0">
-                        <div class="relative p-6 glass-card lg:rounded-xl border-l-4 border-cyan-500 hover:border-blue-500 transition-all">
+                    {{-- Event Card (Compact) --}}
+                    <div class="relative p-4 glass-card rounded-xl border-l-4 border-cyan-500 hover:border-blue-500 transition-all h-full flex flex-col group cursor-pointer"
+                         onclick="window.location.href='{{ route('activities.show', $item['data']) }}'">
 
-                            {{-- Converted Badge --}}
-                            @if($item['data']->originated_from_post_id)
-                                <div class="absolute top-4 right-4">
-                                    <span class="px-3 py-1 bg-purple-500/30 border border-purple-500/50 rounded-full text-xs font-bold text-purple-300 uppercase tracking-wider">
-                                        ⭐ Converted from Post
+                        {{-- Converted Badge --}}
+                        @if($item['data']->originated_from_post_id)
+                            <div class="absolute top-3 right-3 z-10">
+                                <span class="px-2 py-0.5 bg-purple-500/30 border border-purple-500/50 rounded-full text-xs font-bold text-purple-300">
+                                    ⭐
+                                </span>
+                            </div>
+                        @endif
+
+                        {{-- Host Info --}}
+                        <div class="flex items-center gap-2 mb-3">
+                            @if($item['data']->host?->profile_image_url)
+                                <img
+                                    src="{{ Storage::url($item['data']->host->profile_image_url) }}"
+                                    alt="{{ $item['data']->host->display_name ?? $item['data']->host->username }}"
+                                    class="w-8 h-8 rounded-full object-cover ring-2 ring-cyan-500/50 bg-slate-800"
+                                >
+                            @else
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center ring-2 ring-cyan-500/50">
+                                    <span class="text-white font-bold text-xs">
+                                        {{ strtoupper(substr($item['data']->host?->display_name ?? $item['data']->host?->username ?? '?', 0, 1)) }}
                                     </span>
                                 </div>
                             @endif
+                            <div class="flex-1 min-w-0">
+                                <p class="font-semibold text-white text-sm truncate group-hover:text-cyan-400 transition">
+                                    {{ $item['data']->host?->display_name ?? $item['data']->host?->username ?? 'Unknown Host' }}
+                                </p>
+                                <p class="text-xs text-gray-500">Hosting</p>
+                            </div>
+                        </div>
 
-                            {{-- Host Info --}}
-                            <div class="flex items-center gap-3 mb-4">
-                                @if($item['data']->host?->profile_image_url)
-                                    <img
-                                        src="{{ Storage::url($item['data']->host->profile_image_url) }}"
-                                        alt="{{ $item['data']->host->display_name ?? $item['data']->host->username }}"
-                                        class="w-10 h-10 rounded-full object-cover ring-2 ring-cyan-500/50 bg-slate-800"
-                                    >
-                                @else
-                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center ring-2 ring-cyan-500/50">
-                                        <span class="text-white font-bold text-sm">
-                                            {{ strtoupper(substr($item['data']->host?->display_name ?? $item['data']->host?->username ?? '?', 0, 1)) }}
-                                        </span>
+                        {{-- Event Image (First image only for compact view) --}}
+                        @if($item['data']->images && count($item['data']->images) > 0)
+                            <div class="relative mb-3 -mx-4 overflow-hidden bg-slate-900/50 h-40">
+                                <img src="{{ Storage::url($item['data']->images[0]) }}"
+                                     class="w-full h-full object-cover"
+                                     alt="{{ $item['data']->title }}">
+                                @if(count($item['data']->images) > 1)
+                                    <div class="absolute bottom-2 right-2 px-2 py-1 bg-slate-900/80 backdrop-blur-sm rounded-full text-xs text-white">
+                                        +{{ count($item['data']->images) - 1 }}
                                     </div>
                                 @endif
-                                <div class="flex-1 min-w-0">
-                                    <a href="{{ route('profile.view', $item['data']->host?->username ?? 'unknown') }}" class="font-semibold text-white hover:text-cyan-400 transition truncate block">
-                                        {{ $item['data']->host?->display_name ?? $item['data']->host?->username ?? 'Unknown Host' }}
-                                    </a>
-                                    <p class="text-xs text-gray-400">
-                                        {{ "@".$item['data']->host?->username }} · Hosting
-                                    </p>
-                                </div>
                             </div>
+                        @endif
 
-                            {{-- Event Images Carousel --}}
-                            @if($item['data']->images && count($item['data']->images) > 0)
-                                <div class="relative mb-4 -mx-6" x-data="{ currentSlide: 0, totalSlides: {{ count($item['data']->images) }} }">
-                                    {{-- Carousel Container --}}
-                                    <div class="relative overflow-hidden bg-slate-900/50 h-64">
-                                        <div class="flex h-full transition-transform duration-500 ease-out"
-                                             :style="`transform: translateX(-${currentSlide * 100}%)`">
-                                            @foreach($item['data']->images as $image)
-                                                <div class="w-full h-full flex-shrink-0 flex items-center justify-center">
-                                                    <img src="{{ Storage::url($image) }}"
-                                                         class="max-w-full max-h-full object-contain"
-                                                         alt="{{ $item['data']->title }}">
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-
-                                    {{-- Navigation Arrows (only show if more than 1 image) --}}
-                                    @if(count($item['data']->images) > 1)
-                                        {{-- Previous Button --}}
-                                        <button @click="currentSlide = currentSlide === 0 ? totalSlides - 1 : currentSlide - 1"
-                                                class="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900/80 hover:bg-slate-800 border border-white/20 rounded-full transition-all hover:scale-110 z-10">
-                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                                            </svg>
-                                        </button>
-
-                                        {{-- Next Button --}}
-                                        <button @click="currentSlide = currentSlide === totalSlides - 1 ? 0 : currentSlide + 1"
-                                                class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900/80 hover:bg-slate-800 border border-white/20 rounded-full transition-all hover:scale-110 z-10">
-                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                            </svg>
-                                        </button>
-
-                                        {{-- Dots Indicator --}}
-                                        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                                            @foreach($item['data']->images as $index => $image)
-                                                <button @click="currentSlide = {{ $index }}"
-                                                        class="w-2 h-2 rounded-full transition-all"
-                                                        :class="currentSlide === {{ $index }} ? 'bg-cyan-400 w-6' : 'bg-white/50 hover:bg-white/80'">
-                                                </button>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                </div>
+                        {{-- Content --}}
+                        <div class="flex-1 mb-3">
+                            <h3 class="text-base font-bold mb-1.5 text-white line-clamp-2 pr-8">{{ $item['data']->title }}</h3>
+                            @if($item['data']->description)
+                                <p class="text-gray-400 text-xs line-clamp-2">{{ $item['data']->description }}</p>
                             @endif
+                        </div>
 
-                            {{-- Content --}}
-                            <div class="pr-32">
-                                <h3 class="text-xl font-bold mb-2 text-white">{{ $item['data']->title }}</h3>
-                                @if($item['data']->description)
-                                    <p class="text-gray-400 text-sm mb-4 line-clamp-2">{{ $item['data']->description }}</p>
-                                @endif
+                        {{-- Event Details --}}
+                        <div class="space-y-2 mb-3 text-xs">
+                            <div class="flex items-center gap-1.5 text-gray-400">
+                                <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <span class="text-white font-semibold">{{ $item['data']->start_time->format('M j, g:i A') }}</span>
                             </div>
-
-                            {{-- Event Details --}}
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                <div>
-                                    <div class="text-xs text-gray-400 mb-1">When</div>
-                                    <div class="text-sm font-semibold text-white">{{ $item['data']->start_time->format('M j, g:i A') }}</div>
-                                </div>
-                                <div>
-                                    <div class="text-xs text-gray-400 mb-1">Location</div>
-                                    <div class="text-sm font-semibold text-white">{{ $item['data']->location_name }}</div>
-                                </div>
-                                <div>
-                                    <div class="text-xs text-gray-400 mb-1">Price</div>
-                                    <div class="text-sm font-semibold text-white">
+                            <div class="flex items-center gap-1.5 text-gray-400">
+                                <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                </svg>
+                                <span class="truncate">{{ $item['data']->location_name }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-1.5 text-gray-400">
+                                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span class="text-white font-semibold">
                                         @if($item['data']->is_paid)
                                             ${{ number_format($item['data']->price, 2) }}
                                         @else
                                             Free
                                         @endif
-                                    </div>
+                                    </span>
                                 </div>
-                                <div>
-                                    <div class="text-xs text-gray-400 mb-1">Availability</div>
-                                    <div class="text-sm font-semibold text-white">
-                                        {{ $item['data']->max_attendees - $item['data']->rsvps()->count() }} spots left
-                                    </div>
+                                <div class="text-gray-400">
+                                    <span class="text-cyan-400 font-semibold">{{ $item['data']->max_attendees - $item['data']->rsvps()->count() }}</span> spots
                                 </div>
                             </div>
+                        </div>
 
-                            {{-- Action Buttons --}}
-                            <div class="space-y-3">
-                                <a href="{{ route('activities.show', $item['data']) }}"
-                                   class="block px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold hover:scale-105 transition-all text-center">
-                                    View Event Details
-                                </a>
-                                <a href="{{ route('activities.show', $item['data']) }}#discussion"
-                                   class="flex items-center justify-center gap-2 px-6 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 hover:bg-slate-800 transition-all group">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-cyan-400 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {{-- Action Buttons --}}
+                        <div class="space-y-2 mt-auto">
+                            <button
+                                onclick="event.stopPropagation(); window.location.href='{{ route('activities.show', $item['data']) }}'"
+                                class="w-full px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg text-xs font-semibold hover:scale-105 transition-all">
+                                View Details
+                            </button>
+                            <div class="pt-2 border-t border-white/10">
+                                <div class="flex items-center justify-center gap-1.5 text-xs text-gray-400 group-hover:text-cyan-400 transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                     </svg>
-                                    <span class="text-sm font-semibold text-gray-300 group-hover:text-white transition">
-                                        💬 Discussion
-                                    </span>
-                                </a>
+                                    <span class="font-semibold">Discussion</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 @endif
             @empty
-                {{-- Empty State --}}
-                <div class="px-6 lg:px-0">
-                    <div class="relative p-12 glass-card lg:rounded-xl text-center">
+                {{-- Empty State - Spans full grid --}}
+                <div class="col-span-full">
+                    <div class="relative p-12 glass-card rounded-xl text-center">
                         <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-pink-500 via-purple-500 to-cyan-500 flex items-center justify-center">
                             @if($searchQuery)
                                 <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,7 +240,7 @@
 
         {{-- Load More Button / Infinite Scroll Trigger --}}
         @if($hasMore && count($items) > 0)
-            <div class="px-6 lg:px-0 mt-8" x-data="{
+            <div class="mt-8" x-data="{
                 observe() {
                     const observer = new IntersectionObserver((entries) => {
                         entries.forEach(entry => {
@@ -286,7 +252,7 @@
                     observer.observe(this.$el);
                 }
             }" x-init="observe()">
-                <div class="relative p-6 glass-card lg:rounded-xl text-center">
+                <div class="relative p-6 glass-card rounded-xl text-center">
                     <div wire:loading.remove wire:target="loadMore">
                         <button
                             wire:click="loadMore"
@@ -307,8 +273,8 @@
                 </div>
             </div>
         @elseif(count($items) >= 200)
-            <div class="px-6 lg:px-0 mt-8">
-                <div class="relative p-6 glass-card lg:rounded-xl text-center">
+            <div class="mt-8">
+                <div class="relative p-6 glass-card rounded-xl text-center">
                     <p class="text-gray-400 mb-4">You've reached the maximum of 200 items.</p>
                     <p class="text-sm text-gray-500">Try refining your filters to see more specific results.</p>
                 </div>

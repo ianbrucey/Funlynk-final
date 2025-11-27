@@ -94,20 +94,25 @@
 
     {{-- Input Area --}}
     <div class="px-6 py-4 border-t border-white/10 bg-slate-900/50">
-        <form wire:submit.prevent="sendMessage" class="flex items-end gap-3">
+        <div class="flex items-end gap-3">
             {{-- Input --}}
             <div class="flex-1">
-                <input 
+                <input
                     type="text"
+                    id="chat-message-input"
                     wire:model.live="newMessage"
+                    wire:keydown.enter.prevent="sendMessage"
+                    x-on:keydown.enter="$nextTick(() => $el.value = '')"
                     placeholder="Type a message..."
                     class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition"
                 >
             </div>
 
             {{-- Send Button --}}
-            <button 
-                type="submit"
+            <button
+                type="button"
+                wire:click="sendMessage"
+                x-on:click="$nextTick(() => document.getElementById('chat-message-input').value = '')"
                 wire:loading.attr="disabled"
                 class="flex-shrink-0 p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
             >
@@ -115,6 +120,6 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
             </button>
-        </form>
+        </div>
     </div>
 </div>
