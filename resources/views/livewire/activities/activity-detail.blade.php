@@ -228,6 +228,15 @@
                     @endif
                 </div>
 
+                {{-- Chat Section --}}
+                <div id="discussion" class="relative p-6 lg:p-8 glass-card lg:rounded-xl scroll-mt-6">
+                    <div class="top-accent"></div>
+                    <h2 class="text-2xl font-bold mb-6 text-white">Discussion</h2>
+                    <div class="h-[600px]">
+                        <livewire:chat.chat-component :conversationable="$activity" />
+                    </div>
+                </div>
+
             </div>
 
             {{-- Sidebar (Right Column) --}}

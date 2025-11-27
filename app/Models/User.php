@@ -113,6 +113,11 @@ class User extends Authenticatable implements FilamentHasName
         return $this->hasMany(PostReaction::class);
     }
 
+    public function rsvps(): HasMany
+    {
+        return $this->hasMany(Rsvp::class);
+    }
+
     public function conversations(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Conversation::class, 'conversation_participants')
@@ -144,6 +149,19 @@ class User extends Authenticatable implements FilamentHasName
     public function following(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id');
+    }
+
+    /**
+     * Users that this user follows and who follow this user back.
+     */
+    public function mutuals(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id')
+            ->whereIn('users.id', function ($query) {
+                $query->select('follower_id')
+                    ->from('follows')
+                    ->where('following_id', $this->id);
+            });
     }
 
     public function followerEdges(): HasMany

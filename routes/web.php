@@ -40,6 +40,8 @@ Route::middleware('auth')->group(function () {
         // Post Routes
         Route::get('/posts/create', \App\Livewire\Posts\CreatePost::class)->name('posts.create');
         Route::get('/posts/{post}', \App\Livewire\Posts\PostDetail::class)->name('posts.show');
+        Route::get('/posts/{post}/chat', \App\Livewire\Posts\PostChat::class)->name('posts.chat');
+
 
         // Activity Routes
         Route::get('/activities', function () {

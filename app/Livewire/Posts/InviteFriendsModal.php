@@ -39,9 +39,9 @@ class InviteFriendsModal extends Component
 
     public function loadFriends(): void
     {
-        // Get users that the current user is following
+        // Get users that the current user has a mutual follow relationship with
         $this->friends = auth()->user()
-            ->following()
+            ->mutuals()
             ->when($this->search, fn ($q) => $q->where(function ($query) {
                 $query->where('display_name', 'ilike', "%{$this->search}%")
                     ->orWhere('username', 'ilike', "%{$this->search}%");

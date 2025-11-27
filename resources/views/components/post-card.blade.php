@@ -107,5 +107,17 @@
                 @endif
             </span>
         </button>
-</div>
+    </div>
 
+    {{-- Discussion Button --}}
+    <div class="mt-3 pt-3 border-t border-white/10">
+        <a href="{{ route('posts.chat', $post->id) }}" class="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-lg hover:border-cyan-500/50 hover:bg-slate-800 transition-all group">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-cyan-400 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <span class="text-sm font-semibold text-gray-300 group-hover:text-white transition">
+                💬 Discussion
+            </span>
+        </a>
+    </div>
+</div>

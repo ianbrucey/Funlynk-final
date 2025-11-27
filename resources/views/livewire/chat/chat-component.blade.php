@@ -15,7 +15,7 @@
     </div>
 
     {{-- Messages Container --}}
-    <div class="flex-1 overflow-y-auto p-6 space-y-4">
+    <div class="flex-1 overflow-y-auto p-6 space-y-4" style="max-height: calc(100% - 180px);">
         @foreach($messages as $message)
             <div class="flex {{ $message['is_mine'] ? 'justify-end' : 'justify-start' }}">
                 <div class="flex gap-3 max-w-[70%] {{ $message['is_mine'] ? 'flex-row-reverse' : 'flex-row' }}">
@@ -89,22 +89,14 @@
     {{-- Input Area --}}
     <div class="px-6 py-4 border-t border-white/10 bg-slate-900/50">
         <form wire:submit.prevent="sendMessage" class="flex items-end gap-3">
-            {{-- Attachment Button --}}
-            <button type="button" class="flex-shrink-0 p-2 text-gray-400 hover:text-cyan-400 transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                </svg>
-            </button>
-
             {{-- Input --}}
             <div class="flex-1">
-                <textarea 
+                <input 
+                    type="text"
                     wire:model.live="newMessage"
-                    rows="1"
                     placeholder="Type a message..."
-                    class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition resize-none"
-                    style="max-height: 120px;"
-                ></textarea>
+                    class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition"
+                >
             </div>
 
             {{-- Send Button --}}

@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Builder;
 use Laravel\Scout\Searchable;
 use MatanYadaev\EloquentSpatial\Objects\Point;
@@ -79,7 +78,7 @@ class Post extends Model
         return $this->hasOne(PostConversion::class, 'post_id');
     }
 
-    public function conversation(): MorphOne
+    public function conversation(): \Illuminate\Database\Eloquent\Relations\MorphOne
     {
         return $this->morphOne(Conversation::class, 'conversationable');
     }

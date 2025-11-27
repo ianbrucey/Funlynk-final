@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Chat;
 
+use App\Models\Conversation;
+use App\Services\ChatService;
 use Livewire\Component;
 
 class ChatComponent extends Component
@@ -12,48 +14,70 @@ class ChatComponent extends Component
     public $messages = [];
     public $replyingTo = null;
 
+    protected ChatService $chatService;
+
+    public function boot(ChatService $chatService)
+    {
+        $this->chatService = $chatService;
+    }
+
     public function mount($conversationId = null, $conversationable = null)
     {
         $this->conversationId = $conversationId;
         $this->conversationable = $conversationable;
         
-        // Load mock data for UI iteration
-        $this->loadMockMessages();
+        $this->loadMessages();
     }
 
-    protected function loadMockMessages()
+    protected function loadMessages()
     {
-        // Mock data for UI development
-        $this->messages = [
-            [
-                'id' => '1',
-                'user' => ['display_name' => 'Alice', 'profile_image_url' => null],
-                'body' => 'Hey! Anyone down for tennis this evening?',
-                'created_at' => now()->subMinutes(30),
-                'is_mine' => false,
-                'reply_to' => null,
-            ],
-            [
-                'id' => '2',
-                'user' => ['display_name' => 'You', 'profile_image_url' => null],
-                'body' => 'I\'m in! What time?',
-                'created_at' => now()->subMinutes(25),
-                'is_mine' => true,
-                'reply_to' => null,
-            ],
-            [
-                'id' => '3',
-                'user' => ['display_name' => 'Bob', 'profile_image_url' => null],
-                'body' => 'Around 6pm works for me',
-                'created_at' => now()->subMinutes(20),
-                'is_mine' => false,
-                'reply_to' => [
-                    'id' => '2',
-                    'body' => 'I\'m in! What time?',
-                    'user' => ['display_name' => 'You'],
+        // If conversationable is provided, get or create conversation
+        if ($this->conversationable) {
+            $conversation = $this->chatService->getOrCreateConversation($this->conversationable);
+            $this->conversationId = $conversation->id;
+        }
+
+        // If no conversation ID, show empty state
+        if (!$this->conversationId) {
+            $this->messages = [];
+            return;
+        }
+
+        // Load messages from database
+        $conversation = Conversation::find($this->conversationId);
+        
+        if (!$conversation) {
+            $this->messages = [];
+            return;
+        }
+
+        $dbMessages = $this->chatService->getMessages($conversation);
+
+        // Transform to array format for view
+        $this->messages = $dbMessages->map(function ($message) {
+            return [
+                'id' => $message->id,
+                'user' => [
+                    'display_name' => $message->user->display_name ?? $message->user->username,
+                    'profile_image_url' => $message->user->profile_image_url,
                 ],
-            ],
-        ];
+                'body' => $message->body,
+                'created_at' => $message->created_at,
+                'is_mine' => $message->user_id === auth()->id(),
+                'reply_to' => $message->replyTo ? [
+                    'id' => $message->replyTo->id,
+                    'body' => $message->replyTo->body,
+                    'user' => [
+                        'display_name' => $message->replyTo->user->display_name ?? $message->replyTo->user->username,
+                    ],
+                ] : null,
+            ];
+        })->toArray();
+
+        // Mark as read
+        if (auth()->check()) {
+            $this->chatService->markAsRead($conversation, auth()->user());
+        }
     }
 
     public function sendMessage()
@@ -62,16 +86,28 @@ class ChatComponent extends Component
             return;
         }
 
-        // Mock: Add message to array
-        $this->messages[] = [
-            'id' => (string) (count($this->messages) + 1),
-            'user' => ['display_name' => 'You', 'profile_image_url' => null],
-            'body' => $this->newMessage,
-            'created_at' => now(),
-            'is_mine' => true,
-            'reply_to' => $this->replyingTo,
-        ];
+        if (!auth()->check()) {
+            return;
+        }
 
+        $conversation = Conversation::find($this->conversationId);
+
+        if (!$conversation) {
+            return;
+        }
+
+        // Send message via service
+        $this->chatService->sendMessage(
+            $conversation,
+            auth()->user(),
+            $this->newMessage,
+            $this->replyingTo['id'] ?? null
+        );
+
+        // Reload messages
+        $this->loadMessages();
+
+        // Clear input
         $this->newMessage = '';
         $this->replyingTo = null;
     }
