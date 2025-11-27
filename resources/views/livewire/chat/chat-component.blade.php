@@ -15,7 +15,13 @@
     </div>
 
     {{-- Messages Container --}}
-    <div class="flex-1 overflow-y-auto p-6 space-y-4" style="max-height: calc(100% - 180px);">
+    <div 
+        class="flex-1 overflow-y-auto p-6 space-y-4" 
+        style="max-height: calc(100% - 180px);"
+        x-data="{ scrollToBottom() { this.$el.scrollTop = this.$el.scrollHeight; } }"
+        x-init="scrollToBottom()"
+        @message-received.window="scrollToBottom()"
+    >
         @foreach($messages as $message)
             <div class="flex {{ $message['is_mine'] ? 'justify-end' : 'justify-start' }}">
                 <div class="flex gap-3 max-w-[70%] {{ $message['is_mine'] ? 'flex-row-reverse' : 'flex-row' }}">
@@ -102,8 +108,8 @@
             {{-- Send Button --}}
             <button 
                 type="submit"
+                wire:loading.attr="disabled"
                 class="flex-shrink-0 p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
-                :disabled="!newMessage.trim()"
             >
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

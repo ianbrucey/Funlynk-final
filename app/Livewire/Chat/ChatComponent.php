@@ -16,6 +16,17 @@ class ChatComponent extends Component
 
     protected ChatService $chatService;
 
+    public function getListeners()
+    {
+        if (!$this->conversationId) {
+            return [];
+        }
+
+        return [
+            "echo:conversation.{$this->conversationId},MessageSent" => 'onMessageReceived',
+        ];
+    }
+
     public function boot(ChatService $chatService)
     {
         $this->chatService = $chatService;
@@ -122,6 +133,22 @@ class ChatComponent extends Component
                 'user' => $message['user'],
             ];
         }
+    }
+
+    public function onMessageReceived($event)
+    {
+        // Add the new message to the array
+        $this->messages[] = [
+            'id' => $event['id'],
+            'user' => $event['user'],
+            'body' => $event['body'],
+            'created_at' => \Carbon\Carbon::parse($event['created_at']),
+            'is_mine' => false, // Broadcast is toOthers(), so never mine
+            'reply_to' => $event['reply_to'] ?? null,
+        ];
+
+        // Dispatch browser event to scroll to bottom
+        $this->dispatch('message-received');
     }
 
     public function cancelReply()

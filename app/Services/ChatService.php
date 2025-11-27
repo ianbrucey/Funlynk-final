@@ -63,6 +63,9 @@ class ChatService
         // Update conversation's last_message_at
         $conversation->update(['last_message_at' => now()]);
 
+        // Broadcast the message
+        broadcast(new \App\Events\MessageSent($message))->toOthers();
+
         return $message;
     }
 
