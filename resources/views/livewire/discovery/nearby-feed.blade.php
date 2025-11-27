@@ -1,41 +1,48 @@
 <div class="min-h-screen py-8">
-    <div class="container mx-auto lg:px-6">
+    <div class="container mx-auto ">
 
-        {{-- Search Bar --}}
-        <div class="px-6 lg:px-0 mb-6">
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </div>
-                <input
-                    type="text"
-                    wire:model.live.debounce.300ms="searchQuery"
-                    placeholder="What's happening nearby?"
-                    class="w-full pl-12 pr-12 py-4 bg-slate-800/50 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition text-lg"
-                >
-                @if($searchQuery)
-                    <button
-                        wire:click="clearSearch"
-                        class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                @endif
-            </div>
-            @if($searchQuery)
-                <p class="mt-2 text-sm text-gray-400">
-                    Searching for "<span class="text-cyan-400">{{ $searchQuery }}</span>"
-                </p>
-            @endif
-        </div>
+        
 
         {{-- Filters --}}
-        <div class="px-6 lg:px-0 mb-6">
+        <div class=" lg:px-0 mb-6">
+
+            
+
+
             <div class="relative p-4 glass-card lg:rounded-xl">
+
+                <div class=" lg:px-0 mb-6">
+                {{-- Search Bar --}}
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                        <input
+                            type="text"
+                            wire:model.live.debounce.300ms="searchQuery"
+                            placeholder="👀 search for something to get into :)"
+                            class="w-full pl-12 pr-12 py-4 bg-slate-800/50 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition text-lg"
+                        >
+                        @if($searchQuery)
+                            <button
+                                wire:click="clearSearch"
+                                class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
+                    @if($searchQuery)
+                        <p class="mt-2 text-sm text-gray-400">
+                            Searching for "<span class="text-cyan-400">{{ $searchQuery }}</span>"
+                        </p>
+                    @endif
+                </div>
+
                 <div class="grid grid-cols-3 gap-4">
 
                     {{-- Content Type Filter --}}
@@ -83,12 +90,12 @@
             @forelse($items as $item)
                 @if($item['type'] === 'post')
                     {{-- Post Card --}}
-                    <div class="px-6 lg:px-0">
+                    <div class="lg:px-0">
                         <x-post-card :post="$item['data']" />
                     </div>
                 @else
                     {{-- Event Card --}}
-                    <div class="px-6 lg:px-0">
+                    <div class="lg:px-0">
                         <div class="relative p-6 glass-card lg:rounded-xl border-l-4 border-cyan-500 hover:border-blue-500 transition-all">
 
                             {{-- Converted Badge --}}

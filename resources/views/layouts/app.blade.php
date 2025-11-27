@@ -21,7 +21,8 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(to bottom right, #0a0a1a, #0f1729, #0a0a1a);
+            /* background: linear-gradient(to bottom right, #0a0a1a, #0f1729, #0a0a1a); */
+            background: linear-gradient(to bottom right, #0a0a1a,rgb(44, 64, 112), #0a0a1a);
             min-height: 100vh;
             color: white;
             position: relative;
@@ -92,6 +93,7 @@
 
         .glass-card {
             background: rgba(15, 23, 42, 0.5);
+            /* background: rgba(33, 72, 164, 0.5); */
             backdrop-filter: blur(20px);
             border: 1px solid rgba(59, 130, 246, 0.3);
         }
@@ -108,7 +110,7 @@
             padding: 0.125rem;
             background: linear-gradient(to right, #ec4899, #8b5cf6, #06b6d4);
             border-radius: 1rem;
-            animation: pulse 2s infinite;
+            /* animation: pulse 2s infinite; */
         }
 
         .top-accent {

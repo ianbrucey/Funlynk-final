@@ -30,8 +30,8 @@
                     @endif
                 </a>
 
-                <!-- For You Feed -->
-                <a href="{{ route('feed.for-you') }}"
+                <!-- For You Feed TODO: renable when ready | maybe use photos and videos of activities?? -->
+                {{-- <a href="{{ route('feed.for-you') }}"
                    class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('feed.for-you') ? 'bg-white/10' : '' }}"
                    title="For You">
                     <svg class="w-6 h-6 {{ request()->routeIs('feed.for-you') ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,7 +40,7 @@
                     @if(request()->routeIs('feed.for-you'))
                         <div class="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-500 to-cyan-500"></div>
                     @endif
-                </a>
+                </a> --}}
 
                 <!-- Find People -->
                 <a href="{{ route('search.users') }}"
