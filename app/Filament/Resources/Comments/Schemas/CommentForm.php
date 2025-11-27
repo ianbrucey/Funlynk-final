@@ -14,20 +14,54 @@ class CommentForm
     {
         return $schema
             ->components([
-                Select::make('activity_id')
-                    ->relationship('activity', 'title')
-                    ->required(),
-                Select::make('user_id')
-                    ->relationship('user', 'id')
-                    ->required(),
-                TextInput::make('parent_comment_id'),
-                Textarea::make('content')
+                Select::make('commentable_type')
+                    ->label('Commentable Type')
+                    ->options([
+                        'App\\Models\\Post' => 'Post',
+                        'App\\Models\\Activity' => 'Activity',
+                    ])
                     ->required()
+                    ->live(),
+                
+                TextInput::make('commentable_id')
+                    ->label('Commentable ID')
+                    ->required(),
+                
+                Select::make('user_id')
+                    ->label('User')
+                    ->relationship('user', 'username')
+                    ->searchable()
+                    ->required(),
+                
+                Select::make('parent_comment_id')
+                    ->label('Parent Comment (Reply)')
+                    ->relationship('parent', 'id')
+                    ->searchable()
+                    ->nullable(),
+                
+                TextInput::make('depth')
+                    ->label('Depth')
+                    ->numeric()
+                    ->default(0)
+                    ->disabled()
+                    ->dehydrated(false),
+                
+                Textarea::make('content')
+                    ->label('Comment Content')
+                    ->required()
+                    ->maxLength(500)
+                    ->rows(4)
                     ->columnSpanFull(),
+                
                 Toggle::make('is_edited')
-                    ->required(),
+                    ->label('Edited')
+                    ->default(false)
+                    ->disabled(),
+                
                 Toggle::make('is_deleted')
-                    ->required(),
+                    ->label('Deleted')
+                    ->default(false)
+                    ->disabled(),
             ]);
     }
 }

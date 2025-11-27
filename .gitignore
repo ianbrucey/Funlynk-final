@@ -22,3 +22,15 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# CapacitorJS
+ios/App/Pods
+ios/App/Podfile.lock
+ios/App/App/public
+ios/App/App/capacitor.config.json
+android/app/src/main/assets/public
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/res/values/strings.xml
+android/.gradle
+android/build
+android/local.properties

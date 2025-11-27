@@ -7,7 +7,35 @@
             ⏱️ {{ $post->expires_at->diffForHumans() }}
         </span>
     </div>
-    
+
+    {{-- User Info --}}
+    <div class="flex items-center gap-3 mb-3">
+        {{-- Avatar --}}
+        @if($post->user?->profile_image_url)
+            <img
+                src="{{ Storage::url($post->user->profile_image_url) }}"
+                alt="{{ $post->user->display_name ?? $post->user->username }}"
+                class="w-10 h-10 rounded-full object-cover ring-2 ring-pink-500/50 bg-slate-800"
+            >
+        @else
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center ring-2 ring-pink-500/50">
+                <span class="text-white font-bold text-sm">
+                    {{ strtoupper(substr($post->user?->display_name ?? $post->user?->username ?? '?', 0, 1)) }}
+                </span>
+            </div>
+        @endif
+
+        {{-- Username & Time --}}
+        <div class="flex-1 min-w-0">
+            <a href="{{ route('profile.view', $post->user?->username ?? 'unknown') }}" class="font-semibold text-white hover:text-cyan-400 transition truncate block">
+                {{ $post->user?->display_name ?? $post->user?->username ?? 'Unknown User' }}
+            </a>
+            <p class="text-xs text-gray-400">
+                {{ "@".$post->user?->username }} · {{ $post->created_at->diffForHumans() }}
+            </p>
+        </div>
+    </div>
+
     {{-- Content --}}
     <div class="pr-24">
         <h3 class="text-lg font-bold mb-2 text-white">{{ $post->title }}</h3>
@@ -46,11 +74,12 @@
         </div>
     @endif
     
-    {{-- Reactions --}}
+    {{-- Reactions & Actions --}}
     <div class="flex items-center gap-2">
         @php
             $userHasReacted = $post->reactions->where('user_id', auth()->id())->where('reaction_type', 'im_down')->isNotEmpty();
             $reactionCount = $post->reactions->where('reaction_type', 'im_down')->count();
+            $commentCount = $post->comments_count ?? $post->comments()->count();
         @endphp
         <button
             wire:click="reactToPost('{{ $post->id }}', 'im_down')"
@@ -80,11 +109,16 @@
             </span>
         </button>
     </div>
-    
-    {{-- View Details Link --}}
-    <div class="mt-3 pt-3 border-t border-white/10">
-        <a href="#" class="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
-            View full details →
+
+    {{-- Comment Count --}}
+    <div class="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
+        <a href="{{ route('posts.show', $post->id) }}" class="flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <span class="text-sm">
+                {{ $commentCount }} {{ $commentCount === 1 ? 'comment' : 'comments' }}
+            </span>
         </a>
     </div>
 </div>

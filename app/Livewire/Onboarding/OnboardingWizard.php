@@ -121,9 +121,7 @@ class OnboardingWizard extends Component
         // Mark onboarding as complete
         $user->markOnboardingComplete();
 
-        session()->flash('message', 'Welcome to FunLynk! Your profile is all set.');
-
-        return redirect()->route('dashboard');
+        return redirect()->route('feed.nearby');
     }
 
     public function render()

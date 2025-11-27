@@ -2,7 +2,7 @@
     <div class="container mx-auto px-6">
         <div class="flex items-center justify-between h-20">
             <!-- Logo -->
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
+            <a href="{{ route('feed.nearby') }}" class="flex items-center gap-3 group">
                 <div class="w-14 h-14 flex items-center justify-center p-0.5 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl">
                     <div class="bg-slate-900 rounded-xl w-full h-full flex items-center justify-center p-2">
                         <img src="{{ asset('images/fl-logo-icon-only.png') }}" alt="FunLynk" class="w-full h-full object-contain">
@@ -18,38 +18,26 @@
 
             <!-- Navigation Icons -->
             <div class="flex items-center gap-2 md:gap-4">
-                <!-- Timeline/Feed -->
-                <a href="{{ route('dashboard') }}"
-                   class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('dashboard') ? 'bg-white/10' : '' }}"
-                   title="Timeline">
-                    <svg class="w-6 h-6 {{ request()->routeIs('dashboard') ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Home/Nearby Feed -->
+                <a href="{{ route('feed.nearby') }}"
+                   class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('feed.nearby') ? 'bg-white/10' : '' }}"
+                   title="Home">
+                    <svg class="w-6 h-6 {{ request()->routeIs('feed.nearby') ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
-                    @if(request()->routeIs('dashboard'))
+                    @if(request()->routeIs('feed.nearby'))
                         <div class="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-500 to-cyan-500"></div>
                     @endif
                 </a>
 
-                <!-- Discover/Feed -->
-                <a href="{{ route('feed.nearby') }}"
-                   class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('feed.*') ? 'bg-white/10' : '' }}"
-                   title="Discover">
-                    <svg class="w-6 h-6 {{ request()->routeIs('feed.*') ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- For You Feed -->
+                <a href="{{ route('feed.for-you') }}"
+                   class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('feed.for-you') ? 'bg-white/10' : '' }}"
+                   title="For You">
+                    <svg class="w-6 h-6 {{ request()->routeIs('feed.for-you') ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    @if(request()->routeIs('feed.*'))
-                        <div class="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-500 to-cyan-500"></div>
-                    @endif
-                </a>
-
-                <!-- Search -->
-                <a href="{{ route('search') }}"
-                   class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('search') ? 'bg-white/10' : '' }}"
-                   title="Search">
-                    <svg class="w-6 h-6 {{ request()->routeIs('search') ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    @if(request()->routeIs('search'))
+                    @if(request()->routeIs('feed.for-you'))
                         <div class="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-500 to-cyan-500"></div>
                     @endif
                 </a>

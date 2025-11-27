@@ -36,7 +36,7 @@ class SocialLoginController extends Controller
                 request()->session()->regenerate();
             }
 
-            return redirect()->intended(route('dashboard'))
+            return redirect()->intended(route('feed.nearby'))
                 ->with('status', __('Connected :provider account successfully.', [
                     'provider' => ucfirst($provider),
                 ]));

@@ -218,6 +218,14 @@
                     @endif
                 </div>
 
+                {{-- Comments Section --}}
+                <div class="relative p-6 lg:p-8 glass-card lg:rounded-xl">
+                    <livewire:comments.comment-section
+                        :commentable-type="'App\\Models\\Activity'"
+                        :commentable-id="$activity->id"
+                    />
+                </div>
+
             </div>
 
             {{-- Sidebar (Right Column) --}}

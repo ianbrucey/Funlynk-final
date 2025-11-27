@@ -32,12 +32,14 @@ Route::middleware('auth')->group(function () {
 
     // Routes that require completed onboarding
     Route::middleware('onboarding.complete')->group(function () {
-        Route::get('/dashboard', \App\Livewire\Dashboard::class)->name('dashboard');
+        // Redirect /dashboard to nearby feed for backwards compatibility
+        Route::redirect('/dashboard', '/feed/nearby');
         Route::get('/profile', ShowProfile::class)->name('profile.show');
         Route::get('/u/{username}', ShowProfile::class)->name('profile.view');
 
         // Post Routes
         Route::get('/posts/create', \App\Livewire\Posts\CreatePost::class)->name('posts.create');
+        Route::get('/posts/{post}', \App\Livewire\Posts\PostDetail::class)->name('posts.show');
 
         // Activity Routes
         Route::get('/activities', function () {
@@ -52,7 +54,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/feed/nearby', \App\Livewire\Discovery\NearbyFeed::class)->name('feed.nearby');
         Route::get('/feed/for-you', \App\Livewire\Discovery\ForYouFeed::class)->name('feed.for-you');
         Route::get('/map', \App\Livewire\Discovery\MapView::class)->name('map.view');
-        Route::get('/search', \App\Livewire\Search\SearchPage::class)->name('search');
+
+        // Search redirects to home feed with query param
+        Route::get('/search', function (\Illuminate\Http\Request $request) {
+            $query = $request->query('q', '');
+
+            return redirect()->route('feed.nearby', $query ? ['q' => $query] : []);
+        })->name('search');
         Route::get('/search/users', \App\Livewire\Search\SearchUsers::class)->name('search.users');
 
         // Notification Routes

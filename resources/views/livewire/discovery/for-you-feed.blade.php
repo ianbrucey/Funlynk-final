@@ -35,6 +35,54 @@
                                 </div>
                             @endif
 
+                            {{-- Event Images Carousel --}}
+                            @if($item['data']->images && count($item['data']->images) > 0)
+                                <div class="relative mb-4 -mx-6" x-data="{ currentSlide: 0, totalSlides: {{ count($item['data']->images) }} }">
+                                    {{-- Carousel Container --}}
+                                    <div class="relative overflow-hidden bg-slate-900/50 h-64">
+                                        <div class="flex h-full transition-transform duration-500 ease-out"
+                                             :style="`transform: translateX(-${currentSlide * 100}%)`">
+                                            @foreach($item['data']->images as $image)
+                                                <div class="w-full h-full flex-shrink-0 flex items-center justify-center">
+                                                    <img src="{{ Storage::url($image) }}"
+                                                         class="max-w-full max-h-full object-contain"
+                                                         alt="{{ $item['data']->title }}">
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+
+                                    {{-- Navigation Arrows (only show if more than 1 image) --}}
+                                    @if(count($item['data']->images) > 1)
+                                        {{-- Previous Button --}}
+                                        <button @click="currentSlide = currentSlide === 0 ? totalSlides - 1 : currentSlide - 1"
+                                                class="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900/80 hover:bg-slate-800 border border-white/20 rounded-full transition-all hover:scale-110 z-10">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                            </svg>
+                                        </button>
+
+                                        {{-- Next Button --}}
+                                        <button @click="currentSlide = currentSlide === totalSlides - 1 ? 0 : currentSlide + 1"
+                                                class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900/80 hover:bg-slate-800 border border-white/20 rounded-full transition-all hover:scale-110 z-10">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </button>
+
+                                        {{-- Dots Indicator --}}
+                                        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                                            @foreach($item['data']->images as $index => $image)
+                                                <button @click="currentSlide = {{ $index }}"
+                                                        class="w-2 h-2 rounded-full transition-all"
+                                                        :class="currentSlide === {{ $index }} ? 'bg-cyan-400 w-6' : 'bg-white/50 hover:bg-white/80'">
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+
                             {{-- Content --}}
                             <div class="pr-32">
                                 <h3 class="text-xl font-bold mb-2 text-white">{{ $item['data']->title }}</h3>

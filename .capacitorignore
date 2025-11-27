@@ -1,0 +1,3 @@
+# Exclude Laravel's storage symlink (iOS doesn't allow symlinks)
+storage
+

@@ -57,7 +57,7 @@ class Login extends Component implements HasForms
 
         request()->session()->regenerate();
 
-        $this->redirectIntended(route('dashboard'), navigate: true);
+        $this->redirectIntended(route('feed.nearby'), navigate: true);
     }
 
     public function render()

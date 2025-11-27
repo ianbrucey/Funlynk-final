@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Builder;
 use Laravel\Scout\Searchable;
 use MatanYadaev\EloquentSpatial\Objects\Point;
@@ -81,6 +82,11 @@ class Post extends Model
     public function convertedActivity(): BelongsTo
     {
         return $this->belongsTo(Activity::class, 'converted_to_activity_id');
+    }
+
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
     }
 
     // Helper Methods

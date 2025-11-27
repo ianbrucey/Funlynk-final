@@ -1,39 +1,72 @@
-<div class="min-h-screen py-12">
+<div class="min-h-screen py-8">
     <div class="container mx-auto lg:px-6">
 
-        {{-- Header --}}
-        <div class="px-6 lg:px-0 mb-8">
-            <h1 class="text-4xl font-bold mb-2 text-white">Nearby Feed</h1>
-            <p class="text-gray-400">Discover spontaneous activities and events happening around you</p>
+        {{-- Search Bar --}}
+        <div class="px-6 lg:px-0 mb-6">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input
+                    type="text"
+                    wire:model.live.debounce.300ms="searchQuery"
+                    placeholder="What's happening nearby?"
+                    class="w-full pl-12 pr-12 py-4 bg-slate-800/50 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition text-lg"
+                >
+                @if($searchQuery)
+                    <button
+                        wire:click="clearSearch"
+                        class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                @endif
+            </div>
+            @if($searchQuery)
+                <p class="mt-2 text-sm text-gray-400">
+                    Searching for "<span class="text-cyan-400">{{ $searchQuery }}</span>"
+                </p>
+            @endif
         </div>
 
         {{-- Filters --}}
         <div class="px-6 lg:px-0 mb-6">
-            <div class="relative p-6 glass-card lg:rounded-xl">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="relative p-4 glass-card lg:rounded-xl">
+                <div class="grid grid-cols-3 gap-4">
 
                     {{-- Content Type Filter --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-400 mb-2">Show</label>
-                        <select wire:model.live="contentType" class="w-full px-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition">
-                            <option value="all">All Content</option>
-                            <option value="posts">Posts Only</option>
-                            <option value="events">Events Only</option>
+                        <label class="block text-xs font-semibold text-gray-400 mb-1">Show</label>
+                        <select wire:model.live="contentType" class="w-full px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition">
+                            <option value="all">All</option>
+                            <option value="posts">Posts</option>
+                            <option value="events">Events</option>
                         </select>
                     </div>
 
                     {{-- Distance Filter --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-400 mb-2">
-                            Distance: {{ $radius }} km
+                        <label class="block text-xs font-semibold text-gray-400 mb-1">
+                            Distance: <span class="text-cyan-400">{{ $radius }} km</span>
                         </label>
-                        <input type="range" wire:model.live="radius" min="1" max="50" class="w-full h-2 bg-slate-800/50 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                        <input
+                            type="range"
+                            wire:model.live.debounce.150ms="radius"
+                            min="1"
+                            max="100"
+                            step="1"
+                            class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                        >
                     </div>
 
                     {{-- Time Filter --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-400 mb-2">When</label>
-                        <select wire:model.live="timeFilter" class="w-full px-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition">
+                        <label class="block text-xs font-semibold text-gray-400 mb-1">When</label>
+                        <select wire:model.live="timeFilter" class="w-full px-3 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition">
                             <option value="all">Anytime</option>
                             <option value="today">Today</option>
                             <option value="week">This Week</option>
@@ -64,6 +97,79 @@
                                     <span class="px-3 py-1 bg-purple-500/30 border border-purple-500/50 rounded-full text-xs font-bold text-purple-300 uppercase tracking-wider">
                                         ⭐ Converted from Post
                                     </span>
+                                </div>
+                            @endif
+
+                            {{-- Host Info --}}
+                            <div class="flex items-center gap-3 mb-4">
+                                @if($item['data']->host?->profile_image_url)
+                                    <img
+                                        src="{{ Storage::url($item['data']->host->profile_image_url) }}"
+                                        alt="{{ $item['data']->host->display_name ?? $item['data']->host->username }}"
+                                        class="w-10 h-10 rounded-full object-cover ring-2 ring-cyan-500/50 bg-slate-800"
+                                    >
+                                @else
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center ring-2 ring-cyan-500/50">
+                                        <span class="text-white font-bold text-sm">
+                                            {{ strtoupper(substr($item['data']->host?->display_name ?? $item['data']->host?->username ?? '?', 0, 1)) }}
+                                        </span>
+                                    </div>
+                                @endif
+                                <div class="flex-1 min-w-0">
+                                    <a href="{{ route('profile.view', $item['data']->host?->username ?? 'unknown') }}" class="font-semibold text-white hover:text-cyan-400 transition truncate block">
+                                        {{ $item['data']->host?->display_name ?? $item['data']->host?->username ?? 'Unknown Host' }}
+                                    </a>
+                                    <p class="text-xs text-gray-400">
+                                        {{ "@".$item['data']->host?->username }} · Hosting
+                                    </p>
+                                </div>
+                            </div>
+
+                            {{-- Event Images Carousel --}}
+                            @if($item['data']->images && count($item['data']->images) > 0)
+                                <div class="relative mb-4 -mx-6" x-data="{ currentSlide: 0, totalSlides: {{ count($item['data']->images) }} }">
+                                    {{-- Carousel Container --}}
+                                    <div class="relative overflow-hidden bg-slate-900/50 h-64">
+                                        <div class="flex h-full transition-transform duration-500 ease-out"
+                                             :style="`transform: translateX(-${currentSlide * 100}%)`">
+                                            @foreach($item['data']->images as $image)
+                                                <div class="w-full h-full flex-shrink-0 flex items-center justify-center">
+                                                    <img src="{{ Storage::url($image) }}"
+                                                         class="max-w-full max-h-full object-contain"
+                                                         alt="{{ $item['data']->title }}">
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+
+                                    {{-- Navigation Arrows (only show if more than 1 image) --}}
+                                    @if(count($item['data']->images) > 1)
+                                        {{-- Previous Button --}}
+                                        <button @click="currentSlide = currentSlide === 0 ? totalSlides - 1 : currentSlide - 1"
+                                                class="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900/80 hover:bg-slate-800 border border-white/20 rounded-full transition-all hover:scale-110 z-10">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                            </svg>
+                                        </button>
+
+                                        {{-- Next Button --}}
+                                        <button @click="currentSlide = currentSlide === totalSlides - 1 ? 0 : currentSlide + 1"
+                                                class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-slate-900/80 hover:bg-slate-800 border border-white/20 rounded-full transition-all hover:scale-110 z-10">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                            </svg>
+                                        </button>
+
+                                        {{-- Dots Indicator --}}
+                                        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                                            @foreach($item['data']->images as $index => $image)
+                                                <button @click="currentSlide = {{ $index }}"
+                                                        class="w-2 h-2 rounded-full transition-all"
+                                                        :class="currentSlide === {{ $index }} ? 'bg-cyan-400 w-6' : 'bg-white/50 hover:bg-white/80'">
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </div>
                             @endif
 
@@ -103,6 +209,21 @@
                                 </div>
                             </div>
 
+                            {{-- Comment Count --}}
+                            @php
+                                $commentCount = $item['data']->comments_count ?? $item['data']->comments()->count();
+                            @endphp
+                            <div class="mb-3 pt-3 border-t border-white/10">
+                                <a href="{{ route('activities.show', $item['data']) }}" class="flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                    <span class="text-sm">
+                                        {{ $commentCount }} {{ $commentCount === 1 ? 'comment' : 'comments' }}
+                                    </span>
+                                </a>
+                            </div>
+
                             {{-- Action Button --}}
                             <div class="flex items-center gap-3">
                                 <a href="{{ route('activities.show', $item['data']) }}"
@@ -118,16 +239,33 @@
                 <div class="px-6 lg:px-0">
                     <div class="relative p-12 glass-card lg:rounded-xl text-center">
                         <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-pink-500 via-purple-500 to-cyan-500 flex items-center justify-center">
-                            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
+                            @if($searchQuery)
+                                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            @else
+                                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            @endif
                         </div>
-                        <h3 class="text-xl font-bold mb-2 text-white">No activities found</h3>
-                        <p class="text-gray-400 mb-6">Try adjusting your filters or check back later for new posts and events</p>
-                        <a href="{{ route('activities.create') }}"
-                           class="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
-                            Create a Post
-                        </a>
+                        @if($searchQuery)
+                            <h3 class="text-xl font-bold mb-2 text-white">No results for "{{ $searchQuery }}"</h3>
+                            <p class="text-gray-400 mb-6">Try a different search term or adjust your filters</p>
+                            <button
+                                wire:click="clearSearch"
+                                class="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
+                                Clear Search
+                            </button>
+                        @else
+                            <h3 class="text-xl font-bold mb-2 text-white">Nothing nearby yet</h3>
+                            <p class="text-gray-400 mb-6">Be the first to post something! Try increasing your distance or check back later.</p>
+                            <a href="{{ route('posts.create') }}"
+                               class="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
+                                Create a Post
+                            </a>
+                        @endif
                     </div>
                 </div>
             @endforelse

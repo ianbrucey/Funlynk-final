@@ -1,0 +1,6 @@
+# Capacitor Ignore File
+# Files and directories listed here will not be copied to native projects
+
+# Laravel storage symlink (iOS doesn't allow symlinks in app bundles)
+storage
+

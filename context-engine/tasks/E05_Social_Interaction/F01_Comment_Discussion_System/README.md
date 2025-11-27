@@ -1,23 +1,70 @@
 # F01 Comment & Discussion System
 
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         FEED CARDS                              │
+│  ┌──────────────────┐  ┌──────────────────┐                    │
+│  │  Post Card       │  │  Event Card      │                    │
+│  │  💬 12 comments  │  │  💬 5 comments   │  (Click to detail) │
+│  └──────────────────┘  └──────────────────┘                    │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                      DETAIL PAGE                                │
+│  ┌───────────────────────────────────────────────────────────┐ │
+│  │  CommentSection (Polymorphic)                             │ │
+│  │  ┌─────────────────────────────────────────────────────┐ │ │
+│  │  │ CommentForm (New comment)                           │ │ │
+│  │  └─────────────────────────────────────────────────────┘ │ │
+│  │  ┌─────────────────────────────────────────────────────┐ │ │
+│  │  │ CommentItem (Alice: "Great idea!")                  │ │ │
+│  │  │   ├─ CommentItem (Bob: "I agree!")  [Reply]         │ │ │
+│  │  │   └─ CommentItem (Charlie: "Me too!") [Reply]       │ │ │
+│  │  └─────────────────────────────────────────────────────┘ │ │
+│  │  ┌─────────────────────────────────────────────────────┐ │ │
+│  │  │ CommentItem (David: "When?")                        │ │ │
+│  │  └─────────────────────────────────────────────────────┘ │ │
+│  └───────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                   REAL-TIME UPDATES                             │
+│  Laravel Reverb (WebSocket) → Laravel Echo → Livewire          │
+│  New comment → Broadcast → All viewers see update instantly    │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                     NOTIFICATIONS                               │
+│  Content Owner: "Bob commented on your post"                   │
+│  Comment Author: "Charlie replied to your comment"             │
+│  @Mentioned User: "Alice mentioned you in a comment"           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 ## Feature Overview
 
 This feature enables rich conversations and discussions around both **Posts** (ephemeral) and **Events** (structured activities) through a comprehensive commenting system with threading, reactions, moderation, and real-time updates. It transforms static content into dynamic discussion hubs that foster community engagement.
 
 **Key Architecture**: Comments use polymorphic relationships to work on both `posts` and `activities` tables, allowing users to discuss spontaneous posts and structured events with the same commenting infrastructure.
 
-The system supports threaded discussions up to 10 levels deep, rich text formatting with @mentions, comment reactions, and real-time updates via Livewire polling. Moderation tools in Filament allow administrators to manage discussions and enforce community guidelines.
+The system supports threaded discussions (nested replies) up to 10 levels deep, rich text formatting with @mentions, comment reactions, and real-time updates via **Laravel Reverb** (WebSocket-based). Moderation tools in Filament allow administrators to manage discussions and enforce community guidelines.
+
+**UX Strategy**: Feed cards (Nearby Feed, For You Feed) display comment counts only. Clicking navigates to the detail page where the full comment section is displayed. This keeps feeds fast and clean while providing rich discussion on detail pages.
 
 ## Feature Scope
 
 ### In Scope
-- **Polymorphic Comment System**: Comments work on both Posts and Events (activities)
+- **Polymorphic Comment System**: Single unified component works on both Posts and Events (activities)
 - **Threaded Discussions**: Nested replies up to 10 levels deep with parent-child relationships
-- **Rich Text Support**: Markdown or simple formatting with @username mentions
-- **Comment Reactions**: Like, helpful, funny reactions on individual comments
-- **Real-time Updates**: Livewire polling for live comment updates (Laravel Echo optional Phase 2)
+- **Rich Text Support**: Simple formatting with @username mentions
+- **Comment Reactions**: Like reactions on individual comments
+- **Real-time Updates**: Laravel Reverb (WebSocket) for instant comment updates
+- **Smart Notifications**: Content owners notified of comments, users notified of replies to their comments
 - **Moderation Tools**: Filament resources for comment management, flagging, and removal
-- **Comment Analytics**: Engagement tracking and discussion quality metrics
+- **Feed Integration**: Comment counts on feed cards, full comments on detail pages
+- **Rate Limiting**: Max 5 comments per minute per user to prevent spam
 
 ### Out of Scope
 - **Direct Messaging**: One-on-one messaging between users (handled by F04 Real-time Social Features)
@@ -90,23 +137,50 @@ php artisan make:filament-page ManageComments --resource=CommentResource --type=
 ---
 
 ### T04: Livewire Comment Components
-**Estimated Time**: 5-6 hours
+**Estimated Time**: 6-7 hours
 **Dependencies**: T02
 **Artisan Commands**:
 ```bash
 # Create Livewire components
-php artisan make:livewire Comments/CommentThread --no-interaction
+php artisan make:livewire Comments/CommentSection --no-interaction
 php artisan make:livewire Comments/CommentForm --no-interaction
 php artisan make:livewire Comments/CommentItem --no-interaction
 ```
 
-**Description**: Create Livewire components for displaying and managing comments. `CommentThread` displays all comments for a Post/Activity with threading visualization. `CommentForm` handles new comment creation with @mention autocomplete. `CommentItem` displays individual comments with reply, react, and report actions. Implement Livewire polling for real-time updates (every 5 seconds). Apply galaxy theme with glass morphism styling.
+**Description**: Create unified Livewire components for displaying and managing comments on both Posts and Activities.
+
+**CommentSection** (main component):
+- Accepts `$commentableType` and `$commentableId` props (polymorphic)
+- Displays all comments with nested threading visualization (indentation)
+- Listens to Laravel Echo for real-time updates
+- Handles pagination (20 comments per page, infinite scroll)
+
+**CommentForm**:
+- Handles new comment creation and replies
+- Character limit (500 chars)
+- @mention autocomplete (future enhancement)
+- Rate limiting validation
+
+**CommentItem**:
+- Displays individual comment with user avatar, username, timestamp
+- Reply button (opens nested CommentForm)
+- Like/react button
+- Delete button (own comments only)
+- Report button
+
+**Feed Integration**:
+- Add comment count display to post-card and event cards
+- Comment count is clickable, navigates to detail page
+- No inline comment display on feed cards (keeps feed clean)
+
+Apply galaxy theme with glass morphism styling to all components.
 
 **Deliverables**:
-- `app/Livewire/Comments/CommentThread.php` with threading display
-- `app/Livewire/Comments/CommentForm.php` with @mention support
-- `app/Livewire/Comments/CommentItem.php` with reactions
+- `app/Livewire/Comments/CommentSection.php` (polymorphic, works for Posts + Activities)
+- `app/Livewire/Comments/CommentForm.php` with validation
+- `app/Livewire/Comments/CommentItem.php` with threading
 - Blade views with DaisyUI and galaxy theme styling
+- Comment count integration in feed cards
 
 ---
 
@@ -131,24 +205,37 @@ php artisan make:middleware CheckCommentModeration --no-interaction
 
 ---
 
-### T06: Real-time Comment Updates
-**Estimated Time**: 4-5 hours
+### T06: Real-time Comment Updates & Notifications
+**Estimated Time**: 5-6 hours
 **Dependencies**: T02, T04
 **Artisan Commands**:
 ```bash
 # Create listener for CommentCreated event
 php artisan make:listener BroadcastCommentCreated --event=CommentCreated --no-interaction
 
-# Create notification for mentions
+# Create notifications
 php artisan make:notification CommentMentionNotification --no-interaction
+php artisan make:notification CommentOnYourContentNotification --no-interaction
+php artisan make:notification ReplyToYourCommentNotification --no-interaction
 ```
 
-**Description**: Implement real-time comment updates using Livewire polling (poll every 5 seconds). When new comments are created, broadcast `CommentCreated` event. Livewire components listen for updates and refresh comment list. Create notifications for @mentions that notify mentioned users. Optional: Integrate Laravel Echo + Pusher for WebSocket-based real-time updates (Phase 2).
+**Description**: Implement real-time comment updates using **Laravel Reverb** (WebSocket). When new comments are created, broadcast `CommentCreated` event to channel `comments.{commentable_type}.{commentable_id}`. Livewire components listen via Laravel Echo and update in real-time.
+
+**Notification Strategy**:
+1. **Content Owner**: Always notified when someone comments on their Post/Activity
+2. **Comment Author**: Notified when someone replies to their comment
+3. **@Mentions**: Notified when mentioned in a comment (future enhancement)
+4. **Opt-out**: Users can disable notifications in settings
+
+**Rate Limiting**: Max 5 comments per minute per user to prevent spam.
 
 **Deliverables**:
-- `app/Listeners/BroadcastCommentCreated.php` for event broadcasting
+- `app/Listeners/BroadcastCommentCreated.php` for Reverb broadcasting
+- `app/Notifications/CommentOnYourContentNotification.php` for content owners
+- `app/Notifications/ReplyToYourCommentNotification.php` for comment authors
 - `app/Notifications/CommentMentionNotification.php` for @mentions
-- Livewire polling implementation in comment components
+- Laravel Echo integration in Livewire components
+- Rate limiting middleware for comment creation
 
 ---
 
@@ -256,10 +343,78 @@ public function comments(): MorphMany
 - Validate max depth of 10 levels before allowing replies
 - Use eager loading to prevent N+1 queries: `Comment::with('replies.replies')`
 
-### Real-time Updates
-- **MVP**: Livewire polling every 5 seconds (`wire:poll.5s`)
-- **Phase 2**: Laravel Echo + Pusher/Soketi for WebSocket updates
+### Real-time Updates with Laravel Reverb
+- Use **Laravel Reverb** (WebSocket server) for real-time comment updates
 - Broadcast `CommentCreated` event to channel: `comments.{commentable_type}.{commentable_id}`
+- Livewire components listen via Laravel Echo and update instantly
+- Configure Reverb in `.env`: `BROADCAST_CONNECTION=reverb`
+- Start Reverb server: `php artisan reverb:start`
+
+```php
+// In CommentCreated event
+public function broadcastOn(): array
+{
+    return [
+        new Channel("comments.{$this->comment->commentable_type}.{$this->comment->commentable_id}"),
+    ];
+}
+```
+
+```javascript
+// In Livewire component blade view
+Echo.channel(`comments.{{ $commentableType }}.{{ $commentableId }}`)
+    .listen('CommentCreated', (e) => {
+        @this.call('refreshComments');
+    });
+```
+
+### Notification Strategy
+
+**Who Gets Notified:**
+
+1. **Content Owner** (Post/Activity creator):
+   - ✅ Always notified when someone comments on their content
+   - Notification: "Bob commented on your post"
+   - Notification: "Alice commented on your event"
+
+2. **Comment Author** (Person who wrote a comment):
+   - ✅ Notified when someone replies to their comment
+   - Notification: "Charlie replied to your comment"
+   - Does NOT get notified for other comments on the same post (too noisy)
+
+3. **@Mentioned Users** (Future enhancement):
+   - ✅ Notified when mentioned in a comment
+   - Notification: "Bob mentioned you in a comment"
+
+**Notification Opt-out Settings:**
+- Users can disable "Comments on my posts/events"
+- Users can disable "Replies to my comments"
+- Users can disable "@mentions"
+- Settings stored in `user_notification_preferences` table
+
+**Example Scenarios:**
+
+```
+Scenario 1: Comment on your content
+Alice posts "Looking for tennis partners"
+Bob comments "I'm down!"
+→ Alice gets notification: "Bob commented on your post"
+
+Scenario 2: Reply to your comment
+Alice posts "Looking for tennis partners"
+Bob comments "I'm down!"
+Charlie replies to Bob: "What time works?"
+→ Bob gets notification: "Charlie replied to your comment"
+→ Alice gets notification: "Charlie commented on your post"
+
+Scenario 3: Multiple comments (NOT notified)
+Alice posts "Looking for tennis partners"
+Bob comments "I'm down!"
+Charlie comments "Me too!"
+David comments "Count me in!"
+→ Bob does NOT get notified about Charlie or David's comments
+→ Only Alice (content owner) gets notified
+```
 
 ### @Mention Parsing
 ```php
@@ -274,22 +429,114 @@ foreach ($users as $user) {
 }
 ```
 
+### Feed Integration Strategy
+
+**Feed Cards (Nearby Feed, For You Feed):**
+- Display comment count only: "💬 12 comments"
+- Comment count is clickable
+- Clicking navigates to detail page (Post detail or Activity detail)
+- NO inline comment display on feed cards (keeps feed fast and clean)
+
+**Detail Pages (Post detail, Activity detail):**
+- Full `CommentSection` component displayed
+- All comments visible with threading
+- Comment form for new comments
+- Real-time updates via Reverb
+
+**Implementation:**
+```blade
+{{-- In post-card.blade.php --}}
+<a href="{{ route('posts.show', $post) }}" class="text-gray-400 hover:text-cyan-400 transition">
+    💬 {{ $post->comments_count }} comments
+</a>
+
+{{-- In activity-detail.blade.php --}}
+<livewire:comments.comment-section
+    :commentable-type="'App\Models\Activity'"
+    :commentable-id="$activity->id"
+/>
+```
+
 ### Galaxy Theme Integration
 - Use DaisyUI classes: `card`, `card-body`, `btn`, `textarea`
-- Apply glass morphism: `bg-base-100/80 backdrop-blur-lg`
+- Apply glass morphism: `bg-slate-800/50 backdrop-blur-lg border border-white/10`
 - Use aurora gradient backgrounds for comment threads
 - Implement smooth transitions for real-time updates
+- Comment items have subtle hover effects
+- Reply indentation uses left border with cyan accent
+
+### Rate Limiting & Spam Prevention
+
+**Rate Limits:**
+- Max 5 comments per minute per user
+- Max 20 comments per hour per user
+- Implemented using Laravel's `RateLimiter` facade
+
+```php
+// In CommentService
+use Illuminate\Support\Facades\RateLimiter;
+
+public function createComment($data)
+{
+    $key = 'comment-creation:' . auth()->id();
+
+    if (RateLimiter::tooManyAttempts($key, 5)) {
+        throw new \Exception('Too many comments. Please wait before commenting again.');
+    }
+
+    RateLimiter::hit($key, 60); // 60 seconds
+
+    // Create comment...
+}
+```
+
+**Spam Detection:**
+- Detect duplicate content (same comment posted multiple times)
+- Detect rapid-fire comments (same user, same content type)
+- Auto-flag suspicious comments for moderation
+
+**Character Limits:**
+- Min: 1 character
+- Max: 500 characters
+- Validated on both client and server side
 
 ### Performance Optimization
 - Eager load relationships: `Comment::with('user', 'replies', 'reactions')`
-- Cache comment counts: `$post->comments_count` (use database counter)
-- Paginate long comment threads (50 comments per page)
+- Cache comment counts: `$post->comments_count` (use database counter with `withCount()`)
+- Paginate long comment threads (20 comments per page, infinite scroll)
 - Use database indexes on `commentable_type`, `commentable_id`, `parent_id`
+- Optimize threading queries with recursive CTEs for deep nesting
 
 ---
 
-**Estimated Total Time**: 25-32 hours
+**Estimated Total Time**: 28-36 hours
 
 **Implementation Order**: T01 → T02 → T03 → T04 → T05 → T06 → T07
 
 **Testing Priority**: High - Comments are core social feature, must be thoroughly tested
+
+## Implementation Phases
+
+### Phase 1: Core Comment System (T01-T04)
+- Database, models, relationships
+- Service layer with threading logic
+- Livewire components with basic UI
+- Feed integration (comment counts)
+- **Estimated**: 18-22 hours
+
+### Phase 2: Authorization & Moderation (T05)
+- Policies for comment permissions
+- Moderation tools in Filament
+- **Estimated**: 3-4 hours
+
+### Phase 3: Real-time & Notifications (T06)
+- Laravel Reverb integration
+- Notification system
+- Rate limiting
+- **Estimated**: 5-6 hours
+
+### Phase 4: Testing & Polish (T07)
+- Comprehensive Pest tests
+- Browser testing
+- Performance optimization
+- **Estimated**: 3-4 hours

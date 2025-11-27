@@ -150,8 +150,8 @@
                     </div>
                     <div class="flex items-center gap-4">
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
-                                Dashboard
+                            <a href="{{ route('feed.nearby') }}" class="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
+                                Home
                             </a>
                         @else
                             <a href="{{ route('login') }}" class="px-6 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition text-gray-300 hover:text-white">
