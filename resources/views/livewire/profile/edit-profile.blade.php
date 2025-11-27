@@ -163,7 +163,26 @@
                             </button>
                         </div>
 
-                        <p class="text-xs text-gray-500 mt-1">Start typing to search for a location</p>
+                        @if($location_name)
+                            @php
+                                // Parse location_name to show city, state
+                                $locationParts = explode(',', $location_name);
+                                $city = trim($locationParts[0] ?? '');
+                                $state = trim($locationParts[1] ?? '');
+                                $displayLocation = $city;
+                                if ($state) {
+                                    $displayLocation .= ', ' . $state;
+                                }
+                            @endphp
+                            <p class="text-xs text-cyan-400 mt-1 flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Location set: {{ $displayLocation }}
+                            </p>
+                        @else
+                            <p class="text-xs text-gray-500 mt-1">Start typing to search for a location</p>
+                        @endif
                         @error('location_name') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
                     </div>
                 </div>

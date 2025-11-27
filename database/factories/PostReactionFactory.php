@@ -19,7 +19,7 @@ class PostReactionFactory extends Factory
         return [
             'post_id' => \App\Models\Post::factory(),
             'user_id' => \App\Models\User::factory(),
-            'reaction_type' => fake()->randomElement(['im_down', 'join_me', 'interested']),
+            'reaction_type' => fake()->randomElement(['im_down', 'invite_friends']),
             'created_at' => now(),
         ];
     }

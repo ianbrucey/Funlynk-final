@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Scout\Searchable;
 
 class User extends Authenticatable implements FilamentHasName
 {
@@ -19,6 +20,7 @@ class User extends Authenticatable implements FilamentHasName
 
     use HasUuids;
     use Notifiable;
+    use Searchable;
 
     /**
      * The attributes that are mass assignable.
@@ -31,6 +33,7 @@ class User extends Authenticatable implements FilamentHasName
         'display_name',
         'password',
         'email_verified_at',
+        'onboarding_completed_at',
         'bio',
         'profile_image_url',
         'location_name',
@@ -76,6 +79,7 @@ class User extends Authenticatable implements FilamentHasName
     {
         return [
             'email_verified_at' => 'datetime',
+            'onboarding_completed_at' => 'datetime',
             'password' => 'hashed',
             'interests' => 'array',
             'location_coordinates' => \MatanYadaev\EloquentSpatial\Objects\Point::class,
@@ -163,5 +167,82 @@ class User extends Authenticatable implements FilamentHasName
     public function getFilamentName(): string
     {
         return $this->display_name ?: ($this->username ?: (string) $this->email);
+    }
+
+    /**
+     * Get the latitude from the location_coordinates Point
+     */
+    public function getLatitudeAttribute(): ?float
+    {
+        return $this->location_coordinates?->latitude;
+    }
+
+    /**
+     * Get the longitude from the location_coordinates Point
+     */
+    public function getLongitudeAttribute(): ?float
+    {
+        return $this->location_coordinates?->longitude;
+    }
+
+    /**
+     * Check if user has completed onboarding
+     */
+    public function hasCompletedOnboarding(): bool
+    {
+        return $this->onboarding_completed_at !== null;
+    }
+
+    /**
+     * Mark onboarding as complete
+     */
+    public function markOnboardingComplete(): void
+    {
+        $this->onboarding_completed_at = now();
+        $this->save();
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     */
+    public function toSearchableArray(): array
+    {
+        $array = [
+            'id' => $this->id,
+            'username' => $this->username,
+            'display_name' => $this->display_name,
+            'bio' => $this->bio,
+            'interests' => $this->interests ?? [],
+            'location_name' => $this->location_name,
+            'follower_count' => $this->follower_count ?? 0,
+            'is_active' => $this->is_active,
+            'created_at' => $this->created_at->timestamp,
+        ];
+
+        // Add _geo field for Meilisearch native geo filtering
+        if ($this->location_coordinates) {
+            $array['_geo'] = [
+                'lat' => $this->location_coordinates->latitude,
+                'lng' => $this->location_coordinates->longitude,
+            ];
+        }
+
+        return $array;
+    }
+
+    /**
+     * Get the name of the index associated with the model.
+     */
+    public function searchableAs(): string
+    {
+        return 'users_index';
+    }
+
+    /**
+     * Determine if the model should be searchable.
+     */
+    public function shouldBeSearchable(): bool
+    {
+        return $this->is_active && $this->onboarding_completed_at !== null;
     }
 }

@@ -156,7 +156,7 @@ class DatabaseSeeder extends Seeder
         foreach ($samplePosts as $post) {
             $activity = $activities->random();
             // Link both sides
-            $post->update(['evolved_to_event_id' => $activity->id]);
+            $post->update(['converted_to_activity_id' => $activity->id, 'status' => 'converted']);
             $activity->update(['originated_from_post_id' => $post->id, 'conversion_date' => now()]);
 
             // Create conversion metrics record

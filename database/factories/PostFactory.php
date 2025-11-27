@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use MatanYadaev\EloquentSpatial\Objects\Point;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Post>
@@ -16,19 +17,26 @@ class PostFactory extends Factory
      */
     public function definition(): array
     {
+        $lat = fake()->latitude(37.0, 38.0); // San Francisco area
+        $lng = fake()->longitude(-122.5, -122.0);
+        
         return [
             'user_id' => \App\Models\User::factory(),
-            'content' => fake()->sentence(10),
-            'tags' => fake()->randomElements(['sports', 'music', 'outdoors', 'gaming', 'travel'], 2),
-            'location_name' => fake()->optional()->city(),
+            'title' => fake()->sentence(rand(3, 6)),
+            'description' => fake()->optional(0.7)->paragraph(),
+            'location_coordinates' => new Point($lat, $lng, 4326),
+            'location_name' => fake()->city() . ', CA',
+            'time_hint' => fake()->randomElement(['Tonight around 8pm', 'Tomorrow afternoon', 'This weekend', 'Later today', null]),
+            'tags' => fake()->randomElements(['sports', 'music', 'outdoors', 'gaming', 'travel', 'food', 'art'], rand(1, 3)),
             'geo_hash' => null,
             'approximate_time' => fake()->optional()->dateTimeBetween('now', '+2 days'),
-            'expires_at' => now()->addHours(fake()->numberBetween(12, 72)),
+            'expires_at' => now()->addHours(fake()->numberBetween(24, 48)),
+            'status' => 'active',
             'mood' => fake()->optional()->randomElement(['creative', 'social', 'active', 'chill', 'adventurous']),
-            'evolved_to_event_id' => null,
-            'conversion_triggered_at' => null,
-            'view_count' => fake()->numberBetween(0, 500),
-            'reaction_count' => fake()->numberBetween(0, 200),
+            'converted_to_activity_id' => null,
+            'conversion_suggested_at' => null,
+            'view_count' => fake()->numberBetween(0, 50),
+            'reaction_count' => 0, // Will be set by reactions
         ];
     }
 }

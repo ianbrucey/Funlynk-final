@@ -37,4 +37,10 @@ class PostReaction extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    // Validation
+    public static function validReactionTypes(): array
+    {
+        return ['im_down', 'invite_friends'];
+    }
 }

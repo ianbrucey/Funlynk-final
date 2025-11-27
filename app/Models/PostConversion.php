@@ -37,8 +37,14 @@ class PostConversion extends Model
         return $this->belongsTo(Post::class);
     }
 
-    public function event(): BelongsTo
+    public function activity(): BelongsTo
     {
         return $this->belongsTo(Activity::class, 'event_id');
+    }
+
+    // Alias for backward compatibility
+    public function event(): BelongsTo
+    {
+        return $this->activity();
     }
 }

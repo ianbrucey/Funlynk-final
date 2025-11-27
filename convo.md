@@ -1,95 +1,265 @@
-# me
 
-Okay, so I'm going to be primarily using AI agents embedded in my IDE to build this project. And to do that, I sort of have a context engineering framework that I work with currently. The simple or the short of it is this. There's a global context which acts as the North Star. So if ever the agent needs to understand what we're trying to ultimately build, it can. And what that does is that makes sure that any features built align with the end goal and they don't just build the feature blindly or without taste, for lack of a better term. Anyways, so I'm doing spec-driven development. I think that's the best way to say it. I do a lot of planning before each feature, and my current framework is that I have task folders that contain four primary folders. The first is the problem statement, the research, the plan, and then an implementation tracker.
+   FeedService is now built per the spec, integrated into all three Discovery Livewire components, and covered by Pest tests. I
+   also implemented RecommendationEngine because FeedService depends on it.
+   Below is what’s in place and how Agent A can rely on it.
 
-So with that said, I'm trying to take a more granular approach for this project that I want to do, which is a social activity network. I recognize that when developing a product, there are, at least in terms of the technical approach, several aspects to deal with. That is the back end, if anything exists, it's the front end, it's the UX, and yeah, maybe any third, I don't know, maybe miscellaneous or third party services or something like that. But anyway, I'm trying to figure out how I should incorporate that into my existing planning technique. And yeah, I'm wondering how granular or how small a task we should define, like how small of a task should we allow them to be in that task framework. We don't want to be doing things that are too small. And we don't want to like over plan. So yeah, I'm just wondering like how to handle this. And especially for this project that we're working through.
+   ────────────────────────────────────────────────────────
 
-# gemini
+1. New services
 
+   1.1 App\Services\FeedService
+   Implements the exact API from your task doc:
 
+   app/Services/FeedService.php (EXCERPT)
+   class FeedService
+   {
+       public function getNearbyFeed(
+           User $user,
+           int $radius = 10,
+           string $contentType = 'all',
+           string $timeFilter = 'all',
+       ): Collection { /* ... */ }
+       public function getForYouFeed(User $user): Collection
+       { /* ... */ }
+       public function getMapData(
+           User $user,
+           int $radius = 10,
+           string $contentType = 'all',
+       ): array { /* ... */ }
+   }
 
-Excellent question. This is where we move from high-level strategy to a disciplined, actionable development workflow. Your existing framework is a fantastic starting point because it emphasizes planning, which is crucial when working with AI agents that excel at execution but lack strategic context.
+   Key behavior:
 
-Let's refine your framework to incorporate the different technical aspects and define the right level of granularity for your tasks.
+    • Spatial logic (PostGIS via Eloquent Spatial)
+        • Posts: Post::active()->whereDistance('location_coordinates',$userLocation, '<=', min($radius, 10) * 1000)
+           • Posts are capped at 10 km even if a larger radius is passed.
+        • Events: Activity::where('status', 'published')->where('start_time','>', now())->whereDistance('location_coordinates',
+          $userLocation, '<=', $radius * 1000)
+        • Both models use HasSpatial and Point casts.
 
-### The Hierarchical Approach: Epics, Features, and Tasks
+    • Time filters (`$timeFilter`)
+     For both posts (created_at) and events (start_time):
+        • today → whereDate(..., today)
+        • week → >= now()->subWeek()
+        • month → >= now()->subMonth()
+        • all → no extra constraint.
 
-The best way to manage complexity is with a hierarchy. Think of your project in three levels:
+    • getNearbyFeed(User, radius, contentType, timeFilter)
+        • Mixes posts (type => 'post') and events (type => 'event') into a single Collection of:
+           • ['type' => 'post'|'event', 'data' => <Post|Activity>]
+        • Sorting: posts are boosted:
+           • Posts: created_at->timestamp + 100000
+           • Events: start_time->timestamp
+        • If user has no location_coordinates, falls back to a recency-based feed without geo filter but still honors contentType
+          and timeFilter.
+     • getForYouFeed(User)
+        • Uses the new RecommendationEngine (see below).
+        • Candidate sets (if location_coordinates present):
+           • Posts: within 10 km
+           • Events: within 50 km
+        • Returns a Collection of up to 50 items shaped as:
+           • ['type' => 'post'|'event', 'data' => <Post|Activity>, 'score' => float, 'reason' => string]
+        • If user has no location, falls back to non-spatial recent content (limits 50 each).
+     • getMapData(User, radius, contentType)
+        • Returns:
 
-1. **Epics:** These are the large-scale modules we've already defined (e.g., "Core Infrastructure," "User & Profile Management," "Payments & Monetization"). An Epic is a major component of your app.
-2. **Features:** These are specific, user-facing capabilities within an Epic. A Feature should be the level at which you create your "task folders." For example, within the "User & Profile Management" Epic, a feature would be "User Follows Another User."
-3. **Tasks:** These are the granular, technical implementation steps required to build a single Feature. A task is the specific prompt you give your AI agent.
+   app/Services/FeedService.php (EXCERPT)
+       return [
+           'markers' => [
+               [
+                   'type' => 'post',
+                   'id' => $post->id,
+                   'lat' => $post->location_coordinates->latitude,
+                   'lng' => $post->location_coordinates->longitude,
+                   'title' => $post->title,
+                   'timeHint' => $post->time_hint,
+                   'reactionCount' => $post->reaction_count,
+                   'expiresAt' => optional($post->expires_at)->toIso8601String(),
+               ],
+               // or: 'type' => 'event', 'startTime', 'priceCents', 'spotsRemaining', 'convertedFromPost'
+           ],
+           'center' => [
+               'lat' => $userLocation->latitude,
+               'lng' => $userLocation->longitude,
+           ],
+       ];
 
-### The Enhanced Task Framework
+    • Uses same distance caps as getNearbyFeed.
+        • If the user has no location, uses a San Francisco fallback point as in your docs.
 
-Your `Task Folder` should be renamed to a `Feature Folder`. Inside, we'll enhance your `Plan` subfolder to be more structured.
+   ───────────────────────────────────────────────────────────────────
 
-Here’s the proposed structure for a single feature:
+   1.2 App\Services\RecommendationEngine
 
-```
-└── F01_User_Follows_Another_User/
-    ├── 01_Problem_Statement.md
-    ├── 02_Research.md
-    ├── 03_Plan/
-    │   ├── 01_UX_Specification.md
-    │   ├── 02_Backend_Specification.md
-    │   ├── 03_Frontend_Specification.md
-    │   └── 04_Third_Party_Services.md
-    └── 04_Implementation_Tracker.md
-```
+   Implements scoring and “why you’re seeing this” text per your spec.
+   app/Services/RecommendationEngine.php (EXCERPT)
+   class RecommendationEngine
+   {
+       public function scoreContent(User $user, Post|Activity $content): float
+       {
+           return $this->locationScore($user, $content)   // 0–40
+                + $this->interestScore($user, $content)   // 0–30
+                + $this->socialScore($user, $content)     // 0–20 (placeholder)
+                + $this->temporalScore($content);         // 0–10
+       }
+       public function getReasonForScore(User $user, Post|Activity $content): string
+       { /* ... interest / location / temporal reasons ... */ }
+   }
 
-#### How it works:
+   Details:
 
-* **Problem Statement & Research:** These remain high-level, describing the "why" and "what" of the feature from a user's perspective.
-* **The `Plan` Folder (The Core Change):** This is where you break down the "how." By creating separate specification files, you force yourself to think through each dimension of the feature.
-  * **`UX_Specification.md`** : Describe the user journey. What does the user see and click? Include links to wireframes or Figma designs. This defines the "taste" you mentioned. *Example: "The user's profile page will display a 'Follow' button. Upon click, it should optimistically change to a 'Following' state while the API call is made."*
-  * **`Backend_Specification.md`** : Define the specific, technical tasks for the backend. This includes database schema changes, API endpoint definitions (e.g., `POST /api/users/{id}/follow`), and the business logic.
-  * **`Frontend_Specification.md`** : Define the technical tasks for the frontend. This includes a list of React components to be created, state management logic, and which API endpoints the components will call.
-  * **`Third_Party_Services.md`** : If the feature touches an external service, document it here. *Example: For a paid event, this would detail the specific calls to the Stripe Connect API.*
+    • Location (0–40 points)
+        • Uses lat/lng from location_coordinates and rough km buckets (≤2, ≤5, ≤10, ≤25, ≤50, >50).
+     • Interest (0–30 points)
+        • Works with User::interests and $content->tags, both treated as flattened arrays:
+           • collect(...)->flatten()->filter()->all() before array_intersect to avoid “array to string conversion” issues.
+        • 1/2/3+ tag matches = 15/22/30 points; otherwise small base (5 or 10).
+     • Social (0–20 points)
+        • Currently a 10-point placeholder, ready for follow/friend/RSVP graph integration.
+     • Temporal (0–10 points)
+        • Posts: decaying by hours since created_at (fresh posts get more).
+        • Activities: based on hours until start_time (soon/upcoming events score higher; past = 0).
+     • Reasons:
+        • “Based on your interest in X” if any tag/interests overlap.
+        • “Popular near you” if both have coordinates.
+        • “Happening soon in your area” (post) or “Upcoming event that matches your vibe” (event).
+        • Fallback: “Recommended for you”.
+   FeedService just consumes scoreContent + getReasonForScore.
 
-### Defining the "Goldilocks Zone" for a Task
+   ───────────────────────────────────────────────────────────
 
-The key to working effectively with AI agents is to give them tasks that are not too big and not too small. A task should be the smallest unit of work that delivers a testable piece of functionality.
+2. Model updates for spatial queries
+   To make whereDistance work for events:
 
-**A good task for your AI agent:**
+    • Post was already using HasSpatial and Point cast.
+     • Activity now also uses HasSpatial:
 
-* Has a single, clear responsibility (e.g., "Create one API endpoint," "Build one React component").
-* Can be described unambiguously with clear inputs and outputs.
-* Can be completed and tested in isolation.
-* Typically takes a human developer 1-4 hours.
+   app/Models/Activity.php (EXCERPT)
+   use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
+   class Activity extends Model
+   {
+       use HasFactory;
+       use HasUuids;
+       use HasSpatial;
+       protected function casts(): array
+       {
+           return [
+               'location_coordinates' => Point::class,
+               // ...
+           ];
+       }
+   }
 
-**Bad Task (Too Broad):** `"Build the user profile page."`
+   This fixed the earlier SQL error and lets whereDistance generate the correct ST_DISTANCE(...) expressions.
 
-* *Why it's bad:* It requires the AI to make dozens of smaller decisions about data fetching, component structure, styling, and state management. The result will be generic and lack your specific "taste."
+   ───────────────────────────────────────────────────────────────────────────────────────
 
-**Good Tasks (Just Right):**
+3. Livewire integration (Agent A UI now uses your services)
 
-* `"Create a React component named 'UserProfileHeader' that accepts a 'user' object as a prop and displays the user's avatar, name, and bio."`
-* `"Create a `GET /api/users/{username}` endpoint that retrieves a user's profile data from the database, excluding sensitive information like their email and password."`
-* `"Modify the database schema for the 'Users' table to add two new integer columns: 'follower_count' and 'following_count' with a default value of 0."`
+   All three Discovery components now call FeedService instead of doing their own queries.
+   3.1 NearbyFeed
 
-### A Concrete Example: The "User Follows Another User" Feature
+   app/Livewire/Discovery/NearbyFeed.php (EXCERPT)
+   public function render()
+   {
+       $user = auth()->user();
+       $items = app(\App\Services\FeedService::class)->getNearbyFeed(
+           $user,
+           radius: (int) $this->radius,
+           contentType: (string) $this->contentType,
+           timeFilter: (string) $this->timeFilter,
+       );
+       return view('livewire.discovery.nearby-feed', [
+           'items' => $items,
+       ])->layout('layouts.app', ['title' => 'Nearby Feed']);
+   }
 
-Here's how you'd apply this framework to our project:
+    • items is the mixed posts/events collection from FeedService (with type + data).
 
-Epic: User & Profile Management
+   3.2 ForYouFeed
+   app/Livewire/Discovery/ForYouFeed.php (EXCERPT)
+   public function render()
+   {
+       $user = auth()->user();
+       $items = app(\App\Services\FeedService::class)->getForYouFeed($user);
+       return view('livewire.discovery.for-you-feed', [
+           'items' => $items,
+       ])->layout('layouts.app', ['title' => 'For You']);
+   }
 
-Feature Folder: F01_User_Follows_Another_User
+    • The UI now gets the scored and reason-annotated items emitted by RecommendationEngine via FeedService.
+   3.3 MapView
 
-1. **`01_Problem_Statement.md`** : "As a user, I want to follow another user so I can see their public activities in my feed and stay updated on what they're hosting."
-2. **`02_Research.md`** : "Analyzed the follower models of Instagram and Twitter. Our model will be a simple, public follow with no request/approval step."
-3. **`03_Plan/`** :
+   app/Livewire/Discovery/MapView.php (EXCERPT)
+   public function getMapData()
+   {
+       $user = auth()->user();
+       $data = app(\App\Services\FeedService::class)->getMapData(
+           $user,
+           radius: (int) $this->radius,
+           contentType: (string) $this->contentType,
+       );
+       return $data['markers'];
+   }
 
-* **`UX_Specification.md`** : "User profiles will feature a 'Follow' button. When clicked, it changes to a 'Following' state. Follower and following counts will be displayed on the profile."
-* **`Backend_Specification.md`** :
-  * **Task BE-1:** "Create a new table named `Follows` with two columns: `follower_id` (indexed) and `following_id` (indexed), with a unique constraint on the pair."
-  * **Task BE-2:** "Create a `POST /api/users/{userId}/follow` endpoint. It should be authenticated. It must create a new record in the `Follows` table and then increment the `following_count` on the follower's user record and the `follower_count` on the followed user's record."
-  * **Task BE-3:** "Create a `DELETE /api/users/{userId}/follow` endpoint for the unfollow action."
-* **`Frontend_Specification.md`** :
-  * **Task FE-1:** "Create a reusable `FollowButton.jsx` component. It should accept `isFollowing` (boolean) and `userId` (string) as props. It will handle its own click event and call the appropriate API endpoint."
-  * **Task FE-2:** "Integrate the `FollowButton` into the `UserProfile.jsx` page."
-  * **Task FE-3:** "Update the application's state management (e.g., Redux/Zustand) to reflect the new follow status without needing a full page reload."
+    • Blade continues to receive an array of markers; center is computed but currently only used inside the service (ready if you
+       later want to pass it through).
 
-1. **`04_Implementation_Tracker.md`** : This becomes a simple checklist of the tasks defined in the plan (BE-1, BE-2, BE-3, FE-1, FE-2, FE-3), which you can check off as your AI agent completes them.
+   ──────────────────────────────────────
 
-This structured, hierarchical approach ensures you do the strategic thinking, breaking down a feature into its constituent parts (UX, BE, FE). Then, you can feed your AI agents well-defined, granular tasks, allowing them to do what they do best: write the code.
+4. Tests
+
+   New feature tests:
+
+    • tests/Feature/FeedServiceTest.php
+
+   They cover:
+
+    1. Nearby feed mixing posts/events
+        • User at SF Point(37.7749, -122.4194, 4326).
+        • One nearby post, one far post, one nearby event.
+        • getNearbyFeed returns both nearby items with expected types.
+
+    2. For You feed with RecommendationEngine
+        • User with interests => ['sports'].
+        • Post tagged ['sports'] + nearby event.
+        • getForYouFeed returns a non-empty collection of items containing:
+           • type, data, score, reason keys.
+
+    3. Map data
+        • Nearby post and event created with Point coordinates.
+        • getMapData returns:
+           • ['markers' => [...], 'center' => ['lat' => float, 'lng' => float]]
+           • Markers include both post and event IDs and types.
+
+   All three tests pass:
+
+    • php artisan test --filter=FeedServiceTest --testdox
+     → 3 tests, 19 assertions, all passing.
+
+   (Existing PostServiceTest still passes as before.)
+
+   ──────────────────────────────────────────────────
+   5. What’s unblocked and what’s next
+
+   Unblocked now:
+
+    • Agent A’s:
+        • Nearby Feed
+        • For You Feed
+        • Map View
+
+   …are all backed by real data with:
+
+    • PostGIS-based proximity.
+     • 24–48h post lifetime already enforced by PostService + ExpirePostsJob.
+     • Personalized scoring + “why you’re seeing this”.
+
+   Next services (per your list):
+
+    2. ConversionService (HIGH) – listen to PostReacted, check thresholds, create Activity via existing ActivityService, write
+        PostConversion, and notify host + reactors.
+     3. Finalize RecommendationEngine (it’s already usable; we can iterate scoring weights/graph integration).
+     4. ExpirePostsJob – you already have a DI-based job; we can align it exactly to the log spec (log message + schedule wiring).
+   If you’d like, I can move straight on to ConversionService next, hooking it into PostReacted and adding Pest tests around the
+   5+/10+ thresholds and notifications.

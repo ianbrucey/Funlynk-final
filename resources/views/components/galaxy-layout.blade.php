@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="user-id" content="{{ auth()->id() }}">
         <title>{{ $title ?? config('app.name') }}</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -36,6 +37,9 @@
         <div class="relative z-10">
             {{ $slot }}
         </div>
+
+        <!-- Global Modals -->
+        <livewire:posts.invite-friends-modal />
 
         @livewireScripts
         @filamentScripts

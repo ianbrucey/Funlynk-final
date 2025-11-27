@@ -80,16 +80,6 @@ class Register extends Component implements HasForms
                     ->revealable()
                     ->required()
                     ->label('Confirm password'),
-                TextInput::make('location_name')
-                    ->label('Location (optional)')
-                    ->maxLength(255)
-                    ->helperText('We\'ll use this to show you nearby activities'),
-                TextInput::make('latitude')
-                    ->hidden()
-                    ->numeric(),
-                TextInput::make('longitude')
-                    ->hidden()
-                    ->numeric(),
             ])
             ->statePath('data');
     }
@@ -109,23 +99,12 @@ class Register extends Component implements HasForms
         $payload['privacy_level'] = 'public';
         $payload['is_host'] = false;
 
-        // Handle location coordinates if provided
-        if (!empty($payload['latitude']) && !empty($payload['longitude'])) {
-            $payload['location_coordinates'] = new \MatanYadaev\EloquentSpatial\Objects\Point(
-                $payload['latitude'],
-                $payload['longitude']
-            );
-        }
-
-        // Remove latitude/longitude from payload as they're not direct columns
-        unset($payload['latitude'], $payload['longitude']);
-
         $user = User::create($payload);
 
         Auth::login($user);
         request()->session()->regenerate();
 
-        $this->redirectIntended(route('dashboard'), navigate: true);
+        $this->redirectIntended(route('onboarding'), navigate: true);
     }
 
     public function render()

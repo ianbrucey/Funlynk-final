@@ -80,7 +80,6 @@
     </div>
 </div>
 
-@script
 <script>
     // Load Google Places API
     const script = document.createElement('script');
@@ -117,4 +116,3 @@
         }, 500);
     };
 </script>
-@endscript

@@ -7,11 +7,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Scout\Searchable;
+use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
 class Activity extends Model
 {
     use HasFactory;
     use HasUuids;
+    use HasSpatial;
+    use Searchable;
 
     public $incrementing = false;
 
@@ -59,5 +63,68 @@ class Activity extends Model
     public function tags()
     {
         return $this->belongsToMany(Tag::class, 'activity_tag');
+    }
+
+    // Scopes
+    public function scopeConvertedFromPost($query)
+    {
+        return $query->whereNotNull('originated_from_post_id');
+    }
+
+    // Accessor for latitude (for map view)
+    public function getLatitudeAttribute(): ?float
+    {
+        return $this->location_coordinates?->latitude;
+    }
+
+    // Accessor for longitude (for map view)
+    public function getLongitudeAttribute(): ?float
+    {
+        return $this->location_coordinates?->longitude;
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     */
+    public function toSearchableArray(): array
+    {
+        $array = [
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'tags' => $this->tags?->pluck('name')->toArray() ?? [],
+            'location_name' => $this->location_name,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
+            'status' => $this->status,
+            'start_time' => $this->start_time?->timestamp,
+            'created_at' => $this->created_at->timestamp,
+        ];
+        
+        // Add _geo field for Meilisearch native geo filtering
+        if ($this->latitude && $this->longitude) {
+            $array['_geo'] = [
+                'lat' => $this->latitude,
+                'lng' => $this->longitude,
+            ];
+        }
+        
+        return $array;
+    }
+
+    /**
+     * Get the name of the index associated with the model.
+     */
+    public function searchableAs(): string
+    {
+        return 'activities_index';
+    }
+
+    /**
+     * Determine if the model should be searchable.
+     */
+    public function shouldBeSearchable(): bool
+    {
+        return $this->status === 'published' && $this->start_time > now();
     }
 }

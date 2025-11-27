@@ -27,24 +27,47 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', \App\Livewire\Dashboard::class)->name('dashboard');
-    Route::get('/profile', ShowProfile::class)->name('profile.show');
+    // Onboarding route (no middleware - must be accessible to incomplete users)
+    Route::get('/onboarding', \App\Livewire\Onboarding\OnboardingWizard::class)->name('onboarding');
+
+    // Routes that require completed onboarding
+    Route::middleware('onboarding.complete')->group(function () {
+        Route::get('/dashboard', \App\Livewire\Dashboard::class)->name('dashboard');
+        Route::get('/profile', ShowProfile::class)->name('profile.show');
+        Route::get('/u/{username}', ShowProfile::class)->name('profile.view');
+
+        // Post Routes
+        Route::get('/posts/create', \App\Livewire\Posts\CreatePost::class)->name('posts.create');
+
+        // Activity Routes
+        Route::get('/activities', function () {
+            return 'Activities Index Placeholder'; // Placeholder for now
+        })->name('activities.index');
+        Route::get('/activities/create', \App\Livewire\Activities\CreateActivity::class)->name('activities.create');
+        Route::get('/activities/{activity}', \App\Livewire\Activities\ActivityDetail::class)->name('activities.show');
+        Route::get('/activities/{activity}/edit', \App\Livewire\Activities\EditActivity::class)->name('activities.edit');
+        Route::get('/activities/{activity}/checkout', \App\Livewire\Payments\CheckoutForm::class)->name('activities.checkout');
+
+        // Discovery Routes
+        Route::get('/feed/nearby', \App\Livewire\Discovery\NearbyFeed::class)->name('feed.nearby');
+        Route::get('/feed/for-you', \App\Livewire\Discovery\ForYouFeed::class)->name('feed.for-you');
+        Route::get('/map', \App\Livewire\Discovery\MapView::class)->name('map.view');
+        Route::get('/search', \App\Livewire\Search\SearchPage::class)->name('search');
+        Route::get('/search/users', \App\Livewire\Search\SearchUsers::class)->name('search.users');
+
+        // Notification Routes
+        Route::get('/notifications', function () {
+            return 'Notifications Page - Agent A will implement this';
+        })->name('notifications.index');
+
+        // Stripe Connect Routes
+        Route::get('/host/stripe-onboarding', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding');
+        Route::get('/host/stripe-return', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding.return');
+        Route::get('/host/stripe-refresh', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding.refresh');
+    });
+
+    // Profile edit route (outside onboarding middleware - accessible to incomplete users)
     Route::get('/profile/edit', EditProfile::class)->name('profile.edit');
-    Route::get('/u/{username}', ShowProfile::class)->name('profile.view');
-
-    // Activity Routes
-    Route::get('/activities', function () {
-        return 'Activities Index Placeholder'; // Placeholder for now
-    })->name('activities.index');
-    Route::get('/activities/create', \App\Livewire\Activities\CreateActivity::class)->name('activities.create');
-    Route::get('/activities/{activity}', \App\Livewire\Activities\ActivityDetail::class)->name('activities.show');
-    Route::get('/activities/{activity}/edit', \App\Livewire\Activities\EditActivity::class)->name('activities.edit');
-    Route::get('/activities/{activity}/checkout', \App\Livewire\Payments\CheckoutForm::class)->name('activities.checkout');
-
-    // Stripe Connect Routes
-    Route::get('/host/stripe-onboarding', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding');
-    Route::get('/host/stripe-return', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding.return');
-    Route::get('/host/stripe-refresh', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding.refresh');
 
     Route::post('/logout', function (Request $request) {
         Auth::logout();
