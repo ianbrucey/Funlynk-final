@@ -151,20 +151,20 @@ class ConvertPostModal extends Component
                 $eventData['image_path'] = $this->image->store('activities', 'public');
             }
 
-            // Will be implemented by Agent A
-            // $activity = app(PostService::class)->convertToEvent($this->postId, $eventData);
+            // Convert post to event
+            $activity = app(\App\Services\PostService::class)->convertToEvent($this->postId, $eventData, auth()->user());
 
             $this->dispatch('notify', [
                 'type' => 'success',
                 'message' => 'Post converted to event successfully!',
             ]);
 
-            // $this->dispatch('post-converted', activityId: $activity->id);
+            $this->dispatch('post-converted', activityId: $activity->id);
 
             $this->close();
 
             // Redirect to event page
-            // return redirect()->route('activities.show', $activity->id);
+            return redirect()->route('activities.show', $activity->id);
 
         } catch (\Exception $e) {
             $this->dispatch('notify', [

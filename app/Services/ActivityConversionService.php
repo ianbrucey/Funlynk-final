@@ -26,19 +26,24 @@ class ActivityConversionService
                 throw new \Exception('Post is not eligible for conversion');
             }
 
+            // Determine pricing
+            $isPaid = ($eventData['price'] ?? 0) > 0;
+            $priceCents = $isPaid ? (int) round($eventData['price'] * 100) : null;
+
             // Create activity with pre-filled data
             $activity = Activity::create([
                 'id' => Str::uuid(),
-                'user_id' => $host->id,
+                'host_id' => $host->id,
                 'title' => $eventData['title'] ?? $post->title,
                 'description' => $eventData['description'] ?? $post->description,
+                'activity_type' => 'social', // Default type for converted posts
                 'location_name' => $eventData['location_name'] ?? $post->location_name,
                 'location_coordinates' => $eventData['location_coordinates'] ?? $post->location_coordinates,
                 'start_time' => $eventData['start_time'],
                 'end_time' => $eventData['end_time'],
                 'max_attendees' => $eventData['max_attendees'],
-                'price' => $eventData['price'] ?? 0,
-                'is_paid' => ($eventData['price'] ?? 0) > 0,
+                'price_cents' => $priceCents,
+                'is_paid' => $isPaid,
                 'status' => 'published',
                 'originated_from_post_id' => $post->id,
             ]);
@@ -58,7 +63,6 @@ class ActivityConversionService
             $conversion = PostConversion::create([
                 'post_id' => $post->id,
                 'event_id' => $activity->id,
-                'converted_by' => $host->id,
                 'reactions_at_conversion' => $post->reaction_count,
                 'trigger_type' => 'manual',
             ]);
