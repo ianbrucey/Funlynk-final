@@ -76,15 +76,21 @@ class ConvertPostModal extends Component
     protected function preFillForm()
     {
         $this->title = $this->post->title;
-        $this->description = $this->post->description ?? '';
+        // If description is empty, use title as description
+        $this->description = $this->post->description ?: $this->post->title;
         $this->location_name = $this->post->location_name;
         $this->location_coordinates = $this->post->location_coordinates;
         $this->selectedTags = $this->post->tags->pluck('id')->toArray();
 
         // Smart defaults for event fields
         if ($this->post->approximate_time) {
-            $this->start_time = Carbon::parse($this->post->approximate_time)->format('Y-m-d\TH:i');
-            $this->end_time = Carbon::parse($this->post->approximate_time)->addHours(2)->format('Y-m-d\TH:i');
+            $startTime = Carbon::parse($this->post->approximate_time);
+            // If the time is in the past, move it to tomorrow at the same time
+            if ($startTime->isPast()) {
+                $startTime = now()->addDay()->setHour($startTime->hour)->setMinute($startTime->minute);
+            }
+            $this->start_time = $startTime->format('Y-m-d\TH:i');
+            $this->end_time = $startTime->copy()->addHours(2)->format('Y-m-d\TH:i');
         } else {
             $this->start_time = now()->addDays(1)->setHour(18)->setMinute(0)->format('Y-m-d\TH:i');
             $this->end_time = now()->addDays(1)->setHour(20)->setMinute(0)->format('Y-m-d\TH:i');
@@ -122,6 +128,12 @@ class ConvertPostModal extends Component
 
     public function submit()
     {
+        \Log::info('ConvertPostModal::submit() called', [
+            'postId' => $this->postId,
+            'title' => $this->title,
+            'start_time' => $this->start_time,
+        ]);
+
         $this->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -132,6 +144,8 @@ class ConvertPostModal extends Component
             'price' => 'required|numeric|min:0',
             'image' => 'nullable|image|max:2048',
         ]);
+
+        \Log::info('Validation passed');
 
         try {
             $eventData = [
@@ -151,8 +165,12 @@ class ConvertPostModal extends Component
                 $eventData['image_path'] = $this->image->store('activities', 'public');
             }
 
+            \Log::info('About to convert post to event', ['eventData' => $eventData]);
+
             // Convert post to event
             $activity = app(\App\Services\PostService::class)->convertToEvent($this->postId, $eventData, auth()->user());
+
+            \Log::info('Conversion successful', ['activityId' => $activity->id]);
 
             $this->dispatch('notify', [
                 'type' => 'success',
@@ -167,6 +185,11 @@ class ConvertPostModal extends Component
             return redirect()->route('activities.show', $activity->id);
 
         } catch (\Exception $e) {
+            \Log::error('Conversion failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             $this->dispatch('notify', [
                 'type' => 'error',
                 'message' => $e->getMessage(),

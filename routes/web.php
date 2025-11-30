@@ -66,9 +66,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/search/users', \App\Livewire\Search\SearchUsers::class)->name('search.users');
 
         // Notification Routes
-        Route::get('/notifications', function () {
-            return 'Notifications Page - Agent A will implement this';
-        })->name('notifications.index');
+        Route::get('/notifications', \App\Livewire\Notifications\NotificationList::class)->name('notifications.index');
 
         // Stripe Connect Routes
         Route::get('/host/stripe-onboarding', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding');

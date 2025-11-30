@@ -21,12 +21,13 @@ class NotificationBell extends Component
 
     public function loadNotifications(): void
     {
+        // Show recent notifications (both read and unread) so users can see what they clicked on
         $this->recentNotifications = Notification::where('user_id', auth()->id())
-            ->whereNull('read_at')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
 
+        // Count only unread for the badge
         $this->unreadCount = Notification::where('user_id', auth()->id())
             ->whereNull('read_at')
             ->count();
@@ -47,25 +48,16 @@ class NotificationBell extends Component
         $this->loadNotifications();
     }
 
-    public function convertPost(string $postId): void
+    /**
+     * Mark all unread notifications as read when dropdown opens (Facebook-style behavior)
+     */
+    public function markAllAsReadOnOpen(): void
     {
-        $this->dispatch('open-conversion-modal', postId: $postId);
-    }
-
-    public function dismissPrompt(string $postId, string $notificationId): void
-    {
-        // Call service to dismiss (will be implemented by Agent A)
-        // app(\App\Services\PostService::class)->dismissConversionPrompt($postId);
-
-        // Mark notification as read
-        Notification::find($notificationId)?->update(['read_at' => now()]);
+        Notification::where('user_id', auth()->id())
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
 
         $this->loadNotifications();
-
-        $this->dispatch('notify', [
-            'type' => 'info',
-            'message' => 'Conversion prompt dismissed',
-        ]);
     }
 
     public function handleNotificationClick(string $notificationId, string $url = ''): void
@@ -84,7 +76,10 @@ class NotificationBell extends Component
                     $this->redirect(route('posts.show', $notification->data['post_id']));
                 }
             } elseif ($notification->type === 'post_conversion_prompt') {
-                $this->dispatch('open-conversion-modal', postId: $notification->data['post_id']);
+                // Redirect to post detail page where conversion button is available
+                if (isset($notification->data['post_id'])) {
+                    $this->redirect(route('posts.show', $notification->data['post_id']));
+                }
             }
         }
     }

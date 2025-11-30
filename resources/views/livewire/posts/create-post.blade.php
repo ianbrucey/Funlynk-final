@@ -22,9 +22,16 @@
         @endif
 
         <form wire:submit="createPost" class="max-w-3xl mx-auto space-y-6 lg:space-y-6">
-            {{-- Main Content --}}
+            {{-- Required Fields --}}
             <div class="relative p-6 lg:p-8 glass-card">
                 <div class="top-accent-center"></div>
+
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Required Information
+                </h2>
 
                 <div class="space-y-4">
                     {{-- Title --}}
@@ -40,64 +47,7 @@
                         @error('title') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
-                    {{-- Description --}}
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">Details (Optional)</label>
-                        <textarea
-                            wire:model="description"
-                            rows="3"
-                            placeholder="Add more context..."
-                            class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white"
-                        ></textarea>
-                        <p class="text-xs text-gray-400 mt-1">{{ strlen($description ?? '') }}/500 characters</p>
-                        @error('description') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
-                    </div>
-
-                    {{-- Time Hint --}}
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">When? (Optional)</label>
-                        <input
-                            type="text"
-                            wire:model="time_hint"
-                            placeholder="e.g., In 30 mins, Tonight at 8pm, Tomorrow afternoon"
-                            class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white"
-                        />
-                        <p class="text-xs text-gray-400 mt-1">Keep it casual - no need for exact times</p>
-                        @error('time_hint') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
-                    </div>
-
-                    {{-- Mood --}}
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">Vibe (Optional)</label>
-                        <select
-                            wire:model="mood"
-                            class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white"
-                        >
-                            <option value="">Select a vibe...</option>
-                            <option value="creative">✨ Creative</option>
-                            <option value="social">🎉 Social</option>
-                            <option value="active">⚡ Active</option>
-                            <option value="chill">😌 Chill</option>
-                            <option value="adventurous">🚀 Adventurous</option>
-                        </select>
-                        @error('mood') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
-                    </div>
-                </div>
-            </div>
-
-            {{-- Location --}}
-            <div class="relative p-6 lg:p-8 glass-card">
-                <div class="top-accent-center"></div>
-
-                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    Where? (Optional)
-                </h2>
-
-                <div class="space-y-4">
+                    {{-- Location --}}
                     <div class="form-control">
                         <label class="block text-sm font-semibold text-gray-300 mb-2">Location * <span class="text-xs text-gray-400 font-normal">(city or zip is fine)</span></label>
 
@@ -126,6 +76,63 @@
                         <p class="text-xs text-gray-500 mt-1">Start typing to search for a location</p>
                         @error('location_name') <span class="text-red-400 text-sm mt-1 block">{{ $message }}</span> @enderror
                         @error('latitude') <span class="text-red-400 text-sm mt-1 block">Please select a valid location from the list</span> @enderror
+                    </div>
+                </div>
+            </div>
+
+            {{-- Optional Details --}}
+            <div class="relative p-6 lg:p-8 glass-card">
+                <div class="top-accent-center"></div>
+
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Optional Details
+                </h2>
+
+                <div class="space-y-4">
+                    {{-- Description --}}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">Details</label>
+                        <textarea
+                            wire:model="description"
+                            rows="3"
+                            placeholder="Add more context..."
+                            class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white"
+                        ></textarea>
+                        <p class="text-xs text-gray-400 mt-1">{{ strlen($description ?? '') }}/500 characters</p>
+                        @error('description') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                    </div>
+
+                    {{-- Time Hint --}}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">When?</label>
+                        <input
+                            type="text"
+                            wire:model="time_hint"
+                            placeholder="e.g., In 30 mins, Tonight at 8pm, Tomorrow afternoon"
+                            class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white"
+                        />
+                        <p class="text-xs text-gray-400 mt-1">Keep it casual - no need for exact times</p>
+                        @error('time_hint') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                    </div>
+
+                    {{-- Mood --}}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">Vibe</label>
+                        <select
+                            wire:model="mood"
+                            class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white"
+                        >
+                            <option value="">Select a vibe...</option>
+                            <option value="creative">✨ Creative</option>
+                            <option value="social">🎉 Social</option>
+                            <option value="active">⚡ Active</option>
+                            <option value="chill">😌 Chill</option>
+                            <option value="adventurous">🚀 Adventurous</option>
+                        </select>
+                        @error('mood') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>

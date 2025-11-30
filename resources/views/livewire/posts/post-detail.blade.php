@@ -133,6 +133,41 @@
                     </div>
                 </div>
 
+                {{-- Conversion Eligibility Banner --}}
+                @if($post->isEligibleForConversion() && $post->user_id === auth()->id() && $post->status === 'active')
+                    <div class="relative p-6 glass-card lg:rounded-xl border-2 border-pink-500 animate-pulse-slow">
+                        <div class="top-accent-center"></div>
+
+                        <div class="flex flex-col md:flex-row items-center gap-4">
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                                    🎉 Your Post is Popular!
+                                </h3>
+                                <p class="text-gray-300 text-sm">
+                                    <span class="font-semibold text-pink-400">{{ $post->reaction_count }} people</span> are interested!
+                                    Turn this into a full event with RSVPs, payments, and more.
+                                </p>
+                            </div>
+                            <button
+                                wire:click="convertToEvent"
+                                wire:loading.attr="disabled"
+                                wire:target="convertToEvent"
+                                class="px-8 py-4 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-lg shadow-pink-500/50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
+                                <span wire:loading.remove wire:target="convertToEvent" class="flex items-center gap-2">
+                                    ✨ Convert to Event
+                                </span>
+                                <span wire:loading wire:target="convertToEvent" class="flex items-center gap-2">
+                                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Converting...
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Chat Section --}}
                 <div class="relative p-6 lg:p-8 glass-card lg:rounded-xl">
                     <div class="top-accent"></div>

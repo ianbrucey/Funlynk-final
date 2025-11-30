@@ -11,7 +11,7 @@ class NearbyFeed extends Component
     #[Url(as: 'q')]
     public string $searchQuery = '';
 
-    public $radius = 10; // km
+    public $radius = 30; // km
 
     public $contentType = 'all'; // all, posts, events
 

@@ -42,7 +42,19 @@
 
                     {{-- Form Section --}}
                     <div x-show="!showPreview" x-transition>
-                        <form wire:submit.prevent="submit" class="space-y-6">
+                        {{-- Validation Errors Summary --}}
+                        @if ($errors->any())
+                            <div class="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-xl">
+                                <h4 class="text-red-400 font-semibold mb-2">Please fix the following errors:</h4>
+                                <ul class="list-disc list-inside text-red-300 text-sm space-y-1">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <form wire:submit.prevent="submit" class="space-y-6" @submit="console.log('Form submitted!')"
                             {{-- Section 1: Basic Details --}}
                             <div class="space-y-4">
                                 <h3 class="text-lg font-semibold text-white border-b border-white/10 pb-2">
@@ -215,13 +227,17 @@
                                 <button
                                     type="button"
                                     wire:click="close"
-                                    class="flex-1 px-6 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-red-500/50 transition">
+                                    class="flex-1 px-6 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-red-500/50 transition"
+                                    wire:loading.attr="disabled">
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    class="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
-                                    Create Event
+                                    class="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    wire:loading.attr="disabled"
+                                    wire:target="submit">
+                                    <span wire:loading.remove wire:target="submit">Create Event</span>
+                                    <span wire:loading wire:target="submit">Converting...</span>
                                 </button>
                             </div>
                         </form>
