@@ -211,9 +211,25 @@
                         <livewire:activities.rsvp-button :activity="$activity" />
                     @endif
 
+                    {{-- Invite Friends Button (for all users) --}}
+                    <div class="mt-4">
+                        <button
+                            wire:click="$dispatch('openInviteModal', { activityId: '{{ $activity->id }}' })"
+                            class="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl text-sm font-semibold hover:scale-105 transition-all">
+                            <span class="flex items-center justify-center gap-2">
+                                📨 Invite Friends
+                                @if($activity->invitations_count ?? 0 > 0)
+                                    <span class="bg-white/20 px-2 py-0.5 rounded-full text-xs">
+                                        {{ $activity->invitations_count }}
+                                    </span>
+                                @endif
+                            </span>
+                        </button>
+                    </div>
+
                     {{-- Host Actions --}}
                     @if($isHost)
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 mt-4">
                             <a href="{{ route('activities.edit', $activity->id) }}" class="flex-1 py-3 text-center bg-slate-800/50 border border-white/10 rounded-lg hover:border-cyan-500/50 transition font-semibold">
                                 Edit
                             </a>
@@ -267,6 +283,9 @@
 
             </div>
         </div>
+
+        {{-- Invite Friends Modal --}}
+        <livewire:activities.invite-friends-modal />
     </div>
     <style>
        

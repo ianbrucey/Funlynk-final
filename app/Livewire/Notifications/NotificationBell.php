@@ -75,6 +75,13 @@ class NotificationBell extends Component
                 } elseif (isset($notification->data['post_id'])) {
                     $this->redirect(route('posts.show', $notification->data['post_id']));
                 }
+            } elseif ($notification->type === 'activity_invitation') {
+                // Redirect to the activity page
+                if (! empty($url)) {
+                    $this->redirect($url);
+                } elseif (isset($notification->data['activity_id'])) {
+                    $this->redirect(route('activities.show', $notification->data['activity_id']));
+                }
             } elseif ($notification->type === 'post_conversion_prompt') {
                 // Redirect to post detail page where conversion button is available
                 if (isset($notification->data['post_id'])) {

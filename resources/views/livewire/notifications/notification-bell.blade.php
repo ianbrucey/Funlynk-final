@@ -70,6 +70,8 @@
                                         @endif
                                     @elseif($notification->type === 'post_invitation')
                                         {{ $notification->data['inviter_name'] ?? 'Someone' }} invited you to "{{ $notification->data['post_title'] ?? 'a post' }}"
+                                    @elseif($notification->type === 'activity_invitation')
+                                        {{ $notification->data['inviter_name'] ?? 'Someone' }} invited you to "{{ $notification->data['activity_title'] ?? 'an event' }}"
                                     @elseif($notification->type === 'post_conversion')
                                         Your post "{{ $notification->data['post_title'] ?? 'a post' }}" can be converted to an event!
                                     @elseif($notification->type === 'post_converted_to_event')

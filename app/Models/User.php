@@ -129,6 +129,16 @@ class User extends Authenticatable implements FilamentHasName
         return $this->hasMany(Rsvp::class);
     }
 
+    public function activityInvitationsSent(): HasMany
+    {
+        return $this->hasMany(ActivityInvitation::class, 'inviter_id');
+    }
+
+    public function activityInvitationsReceived(): HasMany
+    {
+        return $this->hasMany(ActivityInvitation::class, 'invitee_id');
+    }
+
     public function conversations(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Conversation::class, 'conversation_participants')

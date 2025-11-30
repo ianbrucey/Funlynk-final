@@ -67,6 +67,11 @@ class Activity extends Model
         return $this->hasMany(Rsvp::class);
     }
 
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(ActivityInvitation::class);
+    }
+
     // Scopes
     public function scopeConvertedFromPost($query)
     {

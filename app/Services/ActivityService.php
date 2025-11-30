@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use App\Events\ActivityInvitationSent;
 use App\Models\Activity;
+use App\Models\ActivityInvitation;
 use App\Models\Post;
 use App\Models\PostConversion;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use MatanYadaev\EloquentSpatial\Objects\Point;
@@ -286,7 +289,7 @@ class ActivityService
 
     /**
      * Duplicate an activity (for recurring events)
-     * 
+     *
      * @param Activity $activity
      * @param array $overrides
      * @return Activity
@@ -294,22 +297,77 @@ class ActivityService
     public function duplicate(Activity $activity, array $overrides = []): Activity
     {
         $data = $activity->toArray();
-        
+
         // Remove unique fields
         unset($data['id'], $data['created_at'], $data['updated_at']);
-        
+
         // Reset attendee count
         $data['current_attendees'] = 0;
         $data['status'] = 'draft';
-        
+
         // Apply overrides
         $data = array_merge($data, $overrides);
-        
+
         $newActivity = Activity::create($data);
-        
+
         // Copy tags
         $newActivity->tags()->sync($activity->tags->pluck('id'));
-        
+
         return $newActivity;
+    }
+
+    /**
+     * Invite friends to an activity.
+     *
+     * @param  array  $friendIds  Array of user IDs to invite
+     * @param  User|null  $inviter  The user sending the invitation
+     * @return Collection Collection of ActivityInvitation models
+     */
+    public function inviteFriendsToActivity(string $activityId, array $friendIds, ?User $inviter = null): Collection
+    {
+        $inviter = $inviter ?? auth()->user();
+        $activity = Activity::findOrFail($activityId);
+        $invitations = new Collection;
+
+        foreach ($friendIds as $friendId) {
+            $invitation = ActivityInvitation::updateOrCreate(
+                ['activity_id' => $activityId, 'inviter_id' => $inviter->id, 'invitee_id' => $friendId],
+                ['status' => 'pending', 'created_at' => now()]
+            );
+
+            // Broadcast invitation sent event
+            event(new ActivityInvitationSent($invitation, $activity, $inviter, User::find($friendId)));
+            $invitations->push($invitation);
+        }
+
+        return $invitations;
+    }
+
+    /**
+     * Get all invitees for an activity.
+     */
+    public function getActivityInvitees(string $activityId): Collection
+    {
+        return ActivityInvitation::where('activity_id', $activityId)->with('invitee')->get();
+    }
+
+    /**
+     * Mark an invitation as viewed.
+     */
+    public function markInvitationViewed(string $invitationId): void
+    {
+        ActivityInvitation::where('id', $invitationId)->update(['viewed_at' => now(), 'status' => 'viewed']);
+    }
+
+    /**
+     * Get all pending invitations for a user.
+     */
+    public function getUserPendingInvitations(string $userId): Collection
+    {
+        return ActivityInvitation::where('invitee_id', $userId)
+            ->where('status', 'pending')
+            ->with(['activity', 'inviter'])
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
 }
