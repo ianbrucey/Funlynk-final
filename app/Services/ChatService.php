@@ -40,6 +40,79 @@ class ChatService
     }
 
     /**
+     * Create or get a direct message conversation between two users
+     */
+    public function createDirectMessageConversation(User $sender, User $recipient): Conversation
+    {
+        // Check if conversation already exists (either direction)
+        $existingConversation = Conversation::where('type', 'private')
+            ->whereNull('conversationable_type')
+            ->whereNull('conversationable_id')
+            ->whereHas('participants', function ($query) use ($sender) {
+                $query->where('user_id', $sender->id);
+            })
+            ->whereHas('participants', function ($query) use ($recipient) {
+                $query->where('user_id', $recipient->id);
+            })
+            ->first();
+
+        if ($existingConversation) {
+            return $existingConversation;
+        }
+
+        // Determine if this should be a message request
+        $isRequest = $this->shouldRouteToRequests($sender, $recipient);
+
+        // Create new DM conversation
+        $conversation = Conversation::create([
+            'type' => 'private',
+            'conversationable_type' => null,
+            'conversationable_id' => null,
+            'last_message_at' => now(),
+            'metadata' => [
+                'is_dm' => true,
+                'is_request' => $isRequest,
+                'recipient_id' => $recipient->id,
+            ],
+        ]);
+
+        // Add both users as participants
+        $conversation->participants()->attach($sender->id, [
+            'id' => \Illuminate\Support\Str::uuid()->toString(),
+            'role' => 'member',
+            'is_muted' => false,
+            'last_read_at' => now(),
+            'request_status' => null, // Sender doesn't have request status
+        ]);
+
+        $conversation->participants()->attach($recipient->id, [
+            'id' => \Illuminate\Support\Str::uuid()->toString(),
+            'role' => 'member',
+            'is_muted' => false,
+            'last_read_at' => null, // Recipient hasn't read yet
+            'request_status' => $isRequest ? 'pending' : null,
+        ]);
+
+        return $conversation;
+    }
+
+    /**
+     * Check if two users are mutual followers
+     */
+    public function isMutualFollower(User $userA, User $userB): bool
+    {
+        return $userA->mutuals()->where('users.id', $userB->id)->exists();
+    }
+
+    /**
+     * Determine if message should route to requests inbox
+     */
+    public function shouldRouteToRequests(User $sender, User $recipient): bool
+    {
+        return ! $this->isMutualFollower($sender, $recipient);
+    }
+
+    /**
      * Send a message in a conversation
      */
     public function sendMessage(
@@ -62,6 +135,22 @@ class ChatService
 
         // Update conversation's last_message_at
         $conversation->update(['last_message_at' => now()]);
+
+        // Fire appropriate event based on conversation type and request status
+        if ($conversation->type === 'private') {
+            $isRequest = $conversation->metadata['is_request'] ?? false;
+
+            // Get the recipient (the other user in the conversation)
+            $recipient = $conversation->participants()
+                ->where('user_id', '!=', $user->id)
+                ->first();
+
+            if ($isRequest) {
+                event(new \App\Events\MessageRequestReceived($message, $conversation, $user, $recipient));
+            } else {
+                event(new \App\Events\DirectMessageReceived($message, $conversation, $user, $recipient));
+            }
+        }
 
         // Broadcast the message
         broadcast(new \App\Events\MessageSent($message))->toOthers();
@@ -119,11 +208,11 @@ class ChatService
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$participant) {
+        if (! $participant) {
             return false;
         }
 
-        $newMuteStatus = !$participant->pivot->is_muted;
+        $newMuteStatus = ! $participant->pivot->is_muted;
 
         $conversation->participants()
             ->updateExistingPivot($user->id, ['is_muted' => $newMuteStatus]);

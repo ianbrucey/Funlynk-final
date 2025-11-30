@@ -9,16 +9,22 @@ use Livewire\Component;
 class ChatComponent extends Component
 {
     public $conversationId;
+
     public $conversationable; // Post or Activity model
+
+    public $conversation; // Full conversation model
+
     public $newMessage = '';
+
     public $messages = [];
+
     public $replyingTo = null;
 
     protected ChatService $chatService;
 
     public function getListeners()
     {
-        if (!$this->conversationId) {
+        if (! $this->conversationId) {
             return [];
         }
 
@@ -36,7 +42,7 @@ class ChatComponent extends Component
     {
         $this->conversationId = $conversationId;
         $this->conversationable = $conversationable;
-        
+
         $this->loadMessages();
     }
 
@@ -49,18 +55,25 @@ class ChatComponent extends Component
         }
 
         // If no conversation ID, show empty state
-        if (!$this->conversationId) {
+        if (! $this->conversationId) {
             $this->messages = [];
+            $this->conversation = null;
+
             return;
         }
 
         // Load messages from database
-        $conversation = Conversation::find($this->conversationId);
-        
-        if (!$conversation) {
+        $conversation = Conversation::with(['participants'])->find($this->conversationId);
+
+        if (! $conversation) {
             $this->messages = [];
+            $this->conversation = null;
+
             return;
         }
+
+        // Store conversation for view
+        $this->conversation = $conversation;
 
         $dbMessages = $this->chatService->getMessages($conversation);
 
@@ -97,13 +110,13 @@ class ChatComponent extends Component
             return;
         }
 
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return;
         }
 
         $conversation = Conversation::find($this->conversationId);
 
-        if (!$conversation) {
+        if (! $conversation) {
             return;
         }
 

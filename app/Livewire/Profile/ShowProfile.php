@@ -120,6 +120,29 @@ class ShowProfile extends Component
         }
     }
 
+    public function startConversation()
+    {
+        if (! Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        if (Auth::id() === $this->user->id) {
+            return;
+        }
+
+        try {
+            $chatService = app(\App\Services\ChatService::class);
+            $conversation = $chatService->createDirectMessageConversation(Auth::user(), $this->user);
+
+            // Redirect to the conversation
+            return redirect()->route('messages.show', ['conversation' => $conversation->id]);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Unable to start conversation: '.$e->getMessage());
+
+            return redirect()->route('messages.index');
+        }
+    }
+
     public function switchTab($tab)
     {
         $this->activeTab = $tab;

@@ -101,6 +101,7 @@ class User extends Authenticatable implements FilamentHasName
             'email_on_rsvp_update' => 'boolean',
             'email_on_comment' => 'boolean',
             'email_on_reaction' => 'boolean',
+            'notification_preferences' => 'array',
         ];
     }
 
@@ -142,7 +143,7 @@ class User extends Authenticatable implements FilamentHasName
     public function conversations(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Conversation::class, 'conversation_participants')
-            ->withPivot(['role', 'is_muted', 'last_read_at'])
+            ->withPivot(['role', 'is_muted', 'last_read_at', 'request_status'])
             ->withTimestamps();
     }
 

@@ -2,10 +2,27 @@
     {{-- Header --}}
     <div class="px-6 py-4 border-b border-white/10 bg-gradient-to-r from-slate-800/50 to-slate-900/50">
         <div class="flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-semibold text-white">Chat</h3>
-                <p class="text-sm text-gray-400">3 participants</p>
-            </div>
+            @if($conversation && $conversation->type === 'private')
+                {{-- DM Header: Show other user --}}
+                @php
+                    $otherUser = $conversation->participants->where('id', '!=', auth()->id())->first();
+                @endphp
+                <div class="flex items-center gap-3">
+                    <img src="{{ $otherUser->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($otherUser->name).'&background=ec4899&color=fff' }}"
+                         alt="{{ $otherUser->name }}"
+                         class="w-10 h-10 rounded-full border-2 border-white/20 object-cover">
+                    <div>
+                        <h3 class="text-lg font-semibold text-white">{{ $otherUser->name }}</h3>
+                        <p class="text-sm text-gray-400">{{ '@' . $otherUser->username }}</p>
+                    </div>
+                </div>
+            @else
+                {{-- Group/Public Chat Header --}}
+                <div>
+                    <h3 class="text-lg font-semibold text-white">Chat</h3>
+                    <p class="text-sm text-gray-400">{{ $conversation ? $conversation->participants->count() : 0 }} participants</p>
+                </div>
+            @endif
             <button class="px-3 py-1.5 text-sm text-gray-400 hover:text-white transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -15,14 +32,13 @@
     </div>
 
     {{-- Messages Container --}}
-    <div 
-        class="flex-1 overflow-y-auto p-6 space-y-4" 
-        style="max-height: calc(100% - 180px);"
+    <div
+        class="flex-1 overflow-y-auto p-6 space-y-4"
         x-data="{ scrollToBottom() { this.$el.scrollTop = this.$el.scrollHeight; } }"
         x-init="scrollToBottom()"
         @message-received.window="scrollToBottom()"
     >
-        @foreach($messages as $message)
+        @forelse($messages as $message)
             <div class="flex {{ $message['is_mine'] ? 'justify-end' : 'justify-start' }}">
                 <div class="flex gap-3 max-w-[70%] {{ $message['is_mine'] ? 'flex-row-reverse' : 'flex-row' }}">
                     {{-- Avatar --}}
@@ -69,7 +85,20 @@
                     </div>
                 </div>
             </div>
-        @endforeach
+        @empty
+            {{-- Empty State --}}
+            <div class="flex flex-col items-center justify-center h-full text-center py-12">
+                <div class="relative inline-block mb-6">
+                    <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 blur-2xl rounded-full"></div>
+                    <svg class="relative w-16 h-16 mx-auto text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">No messages yet</h3>
+                <p class="text-gray-400 text-sm">Start the conversation by sending a message below</p>
+            </div>
+        @endforelse
     </div>
 
     {{-- Reply Preview --}}

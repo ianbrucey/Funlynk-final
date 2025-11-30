@@ -42,7 +42,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/posts/{post}', \App\Livewire\Posts\PostDetail::class)->name('posts.show');
         Route::get('/posts/{post}/chat', \App\Livewire\Posts\PostChat::class)->name('posts.chat');
 
-
         // Activity Routes
         Route::get('/activities', function () {
             return 'Activities Index Placeholder'; // Placeholder for now
@@ -67,6 +66,11 @@ Route::middleware('auth')->group(function () {
 
         // Notification Routes
         Route::get('/notifications', \App\Livewire\Notifications\NotificationList::class)->name('notifications.index');
+
+        // Direct Messages Routes
+        Route::get('/messages', \App\Livewire\DirectMessages\MessagesPage::class)->name('messages.index');
+        Route::get('/messages/requests', \App\Livewire\DirectMessages\MessagesPage::class)->name('messages.requests');
+        Route::get('/messages/{conversation}', \App\Livewire\DirectMessages\MessagesPage::class)->name('messages.show');
 
         // Settings Routes
         Route::get('/settings/notifications', \App\Livewire\Settings\NotificationPreferences::class)->name('settings.notifications');
@@ -100,4 +104,6 @@ Route::controller(SocialLoginController::class)
             ->name('social.callback')
             ->whereIn('provider', ['google', 'facebook']);
     });
-Route::get('/chat-demo', function () { return view('chat-demo'); });
+Route::get('/chat-demo', function () {
+    return view('chat-demo');
+});

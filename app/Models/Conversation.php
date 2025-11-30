@@ -32,7 +32,7 @@ class Conversation extends Model
     public function participants(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'conversation_participants')
-            ->withPivot(['id', 'role', 'is_muted', 'last_read_at'])
+            ->withPivot(['id', 'role', 'is_muted', 'last_read_at', 'request_status'])
             ->withTimestamps();
     }
 
@@ -43,6 +43,6 @@ class Conversation extends Model
 
     public function latestMessage()
     {
-        return $this->hasOne(Message::class)->latestOfMany();
+        return $this->hasOne(Message::class)->latest('created_at');
     }
 }

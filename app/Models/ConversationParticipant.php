@@ -16,6 +16,7 @@ class ConversationParticipant extends Pivot
         return [
             'is_muted' => 'boolean',
             'last_read_at' => 'datetime',
+            'request_status' => 'string',
         ];
     }
 }
