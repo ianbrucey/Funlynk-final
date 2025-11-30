@@ -48,6 +48,11 @@ class Report extends Model
         return $this->belongsTo(Post::class, 'reported_post_id');
     }
 
+    public function reportedMessage(): BelongsTo
+    {
+        return $this->belongsTo(Message::class, 'reported_message_id');
+    }
+
     public function reviewedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');

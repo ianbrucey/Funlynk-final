@@ -94,15 +94,23 @@
                         @php
                             $userHasReacted = $post->reactions->where('user_id', auth()->id())->where('reaction_type', 'im_down')->isNotEmpty();
                             $reactionCount = $post->reactions->where('reaction_type', 'im_down')->count();
+                            $isOwner = auth()->id() === $post->user_id;
                         @endphp
                         <button
-                            wire:click="reactToPost('{{ $post->id }}', 'im_down')"
-                            class="flex-1 px-6 py-3 rounded-xl text-sm font-semibold hover:scale-105 transition-all
-                                {{ $userHasReacted
-                                    ? 'bg-gradient-to-r from-pink-600 to-purple-600 ring-2 ring-pink-400'
-                                    : 'bg-gradient-to-r from-pink-500 to-purple-500' }}">
+                            @if(!$isOwner) wire:click="reactToPost('{{ $post->id }}', 'im_down')" @endif
+                            @if($isOwner) disabled @endif
+                            class="flex-1 px-6 py-3 rounded-xl text-sm font-semibold transition-all
+                                {{ $isOwner
+                                    ? 'bg-slate-700/50 border border-white/10 text-gray-400 cursor-not-allowed'
+                                    : ($userHasReacted
+                                        ? 'bg-gradient-to-r from-pink-600 to-purple-600 ring-2 ring-pink-400 hover:scale-105'
+                                        : 'bg-gradient-to-r from-pink-500 to-purple-500 hover:scale-105') }}">
                             <span class="flex items-center justify-center gap-2">
-                                {{ $userHasReacted ? '✓' : '👍' }} I'm down
+                                @if($isOwner)
+                                    👑 You're Hosting
+                                @else
+                                    {{ $userHasReacted ? '✓' : '👍' }} I'm down
+                                @endif
                                 @if($reactionCount > 0)
                                     <span class="bg-white/20 px-2 py-0.5 rounded-full text-xs">
                                         {{ $reactionCount }}
@@ -152,7 +160,7 @@
                         @endif
                         <div>
                             <div class="font-bold text-white">{{ $post->user->display_name ?? $post->user->username }}</div>
-                            <div class="text-xs text-gray-400">@{{ $post->user->username }}</div>
+                            <div class="text-xs text-gray-400">{{ "@".$post->user->username }}</div>
                         </div>
                     </div>
                 </div>

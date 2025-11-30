@@ -42,7 +42,7 @@ class PostConversionSuggested implements ShouldBroadcast
                 'post_id' => $this->post->id,
                 'post_title' => $this->post->title,
                 'reaction_count' => $this->eligibility['reaction_count'],
-                'threshold' => $this->eligibility['threshold_5'],
+                'threshold' => $this->eligibility['threshold_soft'],
             ],
             'actions' => [
                 ['label' => 'Convert to Event', 'route' => "/posts/{$this->post->id}/convert"],

@@ -29,9 +29,9 @@ return new class extends Migration
                 ->constrained('activities', 'id')
                 ->cascadeOnDelete();
 
-            $table->foreignUuid('reported_comment_id')
+            $table->foreignUuid('reported_message_id')
                 ->nullable()
-                ->constrained('comments', 'id')
+                ->constrained('messages', 'id')
                 ->cascadeOnDelete();
 
             $table->string('reason', 50); // spam, inappropriate, harassment, etc.
@@ -58,9 +58,17 @@ return new class extends Migration
             ALTER TABLE reports ADD CONSTRAINT report_target_check CHECK (
                 (CASE WHEN reported_user_id IS NOT NULL THEN 1 ELSE 0 END +
                  CASE WHEN reported_activity_id IS NOT NULL THEN 1 ELSE 0 END +
-                 CASE WHEN reported_comment_id IS NOT NULL THEN 1 ELSE 0 END) = 1
+                 CASE WHEN reported_message_id IS NOT NULL THEN 1 ELSE 0 END) = 1
             )
         ');
+
+        // Additional indexes for performance
+        DB::statement('CREATE INDEX idx_reports_pending ON reports(status, created_at DESC) WHERE status = \'pending\'');
+        DB::statement('CREATE INDEX idx_reports_reporter_created ON reports(reporter_id, created_at DESC)');
+        DB::statement('CREATE INDEX idx_reports_user_target ON reports(reported_user_id, status) WHERE reported_user_id IS NOT NULL');
+        DB::statement('CREATE INDEX idx_reports_activity_target ON reports(reported_activity_id, status) WHERE reported_activity_id IS NOT NULL');
+        DB::statement('CREATE INDEX idx_reports_message_target ON reports(reported_message_id, status) WHERE reported_message_id IS NOT NULL');
+        DB::statement('CREATE INDEX idx_reports_reviewed_by ON reports(reviewed_by, reviewed_at DESC) WHERE reviewed_by IS NOT NULL');
     }
 
     /**

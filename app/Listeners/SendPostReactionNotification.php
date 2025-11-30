@@ -4,8 +4,6 @@ namespace App\Listeners;
 
 use App\Events\PostReacted;
 use App\Models\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 
 class SendPostReactionNotification
 {
@@ -27,15 +25,25 @@ class SendPostReactionNotification
             return;
         }
 
+        $reactor = $event->reaction->user;
+
         Notification::create([
             'user_id' => $event->post->user_id,
             'type' => 'post_reaction',
-            'title' => "{$event->reaction->user->name} reacted to your post",
+            'title' => "{$reactor->name} reacted to your post",
             'message' => "Someone is down for \"{$event->post->title}\"",
             'data' => [
                 'post_id' => $event->post->id,
-                'reactor_id' => $event->reaction->user_id,
+                'post_title' => $event->post->title,
+                'post_location' => $event->post->location_name,
+                'post_description' => $event->post->description ?
+                    \Illuminate\Support\Str::limit($event->post->description, 100) : null,
+                'reactor_id' => $reactor->id,
+                'reactor_name' => $reactor->display_name ?? $reactor->name,
+                'reactor_avatar' => $reactor->profile_image_url,
+                'reaction_count' => $event->post->reaction_count,
                 'reaction_type' => $event->reaction->reaction_type,
+                'url' => route('posts.show', $event->post->id),
             ],
             'delivery_method' => 'in_app',
             'delivery_status' => 'sent',

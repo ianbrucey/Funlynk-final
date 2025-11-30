@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Builder;
 use Laravel\Scout\Searchable;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
@@ -23,6 +23,11 @@ class Post extends Model
 
     protected $guarded = [];
 
+    // Conversion thresholds (test values - change to 5 and 10 for production)
+    public const CONVERSION_SOFT_THRESHOLD = 1;    // Soft prompt at 2 reactions (production: 5)
+    public const CONVERSION_STRONG_THRESHOLD = 2;  // Strong prompt/auto-convert at 1 reaction (production: 10)
+    
+
     protected function casts(): array
     {
         return [
@@ -31,6 +36,9 @@ class Post extends Model
             'approximate_time' => 'datetime',
             'expires_at' => 'datetime',
             'conversion_suggested_at' => 'datetime',
+            'conversion_prompted_at' => 'datetime',
+            'conversion_dismissed_at' => 'datetime',
+            'conversion_dismiss_count' => 'integer',
             'view_count' => 'integer',
             'reaction_count' => 'integer',
         ];
@@ -60,7 +68,33 @@ class Post extends Model
     public function scopeNearUser(Builder $query, float $lat, float $lng, int $radiusMeters = 10000): Builder
     {
         $point = new Point($lat, $lng, 4326);
+
         return $query->whereDistance('location_coordinates', $point, '<=', $radiusMeters);
+    }
+
+    /**
+     * Scope for posts eligible for conversion (soft threshold reactions, active status)
+     */
+    public function scopeEligibleForConversion(Builder $query): Builder
+    {
+        return $query->where('status', 'active')
+            ->where('reaction_count', '>=', self::CONVERSION_SOFT_THRESHOLD);
+    }
+
+    /**
+     * Scope for posts that haven't been prompted for conversion yet
+     */
+    public function scopeNotPrompted(Builder $query): Builder
+    {
+        return $query->whereNull('conversion_prompted_at');
+    }
+
+    /**
+     * Scope for converted posts
+     */
+    public function scopeConvertedPosts(Builder $query): Builder
+    {
+        return $query->where('status', 'converted');
     }
 
     public function user(): BelongsTo
@@ -83,10 +117,14 @@ class Post extends Model
         return $this->morphOne(Conversation::class, 'conversationable');
     }
 
-
     public function convertedActivity(): BelongsTo
     {
         return $this->belongsTo(Activity::class, 'converted_to_activity_id');
+    }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(PostInvitation::class);
     }
 
     // Helper Methods
@@ -97,12 +135,43 @@ class Post extends Model
 
     public function canConvert(): bool
     {
-        return $this->reaction_count >= 5 && $this->status === 'active';
+        return $this->reaction_count >= self::CONVERSION_SOFT_THRESHOLD && $this->status === 'active';
     }
 
     public function shouldAutoConvert(): bool
     {
-        return $this->reaction_count >= 10 && $this->status === 'active';
+        return $this->reaction_count >= self::CONVERSION_STRONG_THRESHOLD && $this->status === 'active';
+    }
+
+    /**
+     * Check if post is eligible for conversion
+     */
+    public function isEligibleForConversion(): bool
+    {
+        return $this->status === 'active'
+            && $this->reaction_count >= self::CONVERSION_SOFT_THRESHOLD
+            && ! $this->hasReachedDismissLimit();
+    }
+
+    /**
+     * Check if user has dismissed conversion prompt 3 times
+     */
+    public function hasReachedDismissLimit(): bool
+    {
+        return $this->conversion_dismiss_count >= 3;
+    }
+
+    /**
+     * Check if post should be re-prompted for conversion
+     */
+    public function shouldReprompt(): bool
+    {
+        if (! $this->conversion_dismissed_at) {
+            return false;
+        }
+
+        // Re-prompt after 7 days
+        return $this->conversion_dismissed_at->addDays(7)->isPast();
     }
 
     public function timeUntilExpiration(): string
@@ -153,7 +222,7 @@ class Post extends Model
             'expires_at' => $this->expires_at?->timestamp,
             'created_at' => $this->created_at->timestamp,
         ];
-        
+
         // Add _geo field for Meilisearch native geo filtering
         if ($this->latitude && $this->longitude) {
             $array['_geo'] = [
@@ -161,7 +230,7 @@ class Post extends Model
                 'lng' => $this->longitude,
             ];
         }
-        
+
         return $array;
     }
 

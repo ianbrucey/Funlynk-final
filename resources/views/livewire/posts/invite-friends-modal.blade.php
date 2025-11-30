@@ -66,14 +66,13 @@
                     @else
                         <div class="space-y-2">
                             @foreach($friends as $friend)
-                                <div
-                                    wire:click="toggleFriend('{{ $friend->id }}')"
+                                <label
                                     class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition group">
                                     <input
                                         type="checkbox"
-                                        checked="{{ in_array($friend->id, $selectedFriends) ? 'true' : 'false' }}"
-                                        class="w-5 h-5 rounded border-white/20 bg-slate-800/50 text-purple-500 focus:ring-purple-500/50 focus:ring-offset-0 cursor-pointer pointer-events-none"
-                                        {{ in_array($friend->id, $selectedFriends) ? 'checked' : '' }}
+                                        wire:model.live="selectedFriends"
+                                        value="{{ $friend->id }}"
+                                        class="w-5 h-5 rounded border-white/20 bg-slate-800/50 text-purple-500 focus:ring-purple-500/50 focus:ring-offset-0 cursor-pointer transition-all"
                                     />
                                     <div class="flex items-center gap-3 flex-1">
                                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
@@ -84,7 +83,7 @@
                                             <p class="text-xs text-gray-400">{{ '@' . $friend->username }}</p>
                                         </div>
                                     </div>
-                                </div>
+                                </label>
                             @endforeach
                         </div>
                     @endif

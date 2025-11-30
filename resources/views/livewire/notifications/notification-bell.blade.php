@@ -42,34 +42,50 @@
         {{-- Notifications List --}}
         <div class="max-h-96 overflow-y-auto">
             @forelse($recentNotifications as $notification)
-                <div wire:click="markAsRead('{{ $notification->id }}')"
-                     class="p-4 hover:bg-white/5 cursor-pointer border-b border-white/5 transition group">
-                    <div class="flex items-start gap-3">
-                        <div class="w-2 h-2 bg-pink-500 rounded-full mt-2 group-hover:scale-125 transition"></div>
-                        <div class="flex-1">
-                            <p class="text-white text-sm font-medium group-hover:text-pink-400 transition">
-                                {{ $notification->type }}
-                            </p>
-                            <p class="text-gray-400 text-xs mt-1">
-                                @if($notification->type === 'post_reaction')
-                                    {{ $notification->data['reactor_name'] ?? 'Someone' }} is down for "{{ $notification->data['post_title'] ?? 'a post' }}"
-                                @elseif($notification->type === 'post_invitation')
-                                    {{ $notification->data['inviter_name'] ?? 'Someone' }} invited you to "{{ $notification->data['post_title'] ?? 'a post' }}"
-                                @elseif($notification->type === 'post_conversion')
-                                    Your post "{{ $notification->data['post_title'] ?? 'a post' }}" can be converted to an event!
-                                @else
-                                    {{ $notification->message ?? 'New notification' }}
-                                @endif
-                            </p>
-                            <p class="text-gray-500 text-xs mt-1 flex items-center gap-1">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                {{ $notification->created_at->diffForHumans() }}
-                            </p>
-                        </div>
+                @if($notification->type === 'post_conversion_prompt')
+                    {{-- Use special component for conversion prompts --}}
+                    <div class="p-2 border-b border-white/5">
+                        <x-notifications.conversion-prompt-card :notification="$notification" />
                     </div>
-                </div>
+                @else
+                    {{-- Standard notification display --}}
+                    <a href="{{ $notification->data['url'] ?? '#' }}"
+                       wire:click.prevent="handleNotificationClick('{{ $notification->id }}', '{{ $notification->data['url'] ?? '' }}')"
+                       class="block p-4 hover:bg-white/5 cursor-pointer border-b border-white/5 transition group">
+                        <div class="flex items-start gap-3">
+                            <div class="w-2 h-2 bg-pink-500 rounded-full mt-2 group-hover:scale-125 transition"></div>
+                            <div class="flex-1">
+                                <p class="text-white text-sm font-medium group-hover:text-pink-400 transition">
+                                    {{ $notification->type }}
+                                </p>
+                                <p class="text-gray-400 text-xs mt-1">
+                                    @if($notification->type === 'post_reaction')
+                                        <strong>{{ $notification->data['reactor_name'] ?? 'Someone' }}</strong> is down for
+                                        <strong>"{{ $notification->data['post_title'] ?? 'a post' }}"</strong>
+                                        @if($notification->data['post_location'] ?? false)
+                                            · 📍 {{ $notification->data['post_location'] }}
+                                        @endif
+                                        @if(($notification->data['reaction_count'] ?? 0) > 1)
+                                            · {{ $notification->data['reaction_count'] }} total reactions
+                                        @endif
+                                    @elseif($notification->type === 'post_invitation')
+                                        {{ $notification->data['inviter_name'] ?? 'Someone' }} invited you to "{{ $notification->data['post_title'] ?? 'a post' }}"
+                                    @elseif($notification->type === 'post_conversion')
+                                        Your post "{{ $notification->data['post_title'] ?? 'a post' }}" can be converted to an event!
+                                    @else
+                                        {{ $notification->message ?? 'New notification' }}
+                                    @endif
+                                </p>
+                                <p class="text-gray-500 text-xs mt-1 flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    {{ $notification->created_at->diffForHumans() }}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                @endif
             @empty
                 <div class="p-8 text-center text-gray-400">
                     <svg class="w-16 h-16 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">

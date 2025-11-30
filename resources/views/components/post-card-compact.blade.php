@@ -2,7 +2,17 @@
 
 <div class="relative p-4 glass-card rounded-xl border-l-4 border-pink-500 hover:border-purple-500 transition-all h-full flex flex-col group cursor-pointer"
      onclick="window.location.href='{{ route('posts.chat', $post->id) }}'">
-    
+
+    {{-- Conversion Badge (for active posts owned by current user) --}}
+    @if($post->status === 'active' && auth()->check() && auth()->id() === $post->user_id)
+        <x-conversion-badge
+            :post="$post"
+            :threshold="$post->reaction_count >= 10 ? 'strong' : 'soft'" />
+    @endif
+
+    {{-- Converted Overlay (for converted posts) --}}
+    <x-converted-post-overlay :post="$post" />
+
     {{-- Expiration Timer --}}
     <div class="absolute top-3 right-3 z-10">
         <span class="text-xs text-gray-400 bg-slate-800/80 px-2 py-1 rounded-full backdrop-blur-sm">

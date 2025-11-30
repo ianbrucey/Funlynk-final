@@ -42,7 +42,7 @@ class PostAutoConverted implements ShouldBroadcast
                 'post_id' => $this->post->id,
                 'post_title' => $this->post->title,
                 'reaction_count' => $this->eligibility['reaction_count'],
-                'threshold' => $this->eligibility['threshold_10'],
+                'threshold' => $this->eligibility['threshold_strong'],
             ],
             'actions' => [
                 ['label' => 'View Event', 'route' => "/events/{$this->post->converted_to_activity_id}"],

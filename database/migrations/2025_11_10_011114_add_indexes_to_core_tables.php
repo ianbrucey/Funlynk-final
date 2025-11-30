@@ -137,22 +137,6 @@ return new class extends Migration
         DB::statement('CREATE INDEX idx_rsvps_payment_status ON rsvps(payment_status, created_at DESC) WHERE payment_status IS NOT NULL');
 
         // ============================================================
-        // COMMENTS TABLE - Additional Indexes
-        // ============================================================
-
-        // Composite index for activity comments ordered by time
-        DB::statement('CREATE INDEX idx_comments_activity_created ON comments(activity_id, created_at DESC) WHERE is_deleted = FALSE');
-
-        // Composite index for user's comment history
-        DB::statement('CREATE INDEX idx_comments_user_created ON comments(user_id, created_at DESC)');
-
-        // Index for top-level comments (no parent)
-        DB::statement('CREATE INDEX idx_comments_top_level ON comments(activity_id, created_at DESC) WHERE parent_comment_id IS NULL AND is_deleted = FALSE');
-
-        // Index for comment replies
-        DB::statement('CREATE INDEX idx_comments_replies ON comments(parent_comment_id, created_at ASC) WHERE parent_comment_id IS NOT NULL AND is_deleted = FALSE');
-
-        // ============================================================
         // TAGS TABLE - Additional Indexes
         // ============================================================
 
@@ -199,24 +183,6 @@ return new class extends Migration
 
         // Index for expiring flares
         DB::statement('CREATE INDEX idx_flares_expires ON flares(expires_at) WHERE expires_at IS NOT NULL AND status = \'active\'');
-
-        // ============================================================
-        // REPORTS TABLE - Additional Indexes
-        // ============================================================
-
-        // Composite index for pending reports (admin dashboard)
-        DB::statement('CREATE INDEX idx_reports_pending ON reports(status, created_at DESC) WHERE status = \'pending\'');
-
-        // Composite index for reporter's report history
-        DB::statement('CREATE INDEX idx_reports_reporter_created ON reports(reporter_id, created_at DESC)');
-
-        // Index for reports by target type
-        DB::statement('CREATE INDEX idx_reports_user_target ON reports(reported_user_id, status) WHERE reported_user_id IS NOT NULL');
-        DB::statement('CREATE INDEX idx_reports_activity_target ON reports(reported_activity_id, status) WHERE reported_activity_id IS NOT NULL');
-        DB::statement('CREATE INDEX idx_reports_comment_target ON reports(reported_comment_id, status) WHERE reported_comment_id IS NOT NULL');
-
-        // Index for admin review tracking
-        DB::statement('CREATE INDEX idx_reports_reviewed_by ON reports(reviewed_by, reviewed_at DESC) WHERE reviewed_by IS NOT NULL');
     }
 
     /**
@@ -225,14 +191,6 @@ return new class extends Migration
     public function down(): void
     {
         // Drop all indexes in reverse order
-
-        // Reports indexes
-        DB::statement('DROP INDEX IF EXISTS idx_reports_reviewed_by');
-        DB::statement('DROP INDEX IF EXISTS idx_reports_comment_target');
-        DB::statement('DROP INDEX IF EXISTS idx_reports_activity_target');
-        DB::statement('DROP INDEX IF EXISTS idx_reports_user_target');
-        DB::statement('DROP INDEX IF EXISTS idx_reports_reporter_created');
-        DB::statement('DROP INDEX IF EXISTS idx_reports_pending');
 
         // Flares indexes
         DB::statement('DROP INDEX IF EXISTS idx_flares_expires');
@@ -251,12 +209,6 @@ return new class extends Migration
         DB::statement('DROP INDEX IF EXISTS idx_tags_category_usage');
         DB::statement('DROP INDEX IF EXISTS idx_tags_name_search');
         DB::statement('DROP INDEX IF EXISTS idx_tags_usage');
-
-        // Comments indexes
-        DB::statement('DROP INDEX IF EXISTS idx_comments_replies');
-        DB::statement('DROP INDEX IF EXISTS idx_comments_top_level');
-        DB::statement('DROP INDEX IF EXISTS idx_comments_user_created');
-        DB::statement('DROP INDEX IF EXISTS idx_comments_activity_created');
 
         // RSVPs indexes
         DB::statement('DROP INDEX IF EXISTS idx_rsvps_payment_status');

@@ -30,6 +30,8 @@ class ShowProfile extends Component
 
     public int $attendedActivitiesCount = 0;
 
+    public int $interestedPostsCount = 0;
+
     public function mount($username = null)
     {
         // If no username provided, show current user's profile
@@ -52,6 +54,12 @@ class ShowProfile extends Component
         $this->attendedActivitiesCount = $this->user->rsvps()
             ->where('status', 'confirmed')
             ->count();
+
+        // Count interested posts (posts with "I'm down" reactions)
+        $this->interestedPostsCount = Post::whereHas('reactions', function ($q) {
+            $q->where('user_id', $this->user->id)
+                ->where('reaction_type', 'im_down');
+        })->count();
     }
 
     public function checkFollowStatus()
@@ -140,6 +148,10 @@ class ShowProfile extends Component
                 })
                     ->latest()
                     ->paginate(10);
+                break;
+            case 'interested':
+                // Interested tab is handled by the InterestedTab component
+                $data['showInterestedTab'] = true;
                 break;
         }
 

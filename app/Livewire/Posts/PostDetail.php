@@ -3,11 +3,19 @@
 namespace App\Livewire\Posts;
 
 use App\Models\Post;
+use App\Services\PostService;
 use Livewire\Component;
 
 class PostDetail extends Component
 {
     public Post $post;
+
+    protected PostService $postService;
+
+    public function boot(PostService $postService)
+    {
+        $this->postService = $postService;
+    }
 
     public function mount(Post $post)
     {
@@ -16,23 +24,13 @@ class PostDetail extends Component
 
     public function reactToPost(string $postId, string $reactionType)
     {
-        $post = Post::findOrFail($postId);
+        // Use PostService to handle reaction toggle
+        // This ensures reaction_count is updated and events are dispatched
+        $this->postService->toggleReaction($postId, $reactionType, auth()->user());
 
-        $existingReaction = $post->reactions()
-            ->where('user_id', auth()->id())
-            ->where('reaction_type', $reactionType)
-            ->first();
-
-        if ($existingReaction) {
-            $existingReaction->delete();
-        } else {
-            $post->reactions()->create([
-                'user_id' => auth()->id(),
-                'reaction_type' => $reactionType,
-            ]);
-        }
-
+        // Refresh post to get updated reaction_count and reactions
         $this->post->refresh();
+        $this->post->load('reactions');
     }
 
     public function render()

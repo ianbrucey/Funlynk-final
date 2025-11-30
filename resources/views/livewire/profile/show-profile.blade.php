@@ -183,7 +183,7 @@
                             <span class="{{ $activeTab === 'hosted' ? 'bg-purple-500/20 text-purple-400' : 'bg-slate-700 text-gray-400' }} px-2 py-0.5 rounded-full text-xs font-semibold">{{ $hostedActivitiesCount }}</span>
                         </div>
                     </button>
-                    <button wire:click="switchTab('attending')" 
+                    <button wire:click="switchTab('attending')"
                             class="pb-4 px-1 border-b-2 font-medium text-sm transition-all {{ $activeTab === 'attending' ? 'border-cyan-500 text-cyan-400' : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600' }}">
                         <div class="flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,6 +191,16 @@
                             </svg>
                             <span>Attending</span>
                             <span class="{{ $activeTab === 'attending' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-700 text-gray-400' }} px-2 py-0.5 rounded-full text-xs font-semibold">{{ $attendedActivitiesCount }}</span>
+                        </div>
+                    </button>
+                    <button wire:click="switchTab('interested')"
+                            class="pb-4 px-1 border-b-2 font-medium text-sm transition-all {{ $activeTab === 'interested' ? 'border-amber-500 text-amber-400' : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600' }}">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                            <span>Interested</span>
+                            <span class="{{ $activeTab === 'interested' ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-700 text-gray-400' }} px-2 py-0.5 rounded-full text-xs font-semibold">{{ $interestedPostsCount }}</span>
                         </div>
                     </button>
                 </nav>
@@ -205,8 +215,10 @@
                                 <div class="bg-slate-800/30 border border-white/10 rounded-xl p-6 hover:border-pink-500/30 transition-all group">
                                     <div class="flex items-start justify-between">
                                         <div class="flex-1">
-                                            <h3 class="text-lg font-semibold text-white group-hover:text-pink-400 transition-colors">
-                                                {{ $post->title }}
+                                            <h3 class="text-lg font-semibold">
+                                                <a href="{{ route('posts.show', $post->id) }}" class="text-white group-hover:text-pink-400 transition-colors hover:underline">
+                                                    {{ $post->title }}
+                                                </a>
                                             </h3>
                                             @if($post->description)
                                                 <p class="mt-2 text-gray-400 line-clamp-2">
@@ -264,8 +276,10 @@
                                 <div class="bg-slate-800/30 border border-white/10 rounded-xl p-6 hover:border-purple-500/30 transition-all group">
                                     <div class="flex items-start justify-between">
                                         <div class="flex-1">
-                                            <h3 class="text-lg font-semibold text-white group-hover:text-purple-400 transition-colors">
-                                                {{ $activity->title }}
+                                            <h3 class="text-lg font-semibold">
+                                                <a href="{{ route('activities.show', $activity->id) }}" class="text-white group-hover:text-purple-400 transition-colors hover:underline">
+                                                    {{ $activity->title }}
+                                                </a>
                                             </h3>
                                             @if($activity->description)
                                                 <p class="mt-2 text-gray-400 line-clamp-2">
@@ -324,6 +338,8 @@
                             </p>
                         </div>
                     @endif
+                @elseif($activeTab === 'interested')
+                    <livewire:profile.interested-tab :user="$user" :key="'interested-'.$user->id" />
                 @endif
             </div>
         </div>

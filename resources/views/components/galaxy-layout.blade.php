@@ -40,6 +40,7 @@
 
         <!-- Global Modals -->
         <livewire:posts.invite-friends-modal />
+        <livewire:modals.convert-post-modal />
 
         @livewireScripts
         @filamentScripts

@@ -12,14 +12,20 @@ class NearbyFeed extends Component
     public string $searchQuery = '';
 
     public $radius = 10; // km
+
     public $contentType = 'all'; // all, posts, events
+
     public $timeFilter = 'all'; // all, today, week, month
 
     // Infinite scroll properties
     public $page = 1;
+
     public $perPage = 30; // Initial load: 30 items
+
     public $hasMore = true;
+
     public $items = [];
+
     public $totalItems = 0;
 
     public function mount()
@@ -70,6 +76,7 @@ class NearbyFeed extends Component
         // Cap at 200 items total
         if (count($this->items) >= 200) {
             $this->hasMore = false;
+
             return;
         }
 
@@ -124,6 +131,18 @@ class NearbyFeed extends Component
             // Handle error (user not authenticated, invalid reaction type, etc.)
             session()->flash('error', 'Failed to react to post: '.$e->getMessage());
         }
+    }
+
+    public function openConversionModal(string $postId)
+    {
+        $this->dispatch('open-conversion-modal', postId: $postId);
+    }
+
+    public function dismissBanner(string $postId)
+    {
+        session()->put("conversion_banner_dismissed_{$postId}", true);
+
+        $this->dispatch('banner-dismissed');
     }
 
     public function render()

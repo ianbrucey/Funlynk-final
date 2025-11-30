@@ -125,7 +125,6 @@ class User extends Authenticatable implements FilamentHasName
             ->withTimestamps();
     }
 
-
     public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class);
@@ -168,7 +167,6 @@ class User extends Authenticatable implements FilamentHasName
     {
         return $this->hasMany(Follow::class, 'following_id');
     }
-
 
     public function followingEdges(): HasMany
     {
@@ -260,5 +258,45 @@ class User extends Authenticatable implements FilamentHasName
     public function shouldBeSearchable(): bool
     {
         return $this->is_active && $this->onboarding_completed_at !== null;
+    }
+
+    /**
+     * Get posts the user has shown interest in ("I'm down" reactions)
+     *
+     * @param  string  $filter  Filter by status: 'active', 'converted', 'expired'
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getInterestedPosts(string $filter = 'active')
+    {
+        $query = Post::whereHas('reactions', function ($q) {
+            $q->where('user_id', $this->id)
+                ->where('reaction_type', 'im_down');
+        })->with(['user', 'reactions']);
+
+        // Apply filters
+        switch ($filter) {
+            case 'active':
+                $query->where('status', 'active')
+                    ->where('expires_at', '>', now());
+                break;
+            case 'converted':
+                $query->where('status', 'converted');
+                break;
+            case 'expired':
+                $query->where(function ($q) {
+                    $q->where('status', 'expired')
+                        ->orWhere('expires_at', '<=', now());
+                });
+                break;
+        }
+
+        // Order by most recent reaction first
+        return $query->orderByDesc(function ($q) {
+            $q->select('created_at')
+                ->from('post_reactions')
+                ->whereColumn('post_reactions.post_id', 'posts.id')
+                ->where('post_reactions.user_id', $this->id)
+                ->limit(1);
+        })->paginate(12);
     }
 }

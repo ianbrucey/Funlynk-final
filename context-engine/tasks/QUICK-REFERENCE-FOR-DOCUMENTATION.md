@@ -187,15 +187,16 @@ php artisan make:test --pest Feature/[TestName] --no-interaction
 - **tags**: id, name, slug, category, usage_count
 - **follows**: id, follower_id, following_id
 - **notifications**: id, user_id, type, data (json), read_at
-- **comments**: id, commentable_type, commentable_id, user_id, content
+- **conversations**: id, type, conversationable_type, conversationable_id, last_message_at
+- **messages**: id, conversation_id, user_id, body, reply_to_message_id, type
 - **flares**: id, user_id, content, location_coordinates (geography), expires_at
-- **reports**: id, reportable_type, reportable_id, user_id, reason
+- **reports**: id, reported_user_id, reported_activity_id, reported_message_id, reporter_id, reason
 
 ### Models Available
-- User, Post, Activity, PostReaction, PostConversion, Rsvp, Tag, Follow, Notification, Comment, Flare, Report
+- User, Post, Activity, PostReaction, PostConversion, Rsvp, Tag, Follow, Notification, Conversation, Message, MessageReaction, Flare, Report
 
 ### Filament Resources Available
-- UserResource, PostResource, ActivityResource, RsvpResource, TagResource, PostReactionResource, CommentResource
+- UserResource, PostResource, ActivityResource, RsvpResource, TagResource, PostReactionResource
 
 ---
 

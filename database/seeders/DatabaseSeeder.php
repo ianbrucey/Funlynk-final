@@ -3,8 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Activity;
-use App\Models\Comment;
+use App\Models\Conversation;
 use App\Models\Follow;
+use App\Models\Message;
 use App\Models\Post;
 use App\Models\PostConversion;
 use App\Models\PostReaction;
@@ -13,7 +14,9 @@ use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -134,20 +137,53 @@ class DatabaseSeeder extends Seeder
             $followPairs[$key] = true;
         }
 
-        // Comments (one per activity, plus a reply)
+        // Conversations and Messages (one per activity, plus a reply)
         foreach ($activities as $activity) {
-            $author = $users->random();
-            $parent = Comment::query()->create([
-                'activity_id' => $activity->id,
-                'user_id' => $author->id,
-                'content' => 'Excited for this!',
+            // Create conversation for activity
+            $conversation = Conversation::query()->create([
+                'type' => 'group',
+                'conversationable_type' => Activity::class,
+                'conversationable_id' => $activity->id,
+                'last_message_at' => now(),
             ]);
 
-            Comment::query()->create([
-                'activity_id' => $activity->id,
-                'user_id' => $users->random()->id,
-                'parent_comment_id' => $parent->id,
-                'content' => 'Me too! See you there.',
+            // Add host as participant
+            $conversation->participants()->attach($activity->host_id, [
+                'id' => Str::uuid()->toString(),
+                'role' => 'admin',
+            ]);
+
+            // First message - ensure author is not the host
+            $author = $users->where('id', '!=', $activity->host_id)->random();
+            if (! $conversation->participants()->where('user_id', $author->id)->exists()) {
+                $conversation->participants()->attach($author->id, [
+                    'id' => Str::uuid()->toString(),
+                    'role' => 'member',
+                ]);
+            }
+
+            $firstMessage = Message::query()->create([
+                'conversation_id' => $conversation->id,
+                'user_id' => $author->id,
+                'body' => 'Excited for this!',
+                'type' => 'text',
+            ]);
+
+            // Reply message - ensure replier is not the author or host
+            $replier = $users->whereNotIn('id', [$activity->host_id, $author->id])->random();
+            if (! $conversation->participants()->where('user_id', $replier->id)->exists()) {
+                $conversation->participants()->attach($replier->id, [
+                    'id' => Str::uuid()->toString(),
+                    'role' => 'member',
+                ]);
+            }
+
+            Message::query()->create([
+                'conversation_id' => $conversation->id,
+                'user_id' => $replier->id,
+                'reply_to_message_id' => $firstMessage->id,
+                'body' => 'Me too! See you there.',
+                'type' => 'text',
             ]);
         }
 
@@ -155,9 +191,14 @@ class DatabaseSeeder extends Seeder
         $samplePosts = $posts->random(10);
         foreach ($samplePosts as $post) {
             $activity = $activities->random();
-            // Link both sides
+            // Link both sides - use DB update to avoid spatial data issues
             $post->update(['converted_to_activity_id' => $activity->id, 'status' => 'converted']);
-            $activity->update(['originated_from_post_id' => $post->id, 'conversion_date' => now()]);
+            DB::table('activities')
+                ->where('id', $activity->id)
+                ->update([
+                    'originated_from_post_id' => $post->id,
+                    'conversion_date' => now(),
+                ]);
 
             // Create conversion metrics record
             PostConversion::query()->create([

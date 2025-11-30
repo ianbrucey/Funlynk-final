@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Events\PostCreated;
 use App\Events\PostInvitationSent;
 use App\Events\PostReacted;
+use App\Models\Activity;
 use App\Models\Post;
 use App\Models\PostInvitation;
 use App\Models\PostReaction;
@@ -97,16 +98,16 @@ class PostService
     /**
      * React to a post using one of the supported reaction types.
      *
-     * @param  string  $postId UUID of the post
-     * @param  string  $reactionType im_down|join_me
-     * @param  User|null  $user Reactor; falls back to auth() if null
+     * @param  string  $postId  UUID of the post
+     * @param  string  $reactionType  im_down|join_me
+     * @param  User|null  $user  Reactor; falls back to auth() if null
      */
     /**
      * Toggle a reaction on a post (add if not exists, remove if exists)
      *
-     * @param  string  $postId UUID of the post
-     * @param  string  $reactionType im_down|invite_friends
-     * @param  User|null  $user Reactor; falls back to auth() if null
+     * @param  string  $postId  UUID of the post
+     * @param  string  $reactionType  im_down|invite_friends
+     * @param  User|null  $user  Reactor; falls back to auth() if null
      * @return array ['action' => 'added'|'removed', 'reaction' => PostReaction|null]
      */
     public function toggleReaction(string $postId, string $reactionType, ?User $user = null): array
@@ -124,6 +125,10 @@ class PostService
         }
 
         $post = Post::findOrFail($postId);
+
+        if ($post->user_id === $userId) {
+            throw new InvalidArgumentException('Post owner cannot react to their own post.');
+        }
 
         return DB::transaction(function () use ($post, $userId, $reactionType) {
             // Check if reaction already exists
@@ -179,6 +184,10 @@ class PostService
 
         $post = Post::findOrFail($postId);
 
+        if ($post->user_id === $userId) {
+            throw new InvalidArgumentException('Post owner cannot react to their own post.');
+        }
+
         return DB::transaction(function () use ($post, $userId, $reactionType) {
             // Create or update the user reaction for this post
             $reaction = PostReaction::updateOrCreate(
@@ -221,11 +230,11 @@ class PostService
         $reactionCount = (int) $post->reaction_count;
 
         return [
-            'eligible' => $reactionCount >= 5,
-            'auto_convert' => $reactionCount >= 10,
+            'eligible' => $reactionCount >= Post::CONVERSION_SOFT_THRESHOLD,
+            'auto_convert' => $reactionCount >= Post::CONVERSION_STRONG_THRESHOLD,
             'reaction_count' => $reactionCount,
-            'threshold_5' => 5,
-            'threshold_10' => 10,
+            'threshold_soft' => Post::CONVERSION_SOFT_THRESHOLD,
+            'threshold_strong' => Post::CONVERSION_STRONG_THRESHOLD,
         ];
     }
 
@@ -242,7 +251,6 @@ class PostService
             ->update(['status' => 'expired']);
     }
 
-
     /**
      * Get all reactions for a post, newest first, including the reacting user.
      */
@@ -257,16 +265,15 @@ class PostService
     /**
      * Invite friends to a post.
      *
-     * @param  string  $postId
-     * @param  array  $friendIds Array of user IDs to invite
-     * @param  User|null  $inviter The user sending the invitation
+     * @param  array  $friendIds  Array of user IDs to invite
+     * @param  User|null  $inviter  The user sending the invitation
      * @return Collection Collection of PostInvitation models
      */
     public function inviteFriendsToPost(string $postId, array $friendIds, ?User $inviter = null): Collection
     {
         $inviter = $inviter ?? auth()->user();
         $post = Post::findOrFail($postId);
-        $invitations = new Collection();
+        $invitations = new Collection;
 
         foreach ($friendIds as $friendId) {
             $invitation = PostInvitation::updateOrCreate(
@@ -308,5 +315,92 @@ class PostService
             ->with(['post', 'inviter'])
             ->orderBy('created_at', 'desc')
             ->get();
+    }
+
+    /**
+     * Dismiss conversion prompt for a post
+     *
+     *
+     * @throws \Exception
+     */
+    public function dismissConversionPrompt(string $postId, ?User $user = null): void
+    {
+        $user = $user ?? auth()->user();
+        $post = Post::findOrFail($postId);
+
+        // Authorization check
+        if ($post->user_id !== $user->id) {
+            throw new \Exception('Unauthorized');
+        }
+
+        DB::transaction(function () use ($post) {
+            $post->update([
+                'conversion_dismissed_at' => now(),
+                'conversion_dismiss_count' => $post->conversion_dismiss_count + 1,
+            ]);
+        });
+    }
+
+    /**
+     * Get conversion eligibility for a post
+     */
+    public function getConversionEligibility(string $postId): array
+    {
+        $post = Post::findOrFail($postId);
+
+        return app(ConversionEligibilityService::class)->checkAndPrompt($post);
+    }
+
+    /**
+     * Convert a post to an event
+     *
+     *
+     * @throws \Exception
+     */
+    public function convertToEvent(string $postId, array $eventData, ?User $user = null): Activity
+    {
+        $user = $user ?? auth()->user();
+        $post = Post::with(['reactions', 'invitations'])->findOrFail($postId);
+
+        // Authorization check
+        if ($post->user_id !== $user->id) {
+            throw new \Exception('Unauthorized: Only post owner can convert');
+        }
+
+        // Validate required event fields
+        $this->validateEventData($eventData);
+
+        return app(ActivityConversionService::class)->createFromPost($post, $eventData, $user);
+    }
+
+    /**
+     * Validate event data for conversion
+     *
+     *
+     * @throws \Exception
+     */
+    protected function validateEventData(array $data): void
+    {
+        $required = ['start_time', 'end_time', 'max_attendees'];
+
+        foreach ($required as $field) {
+            if (! isset($data[$field])) {
+                throw new \Exception("Missing required field: {$field}");
+            }
+        }
+
+        // Validate times
+        if (strtotime($data['start_time']) < now()->timestamp) {
+            throw new \Exception('Start time must be in the future');
+        }
+
+        if (strtotime($data['end_time']) <= strtotime($data['start_time'])) {
+            throw new \Exception('End time must be after start time');
+        }
+
+        // Validate capacity
+        if ($data['max_attendees'] < 1) {
+            throw new \Exception('Max attendees must be at least 1');
+        }
     }
 }

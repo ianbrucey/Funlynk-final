@@ -47,6 +47,48 @@ class NotificationBell extends Component
         $this->loadNotifications();
     }
 
+    public function convertPost(string $postId): void
+    {
+        $this->dispatch('open-conversion-modal', postId: $postId);
+    }
+
+    public function dismissPrompt(string $postId, string $notificationId): void
+    {
+        // Call service to dismiss (will be implemented by Agent A)
+        // app(\App\Services\PostService::class)->dismissConversionPrompt($postId);
+
+        // Mark notification as read
+        Notification::find($notificationId)?->update(['read_at' => now()]);
+
+        $this->loadNotifications();
+
+        $this->dispatch('notify', [
+            'type' => 'info',
+            'message' => 'Conversion prompt dismissed',
+        ]);
+    }
+
+    public function handleNotificationClick(string $notificationId, string $url = ''): void
+    {
+        $notification = Notification::find($notificationId);
+
+        if ($notification) {
+            $notification->update(['read_at' => now()]);
+            $this->loadNotifications();
+
+            // Navigate based on notification type
+            if ($notification->type === 'post_reaction' || $notification->type === 'post_invitation') {
+                if (! empty($url)) {
+                    $this->redirect($url);
+                } elseif (isset($notification->data['post_id'])) {
+                    $this->redirect(route('posts.show', $notification->data['post_id']));
+                }
+            } elseif ($notification->type === 'post_conversion_prompt') {
+                $this->dispatch('open-conversion-modal', postId: $notification->data['post_id']);
+            }
+        }
+    }
+
     public function render()
     {
         return view('livewire.notifications.notification-bell');

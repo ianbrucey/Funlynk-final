@@ -1,8 +1,12 @@
 # E05 Social Interaction - Database Schema
 
+> **⚠️ DEPRECATION NOTICE**: This document contains outdated schema for the traditional comment system. FunLynk has migrated to a **unified chat architecture** that replaces comments with conversations and messages. See `context-engine/domain-contexts/chat-architecture.md` for the current implementation.
+>
+> **Status**: This document is preserved for historical reference but should NOT be used for new development. The comment-related schemas below have been replaced by the chat system tables: `conversations`, `conversation_participants`, `messages`, and `message_reactions`.
+
 ## Schema Overview
 
-This document details the database schema extensions for social interaction features. While core tables exist from previous epics, this epic adds tables for comments, reactions, sharing, communities, and real-time social features.
+This document details the database schema extensions for social interaction features. While core tables exist from previous epics, this epic adds tables for ~~comments~~ **conversations/messages** (see chat-architecture.md), reactions, sharing, communities, and real-time social features.
 
 ## Comment & Discussion System Schema
 

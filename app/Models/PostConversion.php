@@ -28,6 +28,9 @@ class PostConversion extends Model
             'comments_at_conversion' => 'integer',
             'views_at_conversion' => 'integer',
             'rsvp_conversion_rate' => 'float',
+            'interested_users_notified' => 'integer',
+            'invited_users_notified' => 'integer',
+            'notification_sent_at' => 'datetime',
             'created_at' => 'datetime',
         ];
     }

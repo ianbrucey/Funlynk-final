@@ -33,13 +33,13 @@ class CheckPostConversionEligibility implements ShouldQueue
 
         $eligibility = $postService->checkConversionEligibility($this->postId);
 
-        // Auto-convert at 10+ reactions
+        // Auto-convert at strong threshold reactions
         if ($eligibility['auto_convert']) {
             event(new PostAutoConverted($post, $eligibility));
             return;
         }
 
-        // Suggest conversion at 5+ reactions (only once)
+        // Suggest conversion at soft threshold reactions (only once)
         if ($eligibility['eligible'] && !$post->conversion_suggested_at) {
             $post->update(['conversion_suggested_at' => now()]);
             event(new PostConversionSuggested($post, $eligibility));

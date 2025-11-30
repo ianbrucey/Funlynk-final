@@ -1,8 +1,9 @@
 <?php
 
 use App\Models\Activity;
-use App\Models\Comment;
+use App\Models\Conversation;
 use App\Models\Follow;
+use App\Models\Message;
 use App\Models\Post;
 use App\Models\PostReaction;
 use App\Models\Rsvp;
@@ -58,12 +59,17 @@ it('handles follow relationships', function () {
         ->toContain($alice->id);
 });
 
-it('links posts to users, reactions, and evolved activities', function () {
+it('links posts to users, reactions, and converted activities', function () {
     $u = makeUser('poster');
 
     $post = Post::create([
         'user_id' => $u->id,
-        'content' => 'Who is down for basketball tonight?',
+        'title' => 'Who is down for basketball tonight?',
+        'description' => 'Looking for people to play basketball',
+        'location_name' => 'Venice Beach',
+        'location_coordinates' => new \MatanYadaev\EloquentSpatial\Objects\Point(34.0195, -118.4912, 4326),
+        'status' => 'active',
+        'expires_at' => now()->addHours(48),
     ]);
 
     PostReaction::create([
@@ -72,37 +78,55 @@ it('links posts to users, reactions, and evolved activities', function () {
         'reaction_type' => 'im_down',
     ]);
 
-    // Create an activity and set post->evolved_to_event_id
+    // Create an activity and set post->converted_to_activity_id
     $activity = makeActivity($u);
-    $post->evolved_to_event_id = $activity->id;
+    $post->converted_to_activity_id = $activity->id;
+    $post->status = 'converted';
     $post->save();
 
     expect($post->user->id)->toBe($u->id);
     expect($post->reactions()->count())->toBe(1);
-    expect($post->evolvedActivity)->not()->toBeNull();
-    expect($post->evolvedActivity->id)->toBe($activity->id);
+    expect($post->convertedActivity)->not()->toBeNull();
+    expect($post->convertedActivity->id)->toBe($activity->id);
 });
 
-it('supports threaded comments for activities', function () {
+it('supports threaded messages in activity conversations', function () {
     $u = makeUser('chatter');
     $activity = makeActivity($u);
 
-    $parent = Comment::create([
-        'activity_id' => $activity->id,
-        'user_id' => $u->id,
-        'content' => 'Looks fun!',
+    // Create conversation for activity
+    $conversation = Conversation::create([
+        'type' => 'group',
+        'conversationable_type' => Activity::class,
+        'conversationable_id' => $activity->id,
+        'last_message_at' => now(),
     ]);
 
-    $reply = Comment::create([
-        'activity_id' => $activity->id,
-        'user_id' => $u->id,
-        'parent_comment_id' => $parent->id,
-        'content' => 'Count me in!',
+    // Add user as participant
+    $conversation->participants()->attach($u->id, [
+        'id' => \Illuminate\Support\Str::uuid()->toString(),
+        'role' => 'member',
     ]);
 
-    expect($reply->parent->id)->toBe($parent->id);
-    expect($parent->replies()->pluck('id'))
-        ->toContain($reply->id);
+    // Create parent message
+    $parent = Message::create([
+        'conversation_id' => $conversation->id,
+        'user_id' => $u->id,
+        'body' => 'Looks fun!',
+        'type' => 'text',
+    ]);
+
+    // Create reply message
+    $reply = Message::create([
+        'conversation_id' => $conversation->id,
+        'user_id' => $u->id,
+        'reply_to_message_id' => $parent->id,
+        'body' => 'Count me in!',
+        'type' => 'text',
+    ]);
+
+    expect($reply->replyTo->id)->toBe($parent->id);
+    expect($activity->conversation->id)->toBe($conversation->id);
 });
 
 it('connects RSVPs between users and activities', function () {
