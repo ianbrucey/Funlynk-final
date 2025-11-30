@@ -68,29 +68,16 @@ class InviteFriendsModal extends Component
         }
 
         try {
-            \Log::info('Inviting friends to activity', [
-                'activity_id' => $this->activityId,
-                'friend_ids' => $this->selectedFriends,
-            ]);
-
             $invitations = app(\App\Services\ActivityService::class)->inviteFriendsToActivity(
                 $this->activityId,
                 $this->selectedFriends,
                 auth()->user()
             );
 
-            \Log::info('Invitations sent successfully', ['count' => count($invitations)]);
-
             session()->flash('success', count($invitations).' friend(s) invited!');
             $this->reset(['show', 'selectedFriends', 'search', 'activityId']);
-            $this->dispatch('invitations-sent');
         } catch (\Exception $e) {
-            \Log::error('Failed to send invitations', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
             session()->flash('error', 'Failed to send invitations: '.$e->getMessage());
-            $this->show = false;
         }
     }
 
