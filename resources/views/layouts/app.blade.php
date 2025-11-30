@@ -15,9 +15,6 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -161,7 +158,38 @@
         </main>
     </div>
 
+    <!-- Toast Notifications -->
+    <x-toast-notification />
+
     @livewireScripts
+
+    {{-- Global Toast Notifications --}}
+    
+
+    @if (session()->has('error'))
+        <div id="toast-error" class="fixed top-24 right-4 z-50 glass-card border border-red-500/30 rounded-xl p-4 animate-slide-in max-w-sm shadow-2xl">
+            <div class="flex items-center gap-3">
+                <div class="text-2xl">❌</div>
+                <p class="text-white font-medium">{{ session('error') }}</p>
+                <button onclick="document.getElementById('toast-error').remove()" class="ml-auto text-gray-400 hover:text-white transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <script>
+            setTimeout(() => {
+                const toast = document.getElementById('toast-error');
+                if (toast) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100%)';
+                    toast.style.transition = 'all 0.3s ease-out';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 3000);
+        </script>
+    @endif
 </body>
 </html>
 

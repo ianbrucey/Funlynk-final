@@ -47,6 +47,12 @@ class UserFactory extends Factory
             'is_verified' => fake()->boolean(),
             'is_active' => true,
             'privacy_level' => fake()->randomElement(['public', 'friends', 'private']),
+            'notification_preference' => 'all',
+            'email_on_post_converted' => true,
+            'email_on_event_invitation' => true,
+            'email_on_rsvp_update' => true,
+            'email_on_comment' => true,
+            'email_on_reaction' => false,
             'remember_token' => Str::random(10),
         ];
     }

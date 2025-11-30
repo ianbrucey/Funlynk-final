@@ -4,6 +4,7 @@ namespace App\Livewire\Posts;
 
 use App\Models\Post;
 use App\Services\PostService;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 class PostDetail extends Component
@@ -71,15 +72,24 @@ class PostDetail extends Component
             // Convert post to event
             $activity = $this->postService->convertToEvent($this->post->id, $eventData, auth()->user());
 
-            // Show success message
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => '🎉 Post converted to event successfully!',
+            // Log for debugging
+            Log::info('Post converted successfully', [
+                'post_id' => $this->post->id,
+                'activity_id' => $activity->id,
+                'redirect_url' => route('activities.show', $activity->id),
             ]);
 
-            // Redirect to event page
+            // Redirect to event page with success message
+            session()->flash('success', '🎉 Post converted to event successfully!');
+
             return redirect()->route('activities.show', $activity->id);
         } catch (\Exception $e) {
+            Log::error('Failed to convert post', [
+                'post_id' => $this->post->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             $this->dispatch('notify', [
                 'type' => 'error',
                 'message' => 'Failed to convert post: '.$e->getMessage(),

@@ -68,6 +68,9 @@ Route::middleware('auth')->group(function () {
         // Notification Routes
         Route::get('/notifications', \App\Livewire\Notifications\NotificationList::class)->name('notifications.index');
 
+        // Settings Routes
+        Route::get('/settings/notifications', \App\Livewire\Settings\NotificationPreferences::class)->name('settings.notifications');
+
         // Stripe Connect Routes
         Route::get('/host/stripe-onboarding', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding');
         Route::get('/host/stripe-return', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding.return');

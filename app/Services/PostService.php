@@ -389,12 +389,15 @@ class PostService
             }
         }
 
-        // Validate times
-        if (strtotime($data['start_time']) < now()->timestamp) {
+        // Validate times using Carbon for better date parsing
+        $startTime = \Carbon\Carbon::parse($data['start_time']);
+        $endTime = \Carbon\Carbon::parse($data['end_time']);
+
+        if ($startTime->isPast()) {
             throw new \Exception('Start time must be in the future');
         }
 
-        if (strtotime($data['end_time']) <= strtotime($data['start_time'])) {
+        if ($endTime->lessThanOrEqualTo($startTime)) {
             throw new \Exception('End time must be after start time');
         }
 

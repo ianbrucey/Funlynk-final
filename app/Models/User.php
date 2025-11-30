@@ -48,6 +48,12 @@ class User extends Authenticatable implements FilamentHasName
         'is_verified',
         'is_active',
         'privacy_level',
+        'notification_preference',
+        'email_on_post_converted',
+        'email_on_event_invitation',
+        'email_on_rsvp_update',
+        'email_on_comment',
+        'email_on_reaction',
     ];
 
     /**
@@ -90,6 +96,11 @@ class User extends Authenticatable implements FilamentHasName
             'follower_count' => 'integer',
             'following_count' => 'integer',
             'activity_count' => 'integer',
+            'email_on_post_converted' => 'boolean',
+            'email_on_event_invitation' => 'boolean',
+            'email_on_rsvp_update' => 'boolean',
+            'email_on_comment' => 'boolean',
+            'email_on_reaction' => 'boolean',
         ];
     }
 
