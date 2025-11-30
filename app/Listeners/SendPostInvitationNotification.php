@@ -22,10 +22,12 @@ class SendPostInvitationNotification
      */
     public function handle(PostInvitationSent $event): void
     {
+        $inviterName = $event->inviter->display_name ?? $event->inviter->username;
+
         Notification::create([
             'user_id' => $event->invitee->id,
             'type' => 'post_invitation',
-            'title' => "{$event->inviter->name} invited you to a post",
+            'title' => "{$inviterName} invited you to a post",
             'message' => "Check out \"{$event->post->title}\"",
             'data' => [
                 'invitation_id' => $event->invitation->id,

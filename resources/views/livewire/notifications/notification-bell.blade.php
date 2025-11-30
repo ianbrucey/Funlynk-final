@@ -56,7 +56,7 @@
                             <div class="w-2 h-2 bg-pink-500 rounded-full mt-2 group-hover:scale-125 transition"></div>
                             <div class="flex-1">
                                 <p class="text-white text-sm font-medium group-hover:text-pink-400 transition">
-                                    {{ $notification->type }}
+                                    {{ $notification->title ?? Str::headline($notification->type) }}
                                 </p>
                                 <p class="text-gray-400 text-xs mt-1">
                                     @if($notification->type === 'post_reaction')
@@ -72,6 +72,8 @@
                                         {{ $notification->data['inviter_name'] ?? 'Someone' }} invited you to "{{ $notification->data['post_title'] ?? 'a post' }}"
                                     @elseif($notification->type === 'post_conversion')
                                         Your post "{{ $notification->data['post_title'] ?? 'a post' }}" can be converted to an event!
+                                    @elseif($notification->type === 'post_converted_to_event')
+                                        {{ $notification->message ?? 'A post you were interested in became an event!' }}
                                     @else
                                         {{ $notification->message ?? 'New notification' }}
                                     @endif

@@ -26,12 +26,13 @@ class SendPostReactionNotification
         }
 
         $reactor = $event->reaction->user;
+        $reactorName = $reactor->display_name ?? $reactor->username;
 
         Notification::create([
             'user_id' => $event->post->user_id,
             'type' => 'post_reaction',
-            'title' => "{$reactor->name} reacted to your post",
-            'message' => "Someone is down for \"{$event->post->title}\"",
+            'title' => "{$reactorName} reacted to your post",
+            'message' => "{$reactorName} is down for \"{$event->post->title}\"",
             'data' => [
                 'post_id' => $event->post->id,
                 'post_title' => $event->post->title,
