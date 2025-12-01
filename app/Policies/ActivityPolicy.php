@@ -3,8 +3,8 @@
 namespace App\Policies;
 
 use App\Models\Activity;
+use App\Models\Group;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ActivityPolicy
 {
@@ -22,6 +22,10 @@ class ActivityPolicy
      */
     public function view(?User $user, Activity $activity): bool
     {
+        if ($activity->group_id) {
+            // If it's a group activity, apply GroupPolicy view logic
+            return app(GroupPolicy::class)->view($user, $activity->group);
+        }
         // Anyone can view public activities
         if ($activity->is_public) {
             return true;
@@ -34,10 +38,17 @@ class ActivityPolicy
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user): bool
+    public function create(?User $user): bool
     {
-        // All authenticated users can create activities
-        return true;
+        return $user !== null;
+    }
+
+    /**
+     * Determine whether the user can create events within a group.
+     */
+    public function createInGroup(User $user, Group $group): bool
+    {
+        return $group->members()->where('user_id', $user->id)->exists();
     }
 
     /**
@@ -45,13 +56,17 @@ class ActivityPolicy
      */
     public function update(User $user, Activity $activity): bool
     {
+        if ($activity->group_id) {
+            // If it's a group activity, check if user is creator or group admin
+            return $user->id === $activity->user_id || app(GroupPolicy::class)->update($user, $activity->group);
+        }
         // Only the host can update their activity
         if ($activity->host_id === $user->id) {
             return true;
         }
 
         // TODO: Add admin role check when role system is implemented
-        
+
         return false;
     }
 
@@ -60,6 +75,10 @@ class ActivityPolicy
      */
     public function delete(User $user, Activity $activity): bool
     {
+        if ($activity->group_id) {
+            // If it's a group activity, check if user is creator or group admin
+            return $user->id === $activity->user_id || app(GroupPolicy::class)->delete($user, $activity->group);
+        }
         // Only host can delete
         if ($activity->host_id !== $user->id) {
             return false;

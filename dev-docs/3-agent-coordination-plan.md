@@ -1,414 +1,853 @@
-# 3-Agent Parallel Development Coordination Plan
 
-**Date**: 2025-11-23
-**Last Updated**: 2025-11-23 (Sprint 2 assignments)
-**Objective**: Implement E02-E04 features in parallel to accelerate FunLynk development
-**Duration**: 2-3 weeks estimated
+# FunLynk Agent Navigation Guide
 
----
+## Project Identity
 
-## 🎉 Sprint 1 Complete!
+**FunLynk**: Laravel 12 web app for spontaneous, niche activity discovery. Users discover activities through ephemeral "Posts" (24-48h) that can evolve into structured "Events" based on engagement.
 
-**Agent A**: ✅ E02/F01 Profile Management (EditProfile Livewire component, 10 tests passing)
-**Agent B**: ✅ E03/F03 Tagging System (autocomplete, trending, analytics)
-**Agent C**: 🔄 E05-E07 Documentation (in progress)
+**Tech Stack**: Laravel 12, Filament v4, Livewire v3, PostgreSQL + PostGIS, DaisyUI, Pest v4
 
-**Sprint 2 Now Unblocked**: E03/F01, E02/F02, E02/F03 are all ready to start!
+## Core Architecture Principle
 
----
+**Posts vs Events Dual Model** - The platform's defining feature:
 
-## Context: E01 Foundation Status
+- **Posts**: Ephemeral (24-48h), spontaneous, 5-10km radius, reactions ("I'm down", "Join me")
+- **Events**: Structured, persistent, 25-50km radius, RSVPs, payments
+- **Conversion**: Posts with 5+ reactions → suggest conversion → 10+ reactions → auto-convert to Event
+- **Flow**: E04 detects engagement → E03 creates Event with `originated_from_post_id`
 
-### ✅ Available Infrastructure (E01 Complete)
-**Database Tables**: `users`, `posts`, `activities`, `tags`, `activity_tag`, `post_reactions`, `post_conversions`, `rsvps`, `follows`, `notifications`, `comments`, `flares`, `reports`
+## Project Structure
 
-**Eloquent Models**:
-- `User` (with PostGIS location, interests JSON, profile fields)
-- `Post` (ephemeral, 24-48h, 5-10km radius)
-- `Activity` (structured events, 25-50km radius)
-- `Tag` (with usage_count, category)
-- `PostReaction`, `PostConversion`, `Rsvp`, `Follow`, `Notification`, `Comment`
-
-**Filament Resources**: `UserResource`, `PostResource`, `ActivityResource` (basic CRUD), `TagResource`, `PostReactionResource`, `CommentResource`
-
-**Auth System**: Laravel Breeze installed, registration/login working
-
-**UI Standards**: Galaxy theme with glass morphism (see `context-engine/domain-contexts/ui-design-standards.md`)
-
-### 🎯 Current Goal
-Implement E02-E04 to enable:
-1. Rich user profiles with interests and location (E02)
-2. Activity/Event management with tagging (E03)
-3. Discovery feeds with spatial search (E04)
-
-### 🧩 Why These 3 Assignments?
-
-**Assignment Rationale: Dependency Graph, Not Epic Grouping**
-
-We're NOT assigning full epics. We're assigning based on **blocking dependencies**:
+### Documentation Hierarchy
 
 ```
-E02/F01 (Profiles) ← FOUNDATION (Agent A)
-    ↓ BLOCKS ↓
-    ├─→ E02/F02 (Privacy Settings) ← needs profiles to exist first
-    ├─→ E02/F03 (User Discovery) ← needs profile data to search
-    ├─→ E03/F01 (Activity CRUD) ← needs host profiles, user locations
-    ├─→ E03/F02 (RSVP System) ← needs activities + user profiles
-    └─→ E04/F01-F03 (Discovery) ← needs profiles + activities + tags
 
-E03/F03 (Tagging) ← INDEPENDENT (Agent B, parallel-safe)
-    ↑ NO DEPENDENCIES ↑
-    - Tags are metadata only
-    - Don't need activities to exist yet
-    - Don't need user profiles
-    - Can build autocomplete, trending, analytics in isolation
+context-engine/
+
+├── global-context.md           # Universal project context (READ FIRST)
+
+├── epics/                      # 7 major modules (E01-E07)
+
+│   └── E0X_Name/
+
+│       ├── epic-overview.md    # Epic purpose & scope
+
+│       ├── database-schema.md  # Tables & relationships
+
+│       ├── api-contracts.md    # API endpoints
+
+│       └── service-architecture.md
+
+├── tasks/                      # Feature-level implementation docs
+
+│   └── E0X_Name/
+
+│       └── F0X_Feature_Name/
+
+│           └── README.md       # 5-7 tasks, Artisan commands, time estimates
+
+└── domain-contexts/            # Cross-cutting concerns
+
+    ├── ui-design-standards.md  # Galaxy theme, glass morphism (CRITICAL for UI)
+
+    ├── database-context.md     # PostGIS, spatial queries
+
+    └── auth-context.md         # Laravel Auth, Filament
+
 ```
 
-**Why Agent A gets E02/F01 ONLY (not F02, F03)**:
-- E02/F02 (Privacy) can't be built until profiles exist - what would you make private?
-- E02/F03 (Discovery) can't search for users until profile data exists
-- Agent A will do F02 and F03 in Sprint 2 after F01 completes
+### Implementation Status
 
-**Why Agent B gets E03/F03 ONLY (not F01, F02)**:
-- E03/F01 (Activity CRUD) needs user profiles (host info, locations)
-- E03/F02 (RSVPs) needs both activities AND profiles
-- E03/F03 (Tagging) is pure metadata - works independently
+- ✅ **E01 Core Infrastructure**: Database, migrations, models, Filament resources COMPLETE
+- 🔄 **E02-E04**: Task documentation rebuilt for Laravel (Nov 2025), ready for implementation
+- ⏳ **E05-E07**: Epic planning complete, task documentation pending
 
-**Why Agent C gets Documentation**:
-- No other E02-E04 features can run in parallel without blocking
-- Building E04 (Discovery) without real profiles/activities = building on sand
-- Forward-looking documentation unblocks Sprint 2 and Sprint 3
+## 7 Epics Overview
 
----
+1. **E01 Core Infrastructure**: Database (PostGIS), Auth, Notifications - **COMPLETE**
+2. **E02 User & Profile Management**: Profiles, Privacy, User Discovery
+3. **E03 Activity Management**: Event CRUD, RSVPs, Tagging, **Post-to-Event Conversion (receiving)**
+4. **E04 Discovery Engine**: Feeds, Recommendations, **Post-to-Event Conversion (initiating)**
+5. **E05 Social Interaction**: Comments, Reactions, Communities
+6. **E06 Payments & Monetization**: Stripe Connect, Subscriptions
+7. **E07 Administration**: Analytics, Moderation, Monitoring
 
-## Agent A: Coordinator + E02/F01 Profile Management
+## Critical Integration Points
 
-### Assignment
-**Feature**: E02/F01 Profile Creation & Management
-**Documentation**: `context-engine/tasks/E02_User_Profile_Management/F01_Profile_Creation_Management/README.md`
-**Estimated Time**: 30-38 hours (7 tasks)
+### E01 Foundation (Available Now)
 
-### Responsibilities
-1. **Coordinate**: Monitor Agent B/C progress, resolve integration questions
-2. **Implement E02/F01**: Profile CRUD, image uploads, interest management, location picker
+**Tables**: users, posts, activities, post_reactions, post_conversions, rsvps, tags, follows, notifications, comments, flares, reports
 
-### Technical Context
-**What You're Building**: Rich user profiles that power all discovery features
+**Models**: User, Post, Activity, PostReaction, PostConversion, Rsvp, Tag, Follow, Notification, Comment, Flare, Report
 
-**E01 Foundation You'll Use**:
-- `users` table (columns: `bio`, `profile_image_url`, `location_name`, `location_coordinates` (PostGIS), `interests` (JSON), `display_name`)
-- `User` model at `app/Models/User.php` (has relationships, needs profile methods)
-- `UserResource` at `app/Filament/Resources/Users/` (basic CRUD, needs profile fields)
-- Laravel Breeze auth (registration/login working)
+**Filament Resources**: UserResource, PostResource, ActivityResource, RsvpResource, TagResource, PostReactionResource, CommentResource
 
-**Your 7 Tasks** (from README.md):
-1. **T01**: Enhance `UserResource` with profile fields (bio, interests JSON editor, location picker, image upload)
-2. **T02**: Profile image upload via Laravel filesystem (store in `public/profiles`, validate size/type)
-3. **T03**: Create `ProfileService` (calculate completion %, validate interests, geocode locations)
-4. **T04**: Build `EditProfile` Livewire component (user-facing profile editor with galaxy theme)
-5. **T05**: Build `ProfileCompletion` Livewire component (progress indicator: "Your profile is 60% complete")
-6. **T06**: Create `UserPolicy` (users can only edit their own profiles)
-7. **T07**: Write Pest tests (profile CRUD, image upload, completion calculation)
+### PostGIS Spatial Queries (E02/F03, E04/F01)
 
-**Key Technical Decisions**:
-- **Interests**: Store as JSON array in `users.interests` column, use Filament `TagsInput` component
-- **Location**: Use PostGIS `geography(POINT, 4326)` for `location_coordinates`, save human-readable name to `location_name`
-- **Profile Completion**: Calculate as: (filled fields / total fields) * 100. Required fields: bio, interests (min 3), location, profile_image
-- **Image Storage**: Use Laravel's `public` disk, generate thumbnails (200x200), validate max 2MB
-- **Galaxy Theme**: All Livewire views must use glass cards, gradient buttons, cyan focus glow (see `ui-design-standards.md`)
+```php
 
-### Key Files to Create/Modify
-```
-app/Services/ProfileService.php                    # Profile completion logic
-app/Livewire/Profile/EditProfile.php               # User-facing profile editor
-app/Livewire/Profile/ProfileCompletion.php         # Completion indicator
-app/Policies/UserPolicy.php                        # Profile edit authorization
-resources/views/livewire/profile/edit-profile.blade.php
-resources/views/livewire/profile/show-profile.blade.php
-tests/Feature/ProfileManagementTest.php
+// Posts: 5-10km radius
+
+Post::whereDistance('location_coordinates', $point, '<=', 10000)->get();
+
+
+// Events: 25-50km radius
+
+Activity::whereDistance('location_coordinates', $point, '<=', 50000)->get();
+
 ```
 
-### Integration Points
-- **With Agent B**: None (tagging is independent)
-- **With E01**: Extends existing `User` model and `UserResource`
-- **Blocks**: E02/F02 (Privacy), E02/F03 (User Discovery) - both need profiles first
+### Post-to-Event Conversion (E03/F01, E04/F03)
 
-### Success Criteria
-- [ ] Users can edit bio, interests, location, profile image
-- [ ] Profile completion percentage displays correctly
-- [ ] Location picker saves to PostGIS `location_coordinates`
-- [ ] Filament `UserResource` enhanced with new fields
-- [ ] All tests pass (`php artisan test --filter=Profile`)
-- [ ] Galaxy theme applied to all profile views
+```php
 
----
+// E04 detects engagement threshold
 
-## Agent B: E03/F03 Tagging & Category System
+if ($post->reactions()->count() >= 5) {
 
-### Assignment
-**Feature**: E03/F03 Tagging & Category System
-**Documentation**: `context-engine/tasks/E03_Activity_Management/F03_Tagging_Category_System/README.md`
-**Estimated Time**: 28-36 hours (7 tasks)
+    // E04 calls E03's service
 
-### Why This Feature?
-✅ **Parallel-safe**: Works with existing `tags` table, no dependency on Agent A's profiles
-✅ **High value**: Enables activity categorization and discovery filtering
-✅ **Independent**: Doesn't touch `users` or profile-related code
+    app(ActivityConversionService::class)->createFromPost($post);
 
-### Technical Context
-**What You're Building**: A complete tagging infrastructure that will power activity discovery
 
-**E01 Foundation You'll Use**:
-- `tags` table (columns: `id`, `name`, `slug`, `usage_count`, `category`, `is_featured`, `created_at`)
-- `activity_tag` pivot table (many-to-many: activities ↔ tags)
-- `Tag` model at `app/Models/Tag.php` (basic, needs enhancement)
-- `TagResource` at `app/Filament/Resources/Tags/` (basic CRUD only)
+    // E03 creates activity
 
-**Your 7 Tasks** (from README.md):
-1. **T01**: Enhance `TagResource` with analytics columns (usage_count, category filters, bulk moderation)
-2. **T02**: Build `TagAutocomplete` Livewire component (suggest tags as users type, create new tags)
-3. **T03**: Create `TagService` (business logic: trending calculation, analytics, moderation rules)
-4. **T04**: Build `TrendingTags` Livewire component (display popular tags with usage counts)
-5. **T05**: Create `TagPolicy` (who can create/moderate tags)
-6. **T06**: Create `UpdateTagAnalytics` job (background task to recalculate usage_count, trending scores)
-7. **T07**: Write Pest tests (autocomplete, trending algorithm, analytics job)
+    Activity::create([
 
-**Key Technical Decisions**:
-- **Trending Algorithm**: Use `usage_count` + recency weighting (tags used in last 7 days score higher)
-- **Caching**: Cache trending tags for 1 hour (use Laravel Cache with `tags:trending` key)
-- **Autocomplete**: Search `tags.name` with ILIKE, limit 10 results, order by `usage_count DESC`
-- **Galaxy Theme**: All Livewire components must use glass cards, gradient buttons (see `ui-design-standards.md`)
+        'originated_from_post_id' => $post->id,
 
-### Key Files to Create/Modify
-```
-app/Services/TagService.php                        # Tag analytics, trending
-app/Livewire/Tags/TagAutocomplete.php              # Autocomplete component
-app/Livewire/Tags/TrendingTags.php                 # Trending display
-app/Jobs/UpdateTagAnalytics.php                    # Background analytics
-app/Policies/TagPolicy.php                         # Tag moderation
-resources/views/livewire/tags/tag-autocomplete.blade.php
-tests/Feature/TagManagementTest.php
+        // ... copy location, time hints
+
+    ]);
+
+}
+
 ```
 
-### DO NOT TOUCH
-- ❌ `app/Models/User.php` (Agent A is modifying)
-- ❌ `app/Filament/Resources/Users/` (Agent A's territory)
-- ❌ Any profile-related Livewire components
+## Development Workflow
 
-### Integration Points
-- **With E01**: Uses existing `Tag` model, `TagResource`, `activity_tag` pivot
-- **With Agent A**: None (no conflicts)
-- **Future**: E04/F01 (Search) will use tags for filtering
+### Before Starting Any Task
 
-### Success Criteria
-- [ ] Tag autocomplete works in activity forms
-- [ ] Trending tags display with usage counts
-- [ ] Tag analytics job runs successfully
-- [ ] Filament `TagResource` enhanced with analytics columns
-- [ ] All tests pass (`php artisan test --filter=Tag`)
-- [ ] Galaxy theme applied to tag components
+1. **Read epic-overview.md** for business context
+2. **Read task README.md** for implementation details (5-7 tasks with Artisan commands)
+3. **Check E01 foundation** for available tables/models/resources
+4. **Review domain-contexts/** for UI standards, database patterns, auth patterns
 
----
+### Implementation Pattern
 
-## Agent C: E05-E07 Task Documentation Completion
+```bash
 
-### Assignment
-**Task**: Complete E05-E07 README file rewrites (12 files)
-**Reference**: `dev-logs/2025-11-20-12.md` (lines 29-56)
-**Estimated Time**: 6-8 hours
+# Task structure (from README.md)
 
-### Why Documentation Instead of Code?
-❌ **E02/F02-F03**: Blocked by Agent A's E02/F01 (need profiles first)
-❌ **E03/F01-F02**: Blocked by Agent A's E02/F01 (activities need user profiles)
-❌ **E04/F01-F03**: Blocked by both Agent A and B (need profiles + tags)
-✅ **E05-E07 Docs**: Forward-looking work, unblocks future sprints
+T01: Database/Model Setup (migrations, models, factories)
 
-### Technical Context
-**What You're Building**: Implementation-ready task documentation for 12 features across 3 epics
+T02: Service Classes (business logic)
 
-**Why This Matters**:
-- Sprint 2 will implement E03/F01-F02, E04/F01-F03 - they need docs NOW
-- Sprint 3 will implement E05 (social features) - docs must be ready
-- Without these docs, future agents waste hours figuring out architecture
+T03: Filament Resources (admin CRUD)
 
-**Your Documentation Standards** (CRITICAL):
-1. **Use the template**: `context-engine/tasks/LARAVEL-DOCUMENTATION-TEMPLATE.md` (7-task structure)
-2. **Follow epic guides**: Read `E05-DOCUMENTATION-GUIDE.md`, `E06-DOCUMENTATION-GUIDE.md`, `E07-DOCUMENTATION-GUIDE.md` first
-3. **Reference E02-E04 examples**: Look at completed README files for structure/tone
-4. **Laravel 12 conventions**:
-   - Use `casts()` method (NOT `$casts` property)
-   - Use Filament v4 `->components([])` (NOT `->schema([])`)
-   - All Artisan commands must have `--no-interaction` flag
-5. **No React Native/Supabase/TypeScript**: This is Laravel only
-6. **Time estimates**: Include for each task (be realistic: 3-8 hours per task)
+T04: Livewire Components (user-facing UI)
 
-**Each README Must Include**:
-- Feature Overview (2-3 paragraphs explaining business value)
-- Feature Scope (In Scope / Out of Scope bullets)
-- 7 Tasks with this structure:
-  - T01: Database/Model Setup
-  - T02: Service Classes
-  - T03: Filament Resources
-  - T04: Livewire Components
-  - T05: Policies
-  - T06: Jobs (async processing)
-  - T07: Tests (Pest v4)
-- Artisan commands for each task
-- Integration points with E01 foundation
-- Testing strategy
+T05: Policies (authorization)
 
-### Scope
-Rebuild 12 README files following Laravel 12 conventions:
+T06: Jobs (async processing)
 
-**E05 Social Interaction** (4 files):
-- `F01_Comment_Discussion_System/README.md`
-- `F02_Social_Sharing_Engagement/README.md`
-- `F03_Community_Features/README.md`
-- `F04_Realtime_Social_Features/README.md`
+T07: Tests (Pest v4)
 
-**E06 Payments & Monetization** (4 files):
-- `F01_Payment_Processing_System/README.md`
-- `F02_Revenue_Sharing_Payouts/README.md`
-- `F03_Subscription_Premium_Features/README.md`
-- `F04_Marketplace_Monetization_Tools/README.md`
-
-**E07 Administration** (4 files):
-- `F01_Platform_Analytics_BI/README.md`
-- `F02_Content_Moderation_Safety/README.md`
-- `F03_User_Community_Management/README.md`
-- `F04_System_Monitoring_Operations/README.md`
-
-### Template & Guidelines
-- **Template**: `context-engine/tasks/LARAVEL-DOCUMENTATION-TEMPLATE.md`
-- **Epic Guides**: `context-engine/epics/E05_Social_Interaction/E05-DOCUMENTATION-GUIDE.md` (and E06, E07)
-- **Reference Examples**: Any E02-E04 README files (already rebuilt)
-
-### Success Criteria
-- [ ] All 12 README files created with 7-task structure
-- [ ] No React Native/Supabase/TypeScript references
-- [ ] Artisan commands use `--no-interaction` flag
-- [ ] Laravel 12 conventions (`casts()`, Filament v4 `->components([])`)
-- [ ] Time estimates included for each task
-- [ ] Files validated with: `grep -r "React Native\|Supabase\|TypeScript" context-engine/tasks/E05* E06* E07*`
-
----
-
-## Coordination & Communication
-
-### Daily Sync Points
-- **Morning**: Each agent posts progress update in shared doc
-- **Evening**: Each agent commits code with descriptive messages
-
-### Conflict Resolution
-- **Code conflicts**: Agent A (coordinator) resolves
-- **Blocking issues**: Agent A reassigns work if needed
-
-### Integration Testing
-After all agents complete:
-1. Agent A runs full test suite
-2. Agent A verifies galaxy theme consistency
-3. Agent A updates `dev-logs/` with completion status
-
----
-
-## Timeline
-
-**Week 1**:
-- Agent A: E02/F01 Tasks T01-T04 (profile CRUD, images)
-- Agent B: E03/F03 Tasks T01-T04 (tag autocomplete, analytics)
-- Agent C: E05 documentation (4 files)
-
-**Week 2**:
-- Agent A: E02/F01 Tasks T05-T07 (policies, jobs, tests)
-- Agent B: E03/F03 Tasks T05-T07 (trending, caching, tests)
-- Agent C: E06 documentation (4 files)
-
-**Week 3**:
-- Agent A: Integration testing, bug fixes
-- Agent B: Integration testing, bug fixes
-- Agent C: E07 documentation (4 files), validation
-
----
-
-**Last Updated**: 2025-11-23
-**Status**: Ready for parallel execution
-
-
-
-## 🚀 Sprint 2 Assignments (Updated 2025-11-23)
-
-### Agent B: E03/F01 Activity CRUD Operations
-
-**Assignment**: Build the core activity/event creation and management system
-**Documentation**: `context-engine/tasks/E03_Activity_Management/F01_Activity_CRUD_Operations/README.md`
-**Estimated Time**: 35-45 hours (7 tasks)
-
-**Why This Feature?**
-✅ **Dependencies met**: Profiles (Agent A) ✅ + Tags (Agent B Sprint 1) ✅
-✅ **Critical path**: Unblocks E03/F02 (RSVPs) and E04 (Discovery feeds)
-✅ **Core functionality**: Users can create/edit/delete activities and events
-
-**What You're Building**:
-- Activity creation form (title, description, location, time, capacity, tags)
-- Activity editing and deletion
-- Post-to-Event conversion (when Posts get 10+ reactions)
-- Activity detail view with galaxy theme
-- Activity list/management for hosts
-
-**E01 Foundation You'll Use**:
-- `activities` table (all fields ready: title, description, location_coordinates, start_time, end_time, capacity, etc.)
-- `Activity` model at `app/Models/Activity.php`
-- `ActivityResource` at `app/Filament/Resources/Activities/` (basic CRUD)
-- `activity_tag` pivot table (for tagging activities)
-- `posts` table and `Post` model (for Post-to-Event conversion)
-
-**Your 7 Tasks** (from README.md):
-1. **T01**: Enhance `ActivityResource` with all fields (location picker, tag selector, capacity, pricing)
-2. **T02**: Create `ActivityService` (business logic: validation, Post conversion, capacity checks)
-3. **T03**: Build `CreateActivity` Livewire component (user-facing creation form with galaxy theme)
-4. **T04**: Build `EditActivity` Livewire component (edit existing activities)
-5. **T05**: Build `ActivityDetail` Livewire component (public activity view)
-6. **T06**: Create `ActivityPolicy` (who can edit/delete activities)
-7. **T07**: Write Pest tests (CRUD, Post conversion, capacity validation)
-
-**Key Technical Decisions**:
-- **Location**: Use PostGIS for `location_coordinates`, 25-50km radius for events
-- **Post Conversion**: When Post gets 10+ reactions, create Activity with `originated_from_post_id`
-- **Capacity**: Validate RSVPs don't exceed `max_attendees`
-- **Tags**: Use Agent B's autocomplete component from Sprint 1
-- **Galaxy Theme**: Glass cards, gradient buttons, cyan focus glow
-
-**Key Files to Create/Modify**:
-```
-app/Services/ActivityService.php
-app/Livewire/Activities/CreateActivity.php
-app/Livewire/Activities/EditActivity.php
-app/Livewire/Activities/ActivityDetail.php
-app/Policies/ActivityPolicy.php
-resources/views/livewire/activities/create-activity.blade.php
-resources/views/livewire/activities/activity-detail.blade.php
-tests/Feature/ActivityManagementTest.php
 ```
 
-**Integration Points**:
-- **With Agent A (E02/F01)**: Use User profiles for host info, user locations
-- **With Agent B Sprint 1 (E03/F03)**: Use TagAutocomplete component for activity tagging
-- **With E01**: Extends Activity model, uses PostGIS spatial queries
-- **Blocks**: E03/F02 (RSVPs need activities), E04/F01 (Discovery needs activities)
+### Always Use
 
-**Success Criteria**:
-- [ ] Users can create activities with all fields (title, description, location, time, capacity, tags)
-- [ ] Users can edit/delete their own activities
-- [ ] Post-to-Event conversion works (10+ reactions → create Activity)
-- [ ] Activity detail page displays with galaxy theme
-- [ ] Location picker saves to PostGIS coordinates
-- [ ] All tests pass (`php artisan test --filter=Activity`)
+- `php artisan make:*` commands with `--no-interaction` flag
+- `casts()` method (not `$casts` property) - Laravel 12
+- `->components([])` (not `->schema([])`) - Filament v4
+- PostGIS for location queries via matanyadaev/laravel-eloquent-spatial
+- DaisyUI classes for UI components
+- Galaxy theme with glass morphism for all pages (see ui-design-standards.md)
 
----
+### UI Styling - CRITICAL RULES
 
-### Agent A: Next Assignment TBD
-**Options**: E02/F02 (Privacy Settings) or E02/F03 (User Discovery)
-**Waiting for**: User decision on priority
+**EVERY page/component MUST follow the galaxy theme**. No exceptions.
 
-### Agent C: Continue E05-E07 Documentation
-**Status**: In progress, no changes
+**Step 1: Use the Galaxy Layout Component**
+
+```blade
+
+<x-galaxy-layout>
+
+    <x-slot name="title">Page Title</x-slot>
+
+
+    <!-- Your content here -->
+
+
+</x-galaxy-layout>
+
+```
+
+**Step 2: Wrap Content in Glass Cards**
+
+```blade
+
+<div class="container mx-auto px-6 py-8">
+
+    <div class="relative p-8 glass-card max-w-4xl mx-auto">
+
+        <div class="top-accent-center"></div>
+
+        <!-- Your content -->
+
+    </div>
+
+</div>
+
+```
+
+**Step 3: Use Gradient Buttons**
+
+```blade
+
+<!-- Primary -->
+
+<button class="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
+
+    Submit
+
+</button>
+
+
+<!-- Secondary -->
+
+<button class="px-6 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition">
+
+    Cancel
+
+</button>
+
+```
+
+**Step 4: Reference Files**
+
+Before creating UI, review:
+
+- `resources/views/welcome.blade.php` - Full page example
+- `resources/views/livewire/auth/login.blade.php` - Form example
+- `context-engine/domain-contexts/ui-design-standards.md` - Complete guide
+
+**Step 5: Verify Checklist**
+
+- [ ] Galaxy gradient background
+- [ ] Aurora layers visible
+- [ ] Stars twinkling
+- [ ] Content in glass cards
+- [ ] Buttons have gradients
+- [ ] Forms have cyan focus glow
+- [ ] Text is white/gray (readable)
+- [ ] Hover effects work
+
+## Development Progress Tracking
+
+### Purpose
+
+Maintain timestamped progress logs to serve as a development journal. These logs help new agents quickly understand project history, current state, and planned work without re-reading entire conversation history.
+
+### Log File Management
+
+- **Location**: `dev-logs/` directory at project root
+- **Naming**: `YYYY-MM-DD-HH.md` (e.g., `2025-01-20-14.md` for January 20, 2025 at 2 PM)
+- **Structure**: Each log file must contain exactly 3 sections:
+
+  1. **Previously Completed** - Recent accomplishments (last 2-3 sessions)
+  2. **Currently Working On** - Active tasks and current focus
+  3. **Next Steps** - Planned upcoming work and priorities
+
+### When to Update
+
+- At the beginning of each new work session
+- After completing major tasks or milestones
+- Before ending a work session
+- When switching between major features or epics
+
+### Format Guidelines
+
+- Use clear, concise bullet points
+- Keep each section to 5-10 bullets maximum for readability
+- Include specific file paths, feature names, and epic references
+- Note any blockers or important decisions made
+
+## Quick Reference Commands
+
+```bash
+
+# Documentation
+
+cat context-engine/global-context.md                    # Start here
+
+cat context-engine/epics/E0X_Name/epic-overview.md      # Epic context
+
+cat context-engine/tasks/E0X_Name/F0X_Feature/README.md # Task details
+
+
+# Implementation
+
+php artisan make:filament-resource Name --generate --no-interaction
+
+php artisan make:livewire Namespace/Component --no-interaction
+
+php artisan make:test --pest Feature/TestName --no-interaction
+
+
+# Testing
+
+php artisan test --filter=TestName
+
+vendor/bin/pint --dirty  # Format code before committing
+
+```
+
+## Critical Rules
+
+1. **NO React Native/Supabase/TypeScript** - This is Laravel only
+2. **Filament First** - Use Filament for CRUD, custom views only when necessary
+3. **PostGIS for Location** - All spatial queries use PostGIS geography columns
+4. **Galaxy Theme** - All UI must follow ui-design-standards.md (glass cards, aurora effects)
+5. **Posts vs Events** - Always respect the dual model architecture
+6. **E01 Foundation** - Always reference completed tables/models/resources
+7. **Test Everything** - Write Pest tests for all features
+
+## Multi-Agent Workflow Pattern
+
+### Overview
+
+FunLynk uses a **swarm intelligence** architecture where the primary agent (Claude/Augment) acts as architect/orchestrator, and sub-agents (Gemini via `spawn_sub_agent.py`) act as specialized workers executing well-defined tasks.
+
+**Benefits:**
+
+- Reduces primary agent context window usage
+- Preserves AI credits through efficient resource allocation
+- Enables parallel execution of independent tasks
+- Reduces cognitive load on primary agent
+- Allows specialized focus on discrete problems
+
+### Agent Roles
+
+#### Primary Agent (You - Claude/Augment)
+
+**Responsibilities:**
+
+- High-level planning and orchestration
+- Reading and understanding project documentation (context-engine/, AGENTS.md)
+- Breaking down complex features into discrete, self-contained tasks
+- Crafting detailed, context-rich prompts for sub-agents
+- Reviewing sub-agent outputs and integrating them into the codebase
+- Making final decisions on architecture and implementation approach
+- Handling tasks requiring deep context or cross-cutting concerns
+
+**When to Handle Tasks Yourself:**
+
+- Reading/analyzing documentation (you have better context retention)
+- Making architectural decisions
+- Tasks requiring knowledge of previous conversation history
+- Complex refactoring across multiple files
+- Tasks requiring interactive debugging or iteration
+- Final code integration and testing
+- Reviewing and approving sub-agent outputs
+
+#### Sub-Agent (Gemini via spawn_sub_agent.py)
+
+**Responsibilities:**
+
+- Executing specific, well-defined tasks with complete instructions
+- Generating code, migrations, services, tests based on detailed specs
+- Analyzing specific files and producing structured reports
+- Creating documentation from templates
+- Performing repetitive or parallelizable work
+
+**When to Delegate to Sub-Agents:**
+
+- Creating boilerplate code (migrations, models, factories)
+- Generating service classes from detailed specifications
+- Writing tests based on clear requirements
+- Analyzing specific files for patterns or issues
+- Creating documentation from structured data
+- Tasks that can be fully specified without conversation history
+
+**Critical Constraint:**
+
+Sub-agents are **STATELESS** - they have NO memory of previous conversations or context. Every prompt must be completely self-contained.
+
+### Crafting Effective Sub-Agent Prompts
+
+#### Template Structure
+
+```
+
+[CONTEXT SECTION]
+
+Read the following files for context:
+
+- {exact file path 1}
+
+- {exact file path 2}
+
+- {documentation path}
+
+
+[TASK DESCRIPTION]
+
+{Clear, specific task description}
+
+
+[REQUIREMENTS]
+
+- Requirement 1 (with specific details)
+
+- Requirement 2 (with specific details)
+
+- Follow {specific pattern/convention}
+
+
+[OUTPUT SPECIFICATION]
+
+Output format: {exact format description}
+
+File location: {where to save if applicable}
+
+Include: {specific elements to include}
+
+```
+
+#### Good Prompt Example
+
+```
+
+Read the following files for context:
+
+- context-engine/epics/E02_User_Profile_Management/epic-overview.md
+
+- context-engine/tasks/E02_User_Profile_Management/F01_Profile_CRUD/README.md
+
+- app/Models/User.php
+
+- context-engine/domain-contexts/service-architecture.md
+
+
+Create a UserProfileService class that implements profile CRUD operations following Laravel 12 conventions.
+
+
+Requirements:
+
+- Class location: app/Services/UserProfileService.php
+
+- Namespace: App\Services
+
+- Methods to implement:
+
+  * createProfile(User $user, array $data): UserProfile
+
+  * updateProfile(UserProfile $profile, array $data): UserProfile
+
+  * getProfile(int $userId): ?UserProfile
+
+  * deleteProfile(int $profileId): bool
+
+- Use the User model from app/Models/User.php
+
+- Follow the service architecture pattern from service-architecture.md
+
+- Include proper type hints and return types (Laravel 12 style)
+
+- Add PHPDoc blocks for each method
+
+- Handle validation using Laravel's validator
+
+- Throw appropriate exceptions for error cases
+
+
+Output format: Complete PHP class code with proper formatting
+
+Include: namespace, use statements, class definition, all methods with implementation
+
+```
+
+#### Bad Prompt Example (DO NOT USE)
+
+```
+
+Create the user profile service we discussed earlier.
+
+```
+
+**Why it's bad:** No context files, no specific requirements, references "earlier" conversation that sub-agent can't access.
+
+### Workflow Process
+
+#### Step 1: Planning Phase (Primary Agent)
+
+1. Read relevant documentation (epic-overview.md, task README.md)
+2. Understand the full scope of the feature
+3. Identify discrete, independent tasks suitable for delegation
+4. Determine which tasks you'll handle vs. delegate
+
+#### Step 2: Task Decomposition (Primary Agent)
+
+Break down complex features into sub-agent-friendly tasks:
+
+**Example: E02/F01 Profile CRUD Feature**
+
+- Task 1 (Sub-agent): Create UserProfile migration
+- Task 2 (Sub-agent): Create UserProfile model with relationships
+- Task 3 (Sub-agent): Create UserProfileService class
+- Task 4 (Sub-agent): Create UserProfileFactory for testing
+- Task 5 (Primary): Create Filament resource (requires UI decisions)
+- Task 6 (Sub-agent): Create Pest tests for service class
+- Task 7 (Primary): Integration testing and review
+
+#### Step 3: Prompt Crafting (Primary Agent)
+
+For each delegated task:
+
+1. Identify all files the sub-agent needs to read
+2. Specify exact requirements and constraints
+3. Define output format and location
+4. Include references to FunLynk documentation
+5. Add Laravel 12 / Filament v4 specific conventions
+
+#### Step 4: Execution (Sub-Agent)
+
+```bash
+
+python3 spawn_sub_agent.py gemini "YOUR DETAILED PROMPT HERE"
+
+```
+
+The script returns a job_id immediately. Output will be in:
+
+```
+
+subagent_runs/{job_id}/
+
+├── prompt.txt          # Your prompt
+
+├── status.json         # Job status and timing
+
+├── output.jsonl        # Event log
+
+├── report.md           # Sub-agent's output
+
+└── run.log            # Execution logs
+
+```
+
+#### Step 5: Review & Integration (Primary Agent)
+
+1. Wait for job completion (check status.json)
+2. Read report.md to review sub-agent output
+3. Validate output meets requirements
+4. Integrate code into codebase (copy to appropriate files)
+5. Run tests and fix any issues
+6. Iterate if needed (spawn new sub-agent task with corrections)
+
+### Parallel Execution Pattern
+
+For independent tasks, spawn multiple sub-agents simultaneously:
+
+```bash
+
+# Spawn 3 parallel tasks
+
+JOB1=$(python3 spawn_sub_agent.py gemini "Create UserProfile migration...")
+
+JOB2=$(python3 spawn_sub_agent.py gemini "Create UserProfile model...")
+
+JOB3=$(python3 spawn_sub_agent.py gemini "Create UserProfileFactory...")
+
+
+echo "Spawned jobs: $JOB1, $JOB2, $JOB3"
+
+
+# Primary agent continues with other work while sub-agents execute
+
+# Check results later: cat subagent_runs/$JOB1/report.md
+
+```
+
+### FunLynk-Specific Prompt Patterns
+
+#### Pattern 1: Creating Migrations
+
+```
+
+Read the following files:
+
+- context-engine/epics/E0X_Name/database-schema.md
+
+- context-engine/domain-contexts/database-context.md
+
+- database/migrations/2024_01_01_000001_create_users_table.php (example)
+
+
+Create a Laravel 12 migration for the {table_name} table.
+
+
+Requirements:
+
+- Migration name: create_{table_name}_table
+
+- Columns: {list all columns with types}
+
+- Indexes: {specify indexes}
+
+- Foreign keys: {specify relationships}
+
+- Use PostGIS geography type for location columns
+
+- Follow the pattern from the example migration
+
+
+Output: Complete migration file content with up() and down() methods
+
+```
+
+#### Pattern 2: Creating Service Classes
+
+```
+
+Read the following files:
+
+- context-engine/epics/E0X_Name/epic-overview.md
+
+- context-engine/tasks/E0X_Name/F0X_Feature/README.md
+
+- context-engine/domain-contexts/service-architecture.md
+
+- app/Models/{RelatedModel}.php
+
+
+Create a {ServiceName} class in app/Services/.
+
+
+Requirements:
+
+- Implement business logic for {specific feature}
+
+- Methods: {list methods with signatures}
+
+- Use dependency injection for repositories/models
+
+- Follow Laravel 12 conventions
+
+- Include proper error handling
+
+- Add PHPDoc blocks
+
+
+Output: Complete PHP service class
+
+```
+
+#### Pattern 3: Creating Livewire Components
+
+```
+
+Read the following files:
+
+- context-engine/domain-contexts/ui-design-standards.md
+
+- resources/views/welcome.blade.php (galaxy theme example)
+
+- resources/views/livewire/auth/login.blade.php (form example)
+
+- context-engine/tasks/E0X_Name/F0X_Feature/README.md
+
+
+Create a Livewire v3 component for {feature description}.
+
+
+Requirements:
+
+- Component name: {ComponentName}
+
+- Location: app/Livewire/{ComponentName}.php
+
+- View: resources/views/livewire/{component-name}.blade.php
+
+- Must use galaxy theme with glass morphism
+
+- Include: {specific UI elements}
+
+- Follow DaisyUI classes for components
+
+- Use gradient buttons (pink-500 to purple-500)
+
+- Forms must have cyan focus glow
+
+
+Output: Two files - PHP component class and Blade view
+
+```
+
+#### Pattern 4: Creating Tests
+
+```
+
+Read the following files:
+
+- app/Services/{ServiceName}.php
+
+- app/Models/{ModelName}.php
+
+- context-engine/tasks/E0X_Name/F0X_Feature/README.md
+
+
+Create Pest v4 tests for {ServiceName}.
+
+
+Requirements:
+
+- Test file: tests/Feature/{ServiceName}Test.php
+
+- Use Pest v4 syntax (test() function, expect() assertions)
+
+- Test cases: {list specific scenarios}
+
+- Use factories for test data
+
+- Include edge cases and error scenarios
+
+- Follow AAA pattern (Arrange, Act, Assert)
+
+
+Output: Complete Pest test file
+
+```
+
+### Decision Matrix: Delegate or Handle?
+
+| Task Type | Delegate to Sub-Agent? | Reason |
+
+|-----------|----------------------|---------|
+
+| Creating migrations | ✅ Yes | Well-defined schema, boilerplate code |
+
+| Creating models | ✅ Yes | Clear relationships, standard patterns |
+
+| Creating service classes | ✅ Yes (with detailed specs) | Business logic can be fully specified |
+
+| Creating Filament resources | ⚠️ Maybe | Requires UI decisions, but can delegate if specs are complete |
+
+| Creating Livewire components | ⚠️ Maybe | UI requires judgment, but can delegate with detailed mockups |
+
+| Creating tests | ✅ Yes | Clear requirements from implementation |
+
+| Architectural decisions | ❌ No | Requires deep context and judgment |
+
+| Debugging complex issues | ❌ No | Requires iteration and context |
+
+| Refactoring across files | ❌ No | Requires understanding of dependencies |
+
+| Reading documentation | ❌ No | Primary agent has better context retention |
+
+| Code review | ❌ No | Requires judgment and project knowledge |
+
+| Integration tasks | ❌ No | Requires understanding of how pieces fit |
+
+### Best Practices
+
+1. **Always Include File Paths**: Sub-agents need exact paths to read context
+2. **Be Explicit About Conventions**: Specify Laravel 12, Filament v4, Pest v4 syntax
+3. **Reference Examples**: Point to existing files that follow the pattern
+4. **Define Output Format**: Specify exactly what format you expect
+5. **Include All Context**: Don't assume sub-agent knows anything about the project
+6. **Test Sub-Agent Output**: Always review and test before integrating
+7. **Iterate if Needed**: Spawn new tasks with corrections rather than manual fixes
+8. **Track Job IDs**: Keep a list of spawned jobs for later review
+
+### Example: Full Feature Implementation
+
+**Feature: E02/F01 Profile CRUD**
+
+**Primary Agent Planning:**
+
+```
+
+1. Read context-engine/epics/E02_User_Profile_Management/epic-overview.md
+
+2. Read context-engine/tasks/E02_User_Profile_Management/F01_Profile_CRUD/README.md
+
+3. Identify 7 tasks (T01-T07)
+
+4. Determine delegation strategy
+
+```
+
+**Delegation Strategy:**
+
+- T01 (Migration): Delegate to sub-agent
+- T02 (Model): Delegate to sub-agent
+- T03 (Service): Delegate to sub-agent
+- T04 (Filament Resource): Handle myself (UI decisions)
+- T05 (Factory): Delegate to sub-agent
+- T06 (Tests): Delegate to sub-agent
+- T07 (Integration): Handle myself
+
+**Execution:**
+
+```bash
+
+# Spawn parallel tasks
+
+JOB1=$(python3 spawn_sub_agent.py gemini "Create UserProfile migration...")
+
+JOB2=$(python3 spawn_sub_agent.py gemini "Create UserProfile model...")
+
+JOB3=$(python3 spawn_sub_agent.py gemini "Create UserProfileService...")
+
+JOB4=$(python3 spawn_sub_agent.py gemini "Create UserProfileFactory...")
+
+
+# Primary agent works on Filament resource while sub-agents execute
+
+
+# After 30-60 seconds, review outputs
+
+cat subagent_runs/$JOB1/report.md  # Review migration
+
+cat subagent_runs/$JOB2/report.md  # Review model
+
+# ... integrate code, run tests, iterate if needed
+
+```
+
+### Troubleshooting
+
+**Sub-agent output is incomplete:**
+
+- Prompt may be too vague - add more specific requirements
+- May need to break task into smaller pieces
+- Check run.log for errors
+
+**Sub-agent doesn't follow conventions:**
+
+- Explicitly specify Laravel 12 / Filament v4 syntax
+- Reference example files that follow the pattern
+- Include links to documentation
+
+**Sub-agent can't find files:**
+
+- Verify file paths are correct and absolute
+- Ensure files exist before delegating
+- Use exact paths from project root
+
+**Output doesn't match expectations:**
+
+- Review prompt for ambiguity
+- Add more explicit output format specification
+- Include examples of expected output
+
+## When Lost
+
+1. Check `context-engine/global-context.md` for big picture
+2. Check epic `epic-overview.md` for module context
+3. Check task `README.md` for specific implementation steps
+4. Check `domain-contexts/` for cross-cutting patterns
+5. Check E01 implementation for working examples

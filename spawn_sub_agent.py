@@ -3,14 +3,14 @@
 Spawn Sub-Agent (minimal v1)
 
 Usage:
-    python scripts/spawn_sub_agent.py auggie "YOUR PROMPT HERE"
+    python scripts/spawn_sub_agent.py gemini "YOUR PROMPT HERE"
 
 Behavior:
 - Creates ./subagent_runs/{job_id}/ with:
   - prompt.txt, status.json, output.jsonl, report.md (on success), run.log
 - Spawns a detached worker subprocess that performs the agent run
 - Immediately prints the job_id to stdout and exits 0
-- Calls: auggie -p "PROMPT"
+- Calls: gemini -p "PROMPT"
 
 IMPORTANT: Sub-agents are STATELESS
 - Sub-agents have NO memory of previous conversations or context
@@ -124,24 +124,24 @@ def run_worker(job_id: str, agent: str, job_dir: Path) -> int:
 
     try:
         agent_lc = agent.lower()
-        if agent_lc == "auggie":
-            # Call auggie CLI
+        if agent_lc == "gemini":
+            # Call gemini CLI with gemini-2.5-flash model
             result = subprocess.run(
-                ["auggie", "-p", prompt],
+                ["gemini", "-p", prompt, "-m", "gemini-2.5-flash", "-y"],
                 capture_output=True,
                 text=True,
                 timeout=320,
                 cwd=str(ROOT),
             )
             if result.returncode != 0:
-                raise Exception(f"Auggie CLI failed: {result.stderr}")
+                raise Exception(f"gemini CLI failed: {result.stderr}")
 
             text = result.stdout.strip()
             report_path.write_text(text, encoding="utf-8")
             with open(output_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps({"event": "final", "report": "report.md"}) + "\n")
         else:
-            raise ValueError(f"Unsupported agent: {agent}. Only 'auggie' is supported.")
+            raise ValueError(f"Unsupported agent: {agent}. Only 'gemini' is supported.")
 
     except Exception as e:
         exit_code = 1
@@ -166,12 +166,12 @@ def run_worker(job_id: str, agent: str, job_dir: Path) -> int:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Spawn Sub-Agent (detached) - auggie only")
+    parser = argparse.ArgumentParser(description="Spawn Sub-Agent (detached) - gemini only")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--job-id", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--job-dir", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--agent", default=None, help=argparse.SUPPRESS)
-    parser.add_argument("agent_name", nargs="?", help="Agent name: auggie")
+    parser.add_argument("agent_name", nargs="?", help="Agent name: gemini")
     parser.add_argument("prompt", nargs=argparse.REMAINDER, help="Prompt string (last arg)")
     args = parser.parse_args()
 
@@ -184,7 +184,7 @@ def main():
 
     # Orchestrator/parent mode
     if not args.agent_name:
-        print("Error: Agent name is required (auggie)", file=sys.stderr)
+        print("Error: Agent name is required (gemini)", file=sys.stderr)
         sys.exit(2)
 
     prompt = " ".join(args.prompt).strip()

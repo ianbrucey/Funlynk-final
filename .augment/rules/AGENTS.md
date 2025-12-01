@@ -1,4 +1,10 @@
+---
+type: "always_apply"
+---
+
 # FunLynk Agent Navigation Guide
+
+note: don't create unnecessary summary docs
 
 ## Project Identity
 **FunLynk**: Laravel 12 web app for spontaneous, niche activity discovery. Users discover activities through ephemeral "Posts" (24-48h) that can evolve into structured "Events" based on engagement.
@@ -212,6 +218,443 @@ vendor/bin/pint --dirty  # Format code before committing
 5. **Posts vs Events** - Always respect the dual model architecture
 6. **E01 Foundation** - Always reference completed tables/models/resources
 7. **Test Everything** - Write Pest tests for all features
+
+## Multi-Agent Workflow Pattern
+
+### Overview
+FunLynk uses a **swarm intelligence** architecture where the primary agent (Claude/Augment) acts as architect/orchestrator, and sub-agents (Gemini via `spawn_sub_agent.py`) act as specialized workers executing well-defined tasks.
+
+**Benefits:**
+- Reduces primary agent context window usage
+- Preserves AI credits through efficient resource allocation
+- Enables parallel execution of independent tasks
+- Reduces cognitive load on primary agent
+- Allows specialized focus on discrete problems
+
+### Agent Roles
+
+#### Primary Agent (You - Claude/Augment)
+**Responsibilities:**
+- High-level planning and orchestration
+- Reading and understanding project documentation (context-engine/, AGENTS.md)
+- Breaking down complex features into discrete, self-contained tasks
+- Crafting detailed, context-rich prompts for sub-agents
+- Reviewing sub-agent outputs and integrating them into the codebase
+- Making final decisions on architecture and implementation approach
+- Handling tasks requiring deep context or cross-cutting concerns
+
+**When to Handle Tasks Yourself:**
+- Reading/analyzing documentation (you have better context retention)
+- Making architectural decisions
+- Tasks requiring knowledge of previous conversation history
+- Complex refactoring across multiple files
+- Tasks requiring interactive debugging or iteration
+- Final code integration and testing
+- Reviewing and approving sub-agent outputs
+
+#### Sub-Agent (Gemini via spawn_sub_agent.py)
+**Responsibilities:**
+- Executing specific, well-defined tasks with complete instructions
+- Generating code, migrations, services, tests based on detailed specs
+- Analyzing specific files and producing structured reports
+- Creating documentation from templates
+- Performing repetitive or parallelizable work
+
+**When to Delegate to Sub-Agents:**
+- Creating boilerplate code (migrations, models, factories)
+- Generating service classes from detailed specifications
+- Writing tests based on clear requirements
+- Analyzing specific files for patterns or issues
+- Creating documentation from structured data
+- Tasks that can be fully specified without conversation history
+
+**Critical Constraint:**
+Sub-agents are **STATELESS** - they have NO memory of previous conversations or context. Every prompt must be completely self-contained.
+
+**The Golden Rule of Sub-Agent Prompts:**
+> A sub-agent prompt should be readable by a developer who just joined the project and has never seen the codebase before. If they couldn't complete the task with just the prompt, it's not detailed enough.
+
+### Crafting Effective Sub-Agent Prompts
+
+#### The Three Types of Context
+
+Every sub-agent prompt must include these three context layers:
+
+**A. Project Identity Context (Always Include)**
+```
+Project: FunLynk - Laravel 12 activity discovery platform
+Tech Stack: Laravel 12, Filament v4, Livewire v3, PostgreSQL + PostGIS, DaisyUI, Pest v4
+Core Feature: Posts (ephemeral, 24-48h) convert to Events (persistent) based on engagement
+```
+
+**B. Domain Context (When Relevant)**
+Point to specific files in `context-engine/domain-contexts/`:
+- UI work? → Reference `ui-design-standards.md`
+- Database work? → Reference `database-context.md`
+- Auth work? → Reference `auth-context.md`
+- Post-to-Event logic? → Reference epic overviews
+
+**C. Task-Specific Context**
+- **Exact file paths** to read (absolute paths)
+- **Specific requirements** and constraints
+- **Expected output format** and location
+- **Reference implementations** to follow
+
+#### Template Structure
+```
+[CONTEXT SECTION]
+Read the following files for context:
+- {exact file path 1}
+- {exact file path 2}
+- {documentation path}
+
+[TASK DESCRIPTION]
+{Clear, specific task description}
+
+[REQUIREMENTS]
+- Requirement 1 (with specific details)
+- Requirement 2 (with specific details)
+- Follow {specific pattern/convention}
+
+[OUTPUT SPECIFICATION]
+Output format: {exact format description}
+File location: {where to save if applicable}
+Include: {specific elements to include}
+```
+
+#### Good Prompt Example
+```
+Read the following files for context:
+- context-engine/epics/E02_User_Profile_Management/epic-overview.md
+- context-engine/tasks/E02_User_Profile_Management/F01_Profile_CRUD/README.md
+- app/Models/User.php
+- context-engine/domain-contexts/service-architecture.md
+
+Create a UserProfileService class that implements profile CRUD operations following Laravel 12 conventions.
+
+Requirements:
+- Class location: app/Services/UserProfileService.php
+- Namespace: App\Services
+- Methods to implement:
+  * createProfile(User $user, array $data): UserProfile
+  * updateProfile(UserProfile $profile, array $data): UserProfile
+  * getProfile(int $userId): ?UserProfile
+  * deleteProfile(int $profileId): bool
+- Use the User model from app/Models/User.php
+- Follow the service architecture pattern from service-architecture.md
+- Include proper type hints and return types (Laravel 12 style)
+- Add PHPDoc blocks for each method
+- Handle validation using Laravel's validator
+- Throw appropriate exceptions for error cases
+
+Output format: Complete PHP class code with proper formatting
+Include: namespace, use statements, class definition, all methods with implementation
+```
+
+#### Bad Prompt Example (DO NOT USE)
+```
+Create the user profile service we discussed earlier.
+```
+**Why it's bad:** No context files, no specific requirements, references "earlier" conversation that sub-agent can't access.
+
+### Workflow Process
+
+#### Step 1: Planning Phase (Primary Agent)
+1. Read relevant documentation (epic-overview.md, task README.md)
+2. Understand the full scope of the feature
+3. Identify discrete, independent tasks suitable for delegation
+4. Determine which tasks you'll handle vs. delegate
+
+#### Step 2: Task Decomposition (Primary Agent)
+Break down complex features into sub-agent-friendly tasks:
+
+**Example: E02/F01 Profile CRUD Feature**
+- Task 1 (Sub-agent): Create UserProfile migration
+- Task 2 (Sub-agent): Create UserProfile model with relationships
+- Task 3 (Sub-agent): Create UserProfileService class
+- Task 4 (Sub-agent): Create UserProfileFactory for testing
+- Task 5 (Primary): Create Filament resource (requires UI decisions)
+- Task 6 (Sub-agent): Create Pest tests for service class
+- Task 7 (Primary): Integration testing and review
+
+#### Step 3: Prompt Crafting (Primary Agent)
+For each delegated task:
+1. Identify all files the sub-agent needs to read
+2. Specify exact requirements and constraints
+3. Define output format and location
+4. Include references to FunLynk documentation
+5. Add Laravel 12 / Filament v4 specific conventions
+
+#### Step 4: Execution (Sub-Agent)
+```bash
+python3 spawn_sub_agent.py gemini "YOUR DETAILED PROMPT HERE"
+```
+
+#### Step 4.5: Monitoring Sub-Agent Jobs
+
+**Check Job Status:**
+```bash
+cat subagent_runs/$JOB_ID/status.json
+```
+
+**Example Output:**
+```json
+{
+  "job_id": "20251201_113000_abc123",
+  "agent": "gemini",
+  "started_at": "2025-12-01T16:30:00Z",
+  "status": "completed",
+  "exit_code": 0,
+  "duration_ms": 15420,
+  "finished_at": "2025-12-01T16:30:15Z"
+}
+```
+
+**View Output:**
+```bash
+cat subagent_runs/$JOB_ID/report.md
+```
+
+**Check for Errors:**
+```bash
+cat subagent_runs/$JOB_ID/run.log
+```
+
+**Quick Status Check:**
+```bash
+# Check if job is complete
+if [ "$(jq -r '.status' subagent_runs/$JOB_ID/status.json)" = "completed" ]; then
+  echo "Job complete!"
+  cat subagent_runs/$JOB_ID/report.md
+else
+  echo "Job still running..."
+fi
+```
+
+The script returns a job_id immediately. Output will be in:
+```
+subagent_runs/{job_id}/
+├── prompt.txt          # Your prompt
+├── status.json         # Job status and timing
+├── output.jsonl        # Event log
+├── report.md           # Sub-agent's output
+└── run.log            # Execution logs
+```
+
+#### Step 5: Review & Integration (Primary Agent)
+1. Wait for job completion (check status.json)
+2. Read report.md to review sub-agent output
+3. Validate output meets requirements
+4. Integrate code into codebase (copy to appropriate files)
+5. Run tests and fix any issues
+6. Iterate if needed (spawn new sub-agent task with corrections)
+
+### Parallel Execution Pattern
+
+For independent tasks, spawn multiple sub-agents simultaneously:
+
+```bash
+# Spawn 3 parallel tasks
+JOB1=$(python3 spawn_sub_agent.py gemini "Create UserProfile migration...")
+JOB2=$(python3 spawn_sub_agent.py gemini "Create UserProfile model...")
+JOB3=$(python3 spawn_sub_agent.py gemini "Create UserProfileFactory...")
+
+echo "Spawned jobs: $JOB1, $JOB2, $JOB3"
+
+# Primary agent continues with other work while sub-agents execute
+# Check results later: cat subagent_runs/$JOB1/report.md
+```
+
+### FunLynk-Specific Prompt Patterns
+
+#### Pattern 1: Creating Migrations
+```
+Read the following files:
+- context-engine/epics/E0X_Name/database-schema.md
+- context-engine/domain-contexts/database-context.md
+- database/migrations/2024_01_01_000001_create_users_table.php (example)
+
+Create a Laravel 12 migration for the {table_name} table.
+
+Requirements:
+- Migration name: create_{table_name}_table
+- Columns: {list all columns with types}
+- Indexes: {specify indexes}
+- Foreign keys: {specify relationships}
+- Use PostGIS geography type for location columns
+- Follow the pattern from the example migration
+
+Output: Complete migration file content with up() and down() methods
+```
+
+#### Pattern 2: Creating Service Classes
+```
+Read the following files:
+- context-engine/epics/E0X_Name/epic-overview.md
+- context-engine/tasks/E0X_Name/F0X_Feature/README.md
+- context-engine/domain-contexts/service-architecture.md
+- app/Models/{RelatedModel}.php
+
+Create a {ServiceName} class in app/Services/.
+
+Requirements:
+- Implement business logic for {specific feature}
+- Methods: {list methods with signatures}
+- Use dependency injection for repositories/models
+- Follow Laravel 12 conventions
+- Include proper error handling
+- Add PHPDoc blocks
+
+Output: Complete PHP service class
+```
+
+#### Pattern 3: Creating Livewire Components
+```
+Read the following files:
+- context-engine/domain-contexts/ui-design-standards.md
+- resources/views/welcome.blade.php (galaxy theme example)
+- resources/views/livewire/auth/login.blade.php (form example)
+- context-engine/tasks/E0X_Name/F0X_Feature/README.md
+
+Create a Livewire v3 component for {feature description}.
+
+Requirements:
+- Component name: {ComponentName}
+- Location: app/Livewire/{ComponentName}.php
+- View: resources/views/livewire/{component-name}.blade.php
+- Must use galaxy theme with glass morphism
+- Include: {specific UI elements}
+- Follow DaisyUI classes for components
+- Use gradient buttons (pink-500 to purple-500)
+- Forms must have cyan focus glow
+
+Output: Two files - PHP component class and Blade view
+```
+
+#### Pattern 4: Creating Tests
+```
+Read the following files:
+- app/Services/{ServiceName}.php
+- app/Models/{ModelName}.php
+- context-engine/tasks/E0X_Name/F0X_Feature/README.md
+
+Create Pest v4 tests for {ServiceName}.
+
+Requirements:
+- Test file: tests/Feature/{ServiceName}Test.php
+- Use Pest v4 syntax (test() function, expect() assertions)
+- Test cases: {list specific scenarios}
+- Use factories for test data
+- Include edge cases and error scenarios
+- Follow AAA pattern (Arrange, Act, Assert)
+
+Output: Complete Pest test file
+```
+
+### Decision Matrix: Delegate or Handle?
+
+| Task Type | Delegate to Sub-Agent? | Reason |
+|-----------|----------------------|---------|
+| Creating migrations | ✅ Yes | Well-defined schema, boilerplate code |
+| Creating models | ✅ Yes | Clear relationships, standard patterns |
+| Creating service classes | ✅ Yes (with detailed specs) | Business logic can be fully specified |
+| Creating Filament resources | ⚠️ Maybe | Requires UI decisions, but can delegate if specs are complete |
+| Creating Livewire components | ⚠️ Maybe | UI requires judgment, but can delegate with detailed mockups |
+| Creating tests | ✅ Yes | Clear requirements from implementation |
+| Architectural decisions | ❌ No | Requires deep context and judgment |
+| Debugging complex issues | ❌ No | Requires iteration and context |
+| Refactoring across files | ❌ No | Requires understanding of dependencies |
+| Reading documentation | ❌ No | Primary agent has better context retention |
+| Code review | ❌ No | Requires judgment and project knowledge |
+| Integration tasks | ❌ No | Requires understanding of how pieces fit |
+
+### Cost Optimization Strategy
+
+#### When to Use Sub-Agents (Gemini CLI Free Tier):
+✅ **Code Generation**: Migrations, models, services, controllers, tests, factories
+✅ **Code Analysis**: System architecture reports, dependency analysis
+✅ **Documentation**: API docs, feature docs, code comments
+✅ **Batch Operations**: Multiple similar tasks, repetitive transformations
+✅ **Isolated Tasks**: Well-defined scope, clear inputs/outputs
+
+#### When to Use Primary Agent (Paid Tier):
+✅ **Strategic Planning**: Architecture decisions, feature design
+✅ **Complex Debugging**: Multi-system issues, requires conversation history
+✅ **Multi-Step Workflows**: Tasks requiring state, conditional logic
+✅ **User Interaction**: Clarifying requirements, presenting options
+✅ **Integration & Orchestration**: Combining outputs, resolving conflicts
+
+**Optimization Tip**: Use sub-agents for 70-80% of implementation work (code generation, tests, docs), reserve primary agent for 20-30% strategic work (planning, integration, debugging).
+
+### Best Practices
+
+1. **Always Include File Paths**: Sub-agents need exact paths to read context
+2. **Be Explicit About Conventions**: Specify Laravel 12, Filament v4, Pest v4 syntax
+3. **Reference Examples**: Point to existing files that follow the pattern
+4. **Define Output Format**: Specify exactly what format you expect
+5. **Include All Context**: Don't assume sub-agent knows anything about the project
+6. **Test Sub-Agent Output**: Always review and test before integrating
+7. **Iterate if Needed**: Spawn new tasks with corrections rather than manual fixes
+8. **Track Job IDs**: Keep a list of spawned jobs for later review
+
+### Example: Full Feature Implementation
+
+**Feature: E02/F01 Profile CRUD**
+
+**Primary Agent Planning:**
+```
+1. Read context-engine/epics/E02_User_Profile_Management/epic-overview.md
+2. Read context-engine/tasks/E02_User_Profile_Management/F01_Profile_CRUD/README.md
+3. Identify 7 tasks (T01-T07)
+4. Determine delegation strategy
+```
+
+**Delegation Strategy:**
+- T01 (Migration): Delegate to sub-agent
+- T02 (Model): Delegate to sub-agent
+- T03 (Service): Delegate to sub-agent
+- T04 (Filament Resource): Handle myself (UI decisions)
+- T05 (Factory): Delegate to sub-agent
+- T06 (Tests): Delegate to sub-agent
+- T07 (Integration): Handle myself
+
+**Execution:**
+```bash
+# Spawn parallel tasks
+JOB1=$(python3 spawn_sub_agent.py gemini "Create UserProfile migration...")
+JOB2=$(python3 spawn_sub_agent.py gemini "Create UserProfile model...")
+JOB3=$(python3 spawn_sub_agent.py gemini "Create UserProfileService...")
+JOB4=$(python3 spawn_sub_agent.py gemini "Create UserProfileFactory...")
+
+# Primary agent works on Filament resource while sub-agents execute
+
+# After 30-60 seconds, review outputs
+cat subagent_runs/$JOB1/report.md  # Review migration
+cat subagent_runs/$JOB2/report.md  # Review model
+# ... integrate code, run tests, iterate if needed
+```
+
+### Troubleshooting
+
+**Sub-agent output is incomplete:**
+- Prompt may be too vague - add more specific requirements
+- May need to break task into smaller pieces
+- Check run.log for errors
+
+**Sub-agent doesn't follow conventions:**
+- Explicitly specify Laravel 12 / Filament v4 syntax
+- Reference example files that follow the pattern
+- Include links to documentation
+
+**Sub-agent can't find files:**
+- Verify file paths are correct and absolute
+- Ensure files exist before delegating
+- Use exact paths from project root
+
+**Output doesn't match expectations:**
+- Review prompt for ambiguity
+- Add more explicit output format specification
+- Include examples of expected output
 
 ## When Lost
 1. Check `context-engine/global-context.md` for big picture

@@ -33,4 +33,9 @@ class Tag extends Model
     {
         return $this->belongsToMany(Activity::class, 'activity_tag');
     }
+
+    public function groups(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'group_tag');
+    }
 }

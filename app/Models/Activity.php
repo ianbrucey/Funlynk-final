@@ -7,15 +7,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Laravel\Scout\Searchable;
 use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
 class Activity extends Model
 {
     use HasFactory;
-    use HasUuids;
     use HasSpatial;
+    use HasUuids;
     use Searchable;
 
     public $incrementing = false;
@@ -51,10 +50,14 @@ class Activity extends Model
         return $this->morphOne(Conversation::class, 'conversationable');
     }
 
-
     public function postOrigin(): BelongsTo
     {
         return $this->belongsTo(Post::class, 'originated_from_post_id');
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
     }
 
     public function tags()
@@ -107,7 +110,7 @@ class Activity extends Model
             'start_time' => $this->start_time?->timestamp,
             'created_at' => $this->created_at->timestamp,
         ];
-        
+
         // Add _geo field for Meilisearch native geo filtering
         if ($this->latitude && $this->longitude) {
             $array['_geo'] = [
@@ -115,7 +118,7 @@ class Activity extends Model
                 'lng' => $this->longitude,
             ];
         }
-        
+
         return $array;
     }
 

@@ -200,6 +200,28 @@ class User extends Authenticatable implements FilamentHasName
         return $this->hasOne(StripeAccount::class);
     }
 
+    public function groups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'group_members')
+            ->using(GroupMember::class)
+            ->withTimestamps();
+    }
+
+    public function groupMemberships(): HasMany
+    {
+        return $this->hasMany(GroupMember::class);
+    }
+
+    public function createdGroups(): HasMany
+    {
+        return $this->hasMany(Group::class, 'created_by');
+    }
+
+    public function groupJoinRequests(): HasMany
+    {
+        return $this->hasMany(GroupJoinRequest::class);
+    }
+
     public function getFilamentName(): string
     {
         return $this->display_name ?: ($this->username ?: (string) $this->email);

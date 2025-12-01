@@ -29,9 +29,15 @@ class Conversation extends Model
         return $this->morphTo();
     }
 
+    public function group(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Group::class);
+    }
+
     public function participants(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'conversation_participants')
+            ->using(ConversationParticipant::class)
             ->withPivot(['id', 'role', 'is_muted', 'last_read_at', 'request_status'])
             ->withTimestamps();
     }

@@ -96,6 +96,6 @@ class MessagesPage extends Component
     public function render()
     {
         return view('livewire.direct-messages.messages-page')
-            ->layout('components.galaxy-layout', ['title' => 'Messages']);
+            ->layout('layouts.app', ['title' => 'Messages']);
     }
 }

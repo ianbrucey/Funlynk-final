@@ -1,0 +1,53 @@
+Read the following files for context:
+- tests/Feature/Feature/GroupContentServiceTest.php
+- database/migrations/*create_posts_table*.php (to understand expires_at is NOT NULL)
+- app/Models/Post.php
+- app/Models/Activity.php
+
+Fix the test data in GroupContentServiceTest to resolve these issues:
+
+**Issue 1: Posts require expires_at field**
+The posts table has a NOT NULL constraint on expires_at. All test data creating posts must include this field.
+
+**Issue 2: Activity location_coordinates must be Point object**
+The test is passing 'POINT(10 20)' as a string, but the model expects a MatanYadaev\\EloquentSpatial\\Objects\\Point object.
+
+**Fixes needed:**
+
+1. In 'can create a group post' test (line 32-36), add:
+```php
+'expires_at' => now()->addHours(24),
+```
+
+2. In 'can create a group event' test (line 56), change:
+```php
+'location_coordinates' => 'POINT(10 20)',
+```
+To:
+```php
+'location_coordinates' => new \\MatanYadaev\\EloquentSpatial\\Objects\\Point(20, 10),
+```
+
+3. In 'can get group timeline' test (line 74-77), add:
+```php
+'expires_at' => now()->addHours(24),
+```
+
+4. In 'can get group posts' test (around line 95-105), add expires_at to both post creations
+
+5. In 'can get group events' test (around line 110-125), fix location_coordinates to use Point objects for both events
+
+6. Add this import at the top of the file:
+```php
+use MatanYadaev\\EloquentSpatial\\Objects\\Point;
+```
+
+**Requirements:**
+- Fix all 5 test methods
+- Add Point import
+- Use now()->addHours(24) for expires_at
+- Use new Point(longitude, latitude) for coordinates (note: longitude first, then latitude)
+- Don't change anything else
+
+**Output format:**
+Provide the complete corrected test file content

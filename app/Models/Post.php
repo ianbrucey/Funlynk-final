@@ -25,8 +25,8 @@ class Post extends Model
 
     // Conversion thresholds (test values - change to 5 and 10 for production)
     public const CONVERSION_SOFT_THRESHOLD = 1;    // Soft prompt at 2 reactions (production: 5)
+
     public const CONVERSION_STRONG_THRESHOLD = 2;  // Strong prompt/auto-convert at 1 reaction (production: 10)
-    
 
     protected function casts(): array
     {
@@ -120,6 +120,11 @@ class Post extends Model
     public function convertedActivity(): BelongsTo
     {
         return $this->belongsTo(Activity::class, 'converted_to_activity_id');
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class);
     }
 
     public function invitations(): HasMany

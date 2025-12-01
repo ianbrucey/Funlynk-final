@@ -12,7 +12,20 @@ class NotificationBell extends Component
 
     public Collection $recentNotifications;
 
-    protected $listeners = ['notificationReceived' => 'loadNotifications'];
+    public function getListeners()
+    {
+        $userId = auth()->id();
+
+        return [
+            "echo:user.{$userId},.notification" => 'onNotificationReceived',
+            'notificationReceived' => 'loadNotifications',
+        ];
+    }
+
+    public function onNotificationReceived($event): void
+    {
+        $this->loadNotifications();
+    }
 
     public function mount(): void
     {

@@ -4,8 +4,14 @@ use App\Http\Controllers\Api\UsernameController;
 use App\Http\Controllers\Auth\SocialLoginController;
 use App\Livewire\Auth\Login as LoginForm;
 use App\Livewire\Auth\Register as RegisterForm;
+use App\Livewire\Dashboard\UserDashboard;
+use App\Livewire\Groups\CreateGroup;
+use App\Livewire\Groups\GroupSettings;
+use App\Livewire\Groups\GroupShow;
+use App\Livewire\Groups\GroupsIndex;
 use App\Livewire\Profile\EditProfile;
 use App\Livewire\Profile\ShowProfile;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -79,7 +85,25 @@ Route::middleware('auth')->group(function () {
         Route::get('/host/stripe-onboarding', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding');
         Route::get('/host/stripe-return', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding.return');
         Route::get('/host/stripe-refresh', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding.refresh');
+
+        // Group Routes
+        Route::get('/groups', GroupsIndex::class)->name('groups.index');
+        Route::get('/groups/create', CreateGroup::class)->name('groups.create');
+        Route::get('/groups/{group:slug}', GroupShow::class)->name('groups.show');
+        Route::get('/groups/{group:slug}/members', \App\Livewire\Groups\GroupMembers::class)->name('groups.members');
+        Route::get('/groups/{group:slug}/timeline', \App\Livewire\Groups\GroupTimeline::class)->name('groups.timeline');
+        Route::get('/groups/{group:slug}/settings', GroupSettings::class)->name('groups.settings');
+        Route::get('/dashboard', UserDashboard::class)->name('dashboard');
     });
+
+    // Profile view / redirect logic
+    Route::get('/u/{user:username}', function (User $user) {
+        if (auth()->check() && auth()->id() === $user->id) {
+            return redirect()->route('dashboard');
+        }
+
+        return app(ShowProfile::class, ['username' => $user->username]);
+    })->name('profile.view');
 
     // Profile edit route (outside onboarding middleware - accessible to incomplete users)
     Route::get('/profile/edit', EditProfile::class)->name('profile.edit');

@@ -212,5 +212,7 @@ class DatabaseSeeder extends Seeder
                 'created_at' => now(),
             ]);
         }
+
+        $this->call(GroupSeeder::class);
     }
 }

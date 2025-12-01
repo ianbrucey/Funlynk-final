@@ -1,0 +1,1 @@
+Read the file context-engine/global-context.md and provide a concise summary of the FunLynk project, its 7 epics, and current implementation status.
