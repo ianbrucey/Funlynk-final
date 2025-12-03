@@ -1,0 +1,9 @@
+{
+  "job_id": "20251201_112636_90d0ea",
+  "agent": "gemini",
+  "started_at": "2025-12-01T16:26:36.364851Z",
+  "status": "completed",
+  "exit_code": 0,
+  "duration_ms": 17522,
+  "finished_at": "2025-12-01T16:26:54.008866Z"
+}

@@ -1,0 +1,46 @@
+Read the following files for context:
+- app/Livewire/Groups/GroupsIndex.php
+- resources/views/livewire/groups/groups-index.blade.php
+
+**Task**: Analyze the case-sensitive search bug in the GroupsIndex component.
+
+**Bug Description**:
+The search bar on the /groups page is case-sensitive. Searching for 'hiking' does not match groups named 'Hiking', 'HIKING', or 'HiKiNg'.
+
+**Expected Behavior**:
+Search should be case-insensitive so users can find groups regardless of how they type the search term.
+
+**Analysis Requirements**:
+
+1. **Identify the root cause**:
+   - Examine the search query logic in GroupsIndex.php
+   - Check how the search filter is applied to the database query
+   - Determine why it's case-sensitive
+
+2. **Examine the current implementation**:
+   - Find the exact line(s) where search filtering occurs
+   - Identify the SQL query being generated
+   - Check if PostgreSQL case-sensitive operators are being used
+
+3. **Propose a fix**:
+   - Provide the exact code change needed
+   - Show before/after code snippets with line numbers
+   - Explain why this fix will work
+   - Consider PostgreSQL-specific solutions (ILIKE vs LIKE)
+
+4. **Identify potential side effects**:
+   - Will this affect performance?
+   - Are there any edge cases to consider?
+   - Should we add database indexes?
+
+**Output Requirements**:
+Write your analysis to: bug-analysis/search-case-sensitivity.md
+
+Include:
+- Root cause explanation
+- Current code (with line numbers)
+- Proposed fix (with code snippets)
+- Side effects and considerations
+- Testing recommendations
+
+**Format**: Use markdown with clear sections and code blocks.

@@ -1,0 +1,30 @@
+Read the following files for context:
+- context-engine/domain-contexts/ui-design-standards.md
+- context-engine/tasks/E05_Social_Interaction/F03_Groups/README.md
+- resources/views/livewire/auth/login.blade.php
+- app/Models/Group.php
+- app/Services/GroupService.php
+
+Create a Livewire v3 component for creating a new group.
+
+Requirements:
+- Component: app/Livewire/Groups/CreateGroup.php
+- View: resources/views/livewire/groups/create-group.blade.php
+- Form Fields:
+  * Name (required, max 100)
+  * Description (required, max 500)
+  * Privacy (public/private, required)
+  * Tags (multi-select, optional)
+  * Location (with geocoding, optional)
+- UI:
+  * Use galaxy theme with glass morphism
+  * Glass card for form
+  * Gradient submit button
+  * Cyan focus glow on inputs
+  * DaisyUI form components
+  * Real-time validation
+- Properties: $name, $description, $privacy, $selectedTags, $location
+- Methods: createGroup(), validateForm(), addTag(), removeTag()
+- Validation: Use Laravel validator with custom messages
+
+Output: Complete PHP component and Blade view with validation

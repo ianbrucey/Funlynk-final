@@ -23,7 +23,7 @@ class GroupMember extends Pivot
      *
      * @var bool
      */
-    public $incrementing = true;
+    public $incrementing = false;
 
     protected $fillable = [
         'group_id',

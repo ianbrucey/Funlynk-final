@@ -1,0 +1,41 @@
+You are rebuilding F02 Authentication System task documentation for a Laravel 12 + Filament v4 project.
+
+CONTEXT:
+- Project: FunLynk - spontaneous social discovery platform
+- Stack: Laravel 12, Filament v4, Livewire v3, Pest v4
+- Architecture: Posts vs Events dual model
+
+INPUT FILES TO READ:
+1. context-engine/epics/E01_Core_Infrastructure/epic-overview.md
+2. context-engine/tasks/E01_Core_Infrastructure/F02_Authentication_System/README.md
+3. database/migrations/0001_01_01_000000_create_users_table.php
+
+TASK:
+Rewrite the F02 Authentication System feature documentation to reflect Laravel approach instead of React Native/Supabase Auth approach.
+
+KEY CHANGES NEEDED:
+1. Replace Supabase Auth with Laravel Breeze/Fortify + Filament Auth
+2. Remove React Native component references
+3. Focus on Laravel authentication (middleware, guards, policies)
+4. Update social auth to use Laravel Socialite
+5. Reference Filament login/register pages instead of React Native screens
+6. Update session management for Laravel
+7. Update password management to use Laravel's built-in features
+8. Update time estimates for Laravel approach
+
+STRUCTURE TO MAINTAIN:
+- Keep the README.md format
+- Keep the 6 tasks (T01-T06) structure
+- Update task descriptions for Laravel
+- Keep success criteria (update for Laravel context)
+- Keep dependencies section
+
+OUTPUT:
+Save the updated documentation to: context-engine/tasks/E01_Core_Infrastructure/F02_Authentication_System/README.md
+
+VALIDATION:
+- Ensure all references to Supabase Auth are removed
+- Ensure all references to React Native are removed
+- Ensure Laravel authentication best practices are followed
+- Ensure Filament integration is mentioned
+- Ensure file is valid Markdown

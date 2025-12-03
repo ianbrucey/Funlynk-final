@@ -1,0 +1,40 @@
+You are rebuilding F04 Notification Infrastructure task documentation for a Laravel 12 + Filament v4 project.
+
+CONTEXT:
+- Project: FunLynk - spontaneous social discovery platform
+- Stack: Laravel 12, Filament v4, Laravel Notifications, Laravel Queue
+- Architecture: Posts vs Events dual model (different notification types for posts vs events)
+
+INPUT FILES TO READ:
+1. context-engine/epics/E01_Core_Infrastructure/epic-overview.md
+2. context-engine/tasks/E01_Core_Infrastructure/F04_Notification_Infrastructure/README.md
+
+TASK:
+Rewrite the F04 Notification Infrastructure feature documentation to reflect Laravel approach instead of React Native/Supabase approach.
+
+KEY CHANGES NEEDED:
+1. Replace Supabase Realtime with Laravel Broadcasting (Pusher/Soketi)
+2. Remove React Native push notification references
+3. Focus on Laravel Notifications (Mail, Database, Broadcast channels)
+4. Add Laravel Queue for async notification delivery
+5. Reference both Posts and Events notification types
+6. Update email notifications to use Laravel Mailable
+7. Add notification preference management via Filament
+8. Update time estimates for Laravel approach
+
+STRUCTURE TO MAINTAIN:
+- Keep the README.md format
+- Keep the 6 tasks (T01-T06) structure
+- Update task descriptions for Laravel
+- Keep success criteria (update for Laravel context)
+- Keep dependencies section
+
+OUTPUT:
+Save the updated documentation to: context-engine/tasks/E01_Core_Infrastructure/F04_Notification_Infrastructure/README.md
+
+VALIDATION:
+- Ensure all Supabase Realtime references are removed
+- Ensure all React Native references are removed
+- Ensure Laravel Notifications best practices are followed
+- Ensure Posts vs Events notification types are mentioned
+- Ensure file is valid Markdown

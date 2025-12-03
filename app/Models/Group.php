@@ -75,8 +75,8 @@ class Group extends Model
         return $this->belongsToMany(Tag::class, 'group_tag')->withTimestamps();
     }
 
-    public function admins(): \Illuminate\Support\Collection
+    public function admins(): BelongsToMany
     {
-        return $this->members()->where('role', 'admin')->get();
+        return $this->members()->wherePivot('role', 'admin');
     }
 }

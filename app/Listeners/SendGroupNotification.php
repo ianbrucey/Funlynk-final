@@ -34,6 +34,7 @@ class SendGroupNotification implements ShouldQueue
         $creator = $group->creator;
 
         $creator->notify(new GroupNotification(
+            'Group Created',
             'You created the group '.$group->name,
             'group-created',
             $group->id
@@ -50,6 +51,7 @@ class SendGroupNotification implements ShouldQueue
 
         // Notify the joined user
         $user->notify(new GroupNotification(
+            'Joined Group',
             'You joined the group '.$group->name,
             'group-member-joined',
             $group->id
@@ -59,6 +61,7 @@ class SendGroupNotification implements ShouldQueue
         $group->admins->each(function ($admin) use ($group, $user) {
             if ($admin->id !== $user->id) {
                 $admin->notify(new GroupNotification(
+                    'New Member',
                     $user->name.' joined your group '.$group->name,
                     'group-member-joined',
                     $group->id
@@ -77,6 +80,7 @@ class SendGroupNotification implements ShouldQueue
 
         // Notify the removed user
         $user->notify(new GroupNotification(
+            'Removed from Group',
             'You were removed from the group '.$group->name,
             'group-member-removed',
             $group->id
@@ -85,6 +89,7 @@ class SendGroupNotification implements ShouldQueue
         // Notify group admins
         $group->admins->each(function ($admin) use ($group, $user) {
             $admin->notify(new GroupNotification(
+                'Member Removed',
                 $user->name.' was removed from your group '.$group->name,
                 'group-member-removed',
                 $group->id
@@ -105,6 +110,7 @@ class SendGroupNotification implements ShouldQueue
         $group->members->each(function ($member) use ($group, $post, $creator) {
             if ($member->user_id !== $creator->id) {
                 $member->user->notify(new GroupNotification(
+                    'New Post',
                     $creator->name.' created a new post in '.$group->name.': '.$post->title,
                     'group-post-created',
                     $group->id,
@@ -127,6 +133,7 @@ class SendGroupNotification implements ShouldQueue
         $group->members->each(function ($member) use ($group, $activity, $creator) {
             if ($member->user_id !== $creator->id) {
                 $member->user->notify(new GroupNotification(
+                    'New Event',
                     $creator->name.' created a new event in '.$group->name.': '.$activity->title,
                     'group-event-created',
                     $group->id,
@@ -148,6 +155,7 @@ class SendGroupNotification implements ShouldQueue
         // Notify group admins
         $group->admins->each(function ($admin) use ($group, $user, $joinRequest) {
             $admin->notify(new GroupNotification(
+                'Join Request',
                 $user->name.' requested to join your group '.$group->name,
                 'group-join-request-received',
                 $group->id,
@@ -167,6 +175,7 @@ class SendGroupNotification implements ShouldQueue
 
         // Notify the user whose request was approved
         $user->notify(new GroupNotification(
+            'Request Approved',
             'Your request to join '.$group->name.' was approved by '.$admin->name,
             'group-join-request-approved',
             $group->id
@@ -176,6 +185,7 @@ class SendGroupNotification implements ShouldQueue
         $group->admins->each(function ($groupAdmin) use ($group, $user, $admin) {
             if ($groupAdmin->id !== $admin->id) {
                 $groupAdmin->notify(new GroupNotification(
+                    'Request Approved',
                     $user->name.'\'s join request for '.$group->name.' was approved by '.$admin->name,
                     'group-join-request-approved',
                     $group->id

@@ -1,0 +1,26 @@
+Read the following files for context:
+- routes/web.php
+- app/Livewire/Groups/GroupsIndex.php
+- app/Livewire/Groups/GroupShow.php
+- app/Livewire/Groups/CreateGroup.php
+- app/Livewire/Groups/GroupMembers.php
+- app/Livewire/Groups/GroupTimeline.php
+
+Task:
+1. Define the routes for the Groups feature.
+2. Create a Feature test to verify these routes and component availability.
+
+Requirements:
+- Routes should be grouped under 'groups' prefix where appropriate.
+- Use the 'auth' middleware for protected routes (create, join, leave, etc.).
+- Route names should follow standard conventions (groups.index, groups.show, etc.).
+- Test file: tests/Feature/GroupsIntegrationTest.php
+- Test scenarios:
+  - Guest can view public groups index.
+  - Authenticated user can view create group page.
+  - Authenticated user can view a group.
+  - Guest is redirected to login when trying to create a group.
+
+Output:
+- The PHP code to append to routes/web.php.
+- The complete content of tests/Feature/GroupsIntegrationTest.php.

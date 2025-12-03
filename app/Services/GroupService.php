@@ -36,7 +36,10 @@ class GroupService
                 $group->tags()->sync($data['tags']);
             }
 
-            GroupCreated::dispatch($group);
+            // Dispatch event AFTER transaction commits to avoid serialization issues
+            DB::afterCommit(function () use ($group) {
+                GroupCreated::dispatch($group);
+            });
 
             return $group;
         });
@@ -82,13 +85,16 @@ class GroupService
             $member = $group->memberships()->create([
                 'user_id' => $user->id,
                 'role' => $role,
-                'status' => 'approved',
+                // Note: 'status' column doesn't exist in group_members table
             ]);
 
             // Member count is updated by UpdateGroupMemberCount listener
             // Removed: $group->increment('member_count'); to prevent duplicate update
 
-            GroupMemberJoined::dispatch($group, $user);
+            // Dispatch event AFTER transaction commits to avoid serialization issues
+            DB::afterCommit(function () use ($group, $user) {
+                GroupMemberJoined::dispatch($group, $user);
+            });
 
             return $member;
         });
@@ -104,11 +110,14 @@ class GroupService
             }
 
             $member->delete();
-            
+
             // Member count is updated by UpdateGroupMemberCount listener
             // Removed: $group->decrement('member_count'); to prevent duplicate update
 
-            GroupMemberRemoved::dispatch($group, $user);
+            // Dispatch event AFTER transaction commits to avoid serialization issues
+            DB::afterCommit(function () use ($group, $user) {
+                GroupMemberRemoved::dispatch($group, $user);
+            });
 
             return true;
         });

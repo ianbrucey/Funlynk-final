@@ -1,0 +1,9 @@
+{
+  "job_id": "20251109_190509_a3f280",
+  "agent": "auggie",
+  "started_at": "2025-11-10T00:05:09.296889Z",
+  "status": "completed",
+  "exit_code": 0,
+  "duration_ms": 126505,
+  "finished_at": "2025-11-10T00:07:15.871604Z"
+}

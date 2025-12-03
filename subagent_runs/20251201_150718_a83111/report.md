@@ -1,0 +1,1 @@
+I have completed the general review of the `GroupService` and `GroupsIndex` components and have written the analysis to `/Users/ianbruce/Herd/funlynk/bug-analysis/general-review.md`.

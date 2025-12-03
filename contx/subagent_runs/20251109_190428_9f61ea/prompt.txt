@@ -1,0 +1,41 @@
+You are rebuilding F01 Database Foundation task documentation for a Laravel 12 + Filament v4 project.
+
+CONTEXT:
+- Project: FunLynk - spontaneous social discovery platform
+- Stack: Laravel 12, Filament v4, Livewire v3, PostGIS, Pest v4
+- Architecture: Posts vs Events dual model (Posts = ephemeral 24-48h content, Events = structured activities)
+
+INPUT FILES TO READ:
+1. context-engine/epics/E01_Core_Infrastructure/epic-overview.md
+2. context-engine/epics/E01_Core_Infrastructure/database-schema.md
+3. context-engine/tasks/E01_Core_Infrastructure/F01_Database_Foundation/README.md
+
+TASK:
+Rewrite the F01 Database Foundation feature documentation to reflect Laravel approach instead of React Native/Supabase approach.
+
+KEY CHANGES NEEDED:
+1. Replace Supabase SQL scripts with Laravel migrations
+2. Remove RLS policies (Laravel uses middleware/policies instead)
+3. Add Posts tables (posts, post_reactions, post_conversions) from epic schema
+4. Update activities table with post conversion fields
+5. Focus on Laravel migrations, Eloquent models, and Filament resources
+6. Update task breakdown to use Laravel Artisan commands
+7. Reference PostGIS setup for Laravel (not Supabase)
+8. Update time estimates for Laravel approach
+
+STRUCTURE TO MAINTAIN:
+- Keep the README.md format
+- Keep the 6 tasks (T01-T06) structure
+- Update task descriptions for Laravel
+- Keep success criteria (update for Laravel context)
+- Keep dependencies section
+
+OUTPUT:
+Save the updated documentation to: context-engine/tasks/E01_Core_Infrastructure/F01_Database_Foundation/README.md
+
+VALIDATION:
+- Ensure all references to Supabase client SDK are removed
+- Ensure all references to RLS policies are removed or replaced with Laravel policies
+- Ensure Posts vs Events model is reflected in schema
+- Ensure Laravel 12 best practices are followed
+- Ensure file is valid Markdown
