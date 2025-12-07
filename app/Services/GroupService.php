@@ -14,12 +14,19 @@ use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class GroupService
 {
     public function createGroup(User $user, array $data): Group
     {
         return DB::transaction(function () use ($user, $data) {
+            // Build location coordinates if provided
+            $locationCoordinates = null;
+            if (isset($data['latitude']) && isset($data['longitude'])) {
+                $locationCoordinates = new Point($data['latitude'], $data['longitude']);
+            }
+
             $group = Group::create([
                 'name' => $data['name'],
                 'slug' => str($data['name'])->slug(),
@@ -28,21 +35,56 @@ class GroupService
                 'cover_image_url' => $data['cover_image_url'] ?? null,
                 'privacy' => $data['privacy'],
                 'created_by' => $user->id,
+                'location_name' => $data['location_name'] ?? null,
+                'location_coordinates' => $locationCoordinates,
             ]);
 
-            $this->addMember($group, $user, 'admin');
+            // Add creator as admin directly within this transaction
+            // to avoid nested transaction issues
+            $group->memberships()->create([
+                'user_id' => $user->id,
+                'role' => 'admin',
+            ]);
 
-            if (isset($data['tags'])) {
-                $group->tags()->sync($data['tags']);
+            // Handle tags - can be array of tag IDs or tag names
+            if (isset($data['tags']) && ! empty($data['tags'])) {
+                $this->syncTagsByName($group, $data['tags']);
             }
 
-            // Dispatch event AFTER transaction commits to avoid serialization issues
-            DB::afterCommit(function () use ($group) {
+            // Dispatch events AFTER transaction commits to avoid serialization issues
+            DB::afterCommit(function () use ($group, $user) {
                 GroupCreated::dispatch($group);
+                GroupMemberJoined::dispatch($group, $user);
             });
 
             return $group;
         });
+    }
+
+    /**
+     * Sync tags by name, creating new tags if they don't exist.
+     */
+    protected function syncTagsByName(Group $group, array $tagNames): void
+    {
+        $tagIds = [];
+        foreach ($tagNames as $tagName) {
+            // Skip if it's already an ID (UUID string check)
+            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $tagName)
+                || preg_match('/^[0-9a-f]{32}$/i', $tagName)) {
+                $tagIds[] = $tagName;
+
+                continue;
+            }
+
+            // Find or create tag by name
+            $tag = Tag::firstOrCreate(
+                ['name' => trim($tagName)],
+                ['category' => 'general']
+            );
+            $tagIds[] = $tag->id;
+        }
+
+        $group->tags()->sync($tagIds);
     }
 
     public function updateGroup(Group $group, array $data): Group
@@ -171,6 +213,13 @@ class GroupService
     public function createJoinRequest(Group $group, User $user): GroupJoinRequest
     {
         return DB::transaction(function () use ($group, $user) {
+            // Delete any existing requests (approved/denied) to avoid unique constraint issues
+            // when re-requesting to join after being removed or denied
+            $group->joinRequests()
+                ->where('user_id', $user->id)
+                ->whereIn('status', ['approved', 'denied'])
+                ->delete();
+
             $request = $group->joinRequests()->create([
                 'user_id' => $user->id,
                 'status' => 'pending',
@@ -185,6 +234,13 @@ class GroupService
     public function approveJoinRequest(GroupJoinRequest $request, User $admin): bool
     {
         return DB::transaction(function () use ($request, $admin) {
+            // Delete any existing approved/denied requests for this user to avoid unique constraint violation
+            $request->group->joinRequests()
+                ->where('user_id', $request->user_id)
+                ->where('id', '!=', $request->id)
+                ->whereIn('status', ['approved', 'denied'])
+                ->delete();
+
             $request->update(['status' => 'approved']);
             $this->addMember($request->group, $request->user);
 

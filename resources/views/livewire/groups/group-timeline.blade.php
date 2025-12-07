@@ -3,15 +3,25 @@
 
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold">Group Timeline</h2>
-        <div class="flex gap-2">
-            <button wire:click="createPost" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-sm">
-                New Post
-            </button>
-            <button wire:click="createEvent" class="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition text-sm">
-                New Event
-            </button>
-        </div>
+        @auth
+            @if($group->memberships()->where('user_id', auth()->id())->exists())
+            <div class="flex gap-2">
+                <button wire:click="createPost" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-sm">
+                    New Post
+                </button>
+                <button wire:click="createEvent" class="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition text-sm">
+                    New Event
+                </button>
+            </div>
+            @endif
+        @endauth
     </div>
+
+    <!-- Create Post Modal -->
+    @livewire('groups.create-group-post', ['group' => $group], key('create-post-'.$group->id))
+
+    <!-- Create Event Modal -->
+    @livewire('groups.create-group-event', ['group' => $group], key('create-event-'.$group->id))
 
     <div class="space-y-8" wire:poll.10s="loadMore" wire:init="loadMore" wire:scroll.window="loadMore">
         @forelse($items as $item)

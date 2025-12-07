@@ -127,7 +127,7 @@ def run_worker(job_id: str, agent: str, job_dir: Path) -> int:
         if agent_lc == "gemini":
             # Call gemini CLI with gemini-2.5-flash model
             result = subprocess.run(
-                ["gemini", "-p", prompt, "-m", "gemini-2.5-flash", "-y"],
+                ["gemini", prompt, "-m", "gemini-2.5-flash", "-y"],
                 capture_output=True,
                 text=True,
                 timeout=320,

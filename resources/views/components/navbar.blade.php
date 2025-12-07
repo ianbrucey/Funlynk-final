@@ -157,6 +157,14 @@
                          @click.away="open = false"
                          x-transition
                          class="absolute right-0 mt-2 w-48 glass-card border border-white/10 rounded-xl overflow-hidden">
+                        <a href="{{ route('events.dashboard') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-white {{ request()->routeIs('events.dashboard') ? 'bg-white/10 text-cyan-400' : '' }}">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <span>My Events</span>
+                            </div>
+                        </a>
                         <a href="{{ route('profile.edit') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-white">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

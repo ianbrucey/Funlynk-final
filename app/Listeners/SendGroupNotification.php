@@ -9,9 +9,11 @@ use App\Events\GroupJoinRequestReceived;
 use App\Events\GroupMemberJoined;
 use App\Events\GroupMemberRemoved;
 use App\Events\GroupPostCreated;
+use App\Models\User;
 use App\Notifications\GroupNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Storage;
 
 class SendGroupNotification implements ShouldQueue
 {
@@ -23,6 +25,26 @@ class SendGroupNotification implements ShouldQueue
     public function __construct()
     {
         //
+    }
+
+    /**
+     * Get the display name for a user (name, display_name, or username as fallback).
+     */
+    protected function getUserDisplayName(User $user): string
+    {
+        return $user->name ?: $user->display_name ?: $user->username ?: 'User';
+    }
+
+    /**
+     * Get the full avatar URL for a user.
+     */
+    protected function getUserAvatarUrl(User $user): ?string
+    {
+        if (! $user->profile_image_url) {
+            return null;
+        }
+
+        return Storage::url($user->profile_image_url);
     }
 
     /**
@@ -62,9 +84,13 @@ class SendGroupNotification implements ShouldQueue
             if ($admin->id !== $user->id) {
                 $admin->notify(new GroupNotification(
                     'New Member',
-                    $user->name.' joined your group '.$group->name,
+                    $this->getUserDisplayName($user).' joined your group '.$group->name,
                     'group-member-joined',
-                    $group->id
+                    $group->id,
+                    null,
+                    $user->id,
+                    $this->getUserDisplayName($user),
+                    $this->getUserAvatarUrl($user)
                 ));
             }
         });
@@ -90,9 +116,13 @@ class SendGroupNotification implements ShouldQueue
         $group->admins->each(function ($admin) use ($group, $user) {
             $admin->notify(new GroupNotification(
                 'Member Removed',
-                $user->name.' was removed from your group '.$group->name,
+                $this->getUserDisplayName($user).' was removed from your group '.$group->name,
                 'group-member-removed',
-                $group->id
+                $group->id,
+                null,
+                $user->id,
+                $this->getUserDisplayName($user),
+                $this->getUserAvatarUrl($user)
             ));
         });
     }
@@ -107,14 +137,18 @@ class SendGroupNotification implements ShouldQueue
         $creator = $event->user;
 
         // Notify all group members except the creator
+        // members() returns User models directly via BelongsToMany
         $group->members->each(function ($member) use ($group, $post, $creator) {
-            if ($member->user_id !== $creator->id) {
-                $member->user->notify(new GroupNotification(
+            if ($member->id !== $creator->id) {
+                $member->notify(new GroupNotification(
                     'New Post',
-                    $creator->name.' created a new post in '.$group->name.': '.$post->title,
+                    $this->getUserDisplayName($creator).' created a new post in '.$group->name.': '.$post->title,
                     'group-post-created',
                     $group->id,
-                    $post->id
+                    $post->id,
+                    $creator->id,
+                    $this->getUserDisplayName($creator),
+                    $this->getUserAvatarUrl($creator)
                 ));
             }
         });
@@ -130,14 +164,18 @@ class SendGroupNotification implements ShouldQueue
         $creator = $event->user;
 
         // Notify all group members except the creator
+        // members() returns User models directly via BelongsToMany
         $group->members->each(function ($member) use ($group, $activity, $creator) {
-            if ($member->user_id !== $creator->id) {
-                $member->user->notify(new GroupNotification(
+            if ($member->id !== $creator->id) {
+                $member->notify(new GroupNotification(
                     'New Event',
-                    $creator->name.' created a new event in '.$group->name.': '.$activity->title,
+                    $this->getUserDisplayName($creator).' created a new event in '.$group->name.': '.$activity->title,
                     'group-event-created',
                     $group->id,
-                    $activity->id
+                    $activity->id,
+                    $creator->id,
+                    $this->getUserDisplayName($creator),
+                    $this->getUserAvatarUrl($creator)
                 ));
             }
         });
@@ -156,10 +194,13 @@ class SendGroupNotification implements ShouldQueue
         $group->admins->each(function ($admin) use ($group, $user, $joinRequest) {
             $admin->notify(new GroupNotification(
                 'Join Request',
-                $user->name.' requested to join your group '.$group->name,
+                $this->getUserDisplayName($user).' requested to join your group '.$group->name,
                 'group-join-request-received',
                 $group->id,
-                $joinRequest->id
+                $joinRequest->id,
+                $user->id,
+                $this->getUserDisplayName($user),
+                $this->getUserAvatarUrl($user)
             ));
         });
     }
@@ -176,9 +217,13 @@ class SendGroupNotification implements ShouldQueue
         // Notify the user whose request was approved
         $user->notify(new GroupNotification(
             'Request Approved',
-            'Your request to join '.$group->name.' was approved by '.$admin->name,
+            'Your request to join '.$group->name.' was approved by '.$this->getUserDisplayName($admin),
             'group-join-request-approved',
-            $group->id
+            $group->id,
+            null,
+            $admin->id,
+            $this->getUserDisplayName($admin),
+            $this->getUserAvatarUrl($admin)
         ));
 
         // Notify other group admins (excluding the approving admin)
@@ -186,9 +231,13 @@ class SendGroupNotification implements ShouldQueue
             if ($groupAdmin->id !== $admin->id) {
                 $groupAdmin->notify(new GroupNotification(
                     'Request Approved',
-                    $user->name.'\'s join request for '.$group->name.' was approved by '.$admin->name,
+                    $this->getUserDisplayName($user).'\'s join request for '.$group->name.' was approved by '.$this->getUserDisplayName($admin),
                     'group-join-request-approved',
-                    $group->id
+                    $group->id,
+                    null,
+                    $user->id,
+                    $this->getUserDisplayName($user),
+                    $this->getUserAvatarUrl($user)
                 ));
             }
         });

@@ -1,0 +1,1 @@
+I have created the Livewire component `app/Livewire/CheckIn/MyTicket.php` and its associated Blade view `resources/views/livewire/check-in/my-ticket.blade.php` as requested.

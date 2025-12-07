@@ -39,10 +39,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @forelse ($members as $member)
                     <div class="relative p-4 rounded-2xl bg-slate-800/50 border border-white/10 hover:border-purple-500/50 transition-all group flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 p-0.5 flex-shrink-0">
-                            <div class="w-full h-full bg-slate-800 rounded-full flex items-center justify-center text-lg font-bold text-white">
-                                {{ strtoupper(substr($member->user->name, 0, 1)) }}
-                            </div>
+                        <div class="flex-shrink-0">
+                            <img src="{{ Storage::url($member->user->profile_image_url) ?? 'https://ui-avatars.com/api/?name=' . urlencode($member->user->name) . '&background=a855f7&color=fff' }}"
+                                 alt="{{ $member->user->name }}"
+                                 class="w-12 h-12 rounded-xl object-cover">
                         </div>
                         <div class="flex-grow">
                             <p class="text-lg font-semibold text-white">{{ $member->user->name }}</p>

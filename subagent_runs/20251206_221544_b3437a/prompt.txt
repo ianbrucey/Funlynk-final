@@ -1,0 +1,1 @@
+--prompt-file /Users/ianbruce/Herd/funlynk/tmp/subagent_prompt.txt

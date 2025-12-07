@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/posts/{post}/chat', \App\Livewire\Posts\PostChat::class)->name('posts.chat');
 
         // Activity Routes
+        Route::get('/events', \App\Livewire\Events\EventDashboard::class)->name('events.dashboard');
         Route::get('/activities', function () {
             return 'Activities Index Placeholder'; // Placeholder for now
         })->name('activities.index');
@@ -56,6 +57,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/activities/{activity}', \App\Livewire\Activities\ActivityDetail::class)->name('activities.show');
         Route::get('/activities/{activity}/edit', \App\Livewire\Activities\EditActivity::class)->name('activities.edit');
         Route::get('/activities/{activity}/checkout', \App\Livewire\Payments\CheckoutForm::class)->name('activities.checkout');
+
+        // Check-In Routes
+        Route::get('/activities/{activity}/my-ticket', \App\Livewire\CheckIn\MyTicket::class)->name('activities.my-ticket');
+        Route::get('/activities/{activity}/attendees', \App\Livewire\CheckIn\HostAttendeeManager::class)->name('activities.attendees');
+        Route::get('/activities/{activity}/scan', \App\Livewire\CheckIn\QrScanner::class)->name('activities.scan');
 
         // Discovery Routes
         Route::get('/feed/nearby', \App\Livewire\Discovery\NearbyFeed::class)->name('feed.nearby');
@@ -93,6 +99,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/groups/{group:slug}/members', \App\Livewire\Groups\GroupMembers::class)->name('groups.members');
         Route::get('/groups/{group:slug}/timeline', \App\Livewire\Groups\GroupTimeline::class)->name('groups.timeline');
         Route::get('/groups/{group:slug}/settings', GroupSettings::class)->name('groups.settings');
+        Route::get('/groups/{group:slug}/requests', \App\Livewire\Groups\JoinRequestsList::class)->name('groups.requests');
         Route::get('/dashboard', UserDashboard::class)->name('dashboard');
     });
 

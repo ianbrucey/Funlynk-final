@@ -1,0 +1,55 @@
+PROJECT CONTEXT:
+FunLynk is a Laravel 12 application. Uses UUIDs for all model primary keys, HasUuids trait, strict typing.
+
+TASK: Create a CheckInService class for handling event check-in logic.
+
+EXISTING CODE CONTEXT:
+- app/Models/Rsvp.php exists with: user(), activity() relationships, casts for is_paid, attended, payment_amount
+- app/Models/Activity.php exists with: host(), rsvps() relationships
+- app/Services/RsvpService.php exists with basic RSVP management
+
+RSVP TABLE COLUMNS (after migration):
+- id, user_id, activity_id, status, is_paid, payment_intent_id, payment_status
+- attended (boolean), payment_amount
+- NEW: check_in_code (string 6), qr_token (uuid), checked_in_at (timestamp), check_in_method (string), checked_in_by (uuid nullable)
+
+SERVICE REQUIREMENTS:
+
+Create app/Services/CheckInService.php with these methods:
+
+1. generateCheckInCredentials(Rsvp $rsvp): void
+   - Generate unique 6-char uppercase alphanumeric code (exclude O,0,I,1,L,S,5)
+   - Generate UUID for qr_token using Str::uuid()
+   - Ensure code is unique within the activity (not globally)
+   - Update the RSVP record with both values
+
+2. validateQrToken(string $activityId, string $qrToken): ?Rsvp
+   - Find RSVP by activity_id AND qr_token
+   - Return null if not found
+   - Return the Rsvp model if found (with user relationship loaded)
+
+3. validateCheckInCode(string $activityId, string $code): ?Rsvp
+   - Find RSVP by activity_id AND check_in_code (case-insensitive)
+   - Return null if not found
+   - Return the Rsvp model if found (with user relationship loaded)
+
+4. performCheckIn(Rsvp $rsvp, string $method, ?User $checkedInBy = null): Rsvp
+   - Throw exception if already checked in (checked_in_at not null)
+   - Update: checked_in_at = now(), check_in_method = $method, attended = true
+   - If $checkedInBy provided, set checked_in_by = $checkedInBy->id
+   - Return fresh RSVP
+
+5. getActivityCheckInStats(Activity $activity): array
+   - Return array with: total_rsvps, checked_in_count, pending_count, check_in_percentage
+
+6. generateUniqueCode(string $activityId): string (private helper)
+   - Generate 6-char code from allowed chars: ABCDEFGHJKMNPQRTUVWXY23467789
+   - Loop until unique within activity (max 10 attempts, then throw exception)
+
+LARAVEL 12 CONVENTIONS:
+- Use constructor property promotion for dependencies
+- Use strict return types
+- Use Illuminate\Support\Str for string/uuid generation
+- Use Illuminate\Support\Facades\DB for transactions if needed
+
+OUTPUT: Provide the complete PHP class file content only. No markdown, no explanations.

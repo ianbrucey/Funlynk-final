@@ -1,0 +1,34 @@
+Project: FunLynk - Laravel 12 activity discovery platform
+Tech Stack: Laravel 12, Filament v4, Livewire v3, PostgreSQL + PostGIS, DaisyUI, Pest v4
+Core Feature: Posts (ephemeral, 24-48h) convert to Events (persistent) based on engagement
+
+Read the following files for context:
+- /Users/ianbruce/Herd/funlynk/app/Livewire/Activities/ActivityDetail.php
+- /Users/ianbruce/Herd/funlynk/context-engine/domain-contexts/ui-design-standards.md
+- /Users/ianbruce/Herd/funlynk/app/Services/CheckInService.php
+
+TASK: Create a Livewire component for attendees to view their event ticket with QR code, and its corresponding Blade view.
+
+COMPONENT REQUIREMENTS:
+1. Class: App\Livewire\CheckIn\MyTicket
+2. Properties:
+   - public Activity $activity
+   - public ?Rsvp $rsvp (current user's RSVP)
+   - public ?string $qrCodeSvg (rendered QR code)
+3. mount(Activity $activity) method:
+   - Load user's RSVP for this activity using `auth()->user()->rsvps()->where('activity_id', $activity->id)->first()`
+   - If no RSVP, redirect to activity detail page with an error message: `session()->flash('error', 'You do not have an RSVP for this activity.'); return redirect()->route('activities.show', $activity);`
+   - Generate QR code SVG using `SimpleSoftwareIO\QrCode\Facades\QrCode`
+   - QR content: JSON encode `app(App\Services\CheckInService::class)->buildQrPayload($this->rsvp)`
+4. render() returns view with `layout('layouts.app')`
+
+BLADE VIEW REQUIREMENTS (MUST follow galaxy theme from ui-design-standards.md):
+1. Full page with glass-card container. Use the structure from `context-engine/domain-contexts/ui-design-standards.md` for "Livewire Component Template" and "Glass Card Container".
+2. Show activity title, date, location at top.
+3. Large centered QR code display (use `{!! $qrCodeSvg !!}`).
+4. Below QR: show 6-digit `check_in_code` in large monospace font.
+5. Instruction text: 'Show this QR code or tell the host your code'.
+6. Back button to activity page (`route('activities.show', $activity)`). Use the "Secondary Button" style from `ui-design-standards.md`.
+7. All styling must use: glass-card, gradient buttons, white text on dark.
+
+OUTPUT: Provide ONLY the two complete file contents. First the PHP file, then a separator '---BLADE---', then the Blade file. No markdown blocks, no explanations.

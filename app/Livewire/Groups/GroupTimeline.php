@@ -48,14 +48,14 @@ class GroupTimeline extends Component
 
     public function createPost(): void
     {
-        // Placeholder for creating a new post
-        $this->dispatch('open-create-post-modal');
+        // Dispatch event to open the create post modal
+        $this->dispatch('openCreateGroupPostModal');
     }
 
     public function createEvent(): void
     {
-        // Placeholder for creating a new event
-        $this->dispatch('open-create-event-modal');
+        // Dispatch event to open the create event modal
+        $this->dispatch('openCreateGroupEventModal');
     }
 
     public function likeItem(string $itemId, string $itemType): void

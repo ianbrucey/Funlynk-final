@@ -3,6 +3,7 @@
 namespace App\Livewire\Activities;
 
 use App\Models\Activity;
+use App\Models\Rsvp;
 use App\Services\ActivityService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Component;
@@ -12,6 +13,7 @@ class ActivityDetail extends Component
     use AuthorizesRequests;
 
     public Activity $activity;
+    public ?Rsvp $userRsvp = null;
     public $isHost = false;
     public $spotsRemaining = null;
 
@@ -25,7 +27,7 @@ class ActivityDetail extends Component
     public function mount(Activity $activity)
     {
         $this->activity = $activity->load(['host', 'tags']);
-        
+
         // Check authorization
         if (!$this->activity->is_public) {
             $this->authorize('view', $this->activity);
@@ -33,6 +35,13 @@ class ActivityDetail extends Component
 
         $this->isHost = auth()->id() === $this->activity->host_id;
         $this->spotsRemaining = $this->activityService->getAvailableSpots($this->activity);
+
+        // Load user's RSVP if they have one
+        if (auth()->check()) {
+            $this->userRsvp = Rsvp::where('activity_id', $this->activity->id)
+                ->where('user_id', auth()->id())
+                ->first();
+        }
     }
 
     public function deleteActivity()

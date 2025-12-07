@@ -5,7 +5,6 @@ namespace App\Livewire\Groups;
 use App\Models\Group;
 use App\Models\Tag;
 use App\Services\GroupService;
-use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -16,7 +15,7 @@ class GroupsIndex extends Component
 
     public string $search = '';
 
-    public string $privacyFilter = 'public'; // 'public', 'private', 'all'
+    public string $privacyFilter = 'all'; // 'public', 'private', 'all'
 
     public array $selectedTags = [];
 
@@ -30,7 +29,7 @@ class GroupsIndex extends Component
 
     protected $queryString = [
         'search' => ['except' => ''],
-        'privacyFilter' => ['except' => 'public'],
+        'privacyFilter' => ['except' => 'all'],
         'selectedTags' => ['except' => []],
     ];
 
@@ -85,10 +84,24 @@ class GroupsIndex extends Component
     public function joinGroup(string $groupId): void
     {
         if (! Auth::check()) {
-            return; // Or redirect to login
+            return;
         }
 
         $group = Group::findOrFail($groupId);
+
+        // For private groups, create a join request
+        if ($group->privacy === 'private') {
+            try {
+                $this->groupService->createJoinRequest($group, Auth::user());
+                session()->flash('success', 'Join request sent! An admin will review your request.');
+            } catch (\Exception $e) {
+                session()->flash('error', 'Failed to send join request: ' . $e->getMessage());
+            }
+
+            return;
+        }
+
+        // For public groups, join directly
         try {
             $this->groupService->addMember($group, Auth::user());
             session()->flash('success', 'Successfully joined the group!');

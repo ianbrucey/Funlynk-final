@@ -33,17 +33,24 @@
                        wire:click.prevent="handleNotificationClick('{{ $notification->id }}', '{{ $notification->data['url'] ?? '' }}')"
                        class="block p-6 hover:bg-white/5 cursor-pointer border-b border-white/5 transition group {{ $notification->read_at ? 'bg-slate-900/20' : 'bg-slate-900/50' }}">
                         <div class="flex items-start gap-4">
-                            {{-- Unread Indicator --}}
-                            @if(!$notification->read_at)
-                                <div class="w-3 h-3 bg-pink-500 rounded-full mt-2 group-hover:scale-125 transition flex-shrink-0"></div>
+                            {{-- Actor Avatar or Unread Indicator --}}
+                            @if(isset($notification->data['actor_avatar']) && $notification->data['actor_avatar'])
+                                <img src="{{ Storage::url($notification->data['actor_avatar']) }}"
+                                     alt="{{ $notification->data['actor_name'] ?? 'User' }}"
+                                     class="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 {{ $notification->read_at ? 'border-gray-700' : 'border-pink-500' }}">
                             @else
-                                <div class="w-3 h-3 bg-gray-700 rounded-full mt-2 flex-shrink-0"></div>
+                                {{-- Unread Indicator --}}
+                                @if(!$notification->read_at)
+                                    <div class="w-3 h-3 bg-pink-500 rounded-full mt-2 group-hover:scale-125 transition flex-shrink-0"></div>
+                                @else
+                                    <div class="w-3 h-3 bg-gray-700 rounded-full mt-2 flex-shrink-0"></div>
+                                @endif
                             @endif
 
                             {{-- Content --}}
                             <div class="flex-1 min-w-0">
                                 <p class="text-white font-semibold mb-2 group-hover:text-pink-400 transition">
-                                    {{ $notification->type }}
+                                    {{ $notification->title ?? Str::headline($notification->type) }}
                                 </p>
                                 <p class="text-gray-300 text-sm mb-2">
                                     @if($notification->type === 'post_reaction')
@@ -57,10 +64,13 @@
                                             <span class="text-cyan-400">{{ $notification->data['reaction_count'] }} total reactions</span>
                                         @endif
                                     @elseif($notification->type === 'post_invitation')
-                                        <strong class="text-pink-400">{{ $notification->data['inviter_name'] ?? 'Someone' }}</strong> invited you to 
+                                        <strong class="text-pink-400">{{ $notification->data['inviter_name'] ?? 'Someone' }}</strong> invited you to
                                         <strong>"{{ $notification->data['post_title'] ?? 'a post' }}"</strong>
                                     @elseif($notification->type === 'post_conversion')
                                         Your post <strong>"{{ $notification->data['post_title'] ?? 'a post' }}"</strong> can be converted to an event!
+                                    @elseif(isset($notification->data['actor_name']))
+                                        {{-- Group notifications with actor --}}
+                                        <strong class="text-pink-400">{{ $notification->data['actor_name'] }}</strong> {{ $notification->message }}
                                     @else
                                         {{ $notification->message ?? 'New notification' }}
                                     @endif

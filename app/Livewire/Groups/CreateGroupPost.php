@@ -2,27 +2,43 @@
 
 namespace App\Livewire\Groups;
 
-use Livewire\Component;
 use App\Models\Group;
 use App\Models\Tag;
 use App\Services\GroupContentService;
-use Illuminate\Validation\Rule;
+use Livewire\Attributes\On;
+use Livewire\Component;
 
 class CreateGroupPost extends Component
 {
     public Group $group;
+
     public string $title = '';
+
     public string $description = '';
+
     public array $selectedTags = [];
+
     public ?string $locationName = null;
+
     public $expiresAt = null;
 
-    protected $listeners = ['openCreateGroupPostModal' => 'mount'];
+    public bool $showModal = false;
 
     public function mount(Group $group)
     {
         $this->group = $group;
+    }
+
+    #[On('openCreateGroupPostModal')]
+    public function openModal(): void
+    {
         $this->reset(['title', 'description', 'selectedTags', 'locationName', 'expiresAt']);
+        $this->showModal = true;
+    }
+
+    public function closeModal(): void
+    {
+        $this->showModal = false;
     }
 
     protected function rules()
@@ -52,8 +68,9 @@ class CreateGroupPost extends Component
             ]
         );
 
+        $this->showModal = false;
         $this->dispatch('postCreated');
-        $this->dispatch('closeModal', 'create-group-post-modal');
+        session()->flash('success', 'Post created successfully!');
     }
 
     public function render()

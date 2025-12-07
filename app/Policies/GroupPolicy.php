@@ -25,15 +25,16 @@ class GroupPolicy
         }
 
         // Private group, only members can view
-        return $user && $group->members()->where('user_id', $user->id)->exists();
+        return $user && $group->memberships()->where('user_id', $user->id)->exists();
     }
 
     /**
      * Determine whether the user can create models.
+     * Returns false for guests (null user).
      */
-    public function create(User $user): bool
+    public function create(?User $user): bool
     {
-        return true; // Authenticated users can create groups
+        return $user !== null; // Only authenticated users can create groups
     }
 
     /**
@@ -41,7 +42,7 @@ class GroupPolicy
      */
     public function update(User $user, Group $group): bool
     {
-        return $group->members()->where('user_id', $user->id)->where('role', 'admin')->exists();
+        return $group->memberships()->where('user_id', $user->id)->where('role', 'admin')->exists();
     }
 
     /**
@@ -49,7 +50,7 @@ class GroupPolicy
      */
     public function delete(User $user, Group $group): bool
     {
-        return $group->members()->where('user_id', $user->id)->where('role', 'admin')->exists();
+        return $group->memberships()->where('user_id', $user->id)->where('role', 'admin')->exists();
     }
 
     /**
@@ -57,7 +58,7 @@ class GroupPolicy
      */
     public function join(User $user, Group $group): bool
     {
-        return ! $group->members()->where('user_id', $user->id)->exists();
+        return ! $group->memberships()->where('user_id', $user->id)->exists();
     }
 
     /**
@@ -65,14 +66,14 @@ class GroupPolicy
      */
     public function leave(User $user, Group $group): bool
     {
-        $member = $group->members()->where('user_id', $user->id)->first();
+        $membership = $group->memberships()->where('user_id', $user->id)->first();
 
-        if (! $member) {
+        if (! $membership) {
             return false; // Not a member
         }
 
         // Prevent last admin from leaving
-        if ($member->role === 'admin' && $group->members()->where('role', 'admin')->count() === 1) {
+        if ($membership->role === 'admin' && $group->memberships()->where('role', 'admin')->count() === 1) {
             return false;
         }
 
@@ -84,7 +85,7 @@ class GroupPolicy
      */
     public function invite(User $user, Group $group): bool
     {
-        return $group->members()->where('user_id', $user->id)->exists(); // Members can invite
+        return $group->memberships()->where('user_id', $user->id)->exists(); // Members can invite
     }
 
     /**
@@ -92,7 +93,7 @@ class GroupPolicy
      */
     public function removeMember(User $user, Group $group): bool
     {
-        return $group->members()->where('user_id', $user->id)->where('role', 'admin')->exists();
+        return $group->memberships()->where('user_id', $user->id)->where('role', 'admin')->exists();
     }
 
     /**
@@ -100,6 +101,14 @@ class GroupPolicy
      */
     public function approveRequest(User $user, Group $group): bool
     {
-        return $group->members()->where('user_id', $user->id)->where('role', 'admin')->exists();
+        return $group->memberships()->where('user_id', $user->id)->where('role', 'admin')->exists();
+    }
+
+    /**
+     * Determine whether the user can manage group members (for Filament authorization).
+     */
+    public function manageMembers(User $user, Group $group): bool
+    {
+        return $group->memberships()->where('user_id', $user->id)->where('role', 'admin')->exists();
     }
 }

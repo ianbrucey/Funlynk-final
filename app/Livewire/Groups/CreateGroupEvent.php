@@ -2,29 +2,47 @@
 
 namespace App\Livewire\Groups;
 
-use Livewire\Component;
 use App\Models\Group;
 use App\Models\Tag;
 use App\Services\GroupContentService;
-use Illuminate\Validation\Rule;
+use Livewire\Attributes\On;
+use Livewire\Component;
 
 class CreateGroupEvent extends Component
 {
     public Group $group;
+
     public string $title = '';
+
     public string $description = '';
+
     public string $locationName = '';
+
     public $startTime = null;
+
     public $endTime = null;
+
     public ?int $maxAttendees = null;
+
     public array $selectedTags = [];
 
-    protected $listeners = ['openCreateGroupEventModal' => 'mount'];
+    public bool $showModal = false;
 
     public function mount(Group $group)
     {
         $this->group = $group;
+    }
+
+    #[On('openCreateGroupEventModal')]
+    public function openModal(): void
+    {
         $this->reset(['title', 'description', 'locationName', 'startTime', 'endTime', 'maxAttendees', 'selectedTags']);
+        $this->showModal = true;
+    }
+
+    public function closeModal(): void
+    {
+        $this->showModal = false;
     }
 
     protected function rules()
@@ -58,8 +76,9 @@ class CreateGroupEvent extends Component
             ]
         );
 
+        $this->showModal = false;
         $this->dispatch('eventCreated');
-        $this->dispatch('closeModal', 'create-group-event-modal');
+        session()->flash('success', 'Event created successfully!');
     }
 
     public function render()

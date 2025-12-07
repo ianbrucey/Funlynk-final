@@ -1,1 +1,0 @@
-I have successfully created the two Livewire modal components for creating group posts and events, including their respective PHP classes and Blade views.

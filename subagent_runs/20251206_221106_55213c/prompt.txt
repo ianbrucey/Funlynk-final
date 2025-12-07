@@ -1,0 +1,35 @@
+PROJECT CONTEXT:
+FunLynk is a Laravel 12 application for activity discovery. Tech stack: Laravel 12, Livewire v3, PostgreSQL with PostGIS, UUIDs for all primary keys.
+
+TASK: Create a Laravel migration to add check-in tracking columns to the existing RSVPs table.
+
+EXISTING RSVPS TABLE (from database/migrations/2025_11_10_010450_create_rsvps_table.php):
+- id (uuid, primary key)
+- user_id (uuid, foreign key to users)
+- activity_id (uuid, foreign key to activities)
+- status (string, default 'attending')
+- is_paid (boolean)
+- payment_intent_id (string, nullable)
+- payment_status (string, nullable)
+- attended (boolean, added later)
+- payment_amount (integer, added later)
+- timestamps
+
+NEW COLUMNS TO ADD:
+1. check_in_code - string(6), unique per activity (not globally unique), uppercase alphanumeric excluding confusing chars (O,0,I,1,L)
+2. qr_token - uuid, unique globally, used in QR code for validation
+3. checked_in_at - timestamp with timezone, nullable, when attendee was checked in
+4. check_in_method - string(20), nullable, enum values: 'qr_scan', 'manual_code', 'host_manual'
+5. checked_in_by - uuid, nullable, foreign key to users table (the host who checked them in)
+
+INDEXES TO ADD:
+- Index on qr_token for fast lookups
+- Composite index on (activity_id, check_in_code) for code validation
+
+REQUIREMENTS:
+- Migration file name: 2025_12_07_000001_add_checkin_columns_to_rsvps_table.php
+- Use Laravel 12 migration syntax
+- Include proper down() method to rollback
+- Do NOT use enum() - use string with check constraint comment instead for flexibility
+
+OUTPUT: Provide the complete migration file content only. No explanations needed.

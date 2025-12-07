@@ -241,6 +241,20 @@
                                 Delete
                             </button>
                         </div>
+
+                        {{-- Host Check-In Management --}}
+                        <a href="{{ route('activities.attendees', $activity) }}"
+                           class="block w-full mt-4 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl text-center font-semibold hover:scale-105 transition-all">
+                            📋 Manage Attendees & Check-In
+                        </a>
+                    @endif
+
+                    {{-- Attendee Ticket Button --}}
+                    @if($userRsvp && $userRsvp->status === 'attending')
+                        <a href="{{ route('activities.my-ticket', $activity) }}"
+                           class="block w-full mt-4 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-center font-semibold hover:scale-105 transition-all">
+                            🎫 View My Ticket
+                        </a>
                     @endif
                 </div>
 

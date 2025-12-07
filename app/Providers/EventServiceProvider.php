@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Listeners\BroadcastGroupUpdate;
+use App\Listeners\ManageGroupChatParticipants;
 use App\Listeners\SendGroupNotification;
 use App\Listeners\UpdateGroupMemberCount;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -28,6 +29,7 @@ class EventServiceProvider extends ServiceProvider
         SendGroupNotification::class,
         BroadcastGroupUpdate::class,
         UpdateGroupMemberCount::class,
+        ManageGroupChatParticipants::class,
     ];
 
     /**

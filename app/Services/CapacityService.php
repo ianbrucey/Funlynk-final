@@ -82,6 +82,11 @@ class CapacityService
                 $activity->increment('current_attendees');
             }
 
+            // Generate check-in credentials for confirmed attendees
+            if ($status === 'attending') {
+                app(CheckInService::class)->generateCheckInCredentials($rsvp);
+            }
+
             return $rsvp;
         });
     }

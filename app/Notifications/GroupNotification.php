@@ -20,6 +20,9 @@ class GroupNotification extends Notification implements ShouldQueue
         protected string $type,
         protected string $groupId,
         protected ?string $relatedId = null,
+        protected ?string $actorId = null,
+        protected ?string $actorName = null,
+        protected ?string $actorAvatar = null,
     ) {}
 
     /**
@@ -47,6 +50,9 @@ class GroupNotification extends Notification implements ShouldQueue
             'data' => [
                 'group_id' => $this->groupId,
                 'related_id' => $this->relatedId,
+                'actor_id' => $this->actorId,
+                'actor_name' => $this->actorName,
+                'actor_avatar' => $this->actorAvatar,
             ],
         ];
     }
@@ -64,6 +70,9 @@ class GroupNotification extends Notification implements ShouldQueue
             'type' => $this->type,
             'group_id' => $this->groupId,
             'related_id' => $this->relatedId,
+            'actor_id' => $this->actorId,
+            'actor_name' => $this->actorName,
+            'actor_avatar' => $this->actorAvatar,
         ];
     }
 }

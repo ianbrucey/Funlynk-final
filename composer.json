@@ -17,6 +17,7 @@
         "matanyadaev/laravel-eloquent-spatial": "^4.5",
         "meilisearch/meilisearch-php": "^1.16",
         "pusher/pusher-php-server": "^7.2",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "stripe/stripe-php": "^19.0"
     },
     "require-dev": {

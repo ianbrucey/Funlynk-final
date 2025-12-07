@@ -1,0 +1,1 @@
+The `CheckInService` class has been successfully created at `/Users/ianbruce/Herd/funlynk/app/Services/CheckInService.php` with all the specified methods and logic.

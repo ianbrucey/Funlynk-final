@@ -2,25 +2,38 @@
 
 namespace App\Livewire\Groups;
 
-use App\Models\Tag;
 use App\Services\GroupService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class CreateGroup extends Component
 {
+    use WithFileUploads;
+
     public string $name = '';
 
     public string $description = '';
 
-    public string $privacy = 'public'; // Default to public
+    public string $privacy = 'public';
 
-    public array $availableTags = [];
+    // Dynamic tags (type-and-enter pattern)
+    public array $tags = [];
 
-    public array $selectedTags = [];
+    public string $newTag = '';
 
-    public string $location = ''; // Placeholder for location, geocoding to be integrated later
+    // Location with geocoding
+    public string $location_name = '';
+
+    public ?float $latitude = null;
+
+    public ?float $longitude = null;
+
+    // Image uploads
+    public $avatarImage = null;
+
+    public $coverImage = null;
 
     protected GroupService $groupService;
 
@@ -29,9 +42,15 @@ class CreateGroup extends Component
         $this->groupService = $groupService;
     }
 
-    public function mount()
+    public function dehydrate()
     {
-        $this->availableTags = Tag::all()->pluck('name', 'id')->toArray();
+        // Ensure coordinates are always primitives, never objects
+        if ($this->latitude !== null) {
+            $this->latitude = (float) $this->latitude;
+        }
+        if ($this->longitude !== null) {
+            $this->longitude = (float) $this->longitude;
+        }
     }
 
     protected function rules(): array
@@ -40,9 +59,13 @@ class CreateGroup extends Component
             'name' => ['required', 'string', 'max:100'],
             'description' => ['required', 'string', 'max:500'],
             'privacy' => ['required', 'string', Rule::in(['public', 'private'])],
-            'selectedTags' => ['nullable', 'array'],
-            'selectedTags.*' => ['exists:tags,id'],
-            'location' => ['nullable', 'string', 'max:255'],
+            'tags' => ['nullable', 'array', 'max:10'],
+            'tags.*' => ['string', 'max:50'],
+            'location_name' => ['required', 'string', 'max:255'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'avatarImage' => ['nullable', 'image', 'max:2048'],
+            'coverImage' => ['nullable', 'image', 'max:4096'],
         ];
     }
 
@@ -55,7 +78,10 @@ class CreateGroup extends Component
             'description.max' => 'The description cannot exceed 500 characters.',
             'privacy.required' => 'Group privacy setting is required.',
             'privacy.in' => 'Invalid privacy setting.',
-            'selectedTags.*.exists' => 'One or more selected tags are invalid.',
+            'location_name.required' => 'Location is required. Start typing to search for a city.',
+            'latitude.required' => 'Please select a location from the suggestions.',
+            'longitude.required' => 'Please select a location from the suggestions.',
+            'tags.max' => 'Maximum 10 tags allowed.',
         ];
     }
 
@@ -64,37 +90,84 @@ class CreateGroup extends Component
         $this->validateOnly($propertyName);
     }
 
+    public function updatedLatitude($value)
+    {
+        $this->latitude = $value ? (float) $value : null;
+    }
+
+    public function updatedLongitude($value)
+    {
+        $this->longitude = $value ? (float) $value : null;
+    }
+
+    public function setLocationData($name, $lat, $lng)
+    {
+        $this->location_name = $name;
+        $this->latitude = $lat ? (float) $lat : null;
+        $this->longitude = $lng ? (float) $lng : null;
+    }
+
+    public function addTag()
+    {
+        if (empty($this->newTag)) {
+            return;
+        }
+
+        if (count($this->tags) >= 10) {
+            $this->addError('tags', 'Maximum 10 tags allowed.');
+
+            return;
+        }
+
+        $tag = trim($this->newTag);
+        if (! in_array($tag, $this->tags)) {
+            $this->tags[] = $tag;
+        }
+
+        $this->reset('newTag');
+    }
+
+    public function removeTag($index)
+    {
+        unset($this->tags[$index]);
+        $this->tags = array_values($this->tags);
+    }
+
     public function createGroup()
     {
         $this->validate();
 
         try {
-            $group = $this->groupService->createGroup(Auth::user(), [
+            $data = [
                 'name' => $this->name,
                 'description' => $this->description,
                 'privacy' => $this->privacy,
-                'tags' => $this->selectedTags,
-                // 'location' => $this->location, // Will be added when geocoding is integrated
-            ]);
+                'tags' => $this->tags,
+                'location_name' => $this->location_name,
+                'latitude' => $this->latitude,
+                'longitude' => $this->longitude,
+            ];
+
+            // Handle avatar upload
+            if ($this->avatarImage) {
+                $avatarPath = $this->avatarImage->store('groups/avatars', 'public');
+                $data['avatar_url'] = '/storage/'.$avatarPath;
+            }
+
+            // Handle cover image upload
+            if ($this->coverImage) {
+                $coverPath = $this->coverImage->store('groups/covers', 'public');
+                $data['cover_image_url'] = '/storage/'.$coverPath;
+            }
+
+            $group = $this->groupService->createGroup(Auth::user(), $data);
 
             session()->flash('message', 'Group created successfully!');
 
-            return redirect()->to('/groups/'.$group->slug); // Redirect to group detail page
+            return redirect()->to('/groups/'.$group->slug);
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to create group: '.$e->getMessage());
         }
-    }
-
-    public function addTag($tagId)
-    {
-        if (! in_array($tagId, $this->selectedTags)) {
-            $this->selectedTags[] = $tagId;
-        }
-    }
-
-    public function removeTag($tagId)
-    {
-        $this->selectedTags = array_diff($this->selectedTags, [$tagId]);
     }
 
     public function render()

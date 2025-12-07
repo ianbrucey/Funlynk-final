@@ -1,0 +1,48 @@
+PROJECT: FunLynk - Laravel 12, Livewire v3, DaisyUI with galaxy theme
+
+TASK: Create a Livewire component for hosts to manage event attendees and check them in.
+
+FILE TO CREATE: app/Livewire/CheckIn/HostAttendeeManager.php
+
+CONTEXT FILES TO READ:
+- app/Livewire/Activities/ActivityDetail.php (example Livewire component pattern)
+- app/Services/CheckInService.php (use this for check-in operations)
+- context-engine/domain-contexts/ui-design-standards.md (styling - glass cards, gradients)
+
+COMPONENT REQUIREMENTS:
+1. Class: App\Livewire\CheckIn\HostAttendeeManager  
+2. Properties:
+   - public Activity $activity
+   - public Collection $rsvps (attendees list)
+   - public array $stats (from CheckInService)
+   - public string $search = '' (search filter)
+   - public string $manualCode = '' (for code entry)
+   - public ?string $errorMessage = null
+   - public ?string $successMessage = null
+3. mount(Activity $activity):
+   - Authorize user is host (abort_unless)
+   - Load RSVPs with user relationship
+   - Get check-in stats
+4. Methods:
+   - checkInByCode(): validate manualCode via CheckInService, perform check-in, refresh list
+   - manualCheckIn(string $rsvpId): check in specific RSVP with 'host_manual' method
+   - refreshList(): reload RSVPs and stats
+   - Computed: filteredRsvps filters by search term on user name/email
+5. Use wire:poll.5s='refreshList' for real-time updates
+
+BLADE VIEW TO CREATE: resources/views/livewire/check-in/host-attendee-manager.blade.php
+
+VIEW REQUIREMENTS (galaxy theme):
+1. Stats bar at top: Total RSVPs, Checked In, Pending, Percentage (glass card, colored numbers)
+2. Manual code entry section: input field for 6-digit code, 'Check In' button
+3. Search input to filter attendee list
+4. Attendee list as cards/table rows showing:
+   - User avatar/name
+   - Check-in status (green checkmark or gray pending)
+   - Check-in time if checked in
+   - 'Check In' button for pending attendees
+5. Success/error flash messages with colors
+6. Link to QR scanner component
+7. All styling: glass-card, bg-slate-800/50 for rows, gradient buttons, white/gray text
+
+OUTPUT: Provide ONLY the two complete file contents. First the PHP file, then '---BLADE---', then the Blade file. No markdown, no explanations.

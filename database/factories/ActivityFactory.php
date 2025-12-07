@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\DB;
+use MatanYadaev\EloquentSpatial\Objects\Point;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Activity>
@@ -17,15 +17,13 @@ class ActivityFactory extends Factory
      */
     public function definition(): array
     {
-        $lng = fake()->longitude();
-        $lat = fake()->latitude();
-
         return [
             'host_id' => \App\Models\User::factory(),
             'title' => fake()->sentence(4),
             'description' => fake()->paragraph(),
             'activity_type' => fake()->randomElement(['sports', 'music', 'social', 'outdoor']),
             'location_name' => fake()->city(),
+            'location_coordinates' => new Point(fake()->latitude(), fake()->longitude()),
             'start_time' => now()->addDays(fake()->numberBetween(1, 10)),
             'end_time' => null,
             'max_attendees' => fake()->optional(0.7)->numberBetween(5, 30),
@@ -39,8 +37,6 @@ class ActivityFactory extends Factory
             'status' => 'active',
             'originated_from_post_id' => null,
             'conversion_date' => null,
-            // Provide geography value at insert-time to satisfy NOT NULL
-            'location_coordinates' => DB::raw("ST_GeogFromText('SRID=4326;POINT($lng $lat)')"),
         ];
     }
 }

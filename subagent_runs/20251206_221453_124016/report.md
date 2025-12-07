@@ -1,0 +1,1 @@
+The Livewire component `app/Livewire/CheckIn/MyTicket.php` and its corresponding Blade view `resources/views/livewire/check-in/my-ticket.blade.php` have been successfully created and meet all specified requirements.

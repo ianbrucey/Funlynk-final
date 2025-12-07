@@ -1,1 +1,0 @@
-I have fixed the transaction failures in `GroupContentServiceTest.php` by adding `Event::fake()` to the `beforeEach` block.

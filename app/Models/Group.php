@@ -10,10 +10,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use MatanYadaev\EloquentSpatial\Objects\Point;
+use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
 class Group extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasSpatial, HasUuids, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -24,12 +26,15 @@ class Group extends Model
         'privacy',
         'auto_approve_members',
         'created_by',
+        'location_name',
+        'location_coordinates',
     ];
 
     protected function casts(): array
     {
         return [
             'auto_approve_members' => 'boolean',
+            'location_coordinates' => Point::class,
         ];
     }
 

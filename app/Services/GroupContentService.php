@@ -19,10 +19,11 @@ class GroupContentService
             $post = $group->posts()->create([
                 'user_id' => $user->id,
                 'title' => $data['title'],
-                'description' => $data['description'],
+                'description' => $data['description'] ?? null,
                 'location_name' => $data['location_name'] ?? null,
                 'location_coordinates' => $data['location_coordinates'] ?? null,
-                'expires_at' => $data['expires_at'] ?? null,
+                // Default expires_at to 48 hours if not provided (posts are ephemeral by design)
+                'expires_at' => $data['expires_at'] ?? now()->addHours(48),
                 'tags' => $data['tags'] ?? null, // tags is a JSON column, not a relationship
             ]);
 
@@ -36,14 +37,17 @@ class GroupContentService
     {
         return DB::transaction(function () use ($group, $user, $data) {
             $activity = $group->activities()->create([
-                'user_id' => $user->id,
+                'host_id' => $user->id, // Activities use host_id, not user_id
                 'title' => $data['title'],
                 'description' => $data['description'],
+                'activity_type' => $data['activity_type'] ?? 'group_event', // Required field
                 'location_name' => $data['location_name'],
                 'location_coordinates' => $data['location_coordinates'],
                 'start_time' => $data['start_time'],
-                'end_time' => $data['end_time'],
+                'end_time' => $data['end_time'] ?? null,
                 'max_attendees' => $data['max_attendees'] ?? null,
+                'status' => $data['status'] ?? 'active',
+                'is_public' => $data['is_public'] ?? false, // Group events are not public by default
             ]);
 
             if (isset($data['tags'])) {
@@ -59,7 +63,7 @@ class GroupContentService
     public function getGroupTimeline(Group $group, int $page = 1, int $perPage = 20): Collection
     {
         $posts = $group->posts()->with(['user'])->get(); // tags is a JSON column, not a relationship
-        $events = $group->activities()->with(['user', 'tags'])->get();
+        $events = $group->activities()->with(['host', 'tags'])->get(); // Activities use 'host' not 'user'
 
         $timeline = $posts->concat($events)->sortByDesc('created_at');
 
@@ -76,6 +80,6 @@ class GroupContentService
 
     public function getGroupEvents(Group $group): Collection
     {
-        return $group->activities()->with(['user', 'tags'])->get();
+        return $group->activities()->with(['host', 'tags'])->get(); // Activities use 'host' not 'user'
     }
 }

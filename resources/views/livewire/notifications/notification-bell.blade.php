@@ -53,7 +53,15 @@
                        wire:click.prevent="handleNotificationClick('{{ $notification->id }}', '{{ $notification->data['url'] ?? '' }}')"
                        class="block p-4 hover:bg-white/5 cursor-pointer border-b border-white/5 transition group">
                         <div class="flex items-start gap-3">
-                            <div class="w-2 h-2 bg-pink-500 rounded-full mt-2 group-hover:scale-125 transition"></div>
+                            {{-- Actor Avatar (for group notifications) --}}
+                            @if(isset($notification->data['actor_avatar']) && $notification->data['actor_avatar'])
+                                <img src="{{ $notification->data['actor_avatar'] }}"
+                                     alt="{{ $notification->data['actor_name'] ?? 'User' }}"
+                                     class="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-white/10">
+                            @else
+                                <div class="w-2 h-2 bg-pink-500 rounded-full mt-2 group-hover:scale-125 transition"></div>
+                            @endif
+
                             <div class="flex-1">
                                 <p class="text-white text-sm font-medium group-hover:text-pink-400 transition">
                                     {{ $notification->title ?? Str::headline($notification->type) }}
@@ -76,6 +84,9 @@
                                         Your post "{{ $notification->data['post_title'] ?? 'a post' }}" can be converted to an event!
                                     @elseif($notification->type === 'post_converted_to_event')
                                         {{ $notification->message ?? 'A post you were interested in became an event!' }}
+                                    @elseif(isset($notification->data['actor_name']))
+                                        {{-- Group notifications with actor --}}
+                                        <strong class="text-pink-400">{{ $notification->data['actor_name'] }}</strong> {{ $notification->message }}
                                     @else
                                         {{ $notification->message ?? 'New notification' }}
                                     @endif
