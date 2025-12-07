@@ -213,6 +213,16 @@ class GroupService
     public function createJoinRequest(Group $group, User $user): GroupJoinRequest
     {
         return DB::transaction(function () use ($group, $user) {
+            // Check for existing pending request - return it instead of creating duplicate
+            $existingPending = $group->joinRequests()
+                ->where('user_id', $user->id)
+                ->where('status', 'pending')
+                ->first();
+
+            if ($existingPending) {
+                return $existingPending;
+            }
+
             // Delete any existing requests (approved/denied) to avoid unique constraint issues
             // when re-requesting to join after being removed or denied
             $group->joinRequests()

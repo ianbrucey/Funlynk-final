@@ -75,6 +75,18 @@
                     @endif
                 </a>
 
+                <!-- My Events -->
+                <a href="{{ route('events.dashboard') }}"
+                   class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('events.*') || request()->routeIs('activities.index') ? 'bg-white/10' : '' }}"
+                   title="My Events">
+                    <svg class="w-6 h-6 {{ request()->routeIs('events.*') || request()->routeIs('activities.index') ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    @if(request()->routeIs('events.*') || request()->routeIs('activities.index'))
+                        <div class="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-500 to-cyan-500"></div>
+                    @endif
+                </a>
+
                 <!-- Create Menu -->
                 <div class="relative" x-data="{ open: false }">
                     <button

@@ -48,11 +48,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/posts/{post}', \App\Livewire\Posts\PostDetail::class)->name('posts.show');
         Route::get('/posts/{post}/chat', \App\Livewire\Posts\PostChat::class)->name('posts.chat');
 
-        // Activity Routes
+        // Activity/Event Dashboard Routes (both point to same component)
         Route::get('/events', \App\Livewire\Events\EventDashboard::class)->name('events.dashboard');
-        Route::get('/activities', function () {
-            return 'Activities Index Placeholder'; // Placeholder for now
-        })->name('activities.index');
+        Route::get('/activities', \App\Livewire\Events\EventDashboard::class)->name('activities.index');
         Route::get('/activities/create', \App\Livewire\Activities\CreateActivity::class)->name('activities.create');
         Route::get('/activities/{activity}', \App\Livewire\Activities\ActivityDetail::class)->name('activities.show');
         Route::get('/activities/{activity}/edit', \App\Livewire\Activities\EditActivity::class)->name('activities.edit');
