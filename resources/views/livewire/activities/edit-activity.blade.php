@@ -8,6 +8,25 @@
             <p class="text-gray-400">Update your activity details</p>
         </div>
 
+        {{-- Edit Protection Warning Banner --}}
+        @if ($isEditLocked)
+            <div class="mb-6 mx-4 lg:mx-0 p-4 bg-amber-500/20 border border-amber-500/50 rounded-xl">
+                <div class="flex items-start gap-3">
+                    <svg class="w-6 h-6 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <div>
+                        <h3 class="font-semibold text-amber-300">Edit Protection Active</h3>
+                        <p class="text-amber-200/80 text-sm mt-1">
+                            This event has <strong>{{ $paidAttendeeCount }}</strong> paid {{ Str::plural('attendee', $paidAttendeeCount) }}.
+                            Significant changes to date, time, or location will give attendees a 72-hour window to request a refund.
+                            Price increases are not allowed.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Flash Messages --}}
         @if (session()->has('success'))
             <div class="mb-6 mx-4 lg:mx-0 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-300">
@@ -18,6 +37,28 @@
         @if (session()->has('error'))
             <div class="mb-6 mx-4 lg:mx-0 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-300">
                 {{ session('error') }}
+            </div>
+        @endif
+
+        {{-- Blocked Changes Error --}}
+        @if (!empty($blockedChanges))
+            <div class="mb-6 mx-4 lg:mx-0 p-4 bg-red-500/20 border border-red-500/50 rounded-xl">
+                <div class="flex items-start gap-3">
+                    <svg class="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                    </svg>
+                    <div>
+                        <h3 class="font-semibold text-red-300">Changes Not Allowed</h3>
+                        <p class="text-red-200/80 text-sm mt-1">
+                            The following changes cannot be made after receiving payments:
+                        </p>
+                        <ul class="list-disc list-inside text-red-200/80 text-sm mt-2">
+                            @foreach ($blockedChanges as $change)
+                                <li>{{ ucfirst(str_replace('_', ' ', $change['field'])) }}: Cannot increase price or convert paid event to free</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
             </div>
         @endif
 
@@ -381,6 +422,72 @@
             background: linear-gradient(to right, transparent, #ec4899, transparent);
         }
     </style>
+
+    {{-- Significant Changes Warning Modal --}}
+    @if ($showWarningModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div class="relative w-full max-w-lg p-6 glass-card">
+                <div class="top-accent-center"></div>
+
+                {{-- Header --}}
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-3 bg-amber-500/20 rounded-full">
+                        <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Confirm Significant Changes</h3>
+                        <p class="text-gray-400 text-sm">This will notify {{ $paidAttendeeCount }} paid {{ Str::plural('attendee', $paidAttendeeCount) }}</p>
+                    </div>
+                </div>
+
+                {{-- Changes List --}}
+                <div class="mb-6 p-4 bg-slate-800/50 rounded-xl border border-white/10">
+                    <p class="text-sm text-gray-300 mb-3">The following significant changes will be made:</p>
+                    <ul class="space-y-2">
+                        @foreach ($significantChanges as $change)
+                            <li class="flex items-start gap-2 text-sm">
+                                <svg class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span class="text-gray-300">
+                                    <strong class="text-white">{{ ucfirst(str_replace('_', ' ', $change['field'])) }}:</strong>
+                                    Changed from "{{ Str::limit($change['old_value'] ?? 'Not set', 30) }}"
+                                    to "{{ Str::limit($change['new_value'] ?? 'Not set', 30) }}"
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+
+                {{-- Warning Message --}}
+                <div class="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                    <p class="text-amber-200 text-sm">
+                        <strong>Important:</strong> All paid attendees will be notified and given a <strong>72-hour window</strong> to request a full refund if they're not satisfied with these changes.
+                    </p>
+                </div>
+
+                {{-- Actions --}}
+                <div class="flex gap-3 justify-end">
+                    <button
+                        type="button"
+                        wire:click="cancelUpdate"
+                        class="px-6 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition font-semibold"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        wire:click="confirmUpdate"
+                        class="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-semibold hover:scale-105 transition-all shadow-lg"
+                    >
+                        Confirm & Notify Attendees
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <script>
     document.addEventListener('livewire:init', () => {

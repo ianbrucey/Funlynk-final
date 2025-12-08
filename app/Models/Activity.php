@@ -37,6 +37,8 @@ class Activity extends Model
             'max_attendees' => 'integer',
             'current_attendees' => 'integer',
             'images' => 'array',
+            'edit_locked_at' => 'datetime',
+            'original_values' => 'array',
         ];
     }
 
@@ -73,6 +75,58 @@ class Activity extends Model
     public function invitations(): HasMany
     {
         return $this->hasMany(ActivityInvitation::class);
+    }
+
+    public function editLogs(): HasMany
+    {
+        return $this->hasMany(ActivityEditLog::class);
+    }
+
+    public function refundWindows(): HasMany
+    {
+        return $this->hasMany(ActivityRefundWindow::class);
+    }
+
+    public function activeRefundWindow()
+    {
+        return $this->hasOne(ActivityRefundWindow::class)
+            ->where('status', ActivityRefundWindow::STATUS_ACTIVE)
+            ->where('expires_at', '>', now());
+    }
+
+    // Edit Protection Helpers
+    public function isEditLocked(): bool
+    {
+        return $this->edit_locked_at !== null;
+    }
+
+    public function hasPaidAttendees(): bool
+    {
+        return $this->rsvps()->where('is_paid', true)->exists();
+    }
+
+    public function getPaidAttendeeCount(): int
+    {
+        return $this->rsvps()->where('is_paid', true)->count();
+    }
+
+    public function lockEditing(): void
+    {
+        if ($this->isEditLocked()) {
+            return;
+        }
+
+        $this->update([
+            'edit_locked_at' => now(),
+            'original_values' => [
+                'title' => $this->title,
+                'start_time' => $this->start_time?->toISOString(),
+                'end_time' => $this->end_time?->toISOString(),
+                'location_name' => $this->location_name,
+                'location_address' => $this->location_address,
+                'price_cents' => $this->price_cents,
+            ],
+        ]);
     }
 
     // Scopes

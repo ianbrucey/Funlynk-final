@@ -3,6 +3,7 @@
 namespace App\Livewire\Activities;
 
 use App\Models\Activity;
+use App\Services\ActivityEditService;
 use App\Services\ActivityService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Component;
@@ -33,17 +34,27 @@ class EditActivity extends Component
     public $status = '';
     public $selectedTags = [];
     public $newTag = '';
-    
+
     // Image handling
     public $newImages = [];
     public $existingImages = [];
     public $imagesToDelete = [];
 
-    protected ActivityService $activityService;
+    // Edit protection state
+    public bool $showWarningModal = false;
+    public array $pendingChanges = [];
+    public array $blockedChanges = [];
+    public array $significantChanges = [];
+    public bool $isEditLocked = false;
+    public int $paidAttendeeCount = 0;
 
-    public function boot(ActivityService $activityService)
+    protected ActivityService $activityService;
+    protected ActivityEditService $activityEditService;
+
+    public function boot(ActivityService $activityService, ActivityEditService $activityEditService)
     {
         $this->activityService = $activityService;
+        $this->activityEditService = $activityEditService;
     }
 
     public function mount(Activity $activity)
@@ -51,12 +62,16 @@ class EditActivity extends Component
         $this->activity = $activity;
         $this->authorize('update', $activity);
 
+        // Edit protection state
+        $this->isEditLocked = $activity->isEditLocked();
+        $this->paidAttendeeCount = $activity->getPaidAttendeeCount();
+
         // Populate fields
         $this->title = $activity->title;
         $this->description = $activity->description;
         $this->activity_type = $activity->activity_type;
         $this->location_name = $activity->location_name;
-        
+
         if ($activity->location_coordinates) {
             if ($activity->location_coordinates instanceof Point) {
                 $this->latitude = $activity->location_coordinates->latitude;
@@ -70,14 +85,14 @@ class EditActivity extends Component
 
         $this->start_time = $activity->start_time->format('Y-m-d\TH:i');
         $this->end_time = $activity->end_time ? $activity->end_time->format('Y-m-d\TH:i') : '';
-        
+
         $this->max_attendees = $activity->max_attendees;
         $this->is_paid = $activity->is_paid;
         $this->price = $activity->price_cents ? $activity->price_cents / 100 : '';
         $this->is_public = $activity->is_public;
         $this->requires_approval = $activity->requires_approval;
         $this->status = $activity->status;
-        
+
         $this->existingImages = $activity->images ?? [];
 
         // Load tags
@@ -143,7 +158,7 @@ class EditActivity extends Component
 
             // Handle images
             $finalImages = $this->existingImages;
-            
+
             // Add new images
             if ($this->newImages) {
                 foreach ($this->newImages as $image) {
@@ -151,8 +166,8 @@ class EditActivity extends Component
                 }
             }
 
-            // Update activity
-            $this->activity->update([
+            // Prepare new values
+            $newValues = [
                 'title' => $this->title,
                 'description' => $this->description,
                 'activity_type' => $this->activity_type,
@@ -167,7 +182,34 @@ class EditActivity extends Component
                 'requires_approval' => $this->requires_approval,
                 'status' => $this->status,
                 'images' => $finalImages,
-            ]);
+            ];
+
+            // If activity has paid attendees, use edit protection service
+            if ($this->isEditLocked) {
+                $result = $this->activityEditService->processEdit(
+                    $this->activity,
+                    $newValues,
+                    auth()->user()
+                );
+
+                // Check for blocked changes
+                if (!$result['success'] && !empty($result['blocked_changes'])) {
+                    $this->blockedChanges = $result['blocked_changes'];
+                    session()->flash('error', $result['message']);
+                    return;
+                }
+
+                // Check for significant changes - show warning modal
+                if (!empty($result['significant_changes']) && !$this->showWarningModal) {
+                    $this->significantChanges = $result['significant_changes'];
+                    $this->pendingChanges = $newValues;
+                    $this->showWarningModal = true;
+                    return;
+                }
+            } else {
+                // No paid attendees - just update directly
+                $this->activity->update($newValues);
+            }
 
             // Sync tags
             if (!empty($this->selectedTags)) {
@@ -177,15 +219,58 @@ class EditActivity extends Component
                 $this->activity->tags()->detach();
             }
 
-            // TODO: Clean up deleted images from storage if needed
-            // For now we just remove reference from DB
-
             session()->flash('success', 'Activity updated successfully!');
-            
+
             return redirect()->route('activities.show', $this->activity->id);
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to update activity: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Confirm update after warning modal
+     */
+    public function confirmUpdate()
+    {
+        $this->showWarningModal = false;
+
+        try {
+            // Process the edit with confirmation
+            $result = $this->activityEditService->processEdit(
+                $this->activity,
+                $this->pendingChanges,
+                auth()->user()
+            );
+
+            if (!$result['success']) {
+                session()->flash('error', $result['message']);
+                return;
+            }
+
+            // Sync tags
+            if (!empty($this->selectedTags)) {
+                $tagIds = array_column($this->selectedTags, 'id');
+                $this->activity->tags()->sync($tagIds);
+            } else {
+                $this->activity->tags()->detach();
+            }
+
+            session()->flash('success', $result['message']);
+
+            return redirect()->route('activities.show', $this->activity->id);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to update activity: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Cancel update from warning modal
+     */
+    public function cancelUpdate()
+    {
+        $this->showWarningModal = false;
+        $this->pendingChanges = [];
+        $this->significantChanges = [];
     }
 
     public function useCurrentLocation()

@@ -109,6 +109,11 @@ class PaymentService
                 ],
             ]);
 
+            // Lock editing on first paid RSVP (edit protection)
+            if (!$activity->isEditLocked()) {
+                $activity->lockEditing();
+            }
+
             return $transaction;
         });
     }

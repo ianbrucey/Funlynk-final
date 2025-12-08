@@ -14,6 +14,70 @@
             </div>
         @endif
 
+        {{-- Event Changes Alert Banner (for attendees with pending response) --}}
+        @if ($pendingChangeResponse && $pendingChangeResponse->isPending() && $activeRefundWindow?->isActive())
+            <div class="mb-6 mx-4 lg:mx-0 p-4 bg-amber-500/20 border border-amber-500/50 rounded-xl">
+                <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                    <div class="flex items-start gap-3 flex-1">
+                        <div class="p-2 bg-amber-500/30 rounded-full flex-shrink-0">
+                            <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-amber-300">Event Details Changed</h3>
+                            <p class="text-amber-200/80 text-sm mt-1">
+                                The host has made significant changes to this event. You have
+                                <strong>{{ $activeRefundWindow->timeRemaining() }}</strong>
+                                to request a full refund if you're not satisfied with the changes.
+                            </p>
+                            <div class="mt-2 space-y-1">
+                                @foreach ($activeRefundWindow->changes_summary as $change)
+                                    <p class="text-amber-200/70 text-xs">
+                                        <strong>{{ ucfirst(str_replace('_', ' ', $change['field'])) }}:</strong>
+                                        {{ $change['old_display'] }} → {{ $change['new_display'] }}
+                                    </p>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 lg:flex-shrink-0">
+                        <button
+                            wire:click="acceptChanges"
+                            class="px-4 py-2 bg-green-500/20 border border-green-500/50 rounded-lg text-green-300 hover:bg-green-500/30 transition text-sm font-semibold"
+                        >
+                            Accept Changes
+                        </button>
+                        <button
+                            wire:click="openRefundModal"
+                            class="px-4 py-2 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300 hover:bg-red-500/30 transition text-sm font-semibold"
+                        >
+                            Request Refund
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- Already Responded Banner --}}
+        @if ($pendingChangeResponse && !$pendingChangeResponse->isPending())
+            <div class="mb-6 mx-4 lg:mx-0 p-4 {{ $pendingChangeResponse->isAccepted() ? 'bg-green-500/20 border-green-500/50' : 'bg-blue-500/20 border-blue-500/50' }} border rounded-xl">
+                <div class="flex items-center gap-3">
+                    @if ($pendingChangeResponse->isAccepted())
+                        <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-green-300">You have accepted the event changes. Your RSVP is confirmed.</p>
+                    @else
+                        <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                        </svg>
+                        <p class="text-blue-300">Your refund has been processed. You will receive your money back within 5-10 business days.</p>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         <div class="grid grid-cols-1 lg:grid-cols-3 lg:gap-8">
 
             {{-- Main Content (Left Column) --}}
@@ -441,5 +505,64 @@
             }
         });
     </script>
+    @endif
+
+    {{-- Refund Confirmation Modal --}}
+    @if ($showRefundModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div class="relative w-full max-w-md p-6 glass-card">
+                <div class="top-accent-center"></div>
+
+                {{-- Header --}}
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-3 bg-red-500/20 rounded-full">
+                        <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Confirm Refund Request</h3>
+                        <p class="text-gray-400 text-sm">This action cannot be undone</p>
+                    </div>
+                </div>
+
+                {{-- Content --}}
+                <div class="mb-6 p-4 bg-slate-800/50 rounded-xl border border-white/10">
+                    <p class="text-gray-300 text-sm">
+                        You are about to request a full refund of
+                        <strong class="text-white">${{ number_format(($userRsvp?->payment_amount ?? 0) / 100, 2) }}</strong>
+                        for this event.
+                    </p>
+                    <p class="text-gray-400 text-sm mt-2">
+                        Your RSVP will be cancelled and you will no longer be able to attend this event.
+                    </p>
+                </div>
+
+                {{-- Warning --}}
+                <div class="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                    <p class="text-amber-200 text-sm">
+                        <strong>Note:</strong> Refunds typically take 5-10 business days to appear in your account.
+                    </p>
+                </div>
+
+                {{-- Actions --}}
+                <div class="flex gap-3 justify-end">
+                    <button
+                        type="button"
+                        wire:click="closeRefundModal"
+                        class="px-6 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition font-semibold"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        wire:click="requestRefund"
+                        class="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl font-semibold hover:scale-105 transition-all shadow-lg"
+                    >
+                        Confirm Refund
+                    </button>
+                </div>
+            </div>
+        </div>
     @endif
 </div>
