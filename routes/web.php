@@ -126,3 +126,8 @@ Route::controller(SocialLoginController::class)
 Route::get('/chat-demo', function () {
     return view('chat-demo');
 });
+
+// Reverb test page
+Route::middleware('auth')->get('/test-toast', function () {
+    return view('test-toast');
+})->name('test.toast');
