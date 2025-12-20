@@ -3,6 +3,7 @@
 namespace App\Livewire\Onboarding;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -14,8 +15,11 @@ class OnboardingWizard extends Component
 
     public int $currentStep = 1;
 
-    #[Validate('required|image|max:2048')]
+    #[Validate('nullable|image|max:2048')]
     public $profileImage = null;
+
+    // Store the uploaded image path (persisted to DB)
+    public ?string $uploadedImagePath = null;
 
     #[Validate('required|string|max:255')]
     public $location_name = '';
@@ -36,18 +40,29 @@ class OnboardingWizard extends Component
     {
         // If already completed onboarding, redirect to dashboard
         if (Auth::user()->hasCompletedOnboarding()) {
-            return redirect()->route('dashboard');
+            return redirect()->route('feed.nearby');
         }
 
         // Pre-fill if user already has some data
         $user = Auth::user();
+
+        // Check if profile image already uploaded
+        if ($user->profile_image_url) {
+            $this->uploadedImagePath = $user->profile_image_url;
+            // Start at step 2 if we have profile image
+            $this->currentStep = 2;
+        }
+
         if ($user->location_name) {
             $this->location_name = $user->location_name;
+            // If we have location too, start at step 3
+            if ($user->location_coordinates && $this->uploadedImagePath) {
+                $this->latitude = $user->location_coordinates->latitude;
+                $this->longitude = $user->location_coordinates->longitude;
+                $this->currentStep = 3;
+            }
         }
-        if ($user->location_coordinates) {
-            $this->latitude = $user->location_coordinates->latitude;
-            $this->longitude = $user->location_coordinates->longitude;
-        }
+
         if ($user->interests) {
             $this->interests = $user->interests;
         }
@@ -55,9 +70,26 @@ class OnboardingWizard extends Component
 
     public function nextStepFromProfilePicture()
     {
+        // If we already have an uploaded image, just proceed
+        if ($this->uploadedImagePath) {
+            $this->currentStep = 2;
+            return;
+        }
+
+        // Otherwise validate and upload the new image
         $this->validate([
             'profileImage' => 'required|image|max:2048',
         ]);
+
+        // Upload to S3 immediately and save to user
+        $path = $this->profileImage->store('profile-images', 's3');
+
+        Auth::user()->update([
+            'profile_image_url' => $path,
+        ]);
+
+        $this->uploadedImagePath = $path;
+        $this->profileImage = null; // Clear the temporary file
 
         $this->currentStep = 2;
     }
@@ -116,27 +148,36 @@ class OnboardingWizard extends Component
 
     public function complete()
     {
-        // Validate all fields
+        // Validate location and interests (profile image was already saved in step 1)
         $this->validate([
-            'profileImage' => 'required|image|max:2048',
             'location_name' => 'required|string|max:255',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'interests' => 'nullable|array|max:10',
         ]);
 
+        // Ensure we have a profile image (either just uploaded or from previous step)
+        if (!$this->uploadedImagePath && !$this->profileImage) {
+            $this->addError('profileImage', 'Profile image is required.');
+            $this->currentStep = 1;
+            return;
+        }
+
         $user = Auth::user();
 
-        // Upload profile image to S3
-        $profileImagePath = $this->profileImage->store('profile-images', 's3');
-
-        // Update user with onboarding data
-        $user->update([
-            'profile_image_url' => $profileImagePath,
+        $updateData = [
             'location_name' => $this->location_name,
             'location_coordinates' => new Point($this->latitude, $this->longitude),
             'interests' => $this->interests,
-        ]);
+        ];
+
+        // If there's a new profile image to upload (shouldn't happen normally, but just in case)
+        if ($this->profileImage) {
+            $updateData['profile_image_url'] = $this->profileImage->store('profile-images', 's3');
+        }
+
+        // Update user with onboarding data
+        $user->update($updateData);
 
         // Mark onboarding as complete
         $user->markOnboardingComplete();

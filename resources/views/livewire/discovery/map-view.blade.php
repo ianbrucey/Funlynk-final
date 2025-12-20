@@ -34,7 +34,7 @@
     </div>
 
     {{-- Google Maps Script --}}
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_api_key') }}&callback=initMap&loading=async" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google.maps_api_key') }}&callback=initMap" async defer></script>
 
     <script>
         let map;

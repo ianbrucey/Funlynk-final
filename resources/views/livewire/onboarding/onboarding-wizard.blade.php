@@ -47,6 +47,7 @@
                     <!-- Profile Picture Upload -->
                     <div class="flex flex-col items-center gap-6">
                         @if($profileImage)
+                            {{-- New image being uploaded --}}
                             <div class="relative">
                                 <img src="{{ $profileImage->temporaryUrl() }}"
                                      alt="Profile preview"
@@ -59,6 +60,16 @@
                                     </svg>
                                 </button>
                             </div>
+                        @elseif($uploadedImagePath)
+                            {{-- Previously uploaded image --}}
+                            <div class="relative">
+                                <img src="{{ Storage::disk('s3')->url($uploadedImagePath) }}"
+                                     alt="Profile preview"
+                                     class="w-40 h-40 rounded-full object-cover ring-4 ring-green-500/50">
+                                <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 rounded-full text-white text-xs font-semibold">
+                                    ✓ Saved
+                                </div>
+                            </div>
                         @else
                             <div class="w-40 h-40 rounded-full bg-slate-800/50 border-2 border-dashed border-white/20 flex items-center justify-center">
                                 <svg class="w-16 h-16 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,11 +80,17 @@
 
                         <div class="w-full max-w-md">
                             <label for="profile-image-upload"
-                                   class="block w-full px-6 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold text-white text-center cursor-pointer hover:scale-105 transition-all">
+                                   class="block w-full px-6 py-4 {{ $uploadedImagePath ? 'bg-slate-700 hover:bg-slate-600' : 'bg-gradient-to-r from-pink-500 to-purple-500' }} rounded-xl font-semibold text-white text-center cursor-pointer hover:scale-105 transition-all">
                                 <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
-                                {{ $profileImage ? 'Change Photo' : 'Upload Photo' }}
+                                @if($profileImage)
+                                    Change Photo
+                                @elseif($uploadedImagePath)
+                                    Change Photo
+                                @else
+                                    Upload Photo
+                                @endif
                             </label>
                             <input type="file"
                                    id="profile-image-upload"
@@ -99,9 +116,11 @@
                     <div class="flex justify-end mt-8">
                         <button
                             wire:click="nextStepFromProfilePicture"
+                            wire:loading.attr="disabled"
                             class="btn btn-lg bg-gradient-to-r from-pink-500 to-purple-500 border-none text-white px-8 hover:scale-105 transition-transform"
-                            {{ !$profileImage ? 'disabled' : '' }}>
-                            Continue
+                            {{ (!$profileImage && !$uploadedImagePath) ? 'disabled' : '' }}>
+                            <span wire:loading.remove wire:target="nextStepFromProfilePicture">Continue</span>
+                            <span wire:loading wire:target="nextStepFromProfilePicture">Saving...</span>
                             <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                             </svg>
@@ -280,7 +299,8 @@ if (!window.onboardingLocationInitialized) {
             }
 
             const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&libraries=places&loading=async`;
+            // Note: Removed loading=async as it requires importLibrary() pattern
+            script.src = `https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&libraries=places`;
             script.async = true;
             script.defer = true;
             document.head.appendChild(script);
