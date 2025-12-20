@@ -10,20 +10,107 @@
                         <div class="w-10 h-10 rounded-full {{ $currentStep >= 1 ? 'bg-gradient-to-r from-pink-500 to-purple-500' : 'bg-slate-700' }} flex items-center justify-center text-white font-semibold">
                             1
                         </div>
-                        <span class="ml-2 text-sm {{ $currentStep >= 1 ? 'text-white' : 'text-gray-500' }}">Location</span>
+                        <span class="ml-2 text-sm {{ $currentStep >= 1 ? 'text-white' : 'text-gray-500' }}">Photo</span>
                     </div>
-                    <div class="w-16 h-1 {{ $currentStep >= 2 ? 'bg-gradient-to-r from-pink-500 to-purple-500' : 'bg-slate-700' }}"></div>
+                    <div class="w-12 h-1 {{ $currentStep >= 2 ? 'bg-gradient-to-r from-pink-500 to-purple-500' : 'bg-slate-700' }}"></div>
                     <div class="flex items-center">
                         <div class="w-10 h-10 rounded-full {{ $currentStep >= 2 ? 'bg-gradient-to-r from-pink-500 to-purple-500' : 'bg-slate-700' }} flex items-center justify-center text-white font-semibold">
                             2
                         </div>
-                        <span class="ml-2 text-sm {{ $currentStep >= 2 ? 'text-white' : 'text-gray-500' }}">Interests</span>
+                        <span class="ml-2 text-sm {{ $currentStep >= 2 ? 'text-white' : 'text-gray-500' }}">Location</span>
+                    </div>
+                    <div class="w-12 h-1 {{ $currentStep >= 3 ? 'bg-gradient-to-r from-pink-500 to-purple-500' : 'bg-slate-700' }}"></div>
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full {{ $currentStep >= 3 ? 'bg-gradient-to-r from-pink-500 to-purple-500' : 'bg-slate-700' }} flex items-center justify-center text-white font-semibold">
+                            3
+                        </div>
+                        <span class="ml-2 text-sm {{ $currentStep >= 3 ? 'text-white' : 'text-gray-500' }}">Interests</span>
                     </div>
                 </div>
             </div>
 
             @if($currentStep === 1)
-                <!-- Step 1: Location -->
+                <!-- Step 1: Profile Picture -->
+                <div class="space-y-6">
+                    <div class="text-center mb-8">
+                        <div class="inline-block p-4 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-2xl mb-4">
+                            <svg class="w-12 h-12 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                        <h2 class="text-3xl font-bold text-white mb-3">Add your profile picture</h2>
+                        <p class="text-gray-400 text-lg max-w-xl mx-auto">
+                            Help others recognize you by uploading a profile picture. This is required to continue.
+                        </p>
+                    </div>
+
+                    <!-- Profile Picture Upload -->
+                    <div class="flex flex-col items-center gap-6">
+                        @if($profileImage)
+                            <div class="relative">
+                                <img src="{{ $profileImage->temporaryUrl() }}"
+                                     alt="Profile preview"
+                                     class="w-40 h-40 rounded-full object-cover ring-4 ring-cyan-500/50">
+                                <button type="button"
+                                        wire:click="$set('profileImage', null)"
+                                        class="absolute -top-2 -right-2 p-2 bg-red-500 rounded-full text-white hover:bg-red-600 transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        @else
+                            <div class="w-40 h-40 rounded-full bg-slate-800/50 border-2 border-dashed border-white/20 flex items-center justify-center">
+                                <svg class="w-16 h-16 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                        @endif
+
+                        <div class="w-full max-w-md">
+                            <label for="profile-image-upload"
+                                   class="block w-full px-6 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold text-white text-center cursor-pointer hover:scale-105 transition-all">
+                                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                {{ $profileImage ? 'Change Photo' : 'Upload Photo' }}
+                            </label>
+                            <input type="file"
+                                   id="profile-image-upload"
+                                   wire:model="profileImage"
+                                   accept="image/*"
+                                   class="hidden">
+                        </div>
+
+                        <div wire:loading wire:target="profileImage" class="text-cyan-400 flex items-center gap-2">
+                            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Uploading...
+                        </div>
+
+                        @error('profileImage')
+                            <p class="text-red-400 text-sm">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Continue Button -->
+                    <div class="flex justify-end mt-8">
+                        <button
+                            wire:click="nextStepFromProfilePicture"
+                            class="btn btn-lg bg-gradient-to-r from-pink-500 to-purple-500 border-none text-white px-8 hover:scale-105 transition-transform"
+                            {{ !$profileImage ? 'disabled' : '' }}>
+                            Continue
+                            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+            @elseif($currentStep === 2)
+                <!-- Step 2: Location -->
                 <div class="space-y-6">
                     <div class="text-center mb-8">
                         <div class="inline-block p-4 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl mb-4">
@@ -75,8 +162,16 @@
                     @error('longitude') <p class="text-red-400 text-sm text-center">{{ $message }}</p> @enderror
 
                     <!-- Continue Button -->
-                    <div class="flex justify-end mt-8">
-                        <button 
+                    <div class="flex justify-between mt-8">
+                        <button
+                            wire:click="previousStep"
+                            class="btn btn-ghost text-gray-400 hover:text-white hover:bg-white/10">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                            </svg>
+                            Back
+                        </button>
+                        <button
                             wire:click="nextStep"
                             class="btn btn-lg bg-gradient-to-r from-pink-500 to-purple-500 border-none text-white px-8 hover:scale-105 transition-transform"
                             {{ !$location_name || !$latitude || !$longitude ? 'disabled' : '' }}>
@@ -88,8 +183,8 @@
                     </div>
                 </div>
 
-            @elseif($currentStep === 2)
-                <!-- Step 2: Interests -->
+            @elseif($currentStep === 3)
+                <!-- Step 3: Interests -->
                 <div class="space-y-6">
                     <!-- TODO: FIGURE OUT HOW TO MAKE THIS WORK WITHOUT THIS STUPID H1 TAG -->
                     <h1></h1> 

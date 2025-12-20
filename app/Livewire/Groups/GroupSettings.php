@@ -3,7 +3,6 @@
 namespace App\Livewire\Groups;
 
 use App\Models\Group;
-use App\Models\Tag;
 use App\Services\GroupService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -22,7 +21,10 @@ class GroupSettings extends Component
 
     public string $privacy = 'public';
 
-    public array $selectedTags = [];
+    // Dynamic tags (type-and-enter pattern)
+    public array $tags = [];
+
+    public string $newTag = '';
 
     public $avatarImage = null;
 
@@ -39,7 +41,7 @@ class GroupSettings extends Component
         $this->name = $group->name;
         $this->description = $group->description ?? '';
         $this->privacy = $group->privacy;
-        $this->selectedTags = $group->tags->pluck('id')->toArray();
+        $this->tags = $group->tags->pluck('name')->toArray();
     }
 
     protected function rules(): array
@@ -48,10 +50,37 @@ class GroupSettings extends Component
             'name' => ['required', 'string', 'max:100'],
             'description' => ['nullable', 'string', 'max:500'],
             'privacy' => ['required', 'in:public,private'],
-            'selectedTags' => ['nullable', 'array'],
+            'tags' => ['nullable', 'array', 'max:10'],
+            'tags.*' => ['string', 'max:50'],
             'avatarImage' => ['nullable', 'image', 'max:2048'],
             'coverImage' => ['nullable', 'image', 'max:4096'],
         ];
+    }
+
+    public function addTag()
+    {
+        if (empty($this->newTag)) {
+            return;
+        }
+
+        if (count($this->tags) >= 10) {
+            $this->addError('tags', 'Maximum 10 tags allowed.');
+
+            return;
+        }
+
+        $tag = trim($this->newTag);
+        if (! in_array($tag, $this->tags)) {
+            $this->tags[] = $tag;
+        }
+
+        $this->reset('newTag');
+    }
+
+    public function removeTag($index)
+    {
+        unset($this->tags[$index]);
+        $this->tags = array_values($this->tags);
     }
 
     public function updateGroup(GroupService $groupService): void
@@ -62,7 +91,7 @@ class GroupSettings extends Component
             'name' => $this->name,
             'description' => $this->description,
             'privacy' => $this->privacy,
-            'tags' => $this->selectedTags,
+            'tags' => $this->tags,
         ];
 
         // Handle avatar upload
@@ -103,10 +132,6 @@ class GroupSettings extends Component
 
     public function render()
     {
-        $availableTags = Tag::all();
-
-        return view('livewire.groups.group-settings', [
-            'availableTags' => $availableTags,
-        ]);
+        return view('livewire.groups.group-settings');
     }
 }

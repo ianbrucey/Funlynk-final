@@ -62,17 +62,38 @@
                 @error('privacy') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
             </div>
 
-            <!-- Tags -->
+            <!-- Dynamic Tags Input (type-and-enter) -->
             <div class="mb-6">
-                <label for="selectedTags" class="block text-sm font-medium text-gray-300 mb-2">Tags</label>
-                <select id="selectedTags" wire:model="selectedTags" multiple
-                    class="w-full rounded-xl bg-slate-800/50 border border-white/10 text-white px-4 py-3 focus:border-cyan-500 focus:ring-cyan-500 transition h-32">
-                    @foreach($availableTags as $tag)
-                        <option value="{{ $tag->id }}">{{ $tag->name }}</option>
-                    @endforeach
-                </select>
-                <p class="text-gray-500 text-sm mt-1">Hold Ctrl/Cmd to select multiple tags</p>
-                @error('selectedTags') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
+                <label class="block text-gray-300 text-sm font-semibold mb-2">Tags (Optional)</label>
+                <div class="flex gap-2 mb-2">
+                    <input type="text"
+                           id="tag-input"
+                           wire:model="newTag"
+                           wire:keydown.enter.prevent="addTag"
+                           placeholder="Type a tag and press Enter"
+                           class="flex-1 px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white" />
+                    <button type="button"
+                            wire:click="addTag"
+                            class="px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
+                        Add
+                    </button>
+                </div>
+                @if(count($tags) > 0)
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($tags as $index => $tag)
+                            <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm flex items-center gap-2">
+                                {{ $tag }}
+                                <button type="button" wire:click="removeTag({{ $index }})" class="text-purple-300 hover:text-white transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </span>
+                        @endforeach
+                    </div>
+                @endif
+                <p class="text-xs text-gray-500 mt-1">{{ count($tags) }}/10 tags</p>
+                @error('tags') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
             </div>
 
             <!-- Avatar Image -->

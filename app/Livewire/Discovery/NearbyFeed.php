@@ -102,10 +102,10 @@ class NearbyFeed extends Component
 
         if ($append) {
             // Append new items to existing items
-            $this->items = array_merge($this->items, $result['items']->toArray());
+            $this->items = array_merge($this->items, $result['items']->all());
         } else {
             // Replace items (for initial load or filter changes)
-            $this->items = $result['items']->toArray();
+            $this->items = $result['items']->all();
         }
 
         $this->hasMore = $result['hasMore'];

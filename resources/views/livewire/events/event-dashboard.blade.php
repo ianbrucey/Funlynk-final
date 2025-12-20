@@ -16,7 +16,7 @@
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
             <div class="glass-card p-3 sm:p-5 text-center">
                 <div class="text-2xl sm:text-3xl font-bold text-cyan-400">{{ $stats['upcoming'] }}</div>
                 <div class="text-gray-400 text-xs sm:text-sm mt-1">Upcoming</div>
@@ -24,10 +24,6 @@
             <div class="glass-card p-3 sm:p-5 text-center">
                 <div class="text-2xl sm:text-3xl font-bold text-pink-400">{{ $stats['total_attendees'] }}</div>
                 <div class="text-gray-400 text-xs sm:text-sm mt-1">Attendees</div>
-            </div>
-            <div class="glass-card p-3 sm:p-5 text-center">
-                <div class="text-2xl sm:text-3xl font-bold text-yellow-400">{{ $stats['drafts'] }}</div>
-                <div class="text-gray-400 text-xs sm:text-sm mt-1">Drafts</div>
             </div>
             <div class="glass-card p-3 sm:p-5 text-center">
                 <div class="text-2xl sm:text-3xl font-bold text-purple-400">{{ $stats['past'] }}</div>
@@ -48,7 +44,7 @@
 
                 <!-- Filter Tabs -->
                 <div class="flex gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
-                    @foreach(['upcoming' => 'Upcoming', 'past' => 'Past', 'draft' => 'Drafts', 'all' => 'All'] as $key => $label)
+                    @foreach(['upcoming' => 'Upcoming', 'past' => 'Past', 'all' => 'All'] as $key => $label)
                         <button wire:click="setFilter('{{ $key }}')"
                                 class="px-3 sm:px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm sm:text-base flex-shrink-0 {{ $filter === $key
                                     ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white'
@@ -259,23 +255,23 @@
                     <p class="text-gray-400 text-sm sm:text-base mb-6">
                         @if($search)
                             No events match "{{ $search }}"
-                        @elseif($filter === 'draft')
-                            You don't have any draft events
                         @elseif($filter === 'upcoming')
                             You don't have any upcoming events
                         @elseif($filter === 'past')
-                            You haven't hosted any events yet
+                            You don't have any past events
                         @else
                             Start hosting events to see them here
                         @endif
                     </p>
-                    <a href="{{ route('activities.create') }}"
-                       class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-white text-sm sm:text-base">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                        Create Your First Event
-                    </a>
+                    @if($stats['upcoming'] + $stats['past'] === 0)
+                        <a href="{{ route('activities.create') }}"
+                           class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-white text-sm sm:text-base">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Create Your First Event
+                        </a>
+                    @endif
                 </div>
             @endforelse
         </div>

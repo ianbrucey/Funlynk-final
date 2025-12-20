@@ -42,7 +42,6 @@ class EventDashboard extends Component
         match ($this->filter) {
             'upcoming' => $query->where('start_time', '>', now())->orderBy('start_time', 'asc'),
             'past' => $query->where('start_time', '<=', now())->orderBy('start_time', 'desc'),
-            'draft' => $query->where('status', 'draft')->orderBy('updated_at', 'desc'),
             default => $query->orderBy('start_time', 'desc'),
         };
 
@@ -62,10 +61,6 @@ class EventDashboard extends Component
             ->get()
             ->sum('rsvps_count');
 
-        $drafts = Activity::where('host_id', $userId)
-            ->where('status', 'draft')
-            ->count();
-
         $past = Activity::where('host_id', $userId)
             ->where('start_time', '<=', now())
             ->count();
@@ -73,7 +68,6 @@ class EventDashboard extends Component
         return [
             'upcoming' => $upcoming,
             'total_attendees' => $totalAttendees,
-            'drafts' => $drafts,
             'past' => $past,
         ];
     }

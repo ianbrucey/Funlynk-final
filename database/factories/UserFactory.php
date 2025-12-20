@@ -53,6 +53,7 @@ class UserFactory extends Factory
             'email_on_rsvp_update' => true,
             'email_on_comment' => true,
             'email_on_reaction' => false,
+            'onboarding_completed_at' => now(),
             'remember_token' => Str::random(10),
         ];
     }

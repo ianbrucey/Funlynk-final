@@ -5,11 +5,17 @@ namespace App\Livewire\Onboarding;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class OnboardingWizard extends Component
 {
+    use WithFileUploads;
+
     public int $currentStep = 1;
+
+    #[Validate('required|image|max:2048')]
+    public $profileImage = null;
 
     #[Validate('required|string|max:255')]
     public $location_name = '';
@@ -47,24 +53,33 @@ class OnboardingWizard extends Component
         }
     }
 
+    public function nextStepFromProfilePicture()
+    {
+        $this->validate([
+            'profileImage' => 'required|image|max:2048',
+        ]);
+
+        $this->currentStep = 2;
+    }
+
     public function setLocationData($name, $lat, $lng)
     {
         $this->location_name = $name;
         $this->latitude = $lat ? (float) $lat : null;
         $this->longitude = $lng ? (float) $lng : null;
-        $this->currentStep = 2;
+        $this->currentStep = 3;
     }
 
     public function nextStep()
     {
-        // Validate step 1 before proceeding
+        // Validate step 2 (location) before proceeding
         $this->validate([
             'location_name' => 'required|string|max:255',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
         ]);
 
-        $this->currentStep = 2;
+        $this->currentStep = 3;
     }
 
     public function previousStep()
@@ -103,6 +118,7 @@ class OnboardingWizard extends Component
     {
         // Validate all fields
         $this->validate([
+            'profileImage' => 'required|image|max:2048',
             'location_name' => 'required|string|max:255',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
@@ -111,8 +127,12 @@ class OnboardingWizard extends Component
 
         $user = Auth::user();
 
+        // Upload profile image
+        $profileImagePath = $this->profileImage->store('profile-images', 'public');
+
         // Update user with onboarding data
         $user->update([
+            'profile_image_url' => $profileImagePath,
             'location_name' => $this->location_name,
             'location_coordinates' => new Point($this->latitude, $this->longitude),
             'interests' => $this->interests,
