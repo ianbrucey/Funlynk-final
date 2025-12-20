@@ -381,7 +381,7 @@
         // Load Google Places API
         if (!window.google || !window.google.maps || !window.google.maps.places) {
             const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&libraries=places`;
+            script.src = `https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&libraries=places&loading=async`;
             script.async = true;
             script.defer = true;
             document.head.appendChild(script);

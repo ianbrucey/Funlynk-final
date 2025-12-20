@@ -192,11 +192,11 @@ class EditProfile extends Component
         if ($this->profile_image) {
             // Delete old image if exists
             if ($currentProfileImage) {
-                Storage::disk('public')->delete($currentProfileImage);
+                Storage::disk('s3')->delete($currentProfileImage);
             }
 
-            // Store new image
-            $path = $this->profile_image->store('profiles', 'public');
+            // Store new image to S3
+            $path = $this->profile_image->store('profiles', 's3');
             $data['profile_image_url'] = $path;
             $this->current_profile_image_url = $path;
         }
@@ -221,7 +221,7 @@ class EditProfile extends Component
         $currentProfileImage = $currentData->profile_image_url ?? null;
 
         if ($currentProfileImage) {
-            Storage::disk('public')->delete($currentProfileImage);
+            Storage::disk('s3')->delete($currentProfileImage);
             \App\Models\User::where('id', $userId)->update(['profile_image_url' => null]);
             $this->current_profile_image_url = null;
         }

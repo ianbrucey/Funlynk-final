@@ -487,7 +487,7 @@
         if (!window.google || !window.google.maps) {
             console.log('Loading Google Maps API...');
             const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&callback=initActivityMap`;
+            script.src = `https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&callback=initActivityMap&loading=async`;
             script.async = true;
             script.defer = true;
             document.head.appendChild(script);

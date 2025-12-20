@@ -112,11 +112,11 @@ class CreateActivity extends Component
             // Create location point
             $locationPoint = new Point((float)$this->latitude, (float)$this->longitude);
 
-            // Upload images
+            // Upload images to S3
             $imagePaths = [];
             if ($this->images) {
                 foreach ($this->images as $image) {
-                    $imagePaths[] = $image->store('activities', 'public');
+                    $imagePaths[] = $image->store('activities', 's3');
                 }
             }
 

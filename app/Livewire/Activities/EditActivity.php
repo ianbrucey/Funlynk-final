@@ -159,10 +159,10 @@ class EditActivity extends Component
             // Handle images
             $finalImages = $this->existingImages;
 
-            // Add new images
+            // Add new images to S3
             if ($this->newImages) {
                 foreach ($this->newImages as $image) {
-                    $finalImages[] = $image->store('activities', 'public');
+                    $finalImages[] = $image->store('activities', 's3');
                 }
             }
 

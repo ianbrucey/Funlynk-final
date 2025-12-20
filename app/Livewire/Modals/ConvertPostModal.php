@@ -160,9 +160,9 @@ class ConvertPostModal extends Component
                 'tags' => $this->selectedTags,
             ];
 
-            // Handle image upload
+            // Handle image upload to S3
             if ($this->image) {
-                $eventData['image_path'] = $this->image->store('activities', 'public');
+                $eventData['image_path'] = $this->image->store('activities', 's3');
             }
 
             \Log::info('About to convert post to event', ['eventData' => $eventData]);

@@ -127,8 +127,8 @@ class OnboardingWizard extends Component
 
         $user = Auth::user();
 
-        // Upload profile image
-        $profileImagePath = $this->profileImage->store('profile-images', 'public');
+        // Upload profile image to S3
+        $profileImagePath = $this->profileImage->store('profile-images', 's3');
 
         // Update user with onboarding data
         $user->update([
