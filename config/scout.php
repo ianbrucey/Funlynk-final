@@ -149,8 +149,8 @@ return [
                 'sortableAttributes' => ['start_time', 'created_at', 'price', '_geo'],
             ],
             'users_index' => [
-                'filterableAttributes' => ['id', 'is_verified', '_geo'],
-                'sortableAttributes' => ['created_at'],
+                'filterableAttributes' => ['id', 'is_active', 'is_verified', 'interests', 'created_at', '_geo'],
+                'sortableAttributes' => ['follower_count', 'created_at', '_geo'],
             ],
         ],
     ],
