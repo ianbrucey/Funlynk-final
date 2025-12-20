@@ -88,6 +88,7 @@ function getNotificationIcon(type) {
         'activity_rsvp': '✅',
         'comment': '💬',
         'follow': '👥',
+        'test': '🚀',
     };
     return icons[type] || '🔔';
 }
@@ -97,8 +98,10 @@ function getNotificationIcon(type) {
  */
 function getNotificationMessage(notification) {
     const { type, subtype, data } = notification;
-    
-    if (type === 'post_reaction') {
+
+    if (type === 'test') {
+        return data.message || 'Test notification from Reverb!';
+    } else if (type === 'post_reaction') {
         if (subtype === 'im_down') {
             return `is down for "${data.post_title}"`;
         }
@@ -111,7 +114,7 @@ function getNotificationMessage(notification) {
             return `Your post "${data.post_title}" was converted to an event!`;
         }
     }
-    
+
     return 'New notification';
 }
 

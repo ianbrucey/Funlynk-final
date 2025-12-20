@@ -140,9 +140,18 @@ return [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
         'index-settings' => [
-            // 'users' => [
-            //     'filterableAttributes'=> ['id', 'name', 'email'],
-            // ],
+            'posts_index' => [
+                'filterableAttributes' => ['status', 'category', 'user_id', '_geo'],
+                'sortableAttributes' => ['created_at', 'expires_at', '_geo'],
+            ],
+            'activities_index' => [
+                'filterableAttributes' => ['status', 'category', 'host_id', 'is_paid', 'visibility', 'start_time', '_geo'],
+                'sortableAttributes' => ['start_time', 'created_at', 'price', '_geo'],
+            ],
+            'users_index' => [
+                'filterableAttributes' => ['id', 'is_verified', '_geo'],
+                'sortableAttributes' => ['created_at'],
+            ],
         ],
     ],
 
