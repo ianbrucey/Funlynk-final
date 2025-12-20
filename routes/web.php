@@ -11,7 +11,6 @@ use App\Livewire\Groups\GroupShow;
 use App\Livewire\Groups\GroupsIndex;
 use App\Livewire\Profile\EditProfile;
 use App\Livewire\Profile\ShowProfile;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -100,15 +99,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/groups/{group:slug}/requests', \App\Livewire\Groups\JoinRequestsList::class)->name('groups.requests');
         Route::get('/dashboard', UserDashboard::class)->name('dashboard');
     });
-
-    // Profile view / redirect logic
-    Route::get('/u/{user:username}', function (User $user) {
-        if (auth()->check() && auth()->id() === $user->id) {
-            return redirect()->route('dashboard');
-        }
-
-        return app(ShowProfile::class, ['username' => $user->username]);
-    })->name('profile.view');
 
     // Profile edit route (outside onboarding middleware - accessible to incomplete users)
     Route::get('/profile/edit', EditProfile::class)->name('profile.edit');
