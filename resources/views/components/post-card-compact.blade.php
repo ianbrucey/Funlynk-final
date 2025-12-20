@@ -74,18 +74,28 @@
         @endif
     </div>
     
-    {{-- Tags --}}
-    @if($post->tags && count($post->tags) > 0)
+    {{-- Mood/Vibe & Tags --}}
+    @if($post->mood || ($post->tags && count($post->tags) > 0))
         <div class="flex flex-wrap gap-1.5 mb-3">
-            @foreach(array_slice($post->tags, 0, 3) as $tag)
-                <span class="px-2 py-0.5 bg-slate-800/50 border border-white/10 rounded text-xs text-gray-300">
-                    {{ $tag }}
+            {{-- Mood Badge --}}
+            @if($post->mood)
+                <span class="px-2 py-1 bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/50 rounded-full text-xs font-semibold text-pink-300">
+                    ✨ {{ ucfirst($post->mood) }}
                 </span>
-            @endforeach
-            @if(count($post->tags) > 3)
-                <span class="px-2 py-0.5 text-xs text-gray-500">
-                    +{{ count($post->tags) - 3 }}
-                </span>
+            @endif
+
+            {{-- Tags --}}
+            @if($post->tags && count($post->tags) > 0)
+                @foreach(array_slice($post->tags, 0, 3) as $tag)
+                    <span class="px-2 py-0.5 bg-slate-800/50 border border-white/10 rounded text-xs text-gray-300">
+                        {{ $tag }}
+                    </span>
+                @endforeach
+                @if(count($post->tags) > 3)
+                    <span class="px-2 py-0.5 text-xs text-gray-500">
+                        +{{ count($post->tags) - 3 }}
+                    </span>
+                @endif
             @endif
         </div>
     @endif
