@@ -23,7 +23,7 @@ php artisan migrate --force
 
 # Seed location data BEFORE indexing
 echo "🌍 Seeding location data..."
-php artisan db:seed --class=LocationSeeder
+php artisan db:seed --class=LocationSeeder --force
 
 # Clear and cache config/routes/views
 echo "🔧 Caching configuration..."

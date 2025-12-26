@@ -3,7 +3,6 @@
 namespace App\Livewire\Onboarding;
 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -13,28 +12,22 @@ class OnboardingWizard extends Component
 {
     use WithFileUploads;
 
+    // Step order: 1=Location, 2=Photo, 3=Interests
     public int $currentStep = 1;
 
+    // Location data (Step 1)
+    public string $location_name = '';
+    public ?float $latitude = null;
+    public ?float $longitude = null;
+
+    // Profile image (Step 2)
     #[Validate('nullable|image|max:2048')]
     public $profileImage = null;
-
-    // Store the uploaded image path (persisted to DB)
     public ?string $uploadedImagePath = null;
 
-    #[Validate('required|string|max:255')]
-    public $location_name = '';
-
-    #[Validate('required|numeric|between:-90,90')]
-    public $latitude = null;
-
-    #[Validate('required|numeric|between:-180,180')]
-    public $longitude = null;
-
-    #[Validate('nullable|array|max:10')]
-    public $interests = [];
-
-    #[Validate('nullable|string|max:50')]
-    public $newInterest = '';
+    // Interests (Step 3)
+    public array $interests = [];
+    public string $newInterest = '';
 
     public function mount()
     {
@@ -43,36 +36,68 @@ class OnboardingWizard extends Component
             return redirect()->route('feed.nearby');
         }
 
-        // Pre-fill if user already has some data
+        // Pre-fill existing user data
         $user = Auth::user();
 
-        // Check if profile image already uploaded
+        // Load existing location
+        if ($user->location_name && $user->location_coordinates) {
+            $this->location_name = $user->location_name;
+            $this->latitude = $user->location_coordinates->latitude;
+            $this->longitude = $user->location_coordinates->longitude;
+        }
+
+        // Load existing profile image
         if ($user->profile_image_url) {
             $this->uploadedImagePath = $user->profile_image_url;
-            // Start at step 2 if we have profile image
-            $this->currentStep = 2;
         }
 
-        if ($user->location_name) {
-            $this->location_name = $user->location_name;
-            // If we have location too, start at step 3
-            if ($user->location_coordinates && $this->uploadedImagePath) {
-                $this->latitude = $user->location_coordinates->latitude;
-                $this->longitude = $user->location_coordinates->longitude;
-                $this->currentStep = 3;
-            }
-        }
-
+        // Load existing interests
         if ($user->interests) {
             $this->interests = $user->interests;
         }
+
+        // Determine starting step based on what's already completed
+        if ($this->location_name && $this->latitude && $this->longitude) {
+            if ($this->uploadedImagePath) {
+                $this->currentStep = 3; // Both location and photo done, go to interests
+            } else {
+                $this->currentStep = 2; // Location done, go to photo
+            }
+        }
     }
 
-    public function nextStepFromProfilePicture()
+    /**
+     * Called from JavaScript when a location is selected
+     */
+    public function setLocationData(string $name, $lat, $lng)
+    {
+        $this->location_name = $name;
+        $this->latitude = $lat ? (float) $lat : null;
+        $this->longitude = $lng ? (float) $lng : null;
+    }
+
+    /**
+     * Step 1 (Location) -> Step 2 (Photo)
+     */
+    public function nextStepFromLocation()
+    {
+        $this->validate([
+            'location_name' => 'required|string|max:255',
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+        ]);
+
+        $this->currentStep = 2;
+    }
+
+    /**
+     * Step 2 (Photo) -> Step 3 (Interests)
+     */
+    public function nextStepFromPhoto()
     {
         // If we already have an uploaded image, just proceed
         if ($this->uploadedImagePath) {
-            $this->currentStep = 2;
+            $this->currentStep = 3;
             return;
         }
 
@@ -91,29 +116,12 @@ class OnboardingWizard extends Component
         $this->uploadedImagePath = $path;
         $this->profileImage = null; // Clear the temporary file
 
-        $this->currentStep = 2;
-    }
-
-    public function setLocationData($name, $lat, $lng)
-    {
-        $this->location_name = $name;
-        $this->latitude = $lat ? (float) $lat : null;
-        $this->longitude = $lng ? (float) $lng : null;
         $this->currentStep = 3;
     }
 
-    public function nextStep()
-    {
-        // Validate step 2 (location) before proceeding
-        $this->validate([
-            'location_name' => 'required|string|max:255',
-            'latitude' => 'required|numeric|between:-90,90',
-            'longitude' => 'required|numeric|between:-180,180',
-        ]);
-
-        $this->currentStep = 3;
-    }
-
+    /**
+     * Go back to previous step
+     */
     public function previousStep()
     {
         if ($this->currentStep > 1) {
@@ -121,9 +129,14 @@ class OnboardingWizard extends Component
         }
     }
 
+    /**
+     * Add an interest tag
+     */
     public function addInterest()
     {
-        if (empty($this->newInterest)) {
+        $interest = trim($this->newInterest);
+
+        if (empty($interest)) {
             return;
         }
 
@@ -132,52 +145,49 @@ class OnboardingWizard extends Component
             return;
         }
 
-        $interest = trim($this->newInterest);
         if (!in_array($interest, $this->interests)) {
             $this->interests[] = $interest;
         }
 
-        $this->reset('newInterest');
+        $this->newInterest = '';
     }
 
-    public function removeInterest($index)
+    /**
+     * Remove an interest tag
+     */
+    public function removeInterest(int $index)
     {
         unset($this->interests[$index]);
         $this->interests = array_values($this->interests);
     }
 
+    /**
+     * Complete onboarding and save all data
+     */
     public function complete()
     {
-        // Validate location and interests (profile image was already saved in step 1)
+        // Final validation
         $this->validate([
             'location_name' => 'required|string|max:255',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
-            'interests' => 'nullable|array|max:10',
         ]);
 
-        // Ensure we have a profile image (either just uploaded or from previous step)
-        if (!$this->uploadedImagePath && !$this->profileImage) {
+        // Ensure we have a profile image
+        if (!$this->uploadedImagePath) {
             $this->addError('profileImage', 'Profile image is required.');
-            $this->currentStep = 1;
+            $this->currentStep = 2;
             return;
         }
 
         $user = Auth::user();
 
-        $updateData = [
+        // Update user with all onboarding data
+        $user->update([
             'location_name' => $this->location_name,
             'location_coordinates' => new Point($this->latitude, $this->longitude),
-            'interests' => $this->interests,
-        ];
-
-        // If there's a new profile image to upload (shouldn't happen normally, but just in case)
-        if ($this->profileImage) {
-            $updateData['profile_image_url'] = $this->profileImage->store('profile-images', 's3');
-        }
-
-        // Update user with onboarding data
-        $user->update($updateData);
+            'interests' => $this->interests ?: null,
+        ]);
 
         // Mark onboarding as complete
         $user->markOnboardingComplete();
