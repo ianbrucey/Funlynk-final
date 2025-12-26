@@ -6,6 +6,7 @@
         type: 'success',
         timeout: null,
         showToast(msg, toastType = 'success') {
+            console.log('Toast showToast called:', msg, toastType);
             this.message = msg;
             this.type = toastType;
             this.show = true;
@@ -13,6 +14,7 @@
             this.timeout = setTimeout(() => this.show = false, 5000);
         },
         init() {
+            console.log('Toast component initialized');
             {{-- Auto-show session flash messages on page load --}}
             @if(session()->has('success'))
                 this.showToast('{{ addslashes(session('success')) }}', 'success');
@@ -21,7 +23,7 @@
             @endif
         }
     }"
-     @show-toast.window="showToast($event.detail.message || $event.detail[0]?.message, $event.detail.type || $event.detail[0]?.type || 'success')"
+     @show-toast.window="console.log('Toast event received:', $event.detail); showToast($event.detail.message || $event.detail[0]?.message, $event.detail.type || $event.detail[0]?.type || 'success')"
      x-show="show"
      x-transition:enter="transition ease-out duration-300"
      x-transition:enter-start="opacity-0 transform translate-x-full"

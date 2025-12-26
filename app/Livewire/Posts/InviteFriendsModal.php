@@ -62,7 +62,10 @@ class InviteFriendsModal extends Component
     public function inviteFriends(): void
     {
         if (empty($this->selectedFriends)) {
-            session()->flash('error', 'Please select at least one friend to invite.');
+            $this->dispatch('show-toast',
+                message: 'Please select at least one friend to invite.',
+                type: 'error'
+            );
 
             return;
         }
@@ -74,10 +77,18 @@ class InviteFriendsModal extends Component
                 auth()->user()
             );
 
-            session()->flash('success', count($invitations).' friend(s) invited!');
+            $count = count($invitations);
+            $this->dispatch('show-toast',
+                message: "🎉 {$count} friend".($count > 1 ? 's' : '').' invited successfully!',
+                type: 'success'
+            );
+
             $this->reset(['show', 'selectedFriends', 'search', 'postId']);
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to send invitations: '.$e->getMessage());
+            $this->dispatch('show-toast',
+                message: 'Failed to send invitations: '.$e->getMessage(),
+                type: 'error'
+            );
         }
     }
 

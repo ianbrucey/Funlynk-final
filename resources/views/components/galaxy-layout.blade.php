@@ -42,6 +42,9 @@
         <livewire:posts.invite-friends-modal />
         <livewire:modals.convert-post-modal />
 
+        <!-- Toast Notifications -->
+        <x-toast-notification />
+
         @livewireScripts
         @filamentScripts
         {{ $scripts ?? '' }}

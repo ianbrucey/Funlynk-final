@@ -50,10 +50,34 @@ class NotificationList extends Component
         }
     }
 
+    public $search = '';
+
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
-        $notifications = Notification::where('user_id', auth()->id())
-            ->orderBy('created_at', 'desc')
+        $query = Notification::where('user_id', auth()->id());
+
+        if (! empty($this->search)) {
+            $query->where(function ($q) {
+                $term = '%' . $this->search . '%';
+                
+                // Search user-facing text fields
+                $q->where('data->actor_name', 'like', $term)
+                  ->orWhere('data->post_title', 'like', $term)
+                  ->orWhere('data->message', 'like', $term)
+                  ->orWhere('data->reactor_name', 'like', $term)
+                  ->orWhere('data->inviter_name', 'like', $term)
+                  ->orWhere('data->post_location', 'like', $term)
+                  ->orWhere('title', 'like', $term)
+                  ->orWhere('message', 'like', $term);
+            });
+        }
+
+        $notifications = $query->orderBy('created_at', 'desc')
             ->paginate(20);
 
         $unreadCount = Notification::where('user_id', auth()->id())
