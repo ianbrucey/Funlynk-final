@@ -52,7 +52,7 @@ class ShowProfile extends Component
         $this->postsCount = $this->user->posts()->count();
         $this->hostedActivitiesCount = $this->user->activitiesHosted()->count();
         $this->attendedActivitiesCount = $this->user->rsvps()
-            ->where('status', 'confirmed')
+            ->where('status', 'attending')
             ->count();
 
         // Count interested posts (posts with "I'm down" reactions)
@@ -167,7 +167,7 @@ class ShowProfile extends Component
             case 'attending':
                 $data['activities'] = Activity::whereHas('rsvps', function ($query) {
                     $query->where('user_id', $this->user->id)
-                        ->where('status', 'confirmed');
+                        ->where('status', 'attending');
                 })
                     ->latest()
                     ->paginate(10);

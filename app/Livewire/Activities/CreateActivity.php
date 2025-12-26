@@ -28,7 +28,7 @@ class CreateActivity extends Component
     public $requires_approval = false;
     public $selectedTags = [];
     public $newTag = '';
-    public $images = [];
+    public $coverImage = null;
     public $stripeError = '';
 
     protected ActivityService $activityService;
@@ -67,9 +67,8 @@ class CreateActivity extends Component
             'start_time' => 'required|date|after:now',
             'end_time' => 'nullable|date|after:start_time',
             'max_attendees' => 'nullable|integer|min:1',
-            'max_attendees' => 'nullable|integer|min:1',
             'price' => 'required_if:is_paid,true|nullable|numeric|min:0.01',
-            'images.*' => 'nullable|image|max:2048',
+            'coverImage' => 'nullable|image|max:2048',
         ];
     }
 
@@ -112,12 +111,10 @@ class CreateActivity extends Component
             // Create location point
             $locationPoint = new Point((float)$this->latitude, (float)$this->longitude);
 
-            // Upload images to S3
-            $imagePaths = [];
-            if ($this->images) {
-                foreach ($this->images as $image) {
-                    $imagePaths[] = $image->store('activities', 's3');
-                }
+            // Upload cover image to S3
+            $coverImagePath = null;
+            if ($this->coverImage) {
+                $coverImagePath = $this->coverImage->store('activities', 's3');
             }
 
             // Create activity
@@ -138,7 +135,7 @@ class CreateActivity extends Component
                 'is_public' => $this->is_public,
                 'requires_approval' => $this->requires_approval,
                 'status' => 'published',
-                'images' => $imagePaths,
+                'images' => $coverImagePath ? [$coverImagePath] : [],
             ]);
 
             // Attach tags

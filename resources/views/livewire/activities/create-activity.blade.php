@@ -79,26 +79,25 @@
                         @error('description') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
-                    {{-- Images --}}
+                    {{-- Cover Image --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">Activity Images</label>
-                        <input 
-                            type="file" 
-                            wire:model="images"
-                            multiple
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">Cover Image</label>
+                        <input
+                            type="file"
+                            wire:model="coverImage"
                             accept="image/*"
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-pink-500 file:to-purple-500 file:text-white hover:file:scale-105 file:transition-all"
                         />
-                        <p class="text-xs text-gray-400 mt-1">Max 5 images, 2MB each</p>
-                        @error('images.*') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        <p class="text-xs text-gray-400 mt-1">Max 2MB. Choose your best photo!</p>
+                        @error('coverImage') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
 
-                        @if ($images)
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                                @foreach ($images as $image)
-                                    <div class="relative group">
-                                        <img src="{{ $image->temporaryUrl() }}" class="w-full h-24 object-cover rounded-lg border border-white/10">
-                                    </div>
-                                @endforeach
+                        @if ($coverImage)
+                            <div class="mt-4">
+                                <div class="relative group">
+                                    <img src="{{ $coverImage->temporaryUrl() }}" class="w-full h-48 object-cover rounded-xl border-2 border-cyan-500/30">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl"></div>
+                                    <p class="absolute bottom-3 left-3 text-white text-sm font-medium">Preview</p>
+                                </div>
                             </div>
                         @endif
                     </div>
