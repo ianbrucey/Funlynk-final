@@ -14,6 +14,26 @@
                 </div>
             @endif
 
+            <!-- Stripe Connect Section (only show if not connected) -->
+            @if(!$this->canAcceptPayments)
+                <div class="mb-6 p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0">
+                            <svg class="w-12 h-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-white mb-2">Accept Payments for Your Events</h3>
+                            <p class="text-gray-300 mb-4">Connect your Stripe account to create paid activities and receive payments directly. It only takes a few minutes to set up.</p>
+                            <a href="{{ route('stripe.onboarding') }}" class="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white font-semibold hover:scale-105 transition-all shadow-lg">
+                                Connect Stripe Account
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <form wire:submit="save" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Profile Photo (Custom UI preserved as requested) -->
                 <div class="form-control md:col-span-2">

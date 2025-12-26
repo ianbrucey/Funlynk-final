@@ -186,7 +186,17 @@
                                 <span>Settings</span>
                             </div>
                         </a>
-                        <form method="POST" action="{{ route('logout') }}">
+                        @if(!Auth::user()->stripeAccount || !Auth::user()->stripeAccount->canAcceptPayments())
+                            <a href="{{ route('stripe.onboarding') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-white border-t border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                    <span class="text-purple-300">Connect Stripe</span>
+                                </div>
+                            </a>
+                        @endif
+                        <form method="POST" action="{{ route('logout') }}" class="border-t border-white/5">
                             @csrf
                             <button type="submit" class="w-full text-left px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-red-400">
                                 <div class="flex items-center gap-3">

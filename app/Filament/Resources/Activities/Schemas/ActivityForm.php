@@ -144,32 +144,6 @@ class ActivityForm
                     ])
                     ->columns(2),
 
-                // Settings Section
-                Section::make('Settings')
-                    ->schema([
-                        Toggle::make('is_public')
-                            ->label('Public Activity')
-                            ->default(true)
-                            ->helperText('Public activities appear in discovery feeds'),
-
-                        Toggle::make('requires_approval')
-                            ->label('Require Approval')
-                            ->default(false)
-                            ->helperText('Host must approve RSVPs'),
-
-                        Select::make('status')
-                            ->options([
-                                'draft' => 'Draft',
-                                'published' => 'Published',
-                                'active' => 'Active',
-                                'completed' => 'Completed',
-                                'cancelled' => 'Cancelled',
-                            ])
-                            ->default('draft')
-                            ->required(),
-                    ])
-                    ->columns(3),
-
                 // Tags Section
                 Section::make('Tags')
                     ->schema([

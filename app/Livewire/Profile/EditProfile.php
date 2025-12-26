@@ -45,6 +45,17 @@ class EditProfile extends Component
 
     public $current_profile_image_url;
 
+    public function getCanAcceptPaymentsProperty()
+    {
+        $user = Auth::user();
+
+        if (!$user->stripeAccount) {
+            return false;
+        }
+
+        return $user->stripeAccount->canAcceptPayments();
+    }
+
     public function mount()
     {
         // Use DB query to avoid loading the Point object through Eloquent casting
