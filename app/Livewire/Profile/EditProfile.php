@@ -25,7 +25,7 @@ class EditProfile extends Component
 
     public ?bool $usernameAvailable = null;
 
-    #[Validate('nullable|array|min:1|max:10')]
+    #[Validate('nullable|array|max:10')]
     public $interests = [];
 
     #[Validate('nullable|string')]

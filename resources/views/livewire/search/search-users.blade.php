@@ -124,28 +124,31 @@
             @if(count($users) > 0)
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" wire:key="users-grid">
                     @foreach($users as $index => $user)
-                        <div wire:key="user-{{ $user['id'] }}" class="glass-card group hover:border-cyan-500/30 transition-all cursor-pointer"
-                             onclick="window.location.href='{{ route('profile.view', $user['username']) }}'">
+                        <div wire:key="user-{{ $user['id'] }}" class="glass-card group hover:border-cyan-500/30 transition-all">
                             <div class="p-6 space-y-4">
                                 <!-- Avatar and Name -->
                                 <div class="flex items-start gap-4">
-                                    @if($user['profile_image_url'] ?? null)
-                                        <img src="{{ Storage::url($user['profile_image_url']) }}"
-                                             alt="{{ $user['display_name'] ?? $user['username'] }}"
-                                             class="h-16 w-16 rounded-full object-cover bg-slate-800 ring-2 ring-white/10 group-hover:ring-cyan-500/50 transition-all">
-                                    @else
-                                        <div class="h-16 w-16 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center ring-2 ring-white/10 group-hover:ring-cyan-500/50 transition-all">
-                                            <span class="text-2xl font-bold text-white">
-                                                {{ strtoupper(substr($user['display_name'] ?? $user['username'], 0, 1)) }}
-                                            </span>
-                                        </div>
-                                    @endif
+                                    <a href="{{ route('profile.view', $user['username']) }}" class="flex-shrink-0">
+                                        @if($user['profile_image_url'] ?? null)
+                                            <img src="{{ Storage::url($user['profile_image_url']) }}"
+                                                 alt="{{ $user['display_name'] ?? $user['username'] }}"
+                                                 class="h-16 w-16 rounded-full object-cover bg-slate-800 ring-2 ring-white/10 group-hover:ring-cyan-500/50 transition-all">
+                                        @else
+                                            <div class="h-16 w-16 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center ring-2 ring-white/10 group-hover:ring-cyan-500/50 transition-all">
+                                                <span class="text-2xl font-bold text-white">
+                                                    {{ strtoupper(substr($user['display_name'] ?? $user['username'], 0, 1)) }}
+                                                </span>
+                                            </div>
+                                        @endif
+                                    </a>
 
-                                    <div class="flex-1 min-w-0">
-                                        <h3 class="text-lg font-semibold text-white truncate group-hover:text-cyan-400 transition-colors">
-                                            {{ $user['display_name'] ?? $user['username'] }}
-                                        </h3>
-                                        <p class="text-sm text-gray-400">{{ '@'.$user['username'] }}</p>
+                                    <div class="flex-1 min-w-0 pt-1">
+                                        <a href="{{ route('profile.view', $user['username']) }}" class="block group/name">
+                                            <h3 class="text-lg font-semibold text-white truncate group-hover/name:text-cyan-400 transition-colors">
+                                                {{ $user['display_name'] ?? $user['username'] }}
+                                            </h3>
+                                            <p class="text-sm text-gray-400">{{ '@'.$user['username'] }}</p>
+                                        </a>
                                     </div>
                                 </div>
 
@@ -184,21 +187,10 @@
                                         <span>{{ $user['follower_count'] ?? 0 }}</span>
                                     </div>
 
-                                    @if(in_array($user['id'], $followingIds))
-                                        <button wire:click.stop="unfollow('{{ $user['id'] }}')"
-                                                wire:loading.attr="disabled"
-                                                class="px-4 py-2 border border-purple-500/50 rounded-xl text-sm font-semibold text-white bg-purple-500/20 hover:bg-purple-500/30 transition-all">
-                                            <span wire:loading.remove wire:target="unfollow('{{ $user['id'] }}')">Following</span>
-                                            <span wire:loading wire:target="unfollow('{{ $user['id'] }}')">...</span>
-                                        </button>
-                                    @else
-                                        <button wire:click.stop="follow('{{ $user['id'] }}')"
-                                                wire:loading.attr="disabled"
-                                                class="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-sm font-semibold text-white hover:scale-105 transition-all">
-                                            <span wire:loading.remove wire:target="follow('{{ $user['id'] }}')">Follow</span>
-                                            <span wire:loading wire:target="follow('{{ $user['id'] }}')">...</span>
-                                        </button>
-                                    @endif
+                                    <livewire:follow-button 
+                                        :user-id="$user['id']" 
+                                        :is-following="in_array($user['id'], $followingIds)"
+                                        :key="'follow-btn-' . $user['id']" />
                                 </div>
                             </div>
                         </div>

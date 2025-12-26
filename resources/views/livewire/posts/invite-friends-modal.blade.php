@@ -122,22 +122,5 @@
         </div>
     @endif
 
-    {{-- Success/Error Messages --}}
-    @if(session('success'))
-        <div class="fixed top-4 right-4 z-50 glass-card border border-green-500/30 rounded-xl p-4 animate-slide-in">
-            <div class="flex items-center gap-3">
-                <div class="text-2xl">✅</div>
-                <p class="text-white font-medium">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
 
-    @if(session('error'))
-        <div class="fixed top-4 right-4 z-50 glass-card border border-red-500/30 rounded-xl p-4 animate-slide-in">
-            <div class="flex items-center gap-3">
-                <div class="text-2xl">❌</div>
-                <p class="text-white font-medium">{{ session('error') }}</p>
-            </div>
-        </div>
-    @endif
 </div>

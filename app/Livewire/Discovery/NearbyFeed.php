@@ -124,12 +124,27 @@ class NearbyFeed extends Component
             // Dispatch success event
             $this->dispatch('post-reacted', postId: $postId, reactionType: $reactionType, action: $result['action']);
 
-            // Reload the current page of items to show updated reaction counts
-            $this->loadItems();
+            // Update the specific post in the items array instead of reloading everything
+            $this->updatePostInItems($postId);
         } catch (\Exception $e) {
             Log::error('reactToPost failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             // Handle error (user not authenticated, invalid reaction type, etc.)
             session()->flash('error', 'Failed to react to post: '.$e->getMessage());
+        }
+    }
+
+    protected function updatePostInItems($postId)
+    {
+        // Find and update the specific post in the items array
+        foreach ($this->items as $index => $item) {
+            if ($item['type'] === 'post' && $item['data']->id === $postId) {
+                // Refresh just this post from the database
+                $post = \App\Models\Post::with(['user', 'reactions', 'tags'])->find($postId);
+                if ($post) {
+                    $this->items[$index]['data'] = $post;
+                }
+                break;
+            }
         }
     }
 

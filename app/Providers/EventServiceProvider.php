@@ -2,12 +2,14 @@
 
 namespace App\Providers;
 
+use App\Events\PostReacted;
 use App\Listeners\BroadcastGroupUpdate;
+use App\Listeners\CheckPostConversion;
 use App\Listeners\ManageGroupChatParticipants;
 use App\Listeners\SendGroupNotification;
+use App\Listeners\SendPostReactionNotification;
 use App\Listeners\UpdateGroupMemberCount;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Event;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -17,7 +19,10 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
-        //
+        PostReacted::class => [
+            SendPostReactionNotification::class,
+            CheckPostConversion::class,
+        ],
     ];
 
     /**

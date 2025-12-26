@@ -90,25 +90,11 @@
     
     {{-- Reactions & Actions --}}
     <div class="flex items-center gap-2">
-        @php
-            $userHasReacted = $post->reactions->where('user_id', auth()->id())->where('reaction_type', 'im_down')->isNotEmpty();
-            $reactionCount = $post->reactions->where('reaction_type', 'im_down')->count();
-        @endphp
-        <button
-            wire:click="reactToPost('{{ $post->id }}', 'im_down')"
-            class="flex-1 px-4 py-2 rounded-lg text-sm font-semibold hover:scale-105 transition-all
-                {{ $userHasReacted
-                    ? 'bg-gradient-to-r from-pink-600 to-purple-600 ring-2 ring-pink-400'
-                    : 'bg-gradient-to-r from-pink-500 to-purple-500' }}">
-            <span class="flex items-center justify-center gap-2">
-                {{ $userHasReacted ? '✓' : '👍' }} I'm down
-                @if($reactionCount > 0)
-                    <span class="bg-white/20 px-2 py-0.5 rounded-full text-xs">
-                        {{ $reactionCount }}
-                    </span>
-                @endif
-            </span>
-        </button>
+        <livewire:posts.reaction-button
+            :post="$post"
+            size="md"
+            :key="'reaction-'.$post->id" />
+
         <button
             wire:click="$dispatch('openInviteModal', { postId: '{{ $post->id }}' })"
             class="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg text-sm font-semibold hover:scale-105 transition-all">
