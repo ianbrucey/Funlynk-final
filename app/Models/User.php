@@ -274,7 +274,7 @@ class User extends Authenticatable implements FilamentHasName
             'location_name' => $this->location_name,
             'follower_count' => $this->follower_count ?? 0,
             'is_active' => $this->is_active,
-            'created_at' => $this->created_at->timestamp,
+            'created_at' => $this->created_at ? \Carbon\Carbon::parse($this->created_at)->timestamp : null,
         ];
 
         // Add _geo field for Meilisearch native geo filtering
