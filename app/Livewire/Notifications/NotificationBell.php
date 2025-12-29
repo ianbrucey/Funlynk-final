@@ -40,23 +40,29 @@ class NotificationBell extends Component
             ->limit(5)
             ->get();
 
-        // Count only unread for the badge
+        // Count only unread for the badge (use is_read which has an index)
         $this->unreadCount = Notification::where('user_id', auth()->id())
-            ->whereNull('read_at')
+            ->where('is_read', false)
             ->count();
     }
 
     public function markAsRead(string $notificationId): void
     {
-        Notification::where('id', $notificationId)->update(['read_at' => now()]);
+        Notification::where('id', $notificationId)->update([
+            'is_read' => true,
+            'read_at' => now(),
+        ]);
         $this->loadNotifications();
     }
 
     public function markAllAsRead(): void
     {
         Notification::where('user_id', auth()->id())
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+            ->where('is_read', false)
+            ->update([
+                'is_read' => true,
+                'read_at' => now(),
+            ]);
 
         $this->loadNotifications();
     }
@@ -67,8 +73,11 @@ class NotificationBell extends Component
     public function markAllAsReadOnOpen(): void
     {
         Notification::where('user_id', auth()->id())
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+            ->where('is_read', false)
+            ->update([
+                'is_read' => true,
+                'read_at' => now(),
+            ]);
 
         $this->loadNotifications();
     }
@@ -78,7 +87,10 @@ class NotificationBell extends Component
         $notification = Notification::find($notificationId);
 
         if ($notification) {
-            $notification->update(['read_at' => now()]);
+            $notification->update([
+                'is_read' => true,
+                'read_at' => now(),
+            ]);
             $this->loadNotifications();
 
             // Navigate based on notification type

@@ -54,6 +54,12 @@
                     <div class="space-y-4">
                         {{ $this->form }}
                     </div>
+
+                    <div class="mt-4 text-right">
+                        <a href="{{ route('password.request') }}" class="text-sm text-cyan-400 hover:text-cyan-300 transition">
+                            Forgot your password?
+                        </a>
+                    </div>
                 </div>
 
                 <div class="mt-6">

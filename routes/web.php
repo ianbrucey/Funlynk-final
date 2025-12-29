@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\Api\UsernameController;
 use App\Http\Controllers\Auth\SocialLoginController;
+use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login as LoginForm;
 use App\Livewire\Auth\Register as RegisterForm;
+use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Dashboard\UserDashboard;
 use App\Livewire\Groups\CreateGroup;
 use App\Livewire\Groups\GroupSettings;
@@ -29,6 +31,8 @@ Route::post('/api/check-username', [UsernameController::class, 'checkAvailabilit
 Route::middleware('guest')->group(function () {
     Route::get('/register', RegisterForm::class)->name('register');
     Route::get('/login', LoginForm::class)->name('login');
+    Route::get('/forgot-password', ForgotPassword::class)->name('password.request');
+    Route::get('/reset-password/{token}', ResetPassword::class)->name('password.reset');
 });
 
 Route::middleware('auth')->group(function () {

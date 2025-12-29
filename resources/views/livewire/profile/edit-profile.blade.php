@@ -6,14 +6,6 @@
             <h2 class="card-title text-3xl font-bold mb-2 text-white">Edit Profile</h2>
             <p class="text-gray-400 mb-8">Update your personal information and preferences.</p>
 
-            <!-- Success Message -->
-            @if (session()->has('message'))
-                <div role="alert" class="alert alert-success mb-6 bg-green-500/10 border-green-500/20 text-green-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span>{{ session('message') }}</span>
-                </div>
-            @endif
-
             <!-- Stripe Connect Section (only show if not connected) -->
             @if(!$this->canAcceptPayments)
                 <div class="mb-6 p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl">
@@ -216,6 +208,94 @@
                     </button>
                 </div>
             </form>
+
+            <!-- Success Message (below buttons) -->
+            @if ($successMessage)
+                <div role="alert" class="alert alert-success mt-6 bg-green-500/10 border-green-500/20 text-green-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>{{ $successMessage }}</span>
+                </div>
+            @endif
+
+            <!-- Error Message (below buttons) -->
+            @error('save')
+                <div role="alert" class="alert alert-error mt-6 bg-red-500/10 border-red-500/20 text-red-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>{{ $message }}</span>
+                </div>
+            @enderror
+
+            {{-- Danger Zone: Delete Account --}}
+            <div class="mt-12 pt-8 border-t border-red-500/20">
+                <h3 class="text-lg font-bold text-red-400 mb-2">Danger Zone</h3>
+                <p class="text-gray-400 text-sm mb-4">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                
+                <button 
+                    type="button" 
+                    wire:click="confirmDeleteAccount"
+                    class="btn btn-outline btn-error hover:bg-red-500/20">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Delete My Account
+                </button>
+            </div>
+
+            {{-- Delete Confirmation Modal --}}
+            @if($showDeleteConfirmation)
+                <div class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" wire:click.self="cancelDeleteAccount">
+                    <div class="bg-slate-900 border border-red-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Delete Account</h3>
+                                <p class="text-gray-400 text-sm">This action is permanent and cannot be reversed.</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <p class="text-gray-300 text-sm">
+                                All your posts, events, and profile data will be permanently deleted. You will not be able to recover your account.
+                            </p>
+
+                            <div class="form-control">
+                                <label class="label"><span class="label-text text-gray-300">Enter your password to confirm</span></label>
+                                <input 
+                                    type="password" 
+                                    wire:model="deletePassword" 
+                                    class="input input-bordered w-full bg-slate-800 border-white/10 focus:border-red-500 text-white"
+                                    placeholder="Your password"
+                                    autocomplete="current-password"
+                                />
+                                @error('deletePassword') 
+                                    <span class="text-red-400 text-xs mt-1">{{ $message }}</span> 
+                                @enderror
+                            </div>
+
+                            <div class="flex gap-3 pt-2">
+                                <button 
+                                    type="button" 
+                                    wire:click="cancelDeleteAccount"
+                                    class="btn btn-ghost flex-1 text-gray-400 hover:text-white hover:bg-white/10">
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="button" 
+                                    wire:click="deleteAccount"
+                                    wire:loading.attr="disabled"
+                                    class="btn btn-error flex-1 bg-red-600 hover:bg-red-700 border-none text-white">
+                                    <span wire:loading.remove wire:target="deleteAccount">Delete Forever</span>
+                                    <span wire:loading wire:target="deleteAccount">Deleting...</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </div>

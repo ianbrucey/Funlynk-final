@@ -156,6 +156,8 @@ class EditProfile extends Component
         $this->interests = array_values($this->interests);
     }
 
+    public string $successMessage = '';
+
     public function save()
     {
         $this->validate();
@@ -186,17 +188,24 @@ class EditProfile extends Component
             $this->username = $usernameSlug;
         }
 
-        $data = [
-            'username' => $this->username,
-            'display_name' => $this->display_name,
-            'bio' => $this->bio,
-            'interests' => $this->interests,
-            'location_name' => $this->location_name,
-        ];
+        // Find the user model (without loading location_coordinates to avoid Point issues)
+        $user = \App\Models\User::withoutGlobalScopes()->find($userId);
+
+        if (!$user) {
+            $this->addError('save', 'User not found.');
+            return;
+        }
+
+        // Update fields
+        $user->username = $this->username;
+        $user->display_name = $this->display_name;
+        $user->bio = $this->bio;
+        $user->interests = $this->interests; // Cast will handle JSON encoding
+        $user->location_name = $this->location_name;
 
         // Handle location coordinates
         if ($this->latitude && $this->longitude) {
-            $data['location_coordinates'] = new Point($this->latitude, $this->longitude);
+            $user->location_coordinates = new Point($this->latitude, $this->longitude);
         }
 
         // Handle profile image upload
@@ -208,15 +217,21 @@ class EditProfile extends Component
 
             // Store new image to S3
             $path = $this->profile_image->store('profiles', 's3');
-            $data['profile_image_url'] = $path;
+            $user->profile_image_url = $path;
             $this->current_profile_image_url = $path;
         }
 
-        \App\Models\User::where('id', $userId)->update($data);
+        try {
+            $user->save();
 
-        $this->dispatch('profile-updated');
+            $this->dispatch('profile-updated');
 
-        session()->flash('message', 'Profile updated successfully!');
+            // Use component property instead of session flash for immediate display
+            $this->successMessage = 'Profile updated successfully!';
+        } catch (\Exception $e) {
+            $this->addError('save', 'Failed to save profile: ' . $e->getMessage());
+            \Log::error('Profile save failed', ['error' => $e->getMessage(), 'user_id' => $userId]);
+        }
     }
 
     public function removeProfileImage()
@@ -236,6 +251,59 @@ class EditProfile extends Component
             \App\Models\User::where('id', $userId)->update(['profile_image_url' => null]);
             $this->current_profile_image_url = null;
         }
+    }
+
+    // Delete Account Properties
+    public bool $showDeleteConfirmation = false;
+
+    // Note: deletePassword validation is handled in deleteAccount() method, not via attribute
+    // Using attribute would cause it to be validated on every save() call
+    public string $deletePassword = '';
+
+    public function confirmDeleteAccount()
+    {
+        $this->showDeleteConfirmation = true;
+        $this->deletePassword = '';
+    }
+
+    public function cancelDeleteAccount()
+    {
+        $this->showDeleteConfirmation = false;
+        $this->deletePassword = '';
+        $this->resetErrorBag('deletePassword');
+    }
+
+    public function deleteAccount()
+    {
+        $this->validate([
+            'deletePassword' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+
+        // Verify password
+        if (!password_verify($this->deletePassword, $user->password)) {
+            $this->addError('deletePassword', 'The password you entered is incorrect.');
+            return;
+        }
+
+        // Delete profile image from S3 if exists
+        if ($user->profile_image_url) {
+            Storage::disk('s3')->delete($user->profile_image_url);
+        }
+
+        // Log out the user
+        Auth::logout();
+
+        // Delete the user account
+        $user->delete();
+
+        // Invalidate session
+        session()->invalidate();
+        session()->regenerateToken();
+
+        // Redirect to homepage with message
+        return redirect('/')->with('message', 'Your account has been permanently deleted.');
     }
 
     public function render()

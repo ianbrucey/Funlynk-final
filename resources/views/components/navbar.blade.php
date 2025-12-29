@@ -1,23 +1,23 @@
 <nav class="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 border-b border-white/20">
-    <div class="container mx-auto px-6">
-        <div class="flex items-center justify-between h-20">
+    <div class="container mx-auto px-4 md:px-6">
+        <div class="flex items-center justify-between h-16 md:h-20">
             <!-- Logo -->
-            <a href="{{ route('feed.nearby') }}" class="flex items-center gap-3 group">
-                <div class="w-14 h-14 flex items-center justify-center p-0.5 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl">
-                    <div class="bg-slate-900 rounded-xl w-full h-full flex items-center justify-center p-2">
+            <a href="{{ route('feed.nearby') }}" class="flex items-center gap-2 md:gap-3 group">
+                <div class="w-10 h-10 md:w-14 md:h-14 flex items-center justify-center p-0.5 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl">
+                    <div class="bg-slate-900 rounded-xl w-full h-full flex items-center justify-center p-1.5 md:p-2">
                         <img src="{{ asset('images/fl-logo-icon-only.png') }}" alt="FunLynk" class="w-full h-full object-contain">
                     </div>
                 </div>
-                <div class="hidden md:block">
-                    <div class="text-xl font-bold">
+                <div>
+                    <div class="text-lg md:text-xl font-bold">
                         <span class="text-yellow-400">Fun</span><span class="text-cyan-400">Lynk</span>
                     </div>
-                    <div class="text-xs text-white font-bold font-mono tracking-wider">SOCIAL ACTIVITY NETWORK</div>
+                    <div class="hidden md:block text-xs text-white font-bold font-mono tracking-wider">SOCIAL ACTIVITY NETWORK</div>
                 </div>
             </a>
 
-            <!-- Navigation Icons -->
-            <div class="flex items-center gap-2 md:gap-4">
+            <!-- Navigation Icons - Hidden on mobile, visible on md+ -->
+            <div class="hidden md:flex items-center gap-2 md:gap-4">
                 <!-- Home/Nearby Feed -->
                 <a href="{{ route('feed.nearby') }}"
                    class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('feed.nearby') ? 'bg-white/10' : '' }}"

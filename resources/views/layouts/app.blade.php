@@ -152,11 +152,16 @@
         <!-- Navigation -->
         <x-navbar />
 
-        <!-- Page Content -->
-        <main>
+        <!-- Page Content - pt accounts for fixed navbar, pb accounts for mobile bottom nav -->
+        <main class="pt-16 md:pt-20 pb-24 md:pb-0">
             {{ $slot }}
         </main>
     </div>
+
+    <!-- Mobile Bottom Navigation (only visible on mobile) - Outside content wrapper for proper fixed positioning -->
+    @auth
+        <x-mobile-bottom-nav />
+    @endauth
 
     <!-- Toast Notifications -->
     <x-toast-notification />
