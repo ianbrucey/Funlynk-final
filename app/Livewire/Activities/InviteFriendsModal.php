@@ -18,14 +18,14 @@ class InviteFriendsModal extends Component
 
     public Collection $friends;
 
-    protected $listeners = ['openInviteModal'];
+    protected $listeners = ['openActivityInviteModal'];
 
     public function mount(): void
     {
         $this->friends = collect();
     }
 
-    public function openInviteModal(string $activityId): void
+    public function openActivityInviteModal(string $activityId): void
     {
         $this->activityId = $activityId;
         $this->show = true;

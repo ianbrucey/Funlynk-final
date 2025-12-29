@@ -93,111 +93,116 @@
                     <x-post-card-compact :post="$item['data']" />
                 @else
                     {{-- Event Card (Compact) --}}
-                    <div class="relative p-4 glass-card rounded-xl border-l-4 border-cyan-500 hover:border-blue-500 transition-all h-full flex flex-col group cursor-pointer"
-                         onclick="window.location.href='{{ route('activities.show', $item['data']) }}'">
+                    <div class="relative rounded-[18px] p-4 h-full flex flex-col group"
+                         style="background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), #111933; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 12px 30px rgba(0,0,0,0.35);">
 
                         {{-- Converted Badge --}}
                         @if($item['data']->originated_from_post_id)
                             <div class="absolute top-3 right-3 z-10">
-                                <span class="px-2 py-0.5 bg-purple-500/30 border border-purple-500/50 rounded-full text-xs font-bold text-purple-300">
+                                <span class="px-2 py-0.5 rounded-full text-xs font-bold text-purple-300"
+                                      style="background: rgba(139,92,246,0.3); border: 1px solid rgba(139,92,246,0.5);">
                                     ⭐
                                 </span>
                             </div>
                         @endif
 
-                        {{-- Host Info --}}
-                        <div class="flex items-center gap-2 mb-3">
+                        {{-- Card Header --}}
+                        <div class="flex items-center gap-3">
+                            {{-- Avatar --}}
                             @if($item['data']->host?->profile_image_url)
                                 <img
                                     src="{{ Storage::url($item['data']->host->profile_image_url) }}"
                                     alt="{{ $item['data']->host->display_name ?? $item['data']->host->username }}"
-                                    class="w-8 h-8 rounded-full object-cover ring-2 ring-cyan-500/50 bg-slate-800"
+                                    class="w-11 h-11 rounded-full object-cover"
                                 >
                             @else
-                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center ring-2 ring-cyan-500/50">
-                                    <span class="text-white font-bold text-xs">
-                                        {{ strtoupper(substr($item['data']->host?->display_name ?? $item['data']->host?->username ?? '?', 0, 1)) }}
-                                    </span>
+                                <div class="w-11 h-11 rounded-full grid place-items-center font-bold text-white"
+                                     style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">
+                                    {{ strtoupper(substr($item['data']->host?->display_name ?? $item['data']->host?->username ?? '?', 0, 1)) }}
                                 </div>
                             @endif
+
+                            {{-- Host & Role --}}
                             <div class="flex-1 min-w-0">
-                                <p class="font-semibold text-white text-sm truncate group-hover:text-cyan-400 transition">
+                                <p class="font-semibold text-white leading-tight truncate">
                                     {{ $item['data']->host?->display_name ?? $item['data']->host?->username ?? 'Unknown Host' }}
                                 </p>
-                                <p class="text-xs text-gray-500">Hosting</p>
+                                <p class="text-xs" style="color: #8a93b2;">Hosting</p>
                             </div>
+
+                            {{-- Price Badge --}}
+                            <span class="text-xs font-semibold" style="color: #8a93b2;">
+                                @if($item['data']->is_paid)
+                                    ${{ number_format($item['data']->price, 2) }}
+                                @else
+                                    Free
+                                @endif
+                            </span>
                         </div>
 
-                        {{-- Event Image (First image only for compact view) --}}
+                        {{-- Event Image --}}
                         @if($item['data']->images && count($item['data']->images) > 0)
-                            <div class="relative mb-3 -mx-4 overflow-hidden bg-slate-900/50 h-40">
+                            <div class="relative mt-3 -mx-4 overflow-hidden h-36">
                                 <img src="{{ Storage::url($item['data']->images[0]) }}"
-                                     class="w-full h-full object-cover"
-                                     alt="{{ $item['data']->title }}">
+                                     class="w-full h-full object-cover cursor-pointer"
+                                     alt="{{ $item['data']->title }}"
+                                     onclick="window.location.href='{{ route('activities.show', $item['data']) }}'">
                                 @if(count($item['data']->images) > 1)
-                                    <div class="absolute bottom-2 right-2 px-2 py-1 bg-slate-900/80 backdrop-blur-sm rounded-full text-xs text-white">
+                                    <div class="absolute bottom-2 right-2 px-2 py-1 rounded-full text-xs text-white"
+                                         style="background: rgba(15,23,42,0.8); backdrop-filter: blur(4px);">
                                         +{{ count($item['data']->images) - 1 }}
                                     </div>
                                 @endif
                             </div>
                         @endif
 
-                        {{-- Content --}}
-                        <div class="flex-1 mb-3">
-                            <h3 class="text-base font-bold mb-1.5 text-white line-clamp-2 pr-8">{{ $item['data']->title }}</h3>
-                            @if($item['data']->description)
-                                <p class="text-gray-400 text-xs line-clamp-2">{{ $item['data']->description }}</p>
-                            @endif
-                        </div>
+                        {{-- Card Body --}}
+                        <div class="mt-3 flex-1 cursor-pointer" onclick="window.location.href='{{ route('activities.show', $item['data']) }}'">
+                            <h3 class="text-[1.1rem] font-bold text-white mb-1.5 line-clamp-2">{{ $item['data']->title }}</h3>
 
-                        {{-- Event Details --}}
-                        <div class="space-y-2 mb-3 text-xs">
-                            <div class="flex items-center gap-1.5 text-gray-400">
-                                <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                                <span class="text-white font-semibold">{{ $item['data']->start_time->format('M j, g:i A') }}</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 text-gray-400">
-                                <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                </svg>
-                                <span class="truncate">{{ $item['data']->location_name }}</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-1.5 text-gray-400">
-                                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    <span class="text-white font-semibold">
-                                        @if($item['data']->is_paid)
-                                            ${{ number_format($item['data']->price, 2) }}
-                                        @else
-                                            Free
-                                        @endif
+                            {{-- Meta Row --}}
+                            <div class="flex flex-wrap items-center gap-2 text-[0.85rem]" style="color: #8a93b2;">
+                                <span class="py-1 px-2.5 rounded-full"
+                                      style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+                                    📅 {{ $item['data']->start_time->format('M j, g:i A') }}
+                                </span>
+                                @if($item['data']->location_name)
+                                    <span class="py-1 px-2.5 rounded-full"
+                                          style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+                                        📍 {{ Str::limit($item['data']->location_name, 25) }}
                                     </span>
-                                </div>
-                                <div class="text-gray-400">
-                                    <span class="text-cyan-400 font-semibold">{{ $item['data']->max_attendees - $item['data']->rsvps()->count() }}</span> spots
-                                </div>
+                                @endif
                             </div>
                         </div>
 
-                        {{-- Action Buttons --}}
-                        <div class="space-y-2 mt-auto">
+                        {{-- Card Actions --}}
+                        <div class="grid gap-2.5 mt-3.5" style="grid-template-columns: 1fr auto;">
                             <button
                                 onclick="event.stopPropagation(); window.location.href='{{ route('activities.show', $item['data']) }}'"
-                                class="w-full px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg text-xs font-semibold hover:scale-105 transition-all">
-                                View Details
+                                class="py-3 rounded-xl font-semibold cursor-pointer transition-all hover:scale-[1.02]"
+                                style="background: linear-gradient(90deg, #06b6d4, #3b82f6); border: none; color: white;">
+                                🎟️ RSVP
                             </button>
-                            <div class="pt-2 border-t border-white/10">
-                                <div class="flex items-center justify-center gap-1.5 text-xs text-gray-400 group-hover:text-cyan-400 transition">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                    </svg>
-                                    <span class="font-semibold">Discussion</span>
-                                </div>
-                            </div>
+                            <button
+                                wire:click.stop="$dispatch('openActivityInviteModal', { activityId: '{{ $item['data']->id }}' })"
+                                class="px-3.5 py-3 rounded-xl cursor-pointer transition-all hover:bg-white/5"
+                                style="background: transparent; border: 1px solid rgba(255,255,255,0.08); color: #eef1ff;">
+                                Invite
+                            </button>
+                        </div>
+
+                        {{-- Footer --}}
+                        <div class="flex justify-between items-center mt-3 text-[0.8rem]" style="color: #8a93b2;">
+                            <a href="{{ route('activities.show', $item['data']) }}" class="flex items-center gap-1.5 hover:text-cyan-400 transition">
+                                💬 Discussion
+                            </a>
+                            <span>
+                                @if($item['data']->max_attendees)
+                                    <span class="text-cyan-400 font-semibold">{{ max(0, $item['data']->max_attendees - $item['data']->rsvps()->count()) }}</span> spots left
+                                @else
+                                    <span class="text-cyan-400 font-semibold">{{ $item['data']->rsvps()->count() }}</span> going
+                                @endif
+                            </span>
                         </div>
                     </div>
                 @endif
@@ -283,6 +288,7 @@
 
     </div>
 
-    {{-- Invite Friends Modal --}}
+    {{-- Invite Friends Modals --}}
     <livewire:posts.invite-friends-modal />
+    <livewire:activities.invite-friends-modal />
 </div>

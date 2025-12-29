@@ -112,6 +112,24 @@
                         @endif
                     </div>
 
+                    {{-- Host Info --}}
+                    <div class="mb-4">
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Hosted By</h3>
+                        <div class="flex items-center gap-3">
+                            @if($activity->host->profile_image_url)
+                                <img src="{{ Storage::url($activity->host->profile_image_url) }}" class="w-10 h-10 rounded-full object-cover border-2 border-white/10">
+                            @else
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-lg font-bold text-white">
+                                    {{ substr($activity->host->name, 0, 1) }}
+                                </div>
+                            @endif
+                            <div>
+                                <div class="font-semibold text-white">{{ $activity->host->name }}</div>
+                                <div class="text-xs text-gray-400">Member since {{ $activity->host->created_at->format('M Y') }}</div>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Title --}}
                     <h1 class="text-4xl font-bold mb-4 text-white pr-24">{{ $activity->title }}</h1>
 
@@ -275,13 +293,17 @@
                         <livewire:activities.rsvp-button :activity="$activity" />
                     @endif
 
-                    {{-- Invite Friends Button (for all users) --}}
-                    <div class="mt-4">
+                    {{-- Action Buttons --}}
+                    <div class="mt-6 space-y-3">
+                        {{-- Invite Friends Button (for all users) --}}
                         <button
-                            wire:click="$dispatch('openInviteModal', { activityId: '{{ $activity->id }}' })"
-                            class="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl text-sm font-semibold hover:scale-105 transition-all">
+                            wire:click="$dispatch('openActivityInviteModal', { activityId: '{{ $activity->id }}' })"
+                            class="w-full px-6 py-3.5 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl font-semibold hover:scale-[1.02] transition-all shadow-lg hover:shadow-purple-500/50">
                             <span class="flex items-center justify-center gap-2">
-                                📨 Invite Friends
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                                Invite Friends
                                 @if($activity->invitations_count ?? 0 > 0)
                                     <span class="bg-white/20 px-2 py-0.5 rounded-full text-xs">
                                         {{ $activity->invitations_count }}
@@ -289,37 +311,51 @@
                                 @endif
                             </span>
                         </button>
-                    </div>
 
-                    {{-- Host Actions --}}
-                    @if($isHost)
-                        <div class="flex gap-2 mt-4">
-                            <a href="{{ route('activities.edit', $activity->id) }}" class="flex-1 py-3 text-center bg-slate-800/50 border border-white/10 rounded-lg hover:border-cyan-500/50 transition font-semibold">
-                                Edit
+                        {{-- Host Actions --}}
+                        @if($isHost)
+                            {{-- Manage Attendees Button --}}
+                            <a href="{{ route('activities.attendees', $activity) }}"
+                               class="flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold hover:scale-[1.02] transition-all shadow-lg hover:shadow-cyan-500/50">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                </svg>
+                                Manage Attendees & Check-In
                             </a>
-                            <button
-                                wire:click="deleteActivity"
-                                wire:confirm="Are you sure you want to delete this activity?"
-                                class="flex-1 py-3 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition font-semibold text-red-400"
-                            >
-                                Delete
-                            </button>
-                        </div>
 
-                        {{-- Host Check-In Management --}}
-                        <a href="{{ route('activities.attendees', $activity) }}"
-                           class="block w-full mt-4 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl text-center font-semibold hover:scale-105 transition-all">
-                            📋 Manage Attendees & Check-In
-                        </a>
-                    @endif
+                            {{-- Edit & Delete Buttons --}}
+                            <div class="grid grid-cols-2 gap-3">
+                                <a href="{{ route('activities.edit', $activity->id) }}"
+                                   class="flex items-center justify-center gap-2 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 hover:bg-slate-800/70 transition font-semibold">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Edit
+                                </a>
+                                <button
+                                    wire:click="deleteActivity"
+                                    wire:confirm="Are you sure you want to delete this activity?"
+                                    class="flex items-center justify-center gap-2 py-3 bg-red-500/10 border border-red-500/30 rounded-xl hover:bg-red-500/20 hover:border-red-500/50 transition font-semibold text-red-400"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Delete
+                                </button>
+                            </div>
+                        @endif
 
-                    {{-- Attendee Ticket Button --}}
-                    @if($userRsvp && $userRsvp->status === 'attending')
-                        <a href="{{ route('activities.my-ticket', $activity) }}"
-                           class="block w-full mt-4 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-center font-semibold hover:scale-105 transition-all">
-                            🎫 View My Ticket
-                        </a>
-                    @endif
+                        {{-- Attendee Ticket Button --}}
+                        @if($userRsvp && $userRsvp->status === 'attending')
+                            <a href="{{ route('activities.my-ticket', $activity) }}"
+                               class="flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl font-semibold hover:scale-[1.02] transition-all shadow-lg hover:shadow-green-500/50">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+                                </svg>
+                                View My Ticket
+                            </a>
+                        @endif
+                    </div>
                 </div>
 
                 {{-- Chat Section --}}
@@ -335,24 +371,6 @@
 
             {{-- Sidebar (Right Column) --}}
             <div class="space-y-6 lg:space-y-8">
-
-                {{-- Host Info --}}
-                <div class="relative p-6 glass-card lg:rounded-xl">
-                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Hosted By</h3>
-                    <div class="flex items-center gap-4">
-                        @if($activity->host->profile_image_url)
-                            <img src="{{ Storage::url($activity->host->profile_image_url) }}" class="w-12 h-12 rounded-full object-cover border-2 border-white/10">
-                        @else
-                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold text-white">
-                                {{ substr($activity->host->name, 0, 1) }}
-                            </div>
-                        @endif
-                        <div>
-                            <div class="font-bold text-white">{{ $activity->host->name }}</div>
-                            <div class="text-xs text-gray-400">Member since {{ $activity->host->created_at->format('M Y') }}</div>
-                        </div>
-                    </div>
-                </div>
 
                 {{-- Map --}}
                 <div class="relative p-1 glass-card lg:rounded-xl overflow-hidden h-64">
