@@ -42,7 +42,19 @@
             @endif
 
             <form wire:submit.prevent="authenticate">
-                {{ $this->form }}
+                <!-- Solid Container for Form Fields -->
+                <div class="p-6 bg-slate-800/40 border border-white/10 rounded-2xl mb-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                        </svg>
+                        Sign In
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        {{ $this->form }}
+                    </div>
+                </div>
 
                 <div class="mt-6">
                     <button type="submit" class="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
@@ -87,4 +99,65 @@
             </div>
         </div>
     </div>
+
+    <style>
+        /* Target ALL labels in the form */
+        form label,
+        .fi-fo-field-wrp label,
+        [data-field-wrapper] label {
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+            color: rgb(209 213 219) !important;
+            margin-bottom: 0.75rem !important;
+            margin-top: 1.5rem !important;
+            display: block !important;
+            letter-spacing: 0.025em !important;
+        }
+
+        /* First label should not have top margin */
+        form > div:first-child label,
+        .fi-fo-field-wrp:first-child label {
+            margin-top: 0 !important;
+        }
+
+        /* Add spacing between form field groups */
+        .fi-fo-field-wrp,
+        [data-field-wrapper] {
+            margin-bottom: 1.5rem !important;
+            padding-top: 0 !important;
+        }
+
+        /* Style helper text and validation messages */
+        .fi-fo-field-wrp-helper-text,
+        .fi-fo-validation-message,
+        [data-field-wrapper] .text-sm {
+            font-size: 0.75rem !important;
+            margin-top: 0.5rem !important;
+            padding-top: 0.25rem !important;
+            display: block !important;
+        }
+
+        /* Success messages - give them breathing room */
+        .text-success-600,
+        .fi-fo-field-wrp .text-success-600 {
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
+            padding-top: 0.25rem !important;
+            display: block !important;
+        }
+
+        /* Input fields - ensure spacing from label */
+        form input,
+        form textarea,
+        form select,
+        .fi-input {
+            margin-top: 0.5rem !important;
+        }
+
+        /* Remove extra spacing from field wrapper children */
+        .fi-fo-field-wrp > div,
+        [data-field-wrapper] > div {
+            margin-top: 0 !important;
+        }
+    </style>
 </div>

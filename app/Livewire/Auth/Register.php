@@ -46,7 +46,9 @@ class Register extends Component implements HasForms
                     ->label('Email address')
                     ->email()
                     ->required()
-                    ->unique(User::class, 'email'),
+                    ->unique(User::class, 'email')
+                    ->extraAttributes(['class' => 'w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white'])
+                    ->extraInputAttributes(['class' => '!bg-slate-800/50 !border-white/10 !rounded-2xl focus:!border-pink-500/50 !text-white']),
                 TextInput::make('username')
                     ->label('Username')
                     ->required()
@@ -68,18 +70,24 @@ class Register extends Component implements HasForms
                         true => 'success',
                         false => 'danger',
                         default => null,
-                    }),
+                    })
+                    ->extraAttributes(['class' => 'w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white'])
+                    ->extraInputAttributes(['class' => '!bg-slate-800/50 !border-white/10 !rounded-2xl focus:!border-pink-500/50 !text-white']),
                 TextInput::make('password')
                     ->password()
                     ->required()
                     ->revealable()
                     ->rules([Password::defaults()])
-                    ->same('password_confirmation'),
+                    ->same('password_confirmation')
+                    ->extraAttributes(['class' => 'w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white'])
+                    ->extraInputAttributes(['class' => '!bg-slate-800/50 !border-white/10 !rounded-2xl focus:!border-pink-500/50 !text-white']),
                 TextInput::make('password_confirmation')
                     ->password()
                     ->revealable()
                     ->required()
-                    ->label('Confirm password'),
+                    ->label('Confirm password')
+                    ->extraAttributes(['class' => 'w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white'])
+                    ->extraInputAttributes(['class' => '!bg-slate-800/50 !border-white/10 !rounded-2xl focus:!border-pink-500/50 !text-white']),
             ])
             ->statePath('data');
     }

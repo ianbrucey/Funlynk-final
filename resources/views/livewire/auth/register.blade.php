@@ -33,7 +33,19 @@
             <div class="top-accent-center"></div>
 
             <form wire:submit.prevent="register">
-                {{ $this->form }}
+                <!-- Solid Container for Form Fields -->
+                <div class="p-6 bg-slate-800/40 border border-white/10 rounded-2xl mb-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                        </svg>
+                        Create Account
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        {{ $this->form }}
+                    </div>
+                </div>
 
                 <div class="mt-6">
                     <button type="submit" class="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
@@ -78,41 +90,102 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Load Google Places API
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&libraries=places`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+
+        script.onload = () => {
+            // Wait for Filament to render the form
+            setTimeout(() => {
+                const locationInput = document.querySelector('input[wire\\:model\\.live="data.location_name"]');
+                if (!locationInput) return;
+
+                const autocomplete = new google.maps.places.Autocomplete(locationInput, {
+                    types: ['(cities)'],
+                    fields: ['formatted_address', 'geometry', 'name']
+                });
+
+                autocomplete.addListener('place_changed', () => {
+                    const place = autocomplete.getPlace();
+
+                    if (!place.geometry) return;
+
+                    const lat = place.geometry.location.lat();
+                    const lng = place.geometry.location.lng();
+                    const name = place.formatted_address || place.name;
+
+                    // Update Livewire data
+                    $wire.set('data.location_name', name);
+                    $wire.set('data.latitude', lat);
+                    $wire.set('data.longitude', lng);
+                });
+            }, 500);
+        };
+    </script>
+
+    <style>
+        /* Target ALL labels in the form */
+        form label,
+        .fi-fo-field-wrp label,
+        [data-field-wrapper] label {
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+            color: rgb(209 213 219) !important;
+            margin-bottom: 0.75rem !important;
+            margin-top: 1.5rem !important;
+            display: block !important;
+            letter-spacing: 0.025em !important;
+        }
+
+        /* First label should not have top margin */
+        form > div:first-child label,
+        .fi-fo-field-wrp:first-child label {
+            margin-top: 0 !important;
+        }
+
+        /* Add spacing between form field groups */
+        .fi-fo-field-wrp,
+        [data-field-wrapper] {
+            margin-bottom: 1.5rem !important;
+            padding-top: 0 !important;
+        }
+
+        /* Style helper text and validation messages */
+        .fi-fo-field-wrp-helper-text,
+        .fi-fo-validation-message,
+        [data-field-wrapper] .text-sm {
+            font-size: 0.75rem !important;
+            margin-top: 0.5rem !important;
+            padding-top: 0.25rem !important;
+            display: block !important;
+        }
+
+        /* Success messages - give them breathing room */
+        .text-success-600,
+        .fi-fo-field-wrp .text-success-600 {
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
+            padding-top: 0.25rem !important;
+            display: block !important;
+        }
+
+        /* Input fields - ensure spacing from label */
+        form input,
+        form textarea,
+        form select,
+        .fi-input {
+            margin-top: 0.5rem !important;
+        }
+
+        /* Remove extra spacing from field wrapper children */
+        .fi-fo-field-wrp > div,
+        [data-field-wrapper] > div {
+            margin-top: 0 !important;
+        }
+    </style>
 </div>
-
-<script>
-    // Load Google Places API
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key={{ config('services.google.places_api_key') }}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-
-    script.onload = () => {
-        // Wait for Filament to render the form
-        setTimeout(() => {
-            const locationInput = document.querySelector('input[wire\\:model\\.live="data.location_name"]');
-            if (!locationInput) return;
-
-            const autocomplete = new google.maps.places.Autocomplete(locationInput, {
-                types: ['(cities)'],
-                fields: ['formatted_address', 'geometry', 'name']
-            });
-
-            autocomplete.addListener('place_changed', () => {
-                const place = autocomplete.getPlace();
-
-                if (!place.geometry) return;
-
-                const lat = place.geometry.location.lat();
-                const lng = place.geometry.location.lng();
-                const name = place.formatted_address || place.name;
-
-                // Update Livewire data
-                $wire.set('data.location_name', name);
-                $wire.set('data.latitude', lat);
-                $wire.set('data.longitude', lng);
-            });
-        }, 500);
-    };
-</script>

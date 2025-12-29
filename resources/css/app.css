@@ -10,3 +10,106 @@
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Custom Filament Form Styling - Match QuickPost inputs */
+
+/* Field wrapper - add spacing between fields */
+.fi-fo-field-wrp {
+    margin-bottom: 1rem !important; /* space-y-4 equivalent */
+}
+
+/* Label styling - proper spacing above input */
+.fi-fo-field-wrp-label {
+    display: block !important;
+    font-size: 0.875rem !important; /* text-sm */
+    font-weight: 600 !important; /* font-semibold */
+    color: rgb(209 213 219) !important; /* text-gray-300 */
+    margin-bottom: 0.5rem !important; /* mb-2 */
+}
+
+/* Input wrapper - slightly darker background with border (the inner input) */
+.fi-input-wrp {
+    background-color: rgb(30 41 59 / 0.5) !important; /* bg-slate-800/50 */
+    border: 1px solid rgb(255 255 255 / 0.1) !important; /* border-white/10 */
+    border-radius: 1rem !important; /* rounded-2xl */
+    transition: border-color 0.2s !important;
+}
+
+.fi-input-wrp:focus-within {
+    border-color: rgb(236 72 153 / 0.5) !important; /* focus:border-pink-500/50 */
+}
+
+/* Input fields inside wrapper - transparent bg, white text */
+.fi-input-wrp input,
+.fi-input-wrp textarea {
+    background-color: transparent !important;
+    border: none !important;
+    color: white !important;
+    padding: 0.75rem 1rem !important; /* px-4 py-3 */
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.fi-input-wrp input::placeholder,
+.fi-input-wrp textarea::placeholder {
+    color: rgb(156 163 175) !important; /* placeholder-gray-400 */
+}
+
+.fi-input-wrp input:focus,
+.fi-input-wrp textarea:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Helper text styling */
+.fi-fo-field-wrp-hint {
+    font-size: 0.75rem !important; /* text-xs */
+    color: rgb(156 163 175) !important; /* text-gray-400 */
+    margin-top: 0.25rem !important;
+}
+
+/* Error message styling */
+.fi-fo-field-wrp-error-message {
+    font-size: 0.875rem !important; /* text-sm */
+    color: rgb(248 113 113) !important; /* text-red-400 */
+    margin-top: 0.25rem !important;
+}
+
+/* Toggle/Checkbox styling */
+.fi-fo-toggle input[type="checkbox"] {
+    background-color: rgb(30 41 59 / 0.5) !important;
+    border-color: rgb(255 255 255 / 0.1) !important;
+}
+
+.fi-fo-toggle input[type="checkbox"]:checked {
+    background: linear-gradient(to right, rgb(236 72 153), rgb(168 85 247)) !important;
+    border-color: transparent !important;
+}
+
+.fi-fo-toggle input[type="checkbox"]:focus {
+    box-shadow: 0 0 0 2px rgb(236 72 153 / 0.5) !important;
+    outline: none !important;
+}
+
+/* Suffix/Prefix icon colors */
+.fi-input-wrp-suffix,
+.fi-input-wrp-prefix {
+    color: rgb(156 163 175) !important; /* text-gray-400 */
+}
+
+/* Password reveal button */
+.fi-input-wrp button[type="button"] {
+    color: rgb(156 163 175) !important;
+    transition: color 0.2s !important;
+}
+
+.fi-input-wrp button[type="button"]:hover {
+    color: rgb(236 72 153) !important; /* hover:text-pink-400 */
+}
+
+/* Remove any default Filament shadows and rings */
+.fi-input-wrp:focus-within {
+    box-shadow: none !important;
+    outline: none !important;
+}
