@@ -21,7 +21,7 @@ class OnboardingWizard extends Component
     public ?float $longitude = null;
 
     // Profile image (Step 2)
-    #[Validate('nullable|image|max:2048')]
+    #[Validate('nullable|image|max:6144')]
     public $profileImage = null;
     public ?string $uploadedImagePath = null;
 
@@ -103,7 +103,7 @@ class OnboardingWizard extends Component
 
         // Otherwise validate and upload the new image
         $this->validate([
-            'profileImage' => 'required|image|max:2048',
+            'profileImage' => 'required|image|max:6144',
         ]);
 
         // Upload to S3 immediately and save to user
@@ -193,6 +193,18 @@ class OnboardingWizard extends Component
         $user->markOnboardingComplete();
 
         return redirect()->route('feed.nearby');
+    }
+
+    /**
+     * Logout from onboarding
+     */
+    public function logout()
+    {
+        Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+
+        return redirect()->route('login');
     }
 
     public function render()

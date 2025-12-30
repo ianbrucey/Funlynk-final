@@ -64,8 +64,8 @@ class CreateGroup extends Component
             'location_name' => ['required', 'string', 'max:255'],
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
-            'avatarImage' => ['nullable', 'image', 'max:2048'],
-            'coverImage' => ['nullable', 'image', 'max:4096'],
+            'avatarImage' => ['nullable', 'image', 'max:6144'],
+            'coverImage' => ['nullable', 'image', 'max:6144'],
         ];
     }
 

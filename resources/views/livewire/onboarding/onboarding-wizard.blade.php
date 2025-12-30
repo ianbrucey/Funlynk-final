@@ -2,6 +2,20 @@
     <div class="card w-full max-w-3xl glass-card lg:rounded-xl shadow-2xl relative overflow-hidden">
         <div class="top-accent-center"></div>
 
+        {{-- Logout Button --}}
+        <div class="absolute top-4 right-4 z-10">
+            <button
+                wire:click="logout"
+                wire:confirm="Are you sure you want to log out? Your progress will be saved."
+                class="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-xl hover:border-red-500/50 hover:bg-red-500/10 transition text-gray-300 hover:text-red-400 flex items-center gap-2"
+                title="Log out">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span class="hidden sm:inline">Log out</span>
+            </button>
+        </div>
+
         <div class="card-body p-6 sm:p-8 lg:p-10">
             <!-- Progress Indicator: Location → Photo → Interests -->
             <div class="mb-8">
@@ -107,6 +121,9 @@
                         <h2 class="text-3xl font-bold text-white mb-3">Add your profile picture</h2>
                         <p class="text-gray-400 text-lg max-w-xl mx-auto">
                             Help others recognize you by uploading a profile picture. This is required to continue.
+                        </p>
+                        <p class="text-gray-500 text-sm mt-2">
+                            Maximum file size: 6MB
                         </p>
                     </div>
 

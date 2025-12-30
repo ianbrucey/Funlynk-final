@@ -40,7 +40,7 @@ class EditProfile extends Component
     #[Validate('nullable|numeric|between:-180,180')]
     public $longitude = null;
 
-    #[Validate('nullable|image|max:2048')]
+    #[Validate('nullable|image|max:6144')]
     public $profile_image;
 
     public $current_profile_image_url;
