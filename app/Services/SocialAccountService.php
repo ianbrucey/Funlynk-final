@@ -62,7 +62,7 @@ class SocialAccountService
             'display_name' => $providerUser->getName() ?? ($providerUser->getNickname() ?: 'New User'),
             'password' => Hash::make(Str::random(32)),
             'bio' => null,
-            'profile_image_url' => $providerUser->getAvatar(),
+            'profile_image_url' => null, // Don't import social profile pictures - users should take selfies
             'location_name' => null,
             'location_coordinates' => null,
             'interests' => [],
