@@ -6,6 +6,9 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
+        <!-- Favicon -->
+        <link rel="icon" type="image/png" href="{{ asset('images/fl-logo-icon-only.png') }}">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
@@ -129,49 +132,54 @@
 
         <div class="relative z-10">
             <!-- Navbar -->
-            <header class="relative p-4 md:p-6 glass-card mx-4 md:mx-6 mt-6">
+            <header class="relative glass-card mx-4 md:mx-6 mt-6">
                 <div class="top-accent"></div>
-                <div class="flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto gap-4 md:gap-0">
-                    <div class="flex items-center gap-3 md:gap-4">
-                        <div class="relative">
-                            <div class="gradient-border">
-                                <div class="w-12 h-12 md:w-16 md:h-16 bg-slate-900 rounded-2xl flex items-center justify-center">
-                                    <img src="{{ asset('images/fl-logo-icon-only.png') }}" alt="FL" class="h-8 md:h-12 w-auto">
+                <div class="max-w-7xl mx-auto p-3 md:p-6">
+                    <div class="flex items-center justify-center md:justify-between gap-4">
+                        <!-- Logo - Hidden on Mobile -->
+                        <div class="hidden md:flex items-center gap-4">
+                            <div class="relative">
+                                <div class="gradient-border">
+                                    <div class="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center">
+                                        <img src="{{ asset('images/fl-logo-icon-only.png') }}" alt="FL" class="h-12 w-auto">
+                                    </div>
                                 </div>
+                                <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900 animate-pulse"></div>
                             </div>
-                            <div class="absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-green-500 rounded-full border-2 border-slate-900 animate-pulse"></div>
+                            <div>
+                                <h1 class="text-2xl font-bold">
+                                    <span class="text-yellow-400">Fun</span><span class="text-cyan-400">Lynk</span>
+                                </h1>
+                                <p class="text-xs text-gray-400 font-mono">SOCIAL ACTIVITY NETWORK</p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 class="text-xl md:text-2xl font-bold">
-                                <span class="text-yellow-400">Fun</span><span class="text-cyan-400">Lynk</span>
-                            </h1>
-                            <p class="text-[10px] md:text-xs text-gray-400 font-mono hidden sm:block">SOCIAL ACTIVITY NETWORK</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3 w-full md:w-auto justify-center">
-                        @auth
-                            <a href="{{ route('feed.nearby') }}" class="px-5 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold text-sm md:text-base hover:scale-105 transition-all">
-                                Home
-                            </a>
-                        @else
-                            <a href="{{ route('login') }}" class="px-5 py-2.5 md:px-6 md:py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition text-gray-300 hover:text-white text-sm md:text-base">
-                                Log in
-                            </a>
-                            @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="px-5 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold text-sm md:text-base hover:scale-105 transition-all">
-                                    Get Started
+
+                        <!-- Buttons - Centered on Mobile, Right-aligned on Desktop -->
+                        <div class="flex items-center gap-3">
+                            @auth
+                                <a href="{{ route('feed.nearby') }}" class="px-5 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold text-sm md:text-base hover:scale-105 transition-all">
+                                    Home
                                 </a>
-                            @endif
-                        @endauth
+                            @else
+                                <a href="{{ route('login') }}" class="px-5 py-2.5 md:px-6 md:py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition text-gray-300 hover:text-white text-sm md:text-base">
+                                    Log in
+                                </a>
+                                @if (Route::has('register'))
+                                    <a href="{{ route('register') }}" class="px-5 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold text-sm md:text-base hover:scale-105 transition-all">
+                                        Get Started
+                                    </a>
+                                @endif
+                            @endauth
+                        </div>
                     </div>
                 </div>
             </header>
 
             <!-- Hero Section -->
-            <div class="container mx-auto px-4 md:px-6 py-12 md:py-20">
+            <div class="container mx-auto px-4 md:px-6 md:py-20">
                 <div class="flex flex-col lg:flex-row-reverse items-center gap-8 md:gap-12 max-w-7xl mx-auto text-center lg:text-left">
                     <div class="lg:w-1/2">
-                        <img src="{{ asset('images/fl-logo-main.png') }}" alt="Funlynk" class="w-48 md:w-full max-w-md mx-auto">
+                        <img src="{{ asset('images/fl-logo-main.png') }}" alt="Funlynk" class="md:w-full max-w-md mx-auto">
                     </div>
                     <div class="lg:w-1/2">
                         <h2 class="text-3xl md:text-5xl font-bold mb-4 md:mb-6 leading-tight">Discover Activities Around You</h2>
@@ -227,6 +235,13 @@
                         <span class="text-yellow-400">Fun</span><span class="text-cyan-400">Lynk</span>
                     </p>
                     <p class="text-gray-400">Connecting communities through activities</p>
+
+                    <!-- Legal Links -->
+                    <div class="flex gap-6 text-sm">
+                        <a href="{{ route('terms') }}" class="text-gray-400 hover:text-cyan-400 transition">Terms of Service</a>
+                        <a href="{{ route('privacy') }}" class="text-gray-400 hover:text-cyan-400 transition">Privacy Policy</a>
+                    </div>
+
                     <p class="text-gray-600 text-sm">Copyright © {{ date('Y') }} - All rights reserved</p>
                 </div>
             </footer>

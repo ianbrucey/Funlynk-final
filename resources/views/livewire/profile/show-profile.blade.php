@@ -5,21 +5,18 @@
             <div class="relative glass-card overflow-hidden">
                 <div class="top-accent-center"></div>
 
-                <!-- Cover -->
-                <div class="h-32 md:h-48 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600"></div>
-
                 <!-- Profile content -->
-                <div class="px-4 md:px-8 pb-6 md:pb-8">
-                    <div class="flex flex-col items-center md:flex-row md:items-end gap-4 md:gap-6 -mt-16 md:-mt-20">
+                <div class="px-4 md:px-8 py-6 md:py-8">
+                    <div class="flex flex-col items-center md:flex-row md:items-start gap-4 md:gap-6">
                         <!-- Avatar -->
                         <div class="flex-shrink-0">
                             @if($user->profile_image_url)
                                 <img src="{{ Storage::url($user->profile_image_url) }}"
                                      alt="{{ $user->display_name ?? $user->name }}"
-                                     class="h-28 w-28 md:h-40 md:w-40 rounded-full ring-4 ring-slate-900 object-cover bg-slate-800 shadow-2xl">
+                                     class="h-24 w-24 md:h-32 md:w-32 rounded-full ring-4 ring-white/10 object-cover bg-slate-800 shadow-xl">
                             @else
-                                <div class="h-28 w-28 md:h-40 md:w-40 rounded-full ring-4 ring-slate-900 bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-2xl">
-                                    <span class="text-4xl md:text-5xl font-bold text-white">
+                                <div class="h-24 w-24 md:h-32 md:w-32 rounded-full ring-4 ring-white/10 bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-xl">
+                                    <span class="text-3xl md:text-4xl font-bold text-white">
                                         {{ strtoupper(substr($user->display_name ?? $user->name, 0, 1)) }}
                                     </span>
                                 </div>
@@ -27,7 +24,7 @@
                         </div>
 
                         <!-- Name and actions -->
-                        <div class="flex-1 min-w-0 text-center md:text-left pb-2">
+                        <div class="flex-1 min-w-0 text-center md:text-left">
                             <div class="flex flex-col gap-4">
                                 <div>
                                     <h1 class="text-2xl md:text-3xl font-bold text-white truncate">
@@ -120,37 +117,38 @@
                 </div>
 
                 <!-- Bio & Interests Grid -->
-                <!-- Bio & Interests Grid -->
-                <div class="mt-6 md:mt-10 grid grid-cols-1 gap-4 md:gap-8">
-                    <!-- Bio -->
-                    @if($user->bio)
-                        <div>
-                            <h3 class="text-base md:text-lg font-semibold text-white mb-2 md:mb-3">About</h3>
-                            <p class="text-gray-300 leading-relaxed text-sm md:text-base">
-                                {{ $user->bio }}
-                            </p>
-                        </div>
-                    @endif
-
-                    <!-- Interests -->
-                    @if($user->interests && count($user->interests) > 0)
-                        <div class="bg-slate-800/30 rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/5">
-                            <h3 class="text-xs md:text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3 md:mb-4">Interests</h3>
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($user->interests as $interest)
-                                    <span class="inline-flex items-center px-2.5 md:px-3 py-1 md:py-1.5 rounded-full text-xs md:text-sm font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                                        {{ $interest }}
-                                    </span>
-                                @endforeach
+                <div class="px-4 md:px-8 pb-6 md:pb-8">
+                    <div class="grid grid-cols-1 gap-4 md:gap-6">
+                        <!-- Bio -->
+                        @if($user->bio)
+                            <div>
+                                <h3 class="text-base md:text-lg font-semibold text-white mb-2 md:mb-3">About</h3>
+                                <p class="text-gray-300 leading-relaxed text-sm md:text-base">
+                                    {{ $user->bio }}
+                                </p>
                             </div>
-                        </div>
-                    @endif
+                        @endif
+
+                        <!-- Interests -->
+                        @if($user->interests && count($user->interests) > 0)
+                            <div class="bg-slate-800/30 rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/5">
+                                <h3 class="text-xs md:text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3 md:mb-4">Interests</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach($user->interests as $interest)
+                                        <span class="inline-flex items-center px-2.5 md:px-3 py-1 md:py-1.5 rounded-full text-xs md:text-sm font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                                            {{ $interest }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Stats -->
-        <div class="grid grid-cols-2 gap-2 md:grid-cols-5 md:gap-4">
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-5 md:gap-6 mt-6 md:mt-8">
             <div class="bg-slate-800/50 border border-white/10 rounded-xl md:rounded-2xl p-3 md:p-6 text-center backdrop-blur-sm">
                 <dt class="text-xs md:text-sm font-medium text-gray-400">Posts</dt>
                 <dd class="mt-1 md:mt-2 text-2xl md:text-3xl font-bold text-white">{{ $postsCount }}</dd>
@@ -174,7 +172,7 @@
         </div>
 
         <!-- Content Tabs -->
-        <div class="glass-card overflow-hidden">
+        <div class="glass-card overflow-hidden mt-6 md:mt-8">
             <div class="top-accent-left"></div>
 
             <!-- Tab Headers - Horizontal scroll on mobile -->

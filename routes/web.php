@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
+// Legal pages
+Route::view('/terms-of-service', 'legal.terms')->name('terms');
+Route::view('/privacy', 'legal.privacy')->name('privacy');
+
 // Sample design views
 Route::view('/samples/gemini', 'samples.gemini-style')->name('samples.gemini');
 Route::view('/samples/claude', 'samples.claude-style')->name('samples.claude');
