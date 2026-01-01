@@ -34,3 +34,5 @@ android/app/src/main/res/values/strings.xml
 android/.gradle
 android/build
 android/local.properties
+rr
+.rr.yaml
