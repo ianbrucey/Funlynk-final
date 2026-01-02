@@ -3,7 +3,7 @@
         {{-- Header --}}
         <div class="mb-6 lg:mb-8 text-center px-6 lg:px-0 pt-6 lg:pt-0">
             <h1 class="text-4xl font-bold mb-2">
-                <span class="gradient-text">Create Activity</span>
+                <span class="gradient-text">Create Event</span>
             </h1>
             <p class="text-gray-400">Share your passion and connect with others</p>
         </div>
@@ -36,7 +36,7 @@
                 <div class="space-y-4">
                     {{-- Title --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">Activity Title *</label>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">Event Title *</label>
                         <input 
                             type="text" 
                             wire:model="title"
@@ -46,9 +46,9 @@
                         @error('title') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
-                    {{-- Activity Type --}}
+                    {{-- Event Type --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">Activity Type *</label>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">Event Type *</label>
                         <select 
                             wire:model="activity_type"
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
@@ -275,7 +275,7 @@
                 </div>
             </div>
 
-            {{-- Settings --}}
+            {{-- Settings
             <div class="relative p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
 
@@ -315,6 +315,7 @@
                     </div>
                 </div>
             </div>
+            --}}
 
             {{-- Tags --}}
             <div class="relative p-6 lg:p-8 glass-card ">
@@ -386,7 +387,9 @@
             background-clip: text;
         }
 
-        
+        .glass-card {
+            background: rgba(6, 105, 212, 0.8) !important;
+        }
 
         .top-accent-center {
             position: absolute;

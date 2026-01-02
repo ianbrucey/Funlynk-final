@@ -1,9 +1,9 @@
 <div class="min-h-screen py-4 md:py-8 pb-24 md:pb-8">
-    <div class="container mx-auto px-4 md:px-6">
+    <div class="container mx-auto md:px-6">
         {{-- Header --}}
         <div class="mb-6 md:mb-8">
             <div class="flex items-center justify-between gap-3 mb-3 md:mb-4">
-                <h1 class="text-3xl md:text-4xl font-bold">
+                <h1 class="text-3xl md:text-4xl font-bold px-4">
                     <span class="gradient-text">Notifications</span>
                 </h1>
                 @if($unreadCount > 0)
@@ -16,13 +16,12 @@
                     </button>
                 @endif
             </div>
-            <p class="text-gray-400 text-sm md:text-base">Stay updated with your activity</p>
         </div>
 
         {{-- Search Bar --}}
-        <div class="mb-4 md:mb-6">
+        <div class="mb-4 md:mb-6 px-4">
             <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div class="absolute inset-y-0 left-0 p-3 flex items-center pointer-events-none">
                     <svg class="h-4 w-4 md:h-5 md:w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
@@ -31,7 +30,7 @@
                     type="text"
                     wire:model.live.debounce.300ms="search"
                     placeholder="Search notifications..."
-                    class="block w-full pl-9 md:pl-10 pr-3 py-2.5 md:py-2 border border-gray-700 rounded-xl leading-5 bg-slate-800/50 text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-slate-800 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm transition-colors"
+                    class="block w-full pl-9 md:pl-10 p-8 py-2.5 md:py-2 border border-gray-700 rounded-xl leading-5 bg-slate-800/50 text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-slate-800 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 text-sm transition-colors"
                 >
             </div>
         </div>
@@ -130,7 +129,7 @@
 
         {{-- Pagination --}}
         @if($notifications->hasPages())
-            <div class="mt-8">
+            <div class="mt-8 p-4">
                 {{ $notifications->links() }}
             </div>
         @endif
