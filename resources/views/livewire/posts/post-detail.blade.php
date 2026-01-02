@@ -1,4 +1,4 @@
-<div class="min-h-screen py-12">
+<div class="min-h-screen">
     <div class="container mx-auto lg:px-6 lg:py-12">
 
         {{-- Back Button --}}

@@ -227,6 +227,42 @@
                 </div>
             </div>
 
+            <!-- FAQ Section -->
+            <div class="container mx-auto px-6 py-20">
+                <h2 class="text-4xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+                <div class="max-w-3xl mx-auto space-y-4">
+                    <!-- FAQ Item 1 -->
+                    <div class="relative p-6 glass-card">
+                        <h3 class="text-xl font-bold mb-2 text-cyan-400">Is Funlynk free to use?</h3>
+                        <p class="text-gray-300">Yes! Creating an account, browsing activities, and joining free events is completely free. For paid events, we charge a small platform fee to cover payment processing and platform costs.</p>
+                    </div>
+
+                    <!-- FAQ Item 2 -->
+                    <div class="relative p-6 glass-card">
+                        <h3 class="text-xl font-bold mb-2 text-cyan-400">What are the fees for hosting paid activities?</h3>
+                        <p class="text-gray-300">We charge <strong>8% per ticket with a $3 minimum</strong>. This means you keep 92% of ticket sales over $37.50. For example, on a $50 ticket, you receive $46 (after a $4 fee). This covers payment processing, platform maintenance, and customer support.</p>
+                    </div>
+
+                    <!-- FAQ Item 3 -->
+                    <div class="relative p-6 glass-card">
+                        <h3 class="text-xl font-bold mb-2 text-cyan-400">How do I get paid as a host?</h3>
+                        <p class="text-gray-300">Payments are processed through Stripe Connect and deposited directly to your bank account. You'll need to complete a quick onboarding process to verify your identity and connect your bank account.</p>
+                    </div>
+
+                    <!-- FAQ Item 4 -->
+                    <div class="relative p-6 glass-card">
+                        <h3 class="text-xl font-bold mb-2 text-cyan-400">Can I host both free and paid activities?</h3>
+                        <p class="text-gray-300">Absolutely! You can host as many free activities as you want. For paid activities, you'll need to connect a Stripe account to receive payments.</p>
+                    </div>
+
+                    <!-- FAQ Item 5 -->
+                    <div class="relative p-6 glass-card">
+                        <h3 class="text-xl font-bold mb-2 text-cyan-400">What types of activities can I create?</h3>
+                        <p class="text-gray-300">Anything! From sports and fitness to music, food, arts, education, and social gatherings. If it brings people together, it belongs on Funlynk.</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Footer -->
             <footer class="container mx-auto px-6 py-10 text-center">
                 <div class="flex flex-col items-center gap-4">

@@ -156,7 +156,7 @@
         <x-navbar />
 
         <!-- Page Content - pt accounts for fixed navbar, pb accounts for mobile bottom nav -->
-        <main class="pt-16 md:pt-20 pb-24 md:pb-0">
+        <main class="md:pt-20 pb-24 md:pb-0">
             {{ $slot }}
         </main>
     </div>

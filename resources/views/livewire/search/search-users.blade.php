@@ -1,4 +1,4 @@
-<div class="container mx-auto lg:px-8 py-12">
+<div class="container mx-auto lg:px-8">
     <div class="mx-auto max-w-7xl space-y-8">
         <!-- Page Header -->
         <div class="text-center">

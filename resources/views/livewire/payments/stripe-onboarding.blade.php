@@ -1,4 +1,4 @@
-<div class="min-h-screen py-12">
+<div class="min-h-screen">
     <div class="container mx-auto ">
         <div class="max-w-2xl mx-auto">
             
@@ -171,7 +171,7 @@
                         <div class="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <span class="text-cyan-400 text-xs font-bold">3</span>
                         </div>
-                        <p>Receive payments directly to your bank account (minus 10% platform fee)</p>
+                        <p>Receive payments directly to your bank account (8% platform fee, $3 minimum)</p>
                     </div>
                     <div class="flex items-start gap-3">
                         <div class="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
