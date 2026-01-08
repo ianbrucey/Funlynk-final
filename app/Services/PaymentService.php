@@ -11,17 +11,32 @@ use Stripe\StripeClient;
 class PaymentService
 {
     protected StripeClient $stripe;
-    protected float $platformFeePercentage = 0.10; // 10%
+    protected float $platformFeePercentage = 0.08; // 8%
+    protected int $minimumPlatformFeeCents = 300; // $3.00 minimum
 
     public function __construct()
     {
         $stripeSecret = config('services.stripe.secret');
-        
+
         if (empty($stripeSecret)) {
             throw new \Exception('Stripe secret key is not configured. Please add STRIPE_SECRET_KEY to your .env file.');
         }
-        
+
         $this->stripe = new StripeClient($stripeSecret);
+    }
+
+    /**
+     * Calculate platform fee with percentage and minimum
+     *
+     * @param int $amount Amount in cents
+     * @return int Platform fee in cents
+     */
+    protected function calculatePlatformFee(int $amount): int
+    {
+        $percentageFee = (int) ($amount * $this->platformFeePercentage);
+
+        // Apply minimum fee
+        return max($percentageFee, $this->minimumPlatformFeeCents);
     }
 
     /**
@@ -30,7 +45,7 @@ class PaymentService
     public function createPaymentIntent(Activity $activity, User $user): array
     {
         $amount = $activity->price_cents;
-        $platformFee = (int) ($amount * $this->platformFeePercentage);
+        $platformFee = $this->calculatePlatformFee($amount);
 
         // Check if host has Stripe Connect account
         if (!$activity->host->stripeAccount || !$activity->host->stripeAccount->canAcceptPayments()) {
@@ -40,7 +55,7 @@ class PaymentService
         $paymentIntent = $this->stripe->paymentIntents->create([
             'amount' => $amount,
             'currency' => $activity->currency ?? 'usd',
-            'application_fee_amount' => $platformFee, // Platform fee (10%)
+            'application_fee_amount' => $platformFee, // Platform fee (8% with $3 minimum)
             'transfer_data' => [
                 'destination' => $activity->host->stripeAccount->stripe_account_id, // Payment goes to host
             ],
@@ -81,7 +96,7 @@ class PaymentService
             }
 
             $amount = $paymentIntent->amount;
-            $platformFee = (int) ($amount * $this->platformFeePercentage);
+            $platformFee = $this->calculatePlatformFee($amount);
 
             // Create RSVP
             $rsvp = app(RsvpService::class)->createRsvp($activity, $user, [

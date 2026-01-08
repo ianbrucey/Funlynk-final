@@ -3,7 +3,7 @@
         {{-- Header --}}
         <div class="mb-6 lg:mb-8 text-center px-6 lg:px-0 pt-6 lg:pt-0">
             <h1 class="text-4xl font-bold mb-2">
-                <span class="gradient-text">Create Activity</span>
+                <span class="gradient-text">Create Event</span>
             </h1>
             <p class="text-gray-400">Share your passion and connect with others</p>
         </div>
@@ -36,7 +36,7 @@
                 <div class="space-y-4">
                     {{-- Title --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">Activity Title *</label>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">Event Title *</label>
                         <input 
                             type="text" 
                             wire:model="title"
@@ -46,9 +46,9 @@
                         @error('title') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
-                    {{-- Activity Type --}}
+                    {{-- Event Type --}}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-300 mb-2">Activity Type *</label>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">Event Type *</label>
                         <select 
                             wire:model="activity_type"
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
@@ -235,8 +235,8 @@
                             <label class="block text-sm font-semibold text-gray-300 mb-2">Price ($) *</label>
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
-                                <input 
-                                    type="number" 
+                                <input
+                                    type="number"
                                     step="0.01"
                                     wire:model="price"
                                     placeholder="15.00"
@@ -247,11 +247,35 @@
                             <p class="text-xs text-gray-400 mt-1">Enter amount in dollars</p>
                             @error('price') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                         </div>
+
+                        {{-- Platform Fee Info --}}
+                        <div class="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
+                            <div class="flex items-start gap-3">
+                                <svg class="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div class="text-sm">
+                                    <p class="text-cyan-300 font-semibold mb-1">Platform Fee: 8% ($3 minimum)</p>
+                                    <p class="text-gray-400 text-xs leading-relaxed">
+                                        FunLynk charges 8% per ticket (minimum $3) to cover payment processing, platform maintenance, and support.
+                                        <span class="text-cyan-400">You keep 92% of ticket sales over $37.50.</span>
+                                    </p>
+                                    <div class="mt-2 pt-2 border-t border-cyan-500/20">
+                                        <p class="text-gray-400 text-xs">
+                                            <span class="font-semibold text-white">Examples:</span><br>
+                                            • $10 ticket → You receive $7.00 (after $3 fee)<br>
+                                            • $50 ticket → You receive $46.00 (after $4 fee)<br>
+                                            • $100 ticket → You receive $92.00 (after $8 fee)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     @endif
                 </div>
             </div>
 
-            {{-- Settings --}}
+            {{-- Settings
             <div class="relative p-6 lg:p-8 glass-card ">
                 <div class="top-accent-center"></div>
 
@@ -291,6 +315,7 @@
                     </div>
                 </div>
             </div>
+            --}}
 
             {{-- Tags --}}
             <div class="relative p-6 lg:p-8 glass-card ">
@@ -362,7 +387,9 @@
             background-clip: text;
         }
 
-        
+        .glass-card {
+            background: rgba(6, 105, 212, 0.8) !important;
+        }
 
         .top-accent-center {
             position: absolute;

@@ -197,15 +197,13 @@ SELECT * FROM rsvps WHERE payment_status = 'paid' ORDER BY created_at DESC LIMIT
 
 ## Platform Fee
 
-Currently set to **10%** in `PaymentService`:
+**Updated 2026-01-01**: Now set to **8% with $3 minimum** in `PaymentService`:
 ```php
-protected float $platformFeePercentage = 0.10; // 10%
+protected float $platformFeePercentage = 0.08; // 8%
+protected int $minimumPlatformFeeCents = 300; // $3.00 minimum
 ```
 
-To change:
-1. Edit `app/Services/PaymentService.php`
-2. Update `$platformFeePercentage`
-3. Or make it configurable in `.env`
+See `PLATFORM_FEE_UPDATE.md` for full details on the fee structure.
 
 ## Security Notes
 

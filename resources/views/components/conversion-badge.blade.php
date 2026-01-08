@@ -7,7 +7,7 @@ $badgeClasses = $threshold === 'strong'
 @endphp
 
 @if($post->isEligibleForConversion() && !$post->hasReachedDismissLimit())
-    <div class="absolute top-2 right-2 z-10">
+    {{-- <div class="absolute top-2 right-2 z-10">
         <button
             wire:click.stop="openConversionModal('{{ $post->id }}')"
             class="{{ $badgeClasses }} px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg hover:scale-110 transition-all"
@@ -19,4 +19,5 @@ $badgeClasses = $threshold === 'strong'
             @endif
         </button>
     </div>
+    --}}
 @endif

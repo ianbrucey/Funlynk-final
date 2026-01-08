@@ -23,7 +23,7 @@
 
         <form wire:submit="createPost" class="max-w-3xl mx-auto space-y-6 lg:space-y-6">
             {{-- Required Fields --}}
-            <div class="relative p-6 lg:p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card perp">
                 <div class="top-accent-center"></div>
 
                 <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
@@ -81,7 +81,7 @@
             </div>
 
             {{-- Optional Details --}}
-            <div class="relative p-6 lg:p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card perp">
                 <div class="top-accent-center"></div>
 
                 <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
@@ -138,7 +138,7 @@
             </div>
 
             {{-- Tags & Settings --}}
-            <div class="relative p-6 lg:p-8 glass-card">
+            <div class="relative p-6 lg:p-8 glass-card perp">
                 <div class="top-accent-center"></div>
 
                 <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
@@ -235,6 +235,10 @@
             width: 8rem;
             height: 0.25rem;
             background: linear-gradient(to right, transparent, #ec4899, transparent);
+        }
+
+        .glass-card.perp {
+            background: rgba(107, 15, 169, .8) !important;
         }
     </style>
 

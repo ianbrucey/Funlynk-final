@@ -11,6 +11,7 @@
         "http-interop/http-factory-guzzle": "^1.2",
         "laravel/framework": "^12.0",
         "laravel/horizon": "^5.41",
+        "laravel/octane": "^2.13",
         "laravel/reverb": "^1.6",
         "laravel/scout": "^10.22",
         "laravel/socialite": "^5.23",
@@ -20,6 +21,8 @@
         "meilisearch/meilisearch-php": "^1.16",
         "pusher/pusher-php-server": "^7.2",
         "simplesoftwareio/simple-qrcode": "^4.2",
+        "spiral/roadrunner-cli": "^2.6.0",
+        "spiral/roadrunner-http": "^3.3.0",
         "stripe/stripe-php": "^19.0"
     },
     "require-dev": {
@@ -59,6 +62,8 @@
             "Composer\\Config::disableProcessTimeout",
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
+        "octane": "php artisan octane:start --watch --workers=4",
+        "octane:prod": "php artisan octane:start --workers=16 --max-requests=500",
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"

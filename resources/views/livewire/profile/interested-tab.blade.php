@@ -55,7 +55,7 @@
                 @endif
             </p>
             @if($filter === 'active')
-                <a href="{{ route('discovery.nearby') }}"
+                <a href="{{ route('feed.nearby') }}"
                    class="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
                     Discover Posts
                 </a>
