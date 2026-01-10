@@ -126,6 +126,11 @@ Route::controller(SocialLoginController::class)
             ->name('social.redirect')
             ->whereIn('provider', ['google', 'facebook']);
 
+        // Event-aware OAuth redirect (captures activity context)
+        Route::get('{provider}/redirect/event/{activity}', 'redirectWithEvent')
+            ->name('social.redirect.event')
+            ->whereIn('provider', ['google']);
+
         Route::get('{provider}/callback', 'callback')
             ->name('social.callback')
             ->whereIn('provider', ['google', 'facebook']);

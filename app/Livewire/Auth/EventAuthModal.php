@@ -210,10 +210,10 @@ class EventAuthModal extends Component
         ContextPreservationService $contextService,
         RsvpService $rsvpService,
         User $user
-    ): void {
+    ): mixed {
         if (!$this->activity) {
             $this->redirect(route('feed.nearby'), navigate: true);
-            return;
+            return null;
         }
 
         // Check if event is free or paid
@@ -229,9 +229,9 @@ class EventAuthModal extends Component
                 $this->redirect(route('events.show', $this->activity), navigate: true);
             }
         } else {
-            // Paid event - redirect to checkout
+            // Paid event - redirect to checkout (full page load for Stripe.js)
             $contextService->clearIntendedAction();
-            $this->redirect(route('events.checkout', $this->activity), navigate: true);
+            return redirect()->route('events.checkout', $this->activity);
         }
     }
 
