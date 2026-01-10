@@ -20,6 +20,8 @@ class ChatComponent extends Component
 
     public $replyingTo = null;
 
+    public bool $showHeader = true;
+
     protected ChatService $chatService;
 
     public function getListeners()
@@ -38,10 +40,11 @@ class ChatComponent extends Component
         $this->chatService = $chatService;
     }
 
-    public function mount($conversationId = null, $conversationable = null)
+    public function mount($conversationId = null, $conversationable = null, bool $showHeader = true)
     {
         $this->conversationId = $conversationId;
         $this->conversationable = $conversationable;
+        $this->showHeader = $showHeader;
 
         $this->loadMessages();
     }

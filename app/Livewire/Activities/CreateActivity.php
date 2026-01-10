@@ -146,7 +146,7 @@ class CreateActivity extends Component
 
             session()->flash('success', 'Activity created successfully!');
             
-            return redirect()->route('activities.show', $activity->id);
+            return redirect()->route('events.show', $activity->id);
         } catch (\Exception $e) {
             session()->flash('error', 'Error creating activity: ' . $e->getMessage());
         }

@@ -8,7 +8,7 @@
             <p class="text-gray-300 text-sm mb-4">
                 {{ $post->reaction_count }} people were interested
             </p>
-            <a href="{{ route('activities.show', $post->convertedActivity->id) }}"
+            <a href="{{ route('events.show', $post->convertedActivity->id) }}"
                class="inline-block px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold hover:scale-105 transition-all">
                 View Event →
             </a>

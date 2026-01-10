@@ -29,11 +29,21 @@ class NotificationBell extends Component
 
     public function mount(): void
     {
+        if (!auth()->check()) {
+            return;
+        }
+        
         $this->loadNotifications();
     }
 
     public function loadNotifications(): void
     {
+        if (!auth()->check()) {
+            $this->recentNotifications = collect();
+            $this->unreadCount = 0;
+            return;
+        }
+        
         // Show recent notifications (both read and unread) so users can see what they clicked on
         $this->recentNotifications = Notification::where('user_id', auth()->id())
             ->orderBy('created_at', 'desc')
@@ -105,7 +115,7 @@ class NotificationBell extends Component
                 if (! empty($url)) {
                     $this->redirect($url);
                 } elseif (isset($notification->data['activity_id'])) {
-                    $this->redirect(route('activities.show', $notification->data['activity_id']));
+                    $this->redirect(route('events.show', $notification->data['activity_id']));
                 }
             } elseif ($notification->type === 'post_conversion_prompt') {
                 // Redirect to post detail page where conversion button is available
@@ -117,7 +127,7 @@ class NotificationBell extends Component
                 if (! empty($url)) {
                     $this->redirect($url);
                 } elseif (isset($notification->data['activity_id'])) {
-                    $this->redirect(route('activities.show', $notification->data['activity_id']));
+                    $this->redirect(route('events.show', $notification->data['activity_id']));
                 }
             }
         }

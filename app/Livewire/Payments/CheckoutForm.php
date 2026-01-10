@@ -24,7 +24,7 @@ class CheckoutForm extends Component
 
         // Check if activity is paid
         if (!$activity->is_paid) {
-            return redirect()->route('activities.show', $activity);
+            return redirect()->route('events.show', $activity);
         }
 
         $this->activity = $activity;
@@ -54,7 +54,7 @@ class CheckoutForm extends Component
 
             session()->flash('success', 'Payment successful! You\'re all set for this activity.');
             
-            return redirect()->route('activities.show', $this->activity);
+            return redirect()->route('events.show', $this->activity);
             
         } catch (\Exception $e) {
             $this->errorMessage = $e->getMessage();

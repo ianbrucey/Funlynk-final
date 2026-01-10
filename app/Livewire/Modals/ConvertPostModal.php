@@ -182,7 +182,7 @@ class ConvertPostModal extends Component
             $this->close();
 
             // Redirect to event page
-            return redirect()->route('activities.show', $activity->id);
+            return redirect()->route('events.show', $activity->id);
 
         } catch (\Exception $e) {
             \Log::error('Conversion failed', [

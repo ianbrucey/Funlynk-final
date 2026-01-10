@@ -7,7 +7,7 @@
             <div class="flex items-center justify-between">
                 <span class="text-sm font-semibold text-white">✨ Converted to Event</span>
                 @if($post->convertedActivity)
-                    <a href="{{ route('activities.show', $post->convertedActivity->id) }}"
+                    <a href="{{ route('events.show', $post->convertedActivity->id) }}"
                        class="text-xs text-cyan-400 hover:text-cyan-300">
                         View Event →
                     </a>
@@ -40,7 +40,7 @@
     {{-- Actions --}}
     <div class="flex gap-2">
         @if($post->status === 'converted' && $post->convertedActivity)
-            <a href="{{ route('activities.show', $post->convertedActivity->id) }}"
+            <a href="{{ route('events.show', $post->convertedActivity->id) }}"
                class="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg text-center text-sm font-semibold hover:scale-105 transition-all">
                 View Event
             </a>

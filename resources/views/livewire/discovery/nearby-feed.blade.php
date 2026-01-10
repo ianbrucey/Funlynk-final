@@ -22,7 +22,7 @@
                         <input
                             type="text"
                             wire:model.live.debounce.300ms="searchQuery"
-                            placeholder="👀 search for something to get into :)"
+                            placeholder="👀 search for your thing :)"
                             class="w-full pl-12 pr-12 py-4 bg-slate-800/50 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition text-lg"
                         >
                         @if($searchQuery)
@@ -146,7 +146,7 @@
                                 <img src="{{ Storage::url($item['data']->images[0]) }}"
                                      class="w-full h-full object-cover cursor-pointer"
                                      alt="{{ $item['data']->title }}"
-                                     onclick="window.location.href='{{ route('activities.show', $item['data']) }}'">
+                                     onclick="window.location.href='{{ route('events.show', $item['data']) }}'">
                                 @if(count($item['data']->images) > 1)
                                     <div class="absolute bottom-2 right-2 px-2 py-1 rounded-full text-xs text-white"
                                          style="background: rgba(15,23,42,0.8); backdrop-filter: blur(4px);">
@@ -157,7 +157,7 @@
                         @endif
 
                         {{-- Card Body --}}
-                        <div class="mt-3 flex-1 cursor-pointer" onclick="window.location.href='{{ route('activities.show', $item['data']) }}'">
+                        <div class="mt-3 flex-1 cursor-pointer" onclick="window.location.href='{{ route('events.show', $item['data']) }}'">
                             <h3 class="text-[1.1rem] font-bold text-white mb-1.5 line-clamp-2">{{ $item['data']->title }}</h3>
 
                             {{-- Meta Row --}}
@@ -178,7 +178,7 @@
                         {{-- Card Actions --}}
                         <div class="grid gap-2.5 mt-3.5" style="grid-template-columns: 1fr auto;">
                             <button
-                                onclick="event.stopPropagation(); window.location.href='{{ route('activities.show', $item['data']) }}'"
+                                onclick="event.stopPropagation(); window.location.href='{{ route('events.show', $item['data']) }}'"
                                 class="py-3 rounded-xl font-semibold cursor-pointer transition-all hover:scale-[1.02]"
                                 style="background: linear-gradient(90deg, #06b6d4, #3b82f6); border: none; color: white;">
                                 🎟️ RSVP
@@ -193,7 +193,7 @@
 
                         {{-- Footer --}}
                         <div class="flex justify-between items-center mt-3 text-[0.8rem]" style="color: #8a93b2;">
-                            <a href="{{ route('activities.show', $item['data']) }}" class="flex items-center gap-1.5 hover:text-cyan-400 transition">
+                            <a href="{{ route('events.show', $item['data']) }}" class="flex items-center gap-1.5 hover:text-cyan-400 transition">
                                 💬 Discussion
                             </a>
                             <span>

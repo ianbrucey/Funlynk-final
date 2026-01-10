@@ -76,13 +76,13 @@ class PostDetail extends Component
             Log::info('Post converted successfully', [
                 'post_id' => $this->post->id,
                 'activity_id' => $activity->id,
-                'redirect_url' => route('activities.show', $activity->id),
+                'redirect_url' => route('events.show', $activity->id),
             ]);
 
             // Redirect to event page with success message
             session()->flash('success', '🎉 Post converted to event successfully!');
 
-            return redirect()->route('activities.show', $activity->id);
+            return redirect()->route('events.show', $activity->id);
         } catch (\Exception $e) {
             Log::error('Failed to convert post', [
                 'post_id' => $this->post->id,

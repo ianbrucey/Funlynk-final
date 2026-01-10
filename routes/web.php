@@ -55,18 +55,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/posts/{post}', \App\Livewire\Posts\PostDetail::class)->name('posts.show');
         Route::get('/posts/{post}/chat', \App\Livewire\Posts\PostChat::class)->name('posts.chat');
 
-        // Activity/Event Dashboard Routes (both point to same component)
+        // Event Dashboard Routes (specific routes BEFORE dynamic {activity})
         Route::get('/events', \App\Livewire\Events\EventDashboard::class)->name('events.dashboard');
-        Route::get('/activities', \App\Livewire\Events\EventDashboard::class)->name('activities.index');
-        Route::get('/activities/create', \App\Livewire\Activities\CreateActivity::class)->name('activities.create');
-        Route::get('/activities/{activity}', \App\Livewire\Activities\ActivityDetail::class)->name('activities.show');
-        Route::get('/activities/{activity}/edit', \App\Livewire\Activities\EditActivity::class)->name('activities.edit');
-        Route::get('/activities/{activity}/checkout', \App\Livewire\Payments\CheckoutForm::class)->name('activities.checkout');
+        Route::get('/events/create', \App\Livewire\Activities\CreateActivity::class)->name('events.create');
+        Route::get('/events/{activity}/edit', \App\Livewire\Activities\EditActivity::class)->name('events.edit');
+        Route::get('/events/{activity}/checkout', \App\Livewire\Payments\CheckoutForm::class)->name('events.checkout');
 
         // Check-In Routes
-        Route::get('/activities/{activity}/my-ticket', \App\Livewire\CheckIn\MyTicket::class)->name('activities.my-ticket');
-        Route::get('/activities/{activity}/attendees', \App\Livewire\CheckIn\HostAttendeeManager::class)->name('activities.attendees');
-        Route::get('/activities/{activity}/scan', \App\Livewire\CheckIn\QrScanner::class)->name('activities.scan');
+        Route::get('/tickets', \App\Livewire\Tickets\MyTickets::class)->name('tickets.index');
+        Route::get('/events/{activity}/my-ticket', \App\Livewire\CheckIn\MyTicket::class)->name('events.my-ticket');
+        Route::get('/events/{activity}/attendees', \App\Livewire\CheckIn\HostAttendeeManager::class)->name('events.attendees');
+        Route::get('/events/{activity}/scan', \App\Livewire\CheckIn\QrScanner::class)->name('events.scan');
 
         // Discovery Routes
         Route::get('/feed/nearby', \App\Livewire\Discovery\NearbyFeed::class)->name('feed.nearby');
@@ -105,7 +104,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/groups/{group:slug}/timeline', \App\Livewire\Groups\GroupTimeline::class)->name('groups.timeline');
         Route::get('/groups/{group:slug}/settings', GroupSettings::class)->name('groups.settings');
         Route::get('/groups/{group:slug}/requests', \App\Livewire\Groups\JoinRequestsList::class)->name('groups.requests');
-        Route::get('/dashboard', UserDashboard::class)->name('dashboard');
+        Route::redirect('/dashboard', '/feed/nearby')->name('dashboard');
     });
 
     // Profile edit route (outside onboarding middleware - accessible to incomplete users)
@@ -139,3 +138,10 @@ Route::get('/chat-demo', function () {
 Route::middleware('auth')->get('/test-toast', function () {
     return view('test-toast');
 })->name('test.toast');
+
+// Public Event Routes (accessible without login) - UUID-based
+// MUST be last to avoid catching specific routes like /events/create
+Route::get('/events/{activity}', \App\Livewire\Activities\ActivityDetail::class)
+    ->name('events.show')
+    ->middleware(['web', 'capture.intent', 'throttle:60,1']);
+

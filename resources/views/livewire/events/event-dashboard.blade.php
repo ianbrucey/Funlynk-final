@@ -1,13 +1,19 @@
-<div class="min-h-screen py-4 sm:py-8 px-3 sm:px-4">
+<div class="min-h-screen py-4 sm:py-8 px-3 sm:px-4 bg-slate-900">
     <div class="max-w-6xl mx-auto space-y-4 sm:space-y-6">
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-            <div class="text-center sm:text-left">
+        <!-- Header with Integrated Stats -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+            <div class="flex-1">
                 <h1 class="text-2xl sm:text-3xl font-bold text-white">My Events</h1>
-                <p class="text-gray-400 text-sm sm:text-base mt-1">Manage your hosted events and attendees</p>
+                <div class="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-400">
+                    <span>{{ $stats['upcoming'] }} upcoming</span>
+                    <span class="text-white/20">•</span>
+                    <span>{{ $stats['total_attendees'] }} attendees</span>
+                    <span class="text-white/20">•</span>
+                    <span>{{ $stats['past'] }} past</span>
+                </div>
             </div>
-            <a href="{{ route('activities.create') }}"
-               class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-white text-center inline-flex items-center justify-center gap-2">
+            <a href="{{ route('events.create') }}"
+               class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-white text-center inline-flex items-center justify-center gap-2 flex-shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -15,56 +21,40 @@
             </a>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
-            <div class="glass-card p-3 sm:p-5 text-center">
-                <div class="text-2xl sm:text-3xl font-bold text-cyan-400">{{ $stats['upcoming'] }}</div>
-                <div class="text-gray-400 text-xs sm:text-sm mt-1">Upcoming</div>
-            </div>
-            <div class="glass-card p-3 sm:p-5 text-center">
-                <div class="text-2xl sm:text-3xl font-bold text-pink-400">{{ $stats['total_attendees'] }}</div>
-                <div class="text-gray-400 text-xs sm:text-sm mt-1">Attendees</div>
-            </div>
-            <div class="glass-card p-3 sm:p-5 text-center">
-                <div class="text-2xl sm:text-3xl font-bold text-purple-400">{{ $stats['past'] }}</div>
-                <div class="text-gray-400 text-xs sm:text-sm mt-1">Past</div>
-            </div>
-        </div>
-
         <!-- Filters & Search -->
-        <div class="glass-card p-3 sm:p-4">
-            <div class="flex flex-col gap-3 sm:gap-4">
-                <!-- Search (moved to top on mobile for easier access) -->
-                <div class="order-first sm:order-last sm:flex-1">
-                    <input type="text"
-                           wire:model.live.debounce.300ms="search"
-                           placeholder="Search events..."
-                           class="w-full px-4 py-2.5 sm:py-2 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none text-sm sm:text-base">
-                </div>
-
+        <div class="bg-slate-800/70 rounded-2xl border border-white/10 p-3 sm:p-4">
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
                 <!-- Filter Tabs -->
-                <div class="flex gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+                <div class="flex gap-2 overflow-x-auto scrollbar-hide">
                     @foreach(['upcoming' => 'Upcoming', 'past' => 'Past', 'all' => 'All'] as $key => $label)
                         <button wire:click="setFilter('{{ $key }}')"
-                                class="px-3 sm:px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm sm:text-base flex-shrink-0 {{ $filter === $key
+                                class="px-3 sm:px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm flex-shrink-0 {{ $filter === $key
                                     ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white'
-                                    : 'bg-slate-800/50 text-gray-400 hover:text-white hover:bg-slate-700/50' }}">
+                                    : 'bg-slate-700/50 text-gray-400 hover:text-white hover:bg-slate-600/50' }}">
                             {{ $label }}
                         </button>
                     @endforeach
+                </div>
+
+                <!-- Search -->
+                <div class="sm:flex-1">
+                    <input type="text"
+                           wire:model.live.debounce.300ms="search"
+                           placeholder="Search events..."
+                           class="w-full px-4 py-2 bg-slate-700/50 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none text-sm">
                 </div>
             </div>
         </div>
 
         <!-- Events List -->
-        <div class="space-y-3 sm:space-y-4">
+        <div class="space-y-2">
             @forelse($events as $event)
                 @php
                     $eventStats = $this->getEventStats($event);
                     $isPast = $event->start_time <= now();
                     $isDraft = $event->status === 'draft';
                 @endphp
-                <div class="glass-card p-4 sm:p-6 hover:border-cyan-500/30 transition-all">
+                <div class="bg-slate-800/70 border border-white/10 rounded-xl p-4 sm:p-5 hover:border-cyan-500/30 hover:bg-slate-800/80 transition-all">
                     <!-- Mobile Layout -->
                     <div class="sm:hidden">
                         <!-- Title & Status -->
@@ -123,18 +113,18 @@
                         <!-- Actions -->
                         <div class="flex flex-col gap-2">
                             @if(!$isDraft && $eventStats['total_rsvps'] > 0)
-                                <a href="{{ route('activities.attendees', $event) }}"
+                                <a href="{{ route('events.attendees', $event) }}"
                                    class="w-full px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg text-white text-sm font-semibold text-center">
                                     Manage Attendees
                                 </a>
                             @endif
                             <div class="flex gap-2">
-                                <a href="{{ route('activities.show', $event) }}"
+                                <a href="{{ route('events.show', $event) }}"
                                    class="flex-1 px-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white text-sm text-center hover:border-cyan-500/50 transition">
                                     View
                                 </a>
                                 @if(!$isPast)
-                                    <a href="{{ route('activities.edit', $event) }}"
+                                    <a href="{{ route('events.edit', $event) }}"
                                        class="flex-1 px-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white text-sm text-center hover:border-cyan-500/50 transition">
                                         Edit
                                     </a>
@@ -217,18 +207,18 @@
 
                             <!-- Actions -->
                             <div class="flex items-center gap-2 flex-shrink-0">
-                                <a href="{{ route('activities.show', $event) }}"
+                                <a href="{{ route('events.show', $event) }}"
                                    class="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white text-sm hover:border-cyan-500/50 transition">
                                     View
                                 </a>
                                 @if(!$isPast)
-                                    <a href="{{ route('activities.edit', $event) }}"
+                                    <a href="{{ route('events.edit', $event) }}"
                                        class="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white text-sm hover:border-cyan-500/50 transition">
                                         Edit
                                     </a>
                                 @endif
                                 @if(!$isDraft && $eventStats['total_rsvps'] > 0)
-                                    <a href="{{ route('activities.attendees', $event) }}"
+                                    <a href="{{ route('events.attendees', $event) }}"
                                        class="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg text-white text-sm font-semibold hover:scale-105 transition-all">
                                         Manage Attendees
                                     </a>
@@ -249,7 +239,7 @@
                     </div>
                 </div>
             @empty
-                <div class="glass-card p-8 sm:p-12 text-center">
+                <div class="bg-slate-800/70 border border-white/10 rounded-xl p-8 sm:p-12 text-center">
                     <div class="text-5xl sm:text-6xl mb-4">📅</div>
                     <h3 class="text-lg sm:text-xl font-semibold text-white mb-2">No events found</h3>
                     <p class="text-gray-400 text-sm sm:text-base mb-6">
@@ -264,7 +254,7 @@
                         @endif
                     </p>
                     @if($stats['upcoming'] + $stats['past'] === 0)
-                        <a href="{{ route('activities.create') }}"
+                        <a href="{{ route('events.create') }}"
                            class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-white text-sm sm:text-base">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>

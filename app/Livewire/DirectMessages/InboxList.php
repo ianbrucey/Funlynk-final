@@ -4,26 +4,58 @@ namespace App\Livewire\DirectMessages;
 
 use App\Services\MessageRequestService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class InboxList extends Component
 {
-    public $conversations = [];
+    use WithPagination;
 
     public $selectedConversationId = null;
 
-    public function mount()
+    public string $search = '';
+
+    protected $queryString = ['search'];
+
+    public function updatedSearch()
     {
-        $this->loadConversations();
+        $this->resetPage();
     }
 
-    public function loadConversations()
+    public function selectConversation($conversationId)
+    {
+        $this->selectedConversationId = $conversationId;
+        $this->dispatch('conversation-selected', conversationId: $conversationId);
+    }
+
+    public function render()
     {
         $messageRequestService = app(MessageRequestService::class);
-        $conversations = $messageRequestService->getDirectInbox(Auth::user());
+        $conversationsQuery = $messageRequestService->getDirectInbox(Auth::user());
+
+        // Apply search filter
+        if ($this->search) {
+            $searchTerm = strtolower($this->search);
+            $conversationsQuery = $conversationsQuery->filter(function ($conversation) use ($searchTerm) {
+                $otherUser = $conversation->participants
+                    ->where('id', '!=', Auth::id())
+                    ->first();
+
+                // Search by name or username
+                return str_contains(strtolower($otherUser->name), $searchTerm)
+                    || str_contains(strtolower($otherUser->username), $searchTerm);
+            });
+        }
+
+        // Transform for pagination (simple slice-based pagination for collections)
+        $perPage = 15;
+        $page = $this->getPage();
+        $total = $conversationsQuery->count();
+        $conversationsSlice = $conversationsQuery->slice(($page - 1) * $perPage, $perPage);
 
         // Transform Conversation models to UI structure
-        $this->conversations = $conversations->map(function ($conversation) {
+        $conversations = $conversationsSlice->map(function ($conversation) {
             // Get the other user (not the current user)
             $otherUser = $conversation->participants
                 ->where('id', '!=', Auth::id())
@@ -44,28 +76,28 @@ class InboxList extends Component
                 ->when($lastReadAt, fn ($q) => $q->where('created_at', '>', $lastReadAt))
                 ->count();
 
+            // Build avatar URL properly
+            $avatarUrl = $otherUser->profile_image_url
+                ? Storage::url($otherUser->profile_image_url)
+                : 'https://ui-avatars.com/api/?name='.urlencode($otherUser->name).'&background=ec4899&color=fff';
+
             return [
                 'id' => $conversation->id,
                 'other_user' => [
                     'name' => $otherUser->name,
                     'username' => $otherUser->username,
-                    'avatar' => $otherUser->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($otherUser->name).'&background=ec4899&color=fff',
+                    'avatar' => $avatarUrl,
                 ],
-                'latest_message' => $latestMessage?->content ?? 'No messages yet',
+                'latest_message' => $latestMessage?->body ?? 'No messages yet',
                 'last_message_at' => $conversation->last_message_at,
                 'unread_count' => $unreadCount,
             ];
-        })->toArray();
-    }
+        })->values()->toArray();
 
-    public function selectConversation($conversationId)
-    {
-        $this->selectedConversationId = $conversationId;
-        $this->dispatch('conversation-selected', conversationId: $conversationId);
-    }
-
-    public function render()
-    {
-        return view('livewire.direct-messages.inbox-list');
+        return view('livewire.direct-messages.inbox-list', [
+            'conversations' => $conversations,
+            'hasMorePages' => ($page * $perPage) < $total,
+            'totalConversations' => $total,
+        ]);
     }
 }

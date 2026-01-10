@@ -1,5 +1,6 @@
 <div class="flex flex-col h-full bg-slate-900/50 backdrop-blur-lg border border-white/10 rounded-2xl overflow-hidden">
-    {{-- Header --}}
+    {{-- Header (conditionally shown) --}}
+    @if($showHeader)
     <div class="px-6 py-4 border-b border-white/10 bg-gradient-to-r from-slate-800/50 to-slate-900/50">
         <div class="flex items-center justify-between">
             @if($conversation && $conversation->type === 'private')
@@ -30,6 +31,7 @@
             </button>
         </div>
     </div>
+    @endif
 
     {{-- Messages Container --}}
     <div

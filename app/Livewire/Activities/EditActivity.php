@@ -221,7 +221,7 @@ class EditActivity extends Component
 
             session()->flash('success', 'Activity updated successfully!');
 
-            return redirect()->route('activities.show', $this->activity->id);
+            return redirect()->route('events.show', $this->activity->id);
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to update activity: ' . $e->getMessage());
         }
@@ -257,7 +257,7 @@ class EditActivity extends Component
 
             session()->flash('success', $result['message']);
 
-            return redirect()->route('activities.show', $this->activity->id);
+            return redirect()->route('events.show', $this->activity->id);
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to update activity: ' . $e->getMessage());
         }

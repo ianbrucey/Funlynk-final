@@ -50,13 +50,17 @@ class QrScanner extends Component
                 return;
             }
 
+            // Double-check with fresh data to avoid race conditions
+            $rsvp->refresh();
+
             if ($rsvp->checked_in_at) {
-                $this->errorMessage = $rsvp->user->name . ' is already checked in.';
+                $userName = $rsvp->user->name ?? 'This attendee';
+                $this->errorMessage = $userName . ' is already checked in.';
                 return;
             }
 
             $this->lastCheckedIn = $checkInService->performCheckIn($rsvp, 'qr_scan', auth()->user());
-            $this->successMessage = $rsvp->user->name . ' checked in successfully!';
+            $this->successMessage = ($this->lastCheckedIn->user->name ?? 'Attendee') . ' checked in successfully!';
             $this->refreshStats();
 
             $this->dispatch('play-success-sound');

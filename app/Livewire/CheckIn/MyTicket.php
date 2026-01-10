@@ -23,7 +23,7 @@ class MyTicket extends Component
 
         if (!$this->rsvp) {
             session()->flash('error', 'You do not have an RSVP for this activity.');
-            $this->redirect(route('activities.show', $activity));
+            $this->redirect(route('events.show', $activity));
             return;
         }
 

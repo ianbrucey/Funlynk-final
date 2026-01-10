@@ -77,7 +77,7 @@
 
             {{-- Cancel Link --}}
             <div class="mt-6 text-center">
-                <a href="{{ route('activities.show', $activity) }}" class="text-gray-400 hover:text-white transition">
+                <a href="{{ route('events.show', $activity) }}" class="text-gray-400 hover:text-white transition">
                     ← Back to activity
                 </a>
             </div>

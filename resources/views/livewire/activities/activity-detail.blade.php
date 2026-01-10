@@ -83,7 +83,8 @@
             {{-- Main Content (Left Column) --}}
             <div class="lg:col-span-2 space-y-6 lg:space-y-6">
 
-                {{-- Back Button --}}
+                {{-- Back Button (only for authenticated users) --}}
+                @auth
                 <div class="px-4 lg:px-0">
                     <a href="{{ route('feed.nearby') }}" class="inline-flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -92,6 +93,7 @@
                         Back to Feed
                     </a>
                 </div>
+                @endauth
 
                 {{-- Title, Details & Description Card --}}
                 <div class="relative p-6 lg:p-8 glass-card lg:rounded-xl overflow-hidden">
@@ -111,6 +113,42 @@
                             <span class="px-3 py-1 bg-red-500/30 border border-red-500/50 rounded-full text-xs font-bold text-red-300 uppercase tracking-wider">Cancelled</span>
                         @endif
                     </div>
+
+                    {{-- Host Public Link Button (Top Right) --}}
+                    @if($isHost)
+                        <div class="absolute top-6 right-6 z-10 mt-10 md:mt-0 md:static md:float-right md:ml-4"
+                             x-data="{
+                                copied: false,
+                                url: '{{ route('events.show', $activity) }}',
+                                copy() {
+                                    navigator.clipboard.writeText(this.url).then(() => {
+                                        this.copied = true;
+                                        // Dispatch toast event directly for global feedback
+                                        window.dispatchEvent(new CustomEvent('show-toast', {
+                                            detail: { message: 'Public link copied to clipboard!', type: 'success' }
+                                        }));
+                                        setTimeout(() => this.copied = false, 2000);
+                                    });
+                                }
+                             }">
+                            <button @click="copy()"
+                                    class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r rounded-lg text-sm font-semibold hover:scale-105 transition-all shadow-lg"
+                                    :class="copied ? 'from-green-500 to-emerald-500 hover:shadow-green-500/50' : 'from-pink-500 to-purple-500 hover:shadow-pink-500/50'">
+                                
+                                {{-- Default Icon --}}
+                                <svg x-show="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                                </svg>
+
+                                {{-- Copied Icon --}}
+                                <svg x-show="copied" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                
+                                <span x-text="copied ? 'Copied!' : 'Copy Public Link'"></span>
+                            </button>
+                        </div>
+                    @endif
 
                     {{-- Host Info --}}
                     <div class="mb-4">
@@ -288,14 +326,30 @@
                         {{ $activity->description }}
                     </div>
 
-                    {{-- RSVP Button --}}
-                    @if(!$isHost)
-                        <livewire:activities.rsvp-button :activity="$activity" />
-                    @endif
+                    {{-- RSVP / Get Tickets Button --}}
+                    @auth
+                        @if(!$isHost)
+                            <livewire:activities.rsvp-button :activity="$activity" />
+                        @endif
+                    @else
+                        {{-- Guest CTA Buttons --}}
+                        <div class="sticky top-4 z-20 mb-4 flex flex-wrap gap-4 p-4 glass-card rounded-xl border border-white/10">
+                            <button wire:click="guestRsvp" class="flex-1 min-w-[200px] px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-lg">
+                                🎟️ Get Tickets
+                            </button>
+                            <button wire:click="showInterestModal = true" class="flex-1 min-w-[200px] px-8 py-4 bg-slate-800/80 border-2 border-white/20 rounded-xl font-semibold hover:border-cyan-500/50 transition">
+                                💫 I'm Interested
+                            </button>
+                            <button wire:click="bookmark" class="px-6 py-4 bg-slate-800/80 border-2 border-white/20 rounded-xl hover:border-cyan-500/50 transition">
+                                🔖
+                            </button>
+                        </div>
+                    @endauth
 
                     {{-- Action Buttons --}}
                     <div class="mt-6 space-y-3">
-                        {{-- Invite Friends Button (for all users) --}}
+                        @auth
+                        {{-- Invite Friends Button (only for authenticated users) --}}
                         <button
                             wire:click="$dispatch('openActivityInviteModal', { activityId: '{{ $activity->id }}' })"
                             class="w-full px-6 py-3.5 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl font-semibold hover:scale-[1.02] transition-all shadow-lg hover:shadow-purple-500/50">
@@ -315,7 +369,7 @@
                         {{-- Host Actions --}}
                         @if($isHost)
                             {{-- Manage Attendees Button --}}
-                            <a href="{{ route('activities.attendees', $activity) }}"
+                            <a href="{{ route('events.attendees', $activity) }}"
                                class="flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold hover:scale-[1.02] transition-all shadow-lg hover:shadow-cyan-500/50">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
@@ -325,7 +379,7 @@
 
                             {{-- Edit & Delete Buttons --}}
                             <div class="grid grid-cols-2 gap-3">
-                                <a href="{{ route('activities.edit', $activity->id) }}"
+                                <a href="{{ route('events.edit', $activity->id) }}"
                                    class="flex items-center justify-center gap-2 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 hover:bg-slate-800/70 transition font-semibold">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -347,7 +401,7 @@
 
                         {{-- Attendee Ticket Button --}}
                         @if($userRsvp && $userRsvp->status === 'attending')
-                            <a href="{{ route('activities.my-ticket', $activity) }}"
+                            <a href="{{ route('events.my-ticket', $activity) }}"
                                class="flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl font-semibold hover:scale-[1.02] transition-all shadow-lg hover:shadow-green-500/50">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
@@ -355,10 +409,31 @@
                                 View My Ticket
                             </a>
                         @endif
+                        @else
+                        {{-- Share Section for Guests --}}
+                        <div class="p-6 bg-slate-800/50 border border-white/10 rounded-xl">
+                            <h3 class="text-lg font-bold text-white mb-4 text-center">📢 Share This Event</h3>
+                            <div class="flex flex-wrap justify-center gap-3">
+                                <button wire:click="share('instagram')" class="px-4 py-2 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg font-semibold hover:scale-105 transition-all text-sm">
+                                    📷 Instagram
+                                </button>
+                                <button wire:click="share('facebook')" class="px-4 py-2 bg-blue-600 rounded-lg font-semibold hover:scale-105 transition-all text-sm">
+                                    👍 Facebook
+                                </button>
+                                <button wire:click="share('twitter')" class="px-4 py-2 bg-sky-500 rounded-lg font-semibold hover:scale-105 transition-all text-sm">
+                                    🐦 Twitter
+                                </button>
+                                <button wire:click="share('copy_link')" class="px-4 py-2 bg-slate-700 rounded-lg font-semibold hover:scale-105 transition-all text-sm">
+                                    🔗 Copy Link
+                                </button>
+                            </div>
+                        </div>
+                        @endauth
                     </div>
                 </div>
 
-                {{-- Chat Section --}}
+                {{-- Chat Section (only for authenticated users) --}}
+                @auth
                 <div id="discussion" class="relative p-6 lg:p-8 glass-card lg:rounded-xl scroll-mt-6">
                     <div class="top-accent"></div>
                     <h2 class="text-2xl font-bold mb-6 text-white">Discussion</h2>
@@ -366,6 +441,7 @@
                         <livewire:chat.chat-component :conversationable="$activity" />
                     </div>
                 </div>
+                @endauth
 
             </div>
 
@@ -583,4 +659,101 @@
             </div>
         </div>
     @endif
+
+    {{-- Copy to Clipboard Script --}}
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('copy-to-clipboard', (event) => {
+                const url = event.url;
+
+                // Use modern Clipboard API
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        console.log('Link copied to clipboard!');
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { message: 'Public link copied to clipboard!', type: 'success' }
+                        }));
+                    }).catch(err => {
+                        console.error('Failed to copy:', err);
+                        fallbackCopy(url);
+                    });
+                } else {
+                    fallbackCopy(url);
+                }
+            });
+        });
+
+        // Fallback for older browsers
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                console.log('Link copied to clipboard (fallback)!');
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: { message: 'Public link copied to clipboard!', type: 'success' }
+                }));
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+            }
+            document.body.removeChild(textArea);
+        }
+    </script>
+
+    {{-- Interest Modal for Guests --}}
+    @guest
+    @if($showInterestModal)
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50" wire:click.self="showInterestModal = false">
+            <div class="relative p-8 glass-card max-w-md mx-4 rounded-xl border border-white/10">
+                <div class="top-accent"></div>
+
+                <h2 class="text-2xl font-bold text-white mb-4">Stay Updated</h2>
+                <p class="text-gray-300 mb-6">Enter your email to receive updates and reminders about this event.</p>
+
+                <form wire:submit="expressInterest">
+                    <div class="mb-4">
+                        <input
+                            type="email"
+                            wire:model="email"
+                            placeholder="your@email.com"
+                            class="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition"
+                        >
+                        @error('email') <span class="text-red-400 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
+                            Submit
+                        </button>
+                        <button type="button" wire:click="showInterestModal = false" class="px-6 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+    @endguest
+
+    {{-- Share URL Handler Script --}}
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('share-url-generated', (event) => {
+                const { platform, url } = event[0];
+
+                if (platform === 'copy_link') {
+                    navigator.clipboard.writeText(url);
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { message: 'Link copied to clipboard!', type: 'success' }
+                    }));
+                } else {
+                    window.open(url, '_blank');
+                }
+            });
+        });
+    </script>
 </div>

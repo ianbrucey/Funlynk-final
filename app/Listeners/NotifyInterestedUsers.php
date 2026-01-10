@@ -62,7 +62,7 @@ class NotifyInterestedUsers implements ShouldQueue
                         'location' => $event->activity->location_name,
                         'price' => $price,
                         'is_free' => !$event->activity->is_paid,
-                        'url' => route('activities.show', $event->activity->id),
+                        'url' => route('events.show', $event->activity->id),
                     ],
                     'delivery_method' => 'in_app',
                     'delivery_status' => 'sent',

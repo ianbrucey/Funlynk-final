@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'onboarding.complete' => \App\Http\Middleware\EnsureOnboardingComplete::class,
+            'capture.intent' => \App\Http\Middleware\CaptureIntendedAction::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -200,6 +200,22 @@ class User extends Authenticatable implements FilamentHasName
         return $this->hasOne(StripeAccount::class);
     }
 
+    // Guest Engagement Relationships
+    public function eventInterests(): HasMany
+    {
+        return $this->hasMany(EventInterest::class);
+    }
+
+    public function guestBookmarks(): HasMany
+    {
+        return $this->hasMany(GuestBookmark::class);
+    }
+
+    public function socialShares(): HasMany
+    {
+        return $this->hasMany(SocialShare::class);
+    }
+
     public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class, 'group_members')

@@ -161,7 +161,7 @@
                             @endif
 
                             <!-- View Button -->
-                            <a href="{{ route('activities.show', $item['data']->id) }}"
+                            <a href="{{ route('events.show', $item['data']->id) }}"
                                class="inline-block px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold hover:scale-105 transition-all">
                                 View Event
                             </a>

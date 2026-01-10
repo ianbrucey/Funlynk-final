@@ -182,9 +182,9 @@
             <div class="py-4">
                 @if($activeTab === 'posts')
                     @if(isset($posts) && $posts->count() > 0)
-                        <div class="space-y-0">
+                        <div class="space-y-2 px-4 py-2">
                             @foreach($posts as $post)
-                                <a href="{{ route('posts.show', $post->id) }}" class="block border-b border-white/5 p-4 hover:bg-slate-700/30 transition-all group">
+                                <a href="{{ route('posts.show', $post->id) }}" class="block bg-slate-700/60 border border-white/15 rounded-lg p-4 hover:bg-slate-700/75 hover:border-pink-500/40 transition-all group">
                                     <div class="flex items-start justify-between gap-3">
                                         <div class="flex-1 min-w-0">
                                             <h3 class="text-sm font-semibold text-white group-hover:text-pink-400 transition-colors">
@@ -204,7 +204,7 @@
                                             </div>
                                         </div>
                                         @if($post->status === 'active')
-                                            <div class="flex-shrink-0 w-2 h-2 rounded-full bg-green-500"></div>
+                                            <div class="flex-shrink-0 w-2 h-2 rounded-full bg-green-500 ring-2 ring-green-500/30"></div>
                                         @endif
                                     </div>
                                 </a>
@@ -224,9 +224,9 @@
                     @endif
                 @elseif($activeTab === 'hosted' || $activeTab === 'attending')
                     @if(isset($activities) && $activities->count() > 0)
-                        <div class="space-y-0">
+                        <div class="space-y-2 px-4 py-2">
                             @foreach($activities as $activity)
-                                <a href="{{ route('activities.show', $activity->id) }}" class="block border-b border-white/5 p-4 hover:bg-slate-700/30 transition-all group">
+                                <a href="{{ route('events.show', $activity->id) }}" class="block bg-slate-700/60 border border-white/15 rounded-lg p-4 hover:bg-slate-700/75 hover:border-purple-500/40 transition-all group">
                                     <div class="flex items-start justify-between gap-3">
                                         <div class="flex-1 min-w-0">
                                             <h3 class="text-sm font-semibold text-white group-hover:text-purple-400 transition-colors">
@@ -248,7 +248,7 @@
                                             </div>
                                         </div>
                                         @if($activity->status === 'published')
-                                            <div class="flex-shrink-0 w-2 h-2 rounded-full bg-green-500"></div>
+                                            <div class="flex-shrink-0 w-2 h-2 rounded-full bg-green-500 ring-2 ring-green-500/30"></div>
                                         @endif
                                     </div>
                                 </a>

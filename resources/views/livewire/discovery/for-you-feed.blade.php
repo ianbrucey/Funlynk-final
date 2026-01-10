@@ -121,7 +121,7 @@
 
                             {{-- Action Button --}}
                             <div class="flex items-center gap-3">
-                                <a href="{{ route('activities.show', $item['data']) }}"
+                                <a href="{{ route('events.show', $item['data']) }}"
                                    class="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold hover:scale-105 transition-all text-center">
                                     View Event Details
                                 </a>

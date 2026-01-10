@@ -16,8 +16,10 @@
                 </div>
             </a>
 
+
             <!-- Navigation Icons - Hidden on mobile, visible on md+ -->
             <div class="hidden md:flex items-center gap-2 md:gap-4">
+                @auth
                 <!-- Home/Nearby Feed -->
                 <a href="{{ route('feed.nearby') }}"
                    class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('feed.nearby') ? 'bg-white/10' : '' }}"
@@ -30,7 +32,7 @@
                     @endif
                 </a>
 
-                <!-- For You Feed TODO: renable when ready | maybe use photos and videos of activities?? -->
+                {{-- For You Feed TODO: renable when ready | maybe use photos and videos of activities?? --}}
                 {{-- <a href="{{ route('feed.for-you') }}"
                    class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('feed.for-you') ? 'bg-white/10' : '' }}"
                    title="For You">
@@ -75,14 +77,14 @@
                     @endif
                 </a>
 
-                <!-- My Events -->
+                {{-- My Events --}}
                 <a href="{{ route('events.dashboard') }}"
-                   class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('events.*') || request()->routeIs('activities.index') ? 'bg-white/10' : '' }}"
+                   class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('events.*')  ? 'bg-white/10' : '' }}"
                    title="My Events">
-                    <svg class="w-6 h-6 {{ request()->routeIs('events.*') || request()->routeIs('activities.index') ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-6 h-6 {{ request()->routeIs('events.*')  ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    @if(request()->routeIs('events.*') || request()->routeIs('activities.index'))
+                    @if(request()->routeIs('events.*') )
                         <div class="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-500 to-cyan-500"></div>
                     @endif
                 </a>
@@ -116,7 +118,7 @@
                                 </div>
                             </div>
                         </a>
-                        <a href="{{ route('activities.create') }}" class="block px-4 py-3 hover:bg-white/10 transition">
+                        <a href="{{ route('events.create') }}" class="block px-4 py-3 hover:bg-white/10 transition">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
                                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,6 +179,14 @@
                                 <span>My Events</span>
                             </div>
                         </a>
+                        <a href="{{ route('tickets.index') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-white {{ request()->routeIs('tickets.*') ? 'bg-white/10 text-cyan-400' : '' }}">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                                </svg>
+                                <span>My Tickets</span>
+                            </div>
+                        </a>
                         <a href="{{ route('profile.edit') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-white">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -209,6 +219,19 @@
                         </form>
                     </div>
                 </div>
+                @endauth
+                
+                @guest
+                <!-- Guest user buttons -->
+                <a href="{{ route('login') }}"
+                   class="px-4 py-2 text-gray-300 hover:text-white transition font-semibold">
+                    Log In
+                </a>
+                <a href="{{ route('register') }}"
+                   class="px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all shadow-lg text-white">
+                    Sign Up
+                </a>
+                @endguest
             </div>
         </div>
     </div>

@@ -52,7 +52,7 @@ class NotifyAttendeesOfChanges implements ShouldQueue
                     'changes' => $this->refundWindow->changes_summary,
                     'expires_at' => $this->refundWindow->expires_at->toIso8601String(),
                 ],
-                'action_url' => route('activities.show', $this->activity),
+                'action_url' => route('events.show', $this->activity),
             ]);
 
             $notificationCount++;

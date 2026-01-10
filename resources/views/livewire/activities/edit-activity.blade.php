@@ -388,7 +388,7 @@
             {{-- Submit Button --}}
             <div class="flex gap-4 justify-center">
                 <a 
-                    href="{{ route('activities.show', $activity->id) }}"
+                    href="{{ route('events.show', $activity->id) }}"
                     class="px-8 py-4 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition font-semibold"
                 >
                     Cancel

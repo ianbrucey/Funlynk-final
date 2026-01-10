@@ -3,12 +3,15 @@
 namespace App\Livewire\Auth;
 
 use App\Models\User;
+use App\Services\ContextPreservationService;
+use App\Services\GuestEngagementService;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -92,8 +95,10 @@ class Register extends Component implements HasForms
             ->statePath('data');
     }
 
-    public function register(): void
-    {
+    public function register(
+        ContextPreservationService $contextService,
+        GuestEngagementService $guestService
+    ): void {
         $data = $this->form->getState();
 
         $payload = Arr::except($data, ['password_confirmation']);
@@ -111,6 +116,23 @@ class Register extends Component implements HasForms
 
         Auth::login($user);
         request()->session()->regenerate();
+
+        // Migrate guest data to user account
+        $guestToken = Cookie::get('guest_token');
+        if ($guestToken) {
+            $guestService->migrateGuestData($user, $user->email, $guestToken);
+        }
+
+        // Check for intended action
+        if ($contextService->hasIntendedAction()) {
+            $action = $contextService->getIntendedAction();
+            $redirectUrl = $contextService->getRedirectUrl($action);
+            $contextService->clearIntendedAction();
+
+            $this->redirect($redirectUrl, navigate: true);
+
+            return;
+        }
 
         $this->redirectIntended(route('onboarding'), navigate: true);
     }

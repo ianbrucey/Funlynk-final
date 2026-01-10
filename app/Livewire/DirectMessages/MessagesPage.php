@@ -48,6 +48,12 @@ class MessagesPage extends Component
         $this->conversation = null;
     }
 
+    public function clearConversation()
+    {
+        $this->selectedConversationId = null;
+        $this->conversation = null;
+    }
+
     protected function getListeners()
     {
         return [

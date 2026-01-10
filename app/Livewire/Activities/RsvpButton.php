@@ -37,7 +37,7 @@ class RsvpButton extends Component
 
         // If activity is paid and user doesn't have RSVP, redirect to checkout
         if ($this->activity->is_paid && !$this->userRsvp) {
-            return redirect()->route('activities.checkout', $this->activity);
+            return redirect()->route('events.checkout', $this->activity);
         }
 
         $this->loading = true;

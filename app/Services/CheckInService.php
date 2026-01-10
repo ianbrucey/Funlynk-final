@@ -74,8 +74,12 @@ class CheckInService
      */
     public function performCheckIn(Rsvp $rsvp, string $method, ?User $checkedInBy = null): Rsvp
     {
+        // Refresh to get latest data and avoid race conditions
+        $rsvp->refresh();
+
         if ($rsvp->checked_in_at !== null) {
-            throw new Exception('RSVP is already checked in.');
+            $userName = $rsvp->user->name ?? 'This attendee';
+            throw new Exception($userName . ' is already checked in.');
         }
 
         $rsvp->update([

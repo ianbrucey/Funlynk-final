@@ -2,12 +2,15 @@
 
 namespace App\Livewire\Auth;
 
+use App\Services\ContextPreservationService;
+use App\Services\GuestEngagementService;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
@@ -46,8 +49,10 @@ class Login extends Component implements HasForms
             ->statePath('data');
     }
 
-    public function authenticate(): void
-    {
+    public function authenticate(
+        ContextPreservationService $contextService,
+        GuestEngagementService $guestService
+    ): void {
         $data = $this->form->getState();
 
         if (! Auth::attempt(
@@ -60,6 +65,25 @@ class Login extends Component implements HasForms
         }
 
         request()->session()->regenerate();
+
+        $user = Auth::user();
+
+        // Migrate guest data to user account
+        $guestToken = Cookie::get('guest_token');
+        if ($guestToken) {
+            $guestService->migrateGuestData($user, $user->email, $guestToken);
+        }
+
+        // Check for intended action
+        if ($contextService->hasIntendedAction()) {
+            $action = $contextService->getIntendedAction();
+            $redirectUrl = $contextService->getRedirectUrl($action);
+            $contextService->clearIntendedAction();
+
+            $this->redirect($redirectUrl, navigate: true);
+
+            return;
+        }
 
         $this->redirectIntended(route('feed.nearby'), navigate: true);
     }

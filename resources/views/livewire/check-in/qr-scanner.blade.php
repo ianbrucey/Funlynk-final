@@ -61,11 +61,11 @@
 
         <!-- Navigation -->
         <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 pb-4">
-            <a href="{{ route('activities.attendees', $activity) }}"
+            <a href="{{ route('events.attendees', $activity) }}"
                class="flex-1 px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-center hover:border-cyan-500/50 transition text-sm sm:text-base text-white">
                 📋 View Attendee List
             </a>
-            <a href="{{ route('activities.show', $activity) }}"
+            <a href="{{ route('events.show', $activity) }}"
                class="flex-1 px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-center hover:border-cyan-500/50 transition text-sm sm:text-base text-white">
                 ← Back to Event
             </a>

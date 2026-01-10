@@ -58,7 +58,7 @@
                         </div>
                     </div>
                 </a>
-                <a href="{{ route('activities.create') }}" class="block px-4 py-4 hover:bg-white/10 transition border-t border-white/5">
+                <a href="{{ route('events.create') }}" class="block px-4 py-4 hover:bg-white/10 transition border-t border-white/5">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,6 +142,16 @@
                     </div>
                 </a>
 
+                {{-- My Tickets --}}
+                <a href="{{ route('tickets.index') }}" class="block px-4 py-3 hover:bg-white/10 transition {{ request()->routeIs('tickets.*') ? 'bg-white/10 text-cyan-400' : 'text-gray-300' }}">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                        </svg>
+                        <span>My Tickets</span>
+                    </div>
+                </a>
+
                 {{-- Groups --}}
                 <a href="{{ route('groups.index') }}" class="block px-4 py-3 hover:bg-white/10 transition {{ request()->routeIs('groups.*') ? 'bg-white/10 text-cyan-400' : 'text-gray-300' }}">
                     <div class="flex items-center gap-3">
@@ -153,11 +163,30 @@
                 </a>
 
                 {{-- Messages --}}
-                <a href="{{ route('messages.index') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 border-t border-white/5">
+                @php
+                    $unreadMessageCount = auth()->user()->conversations()
+                        ->where('type', 'private')
+                        ->get()
+                        ->sum(function ($conv) {
+                            $lastRead = $conv->pivot->last_read_at;
+                            return $conv->messages()
+                                ->where('user_id', '!=', auth()->id())
+                                ->when($lastRead, fn($q) => $q->where('created_at', '>', $lastRead))
+                                ->count();
+                        });
+                @endphp
+                <a href="{{ route('messages.index') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 border-t border-white/5 {{ request()->routeIs('messages.*') ? 'bg-white/10 text-cyan-400' : '' }}">
                     <div class="flex items-center gap-3">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                        </svg>
+                        <div class="relative">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            @if($unreadMessageCount > 0)
+                                <span class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white">
+                                    {{ min($unreadMessageCount, 9) }}{{ $unreadMessageCount > 9 ? '+' : '' }}
+                                </span>
+                            @endif
+                        </div>
                         <span>Messages</span>
                     </div>
                 </a>

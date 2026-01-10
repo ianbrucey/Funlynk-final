@@ -41,7 +41,7 @@
 
         <!-- Quick Actions: QR Scanner (prominent on mobile) -->
         <div class="glass-card p-4 sm:hidden">
-            <a href="{{ route('activities.scan', $activity) }}"
+            <a href="{{ route('events.scan', $activity) }}"
                class="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold hover:scale-105 transition-all text-white text-center flex items-center justify-center gap-2 text-lg">
                 📷 Scan QR Code
             </a>
@@ -74,7 +74,7 @@
                     <h3 class="text-lg font-semibold text-white">QR Scanner</h3>
                     <p class="text-sm text-gray-400">Scan attendee tickets for quick check-in</p>
                 </div>
-                <a href="{{ route('activities.scan', $activity) }}"
+                <a href="{{ route('events.scan', $activity) }}"
                    class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold hover:scale-105 transition-all text-white text-center">
                     📷 Open Scanner
                 </a>
@@ -230,7 +230,7 @@
 
         <!-- Back to Event -->
         <div class="text-center pb-4">
-            <a href="{{ route('activities.show', $activity) }}"
+            <a href="{{ route('events.show', $activity) }}"
                class="px-6 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition inline-block text-white text-sm sm:text-base">
                 ← Back to Event
             </a>

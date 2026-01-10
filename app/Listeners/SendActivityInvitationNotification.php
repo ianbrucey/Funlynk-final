@@ -34,7 +34,7 @@ class SendActivityInvitationNotification
                 'inviter_id' => $event->inviter->id,
                 'inviter_name' => $inviterName,
                 'inviter_avatar' => $event->inviter->profile_image_url ?? null,
-                'url' => route('activities.show', $event->activity->id),
+                'url' => route('events.show', $event->activity->id),
             ],
             'delivery_method' => 'in_app',
             'delivery_status' => 'sent',

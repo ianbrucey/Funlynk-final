@@ -30,7 +30,7 @@
         </div>
 
         <!-- Navigation -->
-        <a href="{{ route('activities.show', $activity) }}"
+        <a href="{{ route('events.show', $activity) }}"
            class="block w-full px-6 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-center text-white hover:border-cyan-500/50 transition">
             ← Back to Event
         </a>

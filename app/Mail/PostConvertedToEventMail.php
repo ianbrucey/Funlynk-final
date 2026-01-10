@@ -48,8 +48,8 @@ class PostConvertedToEventMail extends Mailable implements ShouldQueue
                 'post' => $this->post,
                 'activity' => $this->activity,
                 'host' => $this->host,
-                'eventUrl' => route('activities.show', $this->activity->id),
-                'rsvpUrl' => route('activities.show', $this->activity->id) . '#rsvp',
+                'eventUrl' => route('events.show', $this->activity->id),
+                'rsvpUrl' => route('events.show', $this->activity->id) . '#rsvp',
             ],
         );
     }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
 use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
@@ -22,6 +23,24 @@ class Activity extends Model
     protected $keyType = 'string';
 
     protected $guarded = [];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($activity) {
+            if (empty($activity->slug)) {
+                $activity->slug = static::generateUniqueSlug($activity->title, $activity->start_time);
+            }
+        });
+
+        static::updating(function ($activity) {
+            // Regenerate slug if title changed and slug wasn't manually set
+            if ($activity->isDirty('title') && ! $activity->isDirty('slug')) {
+                $activity->slug = static::generateUniqueSlug($activity->title, $activity->start_time, $activity->id);
+            }
+        });
+    }
 
     protected function casts(): array
     {
@@ -94,6 +113,22 @@ class Activity extends Model
             ->where('expires_at', '>', now());
     }
 
+    // Guest Engagement Relationships
+    public function interests(): HasMany
+    {
+        return $this->hasMany(EventInterest::class);
+    }
+
+    public function guestBookmarks(): HasMany
+    {
+        return $this->hasMany(GuestBookmark::class);
+    }
+
+    public function socialShares(): HasMany
+    {
+        return $this->hasMany(SocialShare::class);
+    }
+
     // Edit Protection Helpers
     public function isEditLocked(): bool
     {
@@ -127,6 +162,55 @@ class Activity extends Model
                 'price_cents' => $this->price_cents,
             ],
         ]);
+    }
+
+    // Guest Engagement Helpers
+    public function getInterestedCountAttribute(): int
+    {
+        return $this->interests()->whereNull('converted_to_rsvp_at')->count();
+    }
+
+    public function getShareCountAttribute(): int
+    {
+        return $this->socialShares()->count();
+    }
+
+    public function getBookmarkCountAttribute(): int
+    {
+        return $this->guestBookmarks()->count();
+    }
+
+    // Slug Generation
+    public static function generateUniqueSlug(string $title, ?\Carbon\Carbon $startTime = null, ?string $excludeId = null): string
+    {
+        $baseSlug = Str::slug($title);
+
+        // Add date suffix for better uniqueness and SEO (e.g., "yoga-class-2025-01-08")
+        if ($startTime) {
+            $baseSlug .= '-' . $startTime->format('Y-m-d');
+        }
+
+        $slug = $baseSlug;
+        $counter = 1;
+
+        $query = static::where('slug', $slug);
+
+        // Exclude current activity when updating
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        while ($query->exists()) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+
+            $query = static::where('slug', $slug);
+            if ($excludeId) {
+                $query->where('id', '!=', $excludeId);
+            }
+        }
+
+        return $slug;
     }
 
     // Scopes

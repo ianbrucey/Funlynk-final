@@ -43,7 +43,7 @@
                         <button wire:click="acceptRequest('{{ $request['id'] }}')"
                                 wire:loading.attr="disabled"
                                 wire:target="acceptRequest('{{ $request['id'] }}')"
-                                class="flex-1 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg text-sm font-semibold text-white hover:scale-105 transition-all shadow-lg hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                class="flex-1 px-4 py-3 sm:py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg text-sm font-semibold text-white hover:scale-105 transition-all shadow-lg hover:shadow-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95">
                             <span wire:loading.remove wire:target="acceptRequest('{{ $request['id'] }}')">
                                 Accept
                             </span>
@@ -55,7 +55,7 @@
                         <button wire:click="declineRequest('{{ $request['id'] }}')"
                                 wire:loading.attr="disabled"
                                 wire:target="declineRequest('{{ $request['id'] }}')"
-                                class="flex-1 px-4 py-2.5 bg-slate-800/50 border border-white/10 rounded-lg text-sm font-semibold text-gray-300 hover:border-red-500/50 hover:text-red-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                                class="flex-1 px-4 py-3 sm:py-2.5 bg-slate-800/50 border border-white/10 rounded-lg text-sm font-semibold text-gray-300 hover:border-red-500/50 hover:text-red-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95">
                             <span wire:loading.remove wire:target="declineRequest('{{ $request['id'] }}')">
                                 Decline
                             </span>

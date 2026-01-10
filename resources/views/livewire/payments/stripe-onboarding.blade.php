@@ -142,7 +142,7 @@
                         </p>
 
                         <a 
-                            href="{{ route('activities.create') }}"
+                            href="{{ route('events.create') }}"
                             class="inline-block px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-bold text-white hover:scale-105 transition-all shadow-lg"
                         >
                             Create Paid Activity
