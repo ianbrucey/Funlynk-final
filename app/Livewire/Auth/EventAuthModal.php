@@ -102,14 +102,18 @@ class EventAuthModal extends Component
         }
 
         try {
-            // Generate username from email
+            // Generate username from email + timestamp (e.g., john260110 for john@email.com on Jan 10, 2026)
             $emailPrefix = Str::before($this->email, '@');
-            $username = Str::slug($emailPrefix) . '-' . Str::random(4);
+            $timestamp = now()->format('ymd'); // YYMMDD format (e.g., 260110)
+            $username = Str::slug($emailPrefix) . "_" . $timestamp;
             $username = Str::lower($username);
 
-            // Ensure username is unique
+            // Ensure username is unique (add incrementing number if needed)
+            $counter = 1;
+            $originalUsername = $username;
             while (User::where('username', $username)->exists()) {
-                $username = Str::slug($emailPrefix) . '-' . Str::random(4);
+                $username = $originalUsername . $counter;
+                $counter++;
             }
 
             // Handle profile photo upload to S3
