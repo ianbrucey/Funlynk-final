@@ -334,7 +334,7 @@
                     @else
                         {{-- Guest CTA Buttons --}}
                         <div class="sticky top-4 z-20 mb-4 flex flex-wrap gap-4 p-4 glass-card rounded-xl border border-white/10">
-                            <button wire:click="guestRsvp" class="flex-1 min-w-[200px] px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-lg">
+                            <button wire:click="$dispatch('openEventAuthModal', { activityId: '{{ $activity->id }}' })" class="flex-1 min-w-[200px] px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-lg">
                                 🎟️ Get Tickets
                             </button>
                             <button wire:click="showInterestModal = true" class="flex-1 min-w-[200px] px-8 py-4 bg-slate-800/80 border-2 border-white/20 rounded-xl font-semibold hover:border-cyan-500/50 transition">
@@ -458,6 +458,11 @@
 
         {{-- Invite Friends Modal --}}
         <livewire:activities.invite-friends-modal />
+
+        {{-- Event Auth Modal for Guests --}}
+        @guest
+        <livewire:auth.event-auth-modal :activity="$activity" />
+        @endguest
     </div>
     <style>
        
