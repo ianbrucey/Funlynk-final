@@ -33,6 +33,12 @@ class GroupShow extends Component
 
     public function mount(Group $group): void
     {
+        // Redirect non-authenticated users to public landing page
+        if (!auth()->check()) {
+            $this->redirect(route('groups.public', $group), navigate: true);
+            return;
+        }
+
         try {
             $this->group = $group->load(['creator', 'members', 'tags', 'posts', 'activities', 'conversation']);
             $this->isMember = $this->group->members->contains(auth()->user());

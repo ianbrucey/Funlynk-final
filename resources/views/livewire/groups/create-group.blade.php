@@ -31,7 +31,7 @@
             <form wire:submit.prevent="createGroup">
                 <div class="mb-4">
                     <label for="name" class="block text-gray-300 text-sm font-semibold mb-2">Group Name</label>
-                    <input type="text" id="name" wire:model.live="name"
+                    <input type="text" id="name" wire:model.blur="name"
                            class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                            placeholder="e.g., Local Hiking Enthusiasts">
                     @error('name') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
@@ -39,7 +39,7 @@
 
                 <div class="mb-4">
                     <label for="description" class="block text-gray-300 text-sm font-semibold mb-2">Description</label>
-                    <textarea id="description" wire:model.live="description"
+                    <textarea id="description" wire:model.blur="description"
                               class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                               rows="4" placeholder="Tell us what your group is about..."></textarea>
                     @error('description') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
@@ -87,6 +87,120 @@
                     @endif
                     <p class="text-xs text-gray-500 mt-1">{{ count($tags) }}/10 tags</p>
                     @error('tags') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Marketing / Identity Fields -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="col-span-1">
+                        <label for="emoji" class="block text-gray-300 text-sm font-semibold mb-2">Group Emoji</label>
+                        <input type="text" id="emoji" wire:model.blur="emoji"
+                               class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white text-center text-2xl"
+                               placeholder="🥋">
+                        @error('emoji') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-span-2">
+                        <label for="meetup_label" class="block text-gray-300 text-sm font-semibold mb-2">Activities Called...</label>
+                        <input type="text" id="meetup_label" wire:model.blur="meetup_label"
+                               class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
+                               placeholder="e.g. Session, Jam, Class, Meetup">
+                        @error('meetup_label') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="schedule_text" class="block text-gray-300 text-sm font-semibold mb-2">Typical Schedule</label>
+                    <input type="text" id="schedule_text" wire:model.blur="schedule_text"
+                           class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
+                           placeholder="e.g. Sundays at 4pm">
+                    <p class="text-xs text-gray-500 mt-1">Displayed when no specific events are scheduled.</p>
+                    @error('schedule_text') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Recurring Schedule (Optional) -->
+                <div class="mb-6 p-5 bg-slate-800/30 rounded-xl border border-white/5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-base font-semibold text-white">Recurring Schedule (Optional)</h3>
+                            <p class="text-sm text-gray-400">Auto-generate events on a regular schedule</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" wire:model.live="hasRecurringSchedule" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                        </label>
+                    </div>
+
+                    @if($hasRecurringSchedule)
+                        <div class="space-y-4 mt-4">
+                            <!-- Schedule Title -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Event Title</label>
+                                <input type="text" wire:model="scheduleTitle" placeholder="e.g., Morning Training"
+                                    class="w-full rounded-xl bg-slate-800/50 border border-white/10 text-white px-4 py-3 focus:border-cyan-500 focus:ring-cyan-500 transition">
+                                @error('scheduleTitle') <span class="text-red-400 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
+                            <!-- Days of Week -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Days of Week</label>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day)
+                                        <button type="button" wire:click="toggleScheduleDay('{{ $day }}')"
+                                            class="px-3 py-1.5 rounded-lg text-sm transition {{ in_array($day, $scheduleDays) ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50' : 'bg-slate-700/50 text-gray-400 border border-white/10' }}">
+                                            {{ ucfirst(substr($day, 0, 3)) }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                                @error('scheduleDays') <span class="text-red-400 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
+                            <!-- Start Time -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Start Time</label>
+                                <div class="flex gap-2">
+                                    <select wire:model="scheduleStartHour" class="flex-1 rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3">
+                                        @for($h = 1; $h <= 12; $h++)
+                                            <option value="{{ $h }}">{{ $h }}</option>
+                                        @endfor
+                                    </select>
+                                    <select wire:model="scheduleStartMinute" class="flex-1 rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3">
+                                        @foreach(['00', '15', '30', '45'] as $m)
+                                            <option value="{{ $m }}">{{ $m }}</option>
+                                        @endforeach
+                                    </select>
+                                    <select wire:model="scheduleStartPeriod" class="flex-1 rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3">
+                                        <option value="AM">AM</option>
+                                        <option value="PM">PM</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- End Time (Optional) -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">End Time (Optional)</label>
+                                <div class="flex gap-2">
+                                    <select wire:model="scheduleEndHour" class="flex-1 rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3">
+                                        <option value="">--</option>
+                                        @for($h = 1; $h <= 12; $h++)
+                                            <option value="{{ $h }}">{{ $h }}</option>
+                                        @endfor
+                                    </select>
+                                    <select wire:model="scheduleEndMinute" class="flex-1 rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3">
+                                        <option value="">--</option>
+                                        @foreach(['00', '15', '30', '45'] as $m)
+                                            <option value="{{ $m }}">{{ $m }}</option>
+                                        @endforeach
+                                    </select>
+                                    <select wire:model="scheduleEndPeriod" class="flex-1 rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3">
+                                        <option value="">--</option>
+                                        <option value="AM">AM</option>
+                                        <option value="PM">PM</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-gray-500">Events will be auto-generated for the next 4 weeks</p>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Location with Geocoding (Required) -->

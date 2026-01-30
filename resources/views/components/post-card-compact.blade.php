@@ -14,26 +14,55 @@
     <x-converted-post-overlay :post="$post" />
 
     {{-- Card Header --}}
+    @php
+        $author = $post->author;
+        $isGroup = $post->posted_as_group && $post->group;
+        $authorName = $isGroup
+            ? $author->name
+            : ($author?->display_name ?? $author?->username ?? 'Unknown User');
+        $authorImage = $isGroup
+            ? $author->avatar_url
+            : $author?->profile_image_url;
+        $authorInitial = $isGroup
+            ? ($author->emoji ?? substr($author->name, 0, 1))
+            : strtoupper(substr($authorName, 0, 1));
+            
+        $authorUrl = '#';
+        if ($isGroup && $author) {
+            $authorUrl = route('groups.show', $author);
+        } elseif ($author) {
+            $authorUrl = route('profile.view', $author->username);
+        }
+    @endphp
     <div class="flex items-center gap-3">
         {{-- Avatar --}}
-        @if($post->user?->profile_image_url)
-            <img
-                src="{{ Storage::url($post->user->profile_image_url) }}"
-                alt="{{ $post->user->display_name ?? $post->user->username }}"
-                class="w-11 h-11 rounded-full object-cover"
-            >
-        @else
-            <div class="w-11 h-11 rounded-full grid place-items-center font-bold text-white"
-                 style="background: linear-gradient(135deg, #ff3d9a, #8b5cf6);">
-                {{ strtoupper(substr($post->user?->display_name ?? $post->user?->username ?? '?', 0, 1)) }}
-            </div>
-        @endif
+        <a href="{{ $authorUrl }}" class="block shrink-0 transition hover:opacity-80" onclick="event.stopPropagation()">
+            @if($authorImage)
+                <img
+                    src="{{ $isGroup ? $authorImage : Storage::url($authorImage) }}"
+                    alt="{{ $authorName }}"
+                    class="w-11 h-11 rounded-full object-cover"
+                >
+            @else
+                <div class="w-11 h-11 rounded-full grid place-items-center font-bold text-white {{ $isGroup ? 'text-2xl' : '' }}"
+                     style="background: linear-gradient(135deg, {{ $isGroup ? '#06b6d4, #8b5cf6' : '#ff3d9a, #8b5cf6' }});">
+                    {{ $authorInitial }}
+                </div>
+            @endif
+        </a>
 
         {{-- Author & Time --}}
         <div class="flex-1 min-w-0">
-            <p class="font-semibold text-white leading-tight truncate">
-                {{ $post->user?->display_name ?? $post->user?->username ?? 'Unknown User' }}
-            </p>
+            <div class="flex items-center gap-1.5">
+                <a href="{{ $authorUrl }}" class="font-semibold text-white leading-tight truncate hover:text-cyan-400 transition" onclick="event.stopPropagation()">
+                    {{ $authorName }}
+                </a>
+                @if($isGroup)
+                    <span class="px-1.5 py-0.5 text-[0.65rem] font-semibold rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+                        GROUP
+                    </span>
+                @endif
+            </div>
             <p class="text-xs" style="color: #8a93b2;">
                 {{ $post->created_at->diffForHumans(null, true) }} ago
             </p>

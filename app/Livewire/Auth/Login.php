@@ -36,13 +36,13 @@ class Login extends Component implements HasForms
                     ->email()
                     ->required()
                     ->extraAttributes(['class' => 'w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white'])
-                    ->extraInputAttributes(['class' => '!bg-slate-800/50 !border-white/10 !rounded-2xl focus:!border-pink-500/50 !text-white']),
+                    ->extraInputAttributes(['class' => 'w-full !bg-slate-800/50 !border-white/10 !rounded-2xl focus:!border-pink-500/50 !text-white']),
                 TextInput::make('password')
                     ->password()
                     ->required()
                     ->revealable()
                     ->extraAttributes(['class' => 'w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white'])
-                    ->extraInputAttributes(['class' => '!bg-slate-800/50 !border-white/10 !rounded-2xl focus:!border-pink-500/50 !text-white']),
+                    ->extraInputAttributes(['class' => 'w-full !bg-slate-800/50 !border-white/10 !rounded-2xl focus:!border-pink-500/50 !text-white']),
                 Toggle::make('remember')
                     ->label('Remember me'),
             ])

@@ -39,10 +39,10 @@ class GroupContentService
             $activity = $group->activities()->create([
                 'host_id' => $user->id, // Activities use host_id, not user_id
                 'title' => $data['title'],
-                'description' => $data['description'],
+                'description' => $data['description'] ?? null,
                 'activity_type' => $data['activity_type'] ?? 'group_event', // Required field
                 'location_name' => $data['location_name'],
-                'location_coordinates' => $data['location_coordinates'],
+                'location_coordinates' => $data['location_coordinates'] ?? null,
                 'start_time' => $data['start_time'],
                 'end_time' => $data['end_time'] ?? null,
                 'max_attendees' => $data['max_attendees'] ?? null,
@@ -62,10 +62,15 @@ class GroupContentService
 
     public function getGroupTimeline(Group $group, int $page = 1, int $perPage = 20): Collection
     {
-        $posts = $group->posts()->with(['user'])->get(); // tags is a JSON column, not a relationship
-        $events = $group->activities()->with(['host', 'tags'])->get(); // Activities use 'host' not 'user'
+        $posts = $group->posts()->with(['user', 'pinnedBy', 'reactions'])->get(); // tags is a JSON column, not a relationship
+        $events = $group->activities()->with(['host', 'tags', 'rsvps.user'])->get(); // Activities use 'host' not 'user'
 
-        $timeline = $posts->concat($events)->sortByDesc('created_at');
+        // Sort: pinned posts first (by pinned_at desc), then all items by created_at desc
+        $timeline = $posts->concat($events)->sortBy([
+            ['is_pinned', 'desc'],      // Pinned items first
+            ['pinned_at', 'desc'],      // Most recently pinned first among pinned
+            ['created_at', 'desc'],     // Then by creation date
+        ]);
 
         // Manual pagination for merged collection
         $offset = ($page - 1) * $perPage;

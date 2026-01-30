@@ -3,10 +3,10 @@
 namespace App\Livewire\Groups;
 
 use App\Models\Group;
-use App\Models\Tag;
 use App\Services\GroupContentService;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class CreateGroupEvent extends Component
 {
@@ -18,13 +18,21 @@ class CreateGroupEvent extends Component
 
     public string $locationName = '';
 
-    public $startTime = null;
+    public ?float $latitude = null;
 
-    public $endTime = null;
+    public ?float $longitude = null;
+
+    public $startDate = null;
+
+    public $startTimeHour = '12';
+
+    public $startTimeMinute = '00';
+
+    public $startTimePeriod = 'PM';
+
+    public string $duration = '60'; // minutes
 
     public ?int $maxAttendees = null;
-
-    public array $selectedTags = [];
 
     public bool $showModal = false;
 
@@ -36,8 +44,26 @@ class CreateGroupEvent extends Component
     #[On('openCreateGroupEventModal')]
     public function openModal(): void
     {
-        $this->reset(['title', 'description', 'locationName', 'startTime', 'endTime', 'maxAttendees', 'selectedTags']);
+        $this->reset(['title', 'description', 'locationName', 'latitude', 'longitude', 'startDate', 'startTimeHour', 'startTimeMinute', 'startTimePeriod', 'duration', 'maxAttendees']);
+        $this->startTimeHour = '12';
+        $this->startTimeMinute = '00';
+        $this->startTimePeriod = 'PM';
+        $this->duration = '60';
         $this->showModal = true;
+    }
+
+    public function setLocationData($name, $lat, $lng): void
+    {
+        $this->locationName = $name;
+        $this->latitude = $lat ? (float) $lat : null;
+        $this->longitude = $lng ? (float) $lng : null;
+
+        // Log for debugging
+        \Log::info('Group Event Location Data Set', [
+            'name' => $this->locationName,
+            'lat' => $this->latitude,
+            'lng' => $this->longitude,
+        ]);
     }
 
     public function closeModal(): void
@@ -49,18 +75,47 @@ class CreateGroupEvent extends Component
     {
         return [
             'title' => ['required', 'string', 'max:100'],
-            'description' => ['required', 'string', 'max:500'],
+            'description' => ['nullable', 'string', 'max:500'],
             'locationName' => ['required', 'string', 'max:255'],
-            'startTime' => ['required', 'date', 'after:now'],
-            'endTime' => ['required', 'date', 'after:startTime'],
+            'startDate' => ['required', 'date', 'after_or_equal:today'],
+            'startTimeHour' => ['required', 'in:1,2,3,4,5,6,7,8,9,10,11,12'],
+            'startTimeMinute' => ['required', 'in:00,15,30,45'],
+            'startTimePeriod' => ['required', 'in:AM,PM'],
+            'duration' => ['required', 'in:30,60,90,120,180,240'],
             'maxAttendees' => ['nullable', 'integer', 'min:1'],
-            'selectedTags' => ['nullable', 'array'],
         ];
     }
 
     public function createEvent(GroupContentService $groupContentService)
     {
+        // Check permission
+        if (!$this->group->canCreateEvent(auth()->user())) {
+            session()->flash('error', 'You do not have permission to create events in this group.');
+            return;
+        }
+
         $this->validate();
+
+        // Build start time from components
+        $hour = (int) $this->startTimeHour;
+        if ($this->startTimePeriod === 'PM' && $hour !== 12) {
+            $hour += 12;
+        } elseif ($this->startTimePeriod === 'AM' && $hour === 12) {
+            $hour = 0;
+        }
+
+        $startTime = \Carbon\Carbon::parse($this->startDate)
+            ->setHour($hour)
+            ->setMinute((int) $this->startTimeMinute)
+            ->setSecond(0);
+
+        $endTime = $startTime->copy()->addMinutes((int) $this->duration);
+
+        // Create location point if coordinates are provided
+        $locationPoint = null;
+        if ($this->latitude && $this->longitude) {
+            $locationPoint = new Point((float) $this->latitude, (float) $this->longitude, 4326);
+        }
 
         $groupContentService->createGroupEvent(
             $this->group,
@@ -69,10 +124,11 @@ class CreateGroupEvent extends Component
                 'title' => $this->title,
                 'description' => $this->description,
                 'location_name' => $this->locationName,
-                'start_time' => $this->startTime,
-                'end_time' => $this->endTime,
+                'location_coordinates' => $locationPoint,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
                 'max_attendees' => $this->maxAttendees,
-                'tags' => $this->selectedTags,
+                'tags' => [],
             ]
         );
 
@@ -83,9 +139,6 @@ class CreateGroupEvent extends Component
 
     public function render()
     {
-        $availableTags = Tag::all(); // Assuming a Tag model exists
-        return view('livewire.groups.create-group-event', [
-            'availableTags' => $availableTags,
-        ]);
+        return view('livewire.groups.create-group-event');
     }
 }

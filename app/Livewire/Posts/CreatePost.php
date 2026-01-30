@@ -20,12 +20,29 @@ class CreatePost extends Component
     public $selectedTags = [];
     public $newTag = '';
     public $ttl_hours = 48;
+    public $posted_as_group = false;
+    public $userGroups = [];
+    public $selected_group_id = '';
 
     protected PostService $postService;
 
     public function boot(PostService $postService)
     {
         $this->postService = $postService;
+    }
+
+    public function mount()
+    {
+        if (auth()->check()) {
+            $this->userGroups = \App\Models\Group::query()
+                ->where('created_by', auth()->id())
+                ->orWhereHas('members', function ($q) {
+                    $q->where('user_id', auth()->id())
+                      ->where('role', 'admin');
+                })
+                ->orderBy('name')
+                ->get();
+        }
     }
 
     protected function rules()
@@ -39,6 +56,8 @@ class CreatePost extends Component
             'time_hint' => 'nullable|max:100',
             'mood' => 'nullable|in:creative,social,active,chill,adventurous',
             'ttl_hours' => 'required|integer|min:24|max:72',
+            'posted_as_group' => 'boolean',
+            'selected_group_id' => 'required_if:posted_as_group,true',
         ];
     }
 
@@ -53,6 +72,7 @@ class CreatePost extends Component
             'longitude.required' => 'Please provide location coordinates',
             'ttl_hours.min' => 'Post must last at least 24 hours',
             'ttl_hours.max' => 'Post cannot last more than 72 hours',
+            'selected_group_id.required_if' => 'Please select a group to post as.',
         ];
     }
 
@@ -76,6 +96,8 @@ class CreatePost extends Component
                 'mood' => $this->mood ?: null,
                 'tags' => $tags,
                 'ttl_hours' => $this->ttl_hours,
+                'posted_as_group' => $this->posted_as_group,
+                'group_id' => $this->posted_as_group ? $this->selected_group_id : null,
             ]);
 
             session()->flash('success', 'Post created successfully!');

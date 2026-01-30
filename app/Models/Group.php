@@ -17,6 +17,40 @@ class Group extends Model
 {
     use HasFactory, HasSpatial, HasUuids, SoftDeletes;
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($group) {
+            if (empty($group->slug)) {
+                $group->slug = static::generateUniqueSlug($group->name);
+            }
+        });
+
+        static::updating(function ($group) {
+            // Regenerate slug if name changed and slug wasn't manually set
+            if ($group->isDirty('name') && ! $group->isDirty('slug')) {
+                $group->slug = static::generateUniqueSlug($group->name, $group->id);
+            }
+        });
+    }
+
+    public static function generateUniqueSlug(string $name, ?string $excludeId = null): string
+    {
+        $slug = \Illuminate\Support\Str::slug($name);
+        $originalSlug = $slug;
+        $count = 2;
+
+        while (static::where('slug', $slug)
+            ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
+            ->exists()) {
+            $slug = "{$originalSlug}-{$count}";
+            $count++;
+        }
+
+        return $slug;
+    }
+
     protected $fillable = [
         'name',
         'slug',
@@ -25,9 +59,14 @@ class Group extends Model
         'cover_image_url',
         'privacy',
         'auto_approve_members',
+        'post_permission',
+        'event_permission',
         'created_by',
         'location_name',
         'location_coordinates',
+        'emoji',
+        'schedule_text',
+        'meetup_label',
     ];
 
     protected function casts(): array
@@ -47,6 +86,7 @@ class Group extends Model
     {
         return $this->belongsToMany(User::class, 'group_members')
             ->using(GroupMember::class)
+            ->withPivot(['role', 'joined_at'])
             ->withTimestamps();
     }
 
@@ -70,6 +110,11 @@ class Group extends Model
         return $this->hasMany(Activity::class);
     }
 
+    public function recurringSchedules(): HasMany
+    {
+        return $this->hasMany(RecurringSchedule::class);
+    }
+
     public function conversation(): HasOne
     {
         return $this->hasOne(Conversation::class);
@@ -83,5 +128,62 @@ class Group extends Model
     public function admins(): BelongsToMany
     {
         return $this->members()->wherePivot('role', 'admin');
+    }
+
+    /**
+     * Check if a user can create posts in this group
+     */
+    public function canCreatePost(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $membership = $this->memberships()->where('user_id', $user->id)->first();
+        if (!$membership) {
+            return false;
+        }
+
+        if ($this->post_permission === 'everyone') {
+            return true;
+        }
+
+        return $membership->role === 'admin';
+    }
+
+    /**
+     * Check if a user can create events in this group
+     */
+    public function canCreateEvent(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $membership = $this->memberships()->where('user_id', $user->id)->first();
+        if (!$membership) {
+            return false;
+        }
+
+        if ($this->event_permission === 'everyone') {
+            return true;
+        }
+
+        return $membership->role === 'admin';
+    }
+
+    /**
+     * Check if a user is an admin of this group
+     */
+    public function isAdmin(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        return $this->memberships()
+            ->where('user_id', $user->id)
+            ->where('role', 'admin')
+            ->exists();
     }
 }

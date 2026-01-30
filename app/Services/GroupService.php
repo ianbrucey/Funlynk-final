@@ -100,7 +100,7 @@ class GroupService
             ]);
 
             if (isset($data['tags'])) {
-                $group->tags()->sync($data['tags']);
+                $this->syncTagsByName($group, $data['tags']);
             }
 
             return $group;

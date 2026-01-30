@@ -83,15 +83,27 @@
             {{-- Main Content (Left Column) --}}
             <div class="lg:col-span-2 space-y-6 lg:space-y-6">
 
-                {{-- Back Button (only for authenticated users) --}}
+                {{-- Back Button --}}
                 @auth
                 <div class="px-4 lg:px-0">
-                    <a href="{{ route('feed.nearby') }}" class="inline-flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        Back to Feed
-                    </a>
+                    @if($isGroupEvent && $group)
+                        <a href="{{ route('groups.show', $group->slug) }}" class="inline-flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            <span class="flex items-center gap-2">
+                                Back to
+                                <span class="font-semibold text-cyan-400">{{ $group->name }}</span>
+                            </span>
+                        </a>
+                    @else
+                        <a href="{{ route('feed.nearby') }}" class="inline-flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Back to Feed
+                        </a>
+                    @endif
                 </div>
                 @endauth
 
@@ -103,8 +115,10 @@
                     <div class="absolute top-6 right-6 z-10">
                         @if($activity->status === 'draft')
                             <span class="px-3 py-1 bg-gray-500/30 border border-gray-500/50 rounded-full text-xs font-bold text-gray-300 uppercase tracking-wider">Draft</span>
-                        @elseif($activity->status === 'published')
+                        {{-- Published badge hidden per user request --}}
+                        {{-- @elseif($activity->status === 'published')
                             <span class="px-3 py-1 bg-blue-500/30 border border-blue-500/50 rounded-full text-xs font-bold text-blue-300 uppercase tracking-wider">Published</span>
+                        --}}
                         @elseif($activity->status === 'active')
                             <span class="px-3 py-1 bg-green-500/30 border border-green-500/50 rounded-full text-xs font-bold text-green-300 uppercase tracking-wider">Active</span>
                         @elseif($activity->status === 'completed')
@@ -114,9 +128,8 @@
                         @endif
                     </div>
 
-                    {{-- Host Public Link Button (Top Right) --}}
-                    @if($isHost)
-                        <div class="absolute top-6 right-6 z-10 mt-10 md:mt-0 md:static md:float-right md:ml-4"
+                    {{-- Public Link Button (Available to Everyone) --}}
+                    <div class="absolute top-6 right-6 z-10 mt-10 md:mt-0 md:static md:float-right md:ml-4"
                              x-data="{
                                 copied: false,
                                 url: '{{ route('events.show', $activity) }}',
@@ -147,8 +160,7 @@
                                 
                                 <span x-text="copied ? 'Copied!' : 'Copy Public Link'"></span>
                             </button>
-                        </div>
-                    @endif
+                    </div>
 
                     {{-- Host Info --}}
                     <div class="mb-4">
@@ -184,10 +196,11 @@
                                 'wellness' => '🧘',
                                 'tech' => '💻',
                                 'education' => '📚',
+                                'group_event' => '👥',
                                 'other' => '✨',
                                 default => '📅'
                             } }}</span>
-                            <span class="capitalize">{{ $activity->activity_type }}</span>
+                            <span class="capitalize">{{ str_replace('_', ' ', $activity->activity_type) }}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,16 +345,10 @@
                             <livewire:activities.rsvp-button :activity="$activity" />
                         @endif
                     @else
-                        {{-- Guest CTA Buttons --}}
-                        <div class="sticky top-4 z-20 mb-4 flex flex-wrap gap-4 p-4 glass-card rounded-xl border border-white/10">
-                            <button wire:click="$dispatch('openEventAuthModal', { activityId: '{{ $activity->id }}' })" class="flex-1 min-w-[200px] px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-lg">
+                        {{-- Guest CTA - Only Get Tickets Button --}}
+                        <div class="sticky top-4 z-20 mb-4">
+                            <button wire:click="$dispatch('openEventAuthModal', { activityId: '{{ $activity->id }}' })" class="w-full px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-bold text-lg hover:scale-105 transition-all shadow-lg">
                                 🎟️ Get Tickets
-                            </button>
-                            <button wire:click="showInterestModal = true" class="flex-1 min-w-[200px] px-8 py-4 bg-slate-800/80 border-2 border-white/20 rounded-xl font-semibold hover:border-cyan-500/50 transition">
-                                💫 I'm Interested
-                            </button>
-                            <button wire:click="bookmark" class="px-6 py-4 bg-slate-800/80 border-2 border-white/20 rounded-xl hover:border-cyan-500/50 transition">
-                                🔖
                             </button>
                         </div>
                     @endauth
@@ -357,7 +364,11 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                                 </svg>
-                                Invite Friends
+                                @if($isGroupEvent)
+                                    Invite Group Members
+                                @else
+                                    Invite Friends
+                                @endif
                                 @if($activity->invitations_count ?? 0 > 0)
                                     <span class="bg-white/20 px-2 py-0.5 rounded-full text-xs">
                                         {{ $activity->invitations_count }}
@@ -410,7 +421,8 @@
                             </a>
                         @endif
                         @else
-                        {{-- Share Section for Guests --}}
+                        {{-- Share This Event section hidden per user request --}}
+                        {{--
                         <div class="p-6 bg-slate-800/50 border border-white/10 rounded-xl">
                             <h3 class="text-lg font-bold text-white mb-4 text-center">📢 Share This Event</h3>
                             <div class="flex flex-wrap justify-center gap-3">
@@ -428,6 +440,7 @@
                                 </button>
                             </div>
                         </div>
+                        --}}
                         @endauth
                     </div>
                 </div>

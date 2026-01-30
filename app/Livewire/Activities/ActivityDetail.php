@@ -23,6 +23,8 @@ class ActivityDetail extends Component
     public ?Rsvp $userRsvp = null;
     public $isHost = false;
     public $spotsRemaining = null;
+    public $isGroupEvent = false;
+    public $group = null;
 
     // Refund window state
     public ?ActivityRefundWindow $activeRefundWindow = null;
@@ -54,7 +56,7 @@ class ActivityDetail extends Component
         ContextPreservationService $contextService,
         SocialShareService $shareService
     ) {
-        $this->activity = $activity->load(['host', 'tags']);
+        $this->activity = $activity->load(['host', 'tags', 'group']);
 
         // Check authorization - only restrict non-public activities for authenticated users
         if (!$this->activity->is_public && auth()->check()) {
@@ -63,6 +65,10 @@ class ActivityDetail extends Component
 
         $this->isHost = auth()->check() && auth()->id() === $this->activity->host_id;
         $this->spotsRemaining = $this->activityService->getAvailableSpots($this->activity);
+
+        // Check if this is a group event
+        $this->isGroupEvent = $this->activity->group_id !== null;
+        $this->group = $this->activity->group;
 
         // Capture referral code from URL
         if (request()->has('ref')) {

@@ -41,7 +41,28 @@ class Post extends Model
             'conversion_dismiss_count' => 'integer',
             'view_count' => 'integer',
             'reaction_count' => 'integer',
+            'posted_as_group' => 'boolean',
+            'is_pinned' => 'boolean',
+            'pinned_at' => 'datetime',
         ];
+    }
+    
+    /**
+     * Get the display author (User or Group)
+     */
+    public function getAuthorAttribute()
+    {
+        return $this->posted_as_group && $this->group
+            ? $this->group
+            : $this->user;
+    }
+
+    /**
+     * Get the type identifier for timeline differentiation
+     */
+    public function getTypeAttribute(): string
+    {
+        return 'post';
     }
 
     /**
@@ -125,6 +146,11 @@ class Post extends Model
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
+    }
+
+    public function pinnedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'pinned_by');
     }
 
     public function invitations(): HasMany

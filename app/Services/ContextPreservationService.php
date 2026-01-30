@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Activity;
+use App\Models\Group;
 use Illuminate\Support\Facades\Session;
 
 class ContextPreservationService
@@ -21,6 +22,27 @@ class ContextPreservationService
             'type' => $intentType,
             'activity_id' => $activity->id,
             'activity_slug' => $activity->slug,
+            'source' => $metadata['source'] ?? null,
+            'referral_code' => $metadata['referral_code'] ?? null,
+            'utm_params' => $metadata['utm_params'] ?? null,
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Capture user intent to join a group
+     *
+     * @param  Group  $group
+     * @param  string  $intentType  'join', 'view'
+     * @param  array  $metadata  ['source', 'referral_code', 'utm_params']
+     * @return void
+     */
+    public function captureGroupIntent(Group $group, string $intentType, array $metadata = []): void
+    {
+        Session::put('intended_action', [
+            'type' => $intentType,
+            'group_id' => $group->id,
+            'group_slug' => $group->slug,
             'source' => $metadata['source'] ?? null,
             'referral_code' => $metadata['referral_code'] ?? null,
             'utm_params' => $metadata['utm_params'] ?? null,
@@ -56,6 +78,16 @@ class ContextPreservationService
      */
     public function getRedirectUrl(array $action): string
     {
+        // Handle group intents
+        if (isset($action['group_id'])) {
+            return match ($action['type']) {
+                'join' => route('groups.show', $action['group_slug']),
+                'view' => route('groups.public', $action['group_slug']),
+                default => route('dashboard')
+            };
+        }
+
+        // Handle activity intents
         return match ($action['type']) {
             'rsvp' => route('events.checkout', $action['activity_id']),
             'view' => route('events.show', $action['activity_id']),

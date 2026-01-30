@@ -88,6 +88,8 @@ class PostService
             'mood' => $data['mood'] ?? null,
             'expires_at' => $expiresAt,
             'status' => 'active',
+            'group_id' => $data['group_id'] ?? null,
+            'posted_as_group' => $data['posted_as_group'] ?? false,
         ]);
 
         event(new PostCreated($post));

@@ -5,6 +5,7 @@ namespace App\Livewire\Groups;
 use App\Models\Group;
 use App\Services\GroupService;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -20,6 +21,11 @@ class GroupSettings extends Component
     public string $description = '';
 
     public string $privacy = 'public';
+
+    // Content permissions
+    public string $postPermission = 'everyone';
+
+    public string $eventPermission = 'admins';
 
     // Dynamic tags (type-and-enter pattern)
     public array $tags = [];
@@ -37,10 +43,13 @@ class GroupSettings extends Component
         // Use policy for authorization (cleaner and more consistent)
         $this->authorize('update', $group);
 
-        $this->group = $group;
+        // Load recurring schedules relationship for the settings page
+        $this->group = $group->load('recurringSchedules');
         $this->name = $group->name;
         $this->description = $group->description ?? '';
         $this->privacy = $group->privacy;
+        $this->postPermission = $group->post_permission ?? 'everyone';
+        $this->eventPermission = $group->event_permission ?? 'admins';
         $this->tags = $group->tags->pluck('name')->toArray();
     }
 
@@ -50,6 +59,8 @@ class GroupSettings extends Component
             'name' => ['required', 'string', 'max:100'],
             'description' => ['nullable', 'string', 'max:500'],
             'privacy' => ['required', 'in:public,private'],
+            'postPermission' => ['required', 'in:everyone,admins'],
+            'eventPermission' => ['required', 'in:everyone,admins'],
             'tags' => ['nullable', 'array', 'max:10'],
             'tags.*' => ['string', 'max:50'],
             'avatarImage' => ['nullable', 'image', 'max:2048'],
@@ -91,6 +102,8 @@ class GroupSettings extends Component
             'name' => $this->name,
             'description' => $this->description,
             'privacy' => $this->privacy,
+            'post_permission' => $this->postPermission,
+            'event_permission' => $this->eventPermission,
             'tags' => $this->tags,
         ];
 
@@ -128,6 +141,13 @@ class GroupSettings extends Component
         session()->flash('success', 'Group deleted successfully.');
 
         $this->redirect(route('groups.index'));
+    }
+
+    #[On('schedule-created')]
+    public function refreshSchedules(): void
+    {
+        // Reload the group with fresh recurring schedules
+        $this->group->load('recurringSchedules');
     }
 
     public function render()

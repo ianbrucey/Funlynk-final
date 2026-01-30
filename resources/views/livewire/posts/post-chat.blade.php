@@ -3,12 +3,24 @@
     <div class="bg-slate-900/50 border-b border-white/10">
         <div class="px-4 py-4">
             {{-- Back Button --}}
-            <a href="{{ route('feed.nearby') }}" class="inline-flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Feed
-            </a>
+            @if($isGroupPost && $group)
+                <a href="{{ route('groups.show', $group->slug) }}" class="inline-flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span class="flex items-center gap-2">
+                        Back to
+                        <span class="font-semibold text-cyan-400">{{ $group->name }}</span>
+                    </span>
+                </a>
+            @else
+                <a href="{{ route('feed.nearby') }}" class="inline-flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Feed
+                </a>
+            @endif
 
             {{-- Post Context --}}
             <div class="flex items-start gap-3">

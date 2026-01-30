@@ -49,6 +49,7 @@ class Activity extends Model
             'start_time' => 'datetime',
             'end_time' => 'datetime',
             'conversion_date' => 'datetime',
+            'recurrence_date' => 'date',
             'is_public' => 'boolean',
             'requires_approval' => 'boolean',
             'is_paid' => 'boolean',
@@ -59,6 +60,14 @@ class Activity extends Model
             'edit_locked_at' => 'datetime',
             'original_values' => 'array',
         ];
+    }
+
+    /**
+     * Get the type identifier for timeline differentiation
+     */
+    public function getTypeAttribute(): string
+    {
+        return 'event';
     }
 
     public function host(): BelongsTo
@@ -79,6 +88,11 @@ class Activity extends Model
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
+    }
+
+    public function recurringSchedule(): BelongsTo
+    {
+        return $this->belongsTo(RecurringSchedule::class);
     }
 
     public function tags()

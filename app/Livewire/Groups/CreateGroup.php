@@ -3,10 +3,12 @@
 namespace App\Livewire\Groups;
 
 use App\Services\GroupService;
+use App\Services\RecurringScheduleService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class CreateGroup extends Component
 {
@@ -30,10 +32,26 @@ class CreateGroup extends Component
 
     public ?float $longitude = null;
 
+    // Marketing / Landing Page Fields
+    public string $emoji = '';
+    public string $schedule_text = '';
+    public string $meetup_label = 'Session';
+
     // Image uploads
     public $avatarImage = null;
 
     public $coverImage = null;
+
+    // Recurring Schedule Fields
+    public bool $hasRecurringSchedule = false;
+    public string $scheduleTitle = '';
+    public array $scheduleDays = [];
+    public string $scheduleStartHour = '6';
+    public string $scheduleStartMinute = '00';
+    public string $scheduleStartPeriod = 'PM';
+    public ?string $scheduleEndHour = null;
+    public ?string $scheduleEndMinute = null;
+    public ?string $scheduleEndPeriod = null;
 
     protected GroupService $groupService;
 
@@ -55,7 +73,7 @@ class CreateGroup extends Component
 
     protected function rules(): array
     {
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:100'],
             'description' => ['required', 'string', 'max:500'],
             'privacy' => ['required', 'string', Rule::in(['public', 'private'])],
@@ -64,9 +82,25 @@ class CreateGroup extends Component
             'location_name' => ['required', 'string', 'max:255'],
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'emoji' => ['nullable', 'string', 'max:8'],
+            'schedule_text' => ['nullable', 'string', 'max:100'],
+            'meetup_label' => ['nullable', 'string', 'max:50'],
             'avatarImage' => ['nullable', 'image', 'max:6144'],
             'coverImage' => ['nullable', 'image', 'max:6144'],
+            'hasRecurringSchedule' => ['boolean'],
         ];
+
+        // Add schedule validation rules only when recurring schedule is enabled
+        if ($this->hasRecurringSchedule) {
+            $rules['scheduleTitle'] = ['required', 'string', 'max:100'];
+            $rules['scheduleDays'] = ['required', 'array', 'min:1'];
+            $rules['scheduleDays.*'] = ['in:monday,tuesday,wednesday,thursday,friday,saturday,sunday'];
+            $rules['scheduleStartHour'] = ['required', 'in:1,2,3,4,5,6,7,8,9,10,11,12'];
+            $rules['scheduleStartMinute'] = ['required', 'in:00,15,30,45'];
+            $rules['scheduleStartPeriod'] = ['required', 'in:AM,PM'];
+        }
+
+        return $rules;
     }
 
     protected function messages(): array
@@ -82,6 +116,7 @@ class CreateGroup extends Component
             'latitude.required' => 'Please select a location from the suggestions.',
             'longitude.required' => 'Please select a location from the suggestions.',
             'tags.max' => 'Maximum 10 tags allowed.',
+            'emoji.max' => 'Emoji should be a single character or icon.',
         ];
     }
 
@@ -133,6 +168,26 @@ class CreateGroup extends Component
         $this->tags = array_values($this->tags);
     }
 
+    public function toggleScheduleDay(string $day): void
+    {
+        if (in_array($day, $this->scheduleDays)) {
+            $this->scheduleDays = array_values(array_diff($this->scheduleDays, [$day]));
+        } else {
+            $this->scheduleDays[] = $day;
+        }
+    }
+
+    protected function buildTimeString(string $hour, string $minute, string $period): string
+    {
+        $h = (int) $hour;
+        if ($period === 'PM' && $h !== 12) {
+            $h += 12;
+        } elseif ($period === 'AM' && $h === 12) {
+            $h = 0;
+        }
+        return sprintf('%02d:%s:00', $h, $minute);
+    }
+
     public function createGroup()
     {
         $this->validate();
@@ -146,6 +201,9 @@ class CreateGroup extends Component
                 'location_name' => $this->location_name,
                 'latitude' => $this->latitude,
                 'longitude' => $this->longitude,
+                'emoji' => $this->emoji,
+                'schedule_text' => $this->schedule_text,
+                'meetup_label' => $this->meetup_label ?: 'Session',
             ];
 
             // Handle avatar upload
@@ -162,8 +220,37 @@ class CreateGroup extends Component
 
             $group = $this->groupService->createGroup(Auth::user(), $data);
 
+            // Create recurring schedule if enabled
+            if ($this->hasRecurringSchedule && !empty($this->scheduleDays)) {
+                $scheduleService = app(RecurringScheduleService::class);
+
+                $locationPoint = null;
+                if ($this->latitude && $this->longitude) {
+                    $locationPoint = new Point((float) $this->latitude, (float) $this->longitude, 4326);
+                }
+
+                $startTime = $this->buildTimeString($this->scheduleStartHour, $this->scheduleStartMinute, $this->scheduleStartPeriod);
+
+                $endTime = null;
+                if ($this->scheduleEndHour && $this->scheduleEndMinute && $this->scheduleEndPeriod) {
+                    $endTime = $this->buildTimeString($this->scheduleEndHour, $this->scheduleEndMinute, $this->scheduleEndPeriod);
+                }
+
+                $scheduleService->createSchedule($group, Auth::user(), [
+                    'title' => $this->scheduleTitle,
+                    'location_name' => $this->location_name,
+                    'location_coordinates' => $locationPoint,
+                    'frequency' => 'weekly',
+                    'days_of_week' => $this->scheduleDays,
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                    'generate_weeks_ahead' => 4,
+                ]);
+            }
+
             session()->flash('message', 'Group created successfully!');
 
+            // Redirect to the member dashboard initially
             return redirect()->to('/groups/'.$group->slug);
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to create group: '.$e->getMessage());

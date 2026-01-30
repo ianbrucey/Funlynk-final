@@ -135,3 +135,43 @@ it('limits tags to 5', function () {
         ->assertHasErrors(['selectedTags']);
 });
 
+it('can create a post as a group', function () {
+    $group = \App\Models\Group::factory()->create(['created_by' => $this->user->id]);
+    
+    // Ensure user is an admin member (if logic depends on membership)
+    \App\Models\GroupMember::create([
+        'group_id' => $group->id,
+        'user_id' => $this->user->id,
+        'role' => 'admin'
+    ]);
+
+    Livewire::test(CreatePost::class)
+        ->set('title', 'Group Announcement')
+        ->set('location_name', 'Group HQ')
+        ->set('latitude', 37.7749)
+        ->set('longitude', -122.4194)
+        ->set('posted_as_group', true)
+        ->set('selected_group_id', $group->id)
+        ->call('createPost')
+        ->assertHasNoErrors();
+    
+    $post = Post::where('title', 'Group Announcement')->first();
+    expect($post->posted_as_group)->toBeTrue();
+    expect($post->group_id)->toBe($group->id);
+    expect($post->user_id)->toBe($this->user->id); // Creator remains the user
+    expect($post->author)->toBeInstanceOf(\App\Models\Group::class);
+    expect($post->author->id)->toBe($group->id);
+});
+
+it('requires selected_group_id when posting as group', function () {
+    Livewire::test(CreatePost::class)
+        ->set('title', 'Invalid Group Post')
+        ->set('location_name', 'Somewhere')
+        ->set('latitude', 37.7749)
+        ->set('longitude', -122.4194)
+        ->set('posted_as_group', true)
+        ->set('selected_group_id', '') // Empty
+        ->call('createPost')
+        ->assertHasErrors(['selected_group_id']);
+});
+

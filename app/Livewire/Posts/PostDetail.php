@@ -10,6 +10,8 @@ use Livewire\Component;
 class PostDetail extends Component
 {
     public Post $post;
+    public $isGroupPost = false;
+    public $group = null;
 
     protected PostService $postService;
 
@@ -20,7 +22,11 @@ class PostDetail extends Component
 
     public function mount(Post $post)
     {
-        $this->post = $post->load('user', 'reactions');
+        $this->post = $post->load('user', 'reactions', 'group');
+
+        // Check if this is a group post
+        $this->isGroupPost = $this->post->group_id !== null;
+        $this->group = $this->post->group;
     }
 
     public function reactToPost(string $postId, string $reactionType)

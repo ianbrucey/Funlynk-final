@@ -1,16 +1,20 @@
-<div class="container mx-auto px-6 py-8">
-    <!-- Flash Messages -->
-    @if (session()->has('success'))
-        <div class="alert alert-success mb-4 p-4 rounded-xl bg-green-500/20 text-green-300">
-            {{ session('success') }}
-        </div>
-    @endif
+<div>
+    {{-- Modals at root level for proper positioning --}}
+    <livewire:groups.manage-recurring-schedules :group="$group" />
 
-    @if (session()->has('error'))
-        <div class="alert alert-error mb-4 p-4 rounded-xl bg-red-500/20 text-red-300">
-            {{ session('error') }}
-        </div>
-    @endif
+    <div class="container mx-auto px-6 py-8">
+        <!-- Flash Messages -->
+        @if (session()->has('success'))
+            <div class="alert alert-success mb-4 p-4 rounded-xl bg-green-500/20 text-green-300">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session()->has('error'))
+            <div class="alert alert-error mb-4 p-4 rounded-xl bg-red-500/20 text-red-300">
+                {{ session('error') }}
+            </div>
+        @endif
 
     <!-- Header -->
     <div class="flex items-center justify-between mb-8">
@@ -60,6 +64,43 @@
                     </label>
                 </div>
                 @error('privacy') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
+            </div>
+
+            <!-- Content Permissions -->
+            <div class="mb-6 p-4 rounded-xl bg-slate-800/30 border border-white/5">
+                <label class="block text-sm font-medium text-gray-300 mb-4">Content Permissions</label>
+
+                <!-- Post Permission -->
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400 mb-2">Who can create posts?</p>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" wire:model="postPermission" value="everyone" class="text-cyan-500 focus:ring-cyan-500">
+                            <span class="text-gray-300">All Members</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" wire:model="postPermission" value="admins" class="text-cyan-500 focus:ring-cyan-500">
+                            <span class="text-gray-300">Admins Only</span>
+                        </label>
+                    </div>
+                    @error('postPermission') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Event Permission -->
+                <div>
+                    <p class="text-sm text-gray-400 mb-2">Who can create events?</p>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" wire:model="eventPermission" value="everyone" class="text-cyan-500 focus:ring-cyan-500">
+                            <span class="text-gray-300">All Members</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" wire:model="eventPermission" value="admins" class="text-cyan-500 focus:ring-cyan-500">
+                            <span class="text-gray-300">Admins Only</span>
+                        </label>
+                    </div>
+                    @error('eventPermission') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
+                </div>
             </div>
 
             <!-- Dynamic Tags Input (type-and-enter) -->
@@ -168,6 +209,86 @@
         </form>
     </div>
 
+    <!-- Recurring Schedules Section -->
+    <div class="relative p-8 glass-card max-w-3xl mx-auto mb-8">
+        <div class="top-accent-center"></div>
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h3 class="text-xl font-bold text-white">Recurring Schedules</h3>
+                <p class="text-gray-400 text-sm">Auto-generate events on a regular schedule</p>
+            </div>
+            <button
+                wire:click="$dispatch('open-create-schedule-modal')"
+                wire:loading.attr="disabled"
+                wire:loading.class="opacity-50 cursor-wait"
+                class="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-sm disabled:hover:scale-100">
+                <span wire:loading.remove>+ New Schedule</span>
+                <span wire:loading class="flex items-center gap-2">
+                    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Loading...
+                </span>
+            </button>
+        </div>
+
+        <!-- Schedule List -->
+        @if($group->recurringSchedules->isEmpty())
+            <div class="p-8 text-center bg-slate-800/30 rounded-xl border border-white/5">
+                <div class="text-4xl mb-3">📅</div>
+                <p class="text-gray-400">No recurring schedules yet</p>
+                <p class="text-gray-500 text-sm mt-1">Create a schedule to auto-generate events</p>
+            </div>
+        @else
+            <div class="space-y-4">
+                @foreach($group->recurringSchedules as $schedule)
+                    <div class="p-4 bg-slate-800/30 rounded-xl border border-white/5 {{ !$schedule->is_active ? 'opacity-60' : '' }}">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-semibold text-white">{{ $schedule->title }}</h4>
+                                    @if(!$schedule->is_active)
+                                        <span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-300 rounded-full text-xs">Paused</span>
+                                    @endif
+                                </div>
+                                <p class="text-gray-400 text-sm mt-1">
+                                    {{ $schedule->schedule_description }} at {{ $schedule->time_range }}
+                                </p>
+                                @if($schedule->location_name)
+                                    <p class="text-gray-500 text-xs mt-1">📍 {{ $schedule->location_name }}</p>
+                                @endif
+                                <p class="text-gray-500 text-xs mt-2">
+                                    {{ $schedule->upcoming_activities_count }} upcoming events
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button wire:click="$dispatch('open-events-modal', { scheduleId: '{{ $schedule->id }}' })"
+                                    class="px-3 py-1.5 text-xs bg-slate-700/50 hover:bg-slate-700 rounded-lg transition" title="View Events">
+                                    📋 Events
+                                </button>
+                                <button wire:click="$dispatch('toggle-schedule-pause', { scheduleId: '{{ $schedule->id }}' })"
+                                    class="px-3 py-1.5 text-xs bg-slate-700/50 hover:bg-slate-700 rounded-lg transition">
+                                    {{ $schedule->is_active ? '⏸️ Pause' : '▶️ Resume' }}
+                                </button>
+                                <button wire:click="$dispatch('open-edit-schedule-modal', { scheduleId: '{{ $schedule->id }}' })"
+                                    class="px-3 py-1.5 text-xs bg-slate-700/50 hover:bg-slate-700 rounded-lg transition">
+                                    ✏️ Edit
+                                </button>
+                                <button wire:click="$dispatch('open-delete-schedule-modal', { scheduleId: '{{ $schedule->id }}' })"
+                                    class="px-3 py-1.5 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
     <!-- Danger Zone -->
     <div class="relative p-8 glass-card max-w-3xl mx-auto border border-red-500/30">
         <h3 class="text-xl font-bold text-red-400 mb-4">Danger Zone</h3>
@@ -191,5 +312,6 @@
                 Delete Group
             </button>
         @endif
+    </div>
     </div>
 </div>

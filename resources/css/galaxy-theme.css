@@ -282,3 +282,9 @@ body {
     width: 100% !important;
 }
 
+/* Google Places Autocomplete Fix for Modals */
+.pac-container {
+    z-index: 10000 !important;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+

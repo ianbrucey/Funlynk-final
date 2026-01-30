@@ -3,7 +3,6 @@
 namespace App\Livewire\Groups;
 
 use App\Models\Group;
-use App\Models\Tag;
 use App\Services\GroupContentService;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -12,15 +11,13 @@ class CreateGroupPost extends Component
 {
     public Group $group;
 
-    public string $title = '';
-
-    public string $description = '';
-
-    public array $selectedTags = [];
+    public string $content = '';
 
     public ?string $locationName = null;
 
-    public $expiresAt = null;
+    public bool $showLocation = false;
+
+    public string $expiresIn = '24'; // hours
 
     public bool $showModal = false;
 
@@ -32,7 +29,8 @@ class CreateGroupPost extends Component
     #[On('openCreateGroupPostModal')]
     public function openModal(): void
     {
-        $this->reset(['title', 'description', 'selectedTags', 'locationName', 'expiresAt']);
+        $this->reset(['content', 'locationName', 'showLocation', 'expiresIn']);
+        $this->expiresIn = '24';
         $this->showModal = true;
     }
 
@@ -41,30 +39,45 @@ class CreateGroupPost extends Component
         $this->showModal = false;
     }
 
+    public function toggleLocation(): void
+    {
+        $this->showLocation = !$this->showLocation;
+        if (!$this->showLocation) {
+            $this->locationName = null;
+        }
+    }
+
     protected function rules()
     {
         return [
-            'title' => ['required', 'string', 'max:100'],
-            'description' => ['required', 'string', 'max:500'],
-            'selectedTags' => ['nullable', 'array'],
+            'content' => ['required', 'string', 'max:500'],
             'locationName' => ['nullable', 'string', 'max:255'],
-            'expiresAt' => ['required', 'date', 'after:now'],
+            'expiresIn' => ['required', 'in:24,48,168'], // 24h, 48h, 1 week
         ];
     }
 
     public function createPost(GroupContentService $groupContentService)
     {
+        // Check permission
+        if (!$this->group->canCreatePost(auth()->user())) {
+            session()->flash('error', 'You do not have permission to create posts in this group.');
+            return;
+        }
+
         $this->validate();
+
+        // Calculate expiration time
+        $expiresAt = now()->addHours((int) $this->expiresIn);
 
         $groupContentService->createGroupPost(
             $this->group,
             auth()->user(),
             [
-                'title' => $this->title,
-                'description' => $this->description,
+                'title' => \Illuminate\Support\Str::limit($this->content, 50), // Auto-generate title from content
+                'description' => $this->content,
                 'location_name' => $this->locationName,
-                'expires_at' => $this->expiresAt,
-                'tags' => $this->selectedTags,
+                'expires_at' => $expiresAt,
+                'tags' => [],
             ]
         );
 
@@ -75,9 +88,6 @@ class CreateGroupPost extends Component
 
     public function render()
     {
-        $availableTags = Tag::all(); // Assuming a Tag model exists
-        return view('livewire.groups.create-group-post', [
-            'availableTags' => $availableTags,
-        ]);
+        return view('livewire.groups.create-group-post');
     }
 }

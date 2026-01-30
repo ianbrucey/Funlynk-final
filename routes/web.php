@@ -26,6 +26,8 @@ Route::view('/privacy', 'legal.privacy')->name('privacy');
 // Sample design views
 Route::view('/samples/gemini', 'samples.gemini-style')->name('samples.gemini');
 Route::view('/samples/claude', 'samples.claude-style')->name('samples.claude');
+Route::get('/groups/mockup-landing', \App\Livewire\Groups\PublicGroupLanding::class)->name('groups.mockup-landing');
+Route::get('/groups/mockup-landing-jazz', \App\Livewire\Groups\PublicGroupLandingJazz::class)->name('groups.mockup-landing-jazz');
 
 // API Routes
 Route::post('/api/check-username', [UsernameController::class, 'checkAvailability'])
@@ -96,10 +98,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/host/stripe-return', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding.return');
         Route::get('/host/stripe-refresh', \App\Livewire\Payments\StripeOnboarding::class)->name('stripe.onboarding.refresh');
 
-        // Group Routes
+        // Group Routes (auth required)
         Route::get('/groups', GroupsIndex::class)->name('groups.index');
         Route::get('/groups/create', CreateGroup::class)->name('groups.create');
-        Route::get('/groups/{group:slug}', GroupShow::class)->name('groups.show');
         Route::get('/groups/{group:slug}/members', \App\Livewire\Groups\GroupMembers::class)->name('groups.members');
         Route::get('/groups/{group:slug}/timeline', \App\Livewire\Groups\GroupTimeline::class)->name('groups.timeline');
         Route::get('/groups/{group:slug}/settings', GroupSettings::class)->name('groups.settings');
@@ -143,6 +144,11 @@ Route::get('/chat-demo', function () {
 Route::middleware('auth')->get('/test-toast', function () {
     return view('test-toast');
 })->name('test.toast');
+
+// Public Group Routes
+Route::get('/g/{group:slug}', \App\Livewire\Groups\PublicGroupLanding::class)->name('groups.public');
+// Group detail route - handles auth redirect internally
+Route::get('/groups/{group:slug}', GroupShow::class)->name('groups.show');
 
 // Public Event Routes (accessible without login) - UUID-based
 // MUST be last to avoid catching specific routes like /events/create

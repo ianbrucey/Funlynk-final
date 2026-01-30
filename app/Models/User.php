@@ -238,6 +238,16 @@ class User extends Authenticatable implements FilamentHasName
         return $this->hasMany(GroupJoinRequest::class);
     }
 
+    /**
+     * Check if the user is a member of the given group.
+     */
+    public function isMemberOf(Group|string|int $group): bool
+    {
+        $groupId = $group instanceof Group ? $group->id : $group;
+        
+        return $this->groups()->where('groups.id', $groupId)->exists();
+    }
+
     public function getFilamentName(): string
     {
         return $this->display_name ?: ($this->username ?: (string) $this->email);
