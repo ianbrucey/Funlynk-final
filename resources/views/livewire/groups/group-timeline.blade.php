@@ -3,11 +3,11 @@
     @livewire('groups.create-group-post', ['group' => $group], key('create-post-'.$group->id))
     @livewire('groups.create-group-event', ['group' => $group], key('create-event-'.$group->id))
 
-    <div class="relative p-8 glass-card">
+    <div class="relative p-2 glass-card">
         <div class="top-accent-center"></div>
 
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold">Group Timeline</h2>
+            <h2 class="text-2xl font-bold p-3">Group Timeline</h2>
             @auth
                 @php
                     $canCreatePost = $group->canCreatePost(auth()->user());

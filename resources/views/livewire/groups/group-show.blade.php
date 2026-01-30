@@ -4,7 +4,7 @@
 
     <x-slot name="title">{{ $group->name }}</x-slot>
 
-    <div class="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-5xl">
+    <div class="container mx-auto sm:px-6 py-4 sm:py-8 max-w-5xl">
         <!-- Flash Messages -->
         @if (session()->has('success'))
             <div class="mb-4 p-3 sm:p-4 rounded-xl bg-green-500/20 text-green-300 text-sm sm:text-base">
