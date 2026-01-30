@@ -119,28 +119,34 @@ class ActivityForm
                 // Pricing Section
                 Section::make('Pricing')
                     ->schema([
-                        Toggle::make('is_paid')
-                            ->label('Paid Activity')
-                            ->default(false)
-                            ->live(),
+                        Select::make('payment_type')
+                            ->label('Payment Type')
+                            ->options([
+                                'free' => 'Free',
+                                'online' => 'Pay Online (Stripe)',
+                                'at_door' => 'Pay at Door',
+                            ])
+                            ->default('free')
+                            ->live()
+                            ->required(),
 
                         TextInput::make('price_cents')
                             ->label('Price (in cents)')
                             ->numeric()
                             ->prefix('$')
                             ->helperText('Enter amount in cents (e.g., 1500 for $15.00)')
-                            ->visible(fn ($get) => $get('is_paid'))
-                            ->required(fn ($get) => $get('is_paid')),
+                            ->visible(fn ($get) => $get('payment_type') !== 'free')
+                            ->required(fn ($get) => $get('payment_type') !== 'free'),
 
                         TextInput::make('currency')
                             ->default('USD')
                             ->disabled()
-                            ->visible(fn ($get) => $get('is_paid')),
+                            ->visible(fn ($get) => $get('payment_type') !== 'free'),
 
                         TextInput::make('stripe_price_id')
                             ->label('Stripe Price ID')
                             ->placeholder('price_xxxxx')
-                            ->visible(fn ($get) => $get('is_paid')),
+                            ->visible(fn ($get) => $get('payment_type') === 'online'),
                     ])
                     ->columns(2),
 

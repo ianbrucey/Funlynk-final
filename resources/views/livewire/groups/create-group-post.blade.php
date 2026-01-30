@@ -1,13 +1,18 @@
-<div>
-    @if($showModal)
+<div x-data="{ open: false }"
+     x-show="open"
+     x-cloak
+     x-on:open-create-group-post-modal.window="open = true; $wire.call('openModal')"
+     x-on:close-create-group-post-modal.window="open = false"
+     x-on:keydown.escape.window="open = false"
+     class="relative z-50">
+
     <div class="fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
             <!-- Background overlay -->
-            <div class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75" wire:click="closeModal"></div>
+            <div class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75" @click="open = false"></div>
 
             <!-- Modal content -->
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="relative inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform rounded-lg shadow-xl glass-card sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div class="relative inline-block w-full max-w-lg px-6 pt-5 pb-4 overflow-hidden text-left align-middle transition-all transform rounded-2xl shadow-xl glass-card sm:p-6">
                 <div class="top-accent-center"></div>
 
                 {{-- Header with user avatar --}}
@@ -116,8 +121,8 @@
                     @endif
 
                     {{-- Bottom toolbar --}}
-                    <div class="flex items-center justify-between border-t border-white/10 pt-4">
-                        <div class="flex items-center gap-3">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-t border-white/10 pt-4">
+                        <div class="flex items-center gap-3 justify-center sm:justify-start">
                             {{-- Add location button --}}
                             @if(!$showLocation)
                             <button type="button" wire:click="toggleLocation" class="flex items-center gap-1 text-gray-400 hover:text-cyan-400 transition text-sm">
@@ -142,13 +147,13 @@
                             </div>
                         </div>
 
-                        <div class="flex gap-2">
-                            <button type="button" wire:click="closeModal" class="px-4 py-2 text-gray-400 hover:text-white transition text-sm">
+                        <div class="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
+                            <button type="button" @click="open = false" class="w-full sm:w-auto px-6 py-3 sm:py-2 text-gray-400 hover:text-white transition text-sm border border-white/10 rounded-xl hover:border-white/20 min-h-[44px] sm:min-h-0">
                                 Cancel
                             </button>
-                            <button type="submit" wire:loading.attr="disabled" class="px-5 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full font-semibold hover:scale-105 transition-all text-white text-sm disabled:opacity-50 disabled:cursor-wait disabled:hover:scale-100">
+                            <button type="submit" wire:loading.attr="disabled" class="w-full sm:w-auto px-6 py-3 sm:py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-white text-sm disabled:opacity-50 disabled:cursor-wait disabled:hover:scale-100 min-h-[44px] sm:min-h-0">
                                 <span wire:loading.remove wire:target="createPost">Post</span>
-                                <span wire:loading wire:target="createPost" class="flex items-center gap-2">
+                                <span wire:loading wire:target="createPost" class="flex items-center gap-2 justify-center">
                                     <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                     Posting...
                                 </span>
@@ -159,5 +164,4 @@
             </div>
         </div>
     </div>
-    @endif
 </div>

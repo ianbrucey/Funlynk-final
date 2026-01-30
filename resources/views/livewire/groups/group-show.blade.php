@@ -186,29 +186,35 @@
 
         @if ($isMember || $group->privacy === 'public')
             <!-- Tab Navigation - Horizontally Scrollable on Mobile -->
-            <div class="relative glass-card mb-4 sm:mb-6 overflow-hidden">
+            <div class="relative glass-card mb-4 sm:mb-6 overflow-hidden"
+                 x-data="{ 
+                     activeTab: @entangle('activeTab'),
+                     switchTab(tab) {
+                         this.activeTab = tab;
+                     }
+                 }">
                 <div class="flex overflow-x-auto scrollbar-hide -mx-px px-2 py-2 sm:py-3 gap-1 sm:gap-2 sm:justify-center">
-                    <button wire:click="switchTab('timeline')"
-                            class="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-2 rounded-xl font-medium text-sm sm:text-base transition-all min-h-[44px] flex items-center gap-2 active:scale-95
-                            {{ $activeTab === 'timeline' ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white border border-purple-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                    <button @click="switchTab('timeline')"
+                            class="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-2 rounded-xl font-medium text-sm sm:text-base transition-all min-h-[44px] flex items-center gap-2 active:scale-95"
+                            :class="activeTab === 'timeline' ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white border border-purple-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5'">
                         <svg class="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
                         </svg>
                         Timeline
                     </button>
 
-                    <button wire:click="switchTab('members')"
-                            class="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-2 rounded-xl font-medium text-sm sm:text-base transition-all min-h-[44px] flex items-center gap-2 active:scale-95
-                            {{ $activeTab === 'members' ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white border border-purple-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                    <button @click="switchTab('members')"
+                            class="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-2 rounded-xl font-medium text-sm sm:text-base transition-all min-h-[44px] flex items-center gap-2 active:scale-95"
+                            :class="activeTab === 'members' ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white border border-purple-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5'">
                         <svg class="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                         </svg>
                         Members
                     </button>
 
-                    <button wire:click="switchTab('chat')"
-                            class="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-2 rounded-xl font-medium text-sm sm:text-base transition-all min-h-[44px] flex items-center gap-2 active:scale-95
-                            {{ $activeTab === 'chat' ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white border border-purple-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                    <button @click="switchTab('chat')"
+                            class="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-2 rounded-xl font-medium text-sm sm:text-base transition-all min-h-[44px] flex items-center gap-2 active:scale-95"
+                            :class="activeTab === 'chat' ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white border border-purple-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5'">
                         <svg class="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                         </svg>
@@ -216,9 +222,9 @@
                     </button>
 
                     @if($isAdmin)
-                        <button wire:click="switchTab('requests')"
-                                class="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-2 rounded-xl font-medium text-sm sm:text-base transition-all min-h-[44px] flex items-center gap-2 relative active:scale-95
-                                {{ $activeTab === 'requests' ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white border border-purple-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5' }}">
+                        <button @click="switchTab('requests')"
+                                class="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-2 rounded-xl font-medium text-sm sm:text-base transition-all min-h-[44px] flex items-center gap-2 relative active:scale-95"
+                                :class="activeTab === 'requests' ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white border border-purple-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5'">
                             <svg class="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                             </svg>
@@ -233,14 +239,18 @@
                 </div>
             </div>
 
-            <!-- Tab Content -->
-            <div>
-                @if ($activeTab === 'timeline')
+            <!-- Tab Content - Using Alpine.js x-show for instant switching -->
+            <div x-data="{ activeTab: @entangle('activeTab') }">
+                <div x-show="activeTab === 'timeline'" x-cloak>
                     @livewire('groups.group-timeline', ['group' => $group], key('timeline-'.$group->id))
-                @elseif ($activeTab === 'members')
+                </div>
+                
+                <div x-show="activeTab === 'members'" x-cloak>
                     @livewire('groups.group-members', ['group' => $group], key('members-'.$group->id))
-                @elseif ($activeTab === 'chat')
-                    <div class="relative glass-card p-4 sm:p-6 lg:p-8">
+                </div>
+                
+                <div x-show="activeTab === 'chat'" x-cloak>
+                    <div class="relative glass-card sm:p-6 lg:p-8">
                         <div class="top-accent-center"></div>
                         @if ($isMember && $conversationId)
                             @livewire('chat.chat-component', ['conversationId' => $conversationId], key('chat-'.$group->id))
@@ -275,16 +285,20 @@
                             </div>
                         @endif
                     </div>
-                @elseif ($activeTab === 'requests' && $isAdmin)
-                    <div class="relative glass-card p-4 sm:p-6 lg:p-8">
+                </div>
+                
+                @if($isAdmin)
+                <div x-show="activeTab === 'requests'" x-cloak>
+                    <div class="relative glass-card sm:p-6 lg:p-8">
                         <div class="top-accent-center"></div>
                         @livewire('groups.join-requests-list', ['group' => $group], key('requests-'.$group->id))
                     </div>
+                </div>
                 @endif
             </div>
         @else
             <!-- Private Group - Non-Member View -->
-            <div class="relative glass-card p-6 sm:p-8 lg:p-12">
+            <div class="relative glass-card sm:p-8 lg:p-12">
                 <div class="top-accent-center"></div>
                 <div class="text-center py-6 sm:py-8">
                     <div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6 rounded-full bg-purple-500/10 flex items-center justify-center">

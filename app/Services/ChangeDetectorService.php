@@ -35,7 +35,7 @@ class ChangeDetectorService
     // Fields that are locked after first payment
     public const LOCKED_FIELDS = [
         'price_cents',
-        'is_paid',
+        'payment_type',
     ];
 
     // Thresholds
@@ -140,8 +140,8 @@ class ChangeDetectorService
             return 'minor';
         }
 
-        // Paid → Free is blocked
-        if ($field === 'is_paid' && $oldValue === true && $newValue === false) {
+        // Paid → Free is blocked (online/at_door to free)
+        if ($field === 'payment_type' && in_array($oldValue, ['online', 'at_door']) && $newValue === 'free') {
             return 'blocked';
         }
 

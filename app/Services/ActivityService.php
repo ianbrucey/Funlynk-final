@@ -46,7 +46,7 @@ class ActivityService
                 'current_attendees' => 0,
                 'is_public' => true,
                 'requires_approval' => false,
-                'is_paid' => false,
+                'payment_type' => 'free',
                 'price_cents' => null,
                 'status' => 'draft', // Host needs to finalize
                 'originated_from_post_id' => $post->id,
@@ -199,7 +199,7 @@ class ActivityService
         }
 
         // Price validation
-        if (isset($data['is_paid']) && $data['is_paid']) {
+        if (isset($data['payment_type']) && $data['payment_type'] !== 'free') {
             if (!isset($data['price_cents']) || $data['price_cents'] < 1) {
                 $errors['price_cents'] = 'Paid activities must have a price greater than 0';
             }

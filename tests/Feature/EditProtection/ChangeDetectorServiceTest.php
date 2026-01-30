@@ -16,7 +16,7 @@ beforeEach(function () {
         'end_time' => Carbon::now()->addDays(7)->addHours(2),
         'location_name' => 'Original Location',
         'price_cents' => 5000,
-        'is_paid' => true,
+        'payment_type' => 'online',
     ]);
 });
 
@@ -110,11 +110,11 @@ test('classifies price decrease as minor', function () {
 
 test('classifies paid to free as blocked', function () {
     $changes = $this->service->detectChanges($this->activity, [
-        'is_paid' => false,
+        'payment_type' => 'free',
     ]);
 
     expect($changes)->toHaveCount(1);
-    expect($changes[0]['field'])->toBe('is_paid');
+    expect($changes[0]['field'])->toBe('payment_type');
     expect($changes[0]['category'])->toBe('blocked');
 });
 

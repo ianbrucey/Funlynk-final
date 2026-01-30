@@ -22,7 +22,7 @@ beforeEach(function () {
         'end_time' => Carbon::now()->addDays(7)->addHours(2),
         'location_name' => 'Original Location',
         'price_cents' => 5000,
-        'is_paid' => true,
+        'payment_type' => 'online',
     ]);
 });
 

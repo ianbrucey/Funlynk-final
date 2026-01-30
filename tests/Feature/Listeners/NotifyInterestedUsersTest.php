@@ -32,7 +32,7 @@ test('notifies all interested users when post is converted to event', function (
     $activity = Activity::factory()->create([
         'host_id' => $owner->id,
         'originated_from_post_id' => $post->id,
-        'is_paid' => false,
+        'payment_type' => 'free',
         'price_cents' => null,
     ]);
 

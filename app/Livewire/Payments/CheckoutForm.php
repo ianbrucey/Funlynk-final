@@ -22,8 +22,8 @@ class CheckoutForm extends Component
             return redirect()->route('login');
         }
 
-        // Check if activity is paid
-        if (!$activity->is_paid) {
+        // Check if activity requires online payment
+        if ($activity->payment_type !== 'online') {
             return redirect()->route('events.show', $activity);
         }
 

@@ -14,7 +14,7 @@ beforeEach(function () {
     $this->host = User::factory()->create();
     $this->activity = Activity::factory()->create([
         'host_id' => $this->host->id,
-        'is_paid' => true,
+        'payment_type' => 'online',
         'price_cents' => 5000,
     ]);
     $this->activity->lockEditing();

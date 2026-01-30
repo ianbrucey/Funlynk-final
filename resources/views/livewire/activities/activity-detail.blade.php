@@ -111,32 +111,62 @@
                 <div class="relative p-6 lg:p-8 glass-card lg:rounded-xl overflow-hidden">
                     <div class="top-accent"></div>
 
-                    {{-- Status Badge --}}
-                    <div class="absolute top-6 right-6 z-10">
-                        @if($activity->status === 'draft')
-                            <span class="px-3 py-1 bg-gray-500/30 border border-gray-500/50 rounded-full text-xs font-bold text-gray-300 uppercase tracking-wider">Draft</span>
-                        {{-- Published badge hidden per user request --}}
-                        {{-- @elseif($activity->status === 'published')
-                            <span class="px-3 py-1 bg-blue-500/30 border border-blue-500/50 rounded-full text-xs font-bold text-blue-300 uppercase tracking-wider">Published</span>
-                        --}}
-                        @elseif($activity->status === 'active')
-                            <span class="px-3 py-1 bg-green-500/30 border border-green-500/50 rounded-full text-xs font-bold text-green-300 uppercase tracking-wider">Active</span>
-                        @elseif($activity->status === 'completed')
-                            <span class="px-3 py-1 bg-purple-500/30 border border-purple-500/50 rounded-full text-xs font-bold text-purple-300 uppercase tracking-wider">Completed</span>
-                        @elseif($activity->status === 'cancelled')
-                            <span class="px-3 py-1 bg-red-500/30 border border-red-500/50 rounded-full text-xs font-bold text-red-300 uppercase tracking-wider">Cancelled</span>
-                        @endif
-                    </div>
+                    {{-- Header Row: Host Info + Actions (Flex) --}}
+                    <div class="relative z-10 flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6">
+                        
+                        {{-- Host Info --}}
+                        <div class="flex items-center gap-4 min-w-0">
+                            <a href="{{ route('profile.view', $activity->host->username) }}" class="flex-shrink-0 group">
+                                @if($activity->host->profile_image_url)
+                                    <img src="{{ Storage::url($activity->host->profile_image_url) }}" class="w-12 h-12 rounded-full object-cover border-2 border-white/10 shadow-lg group-hover:border-cyan-400/50 transition-colors">
+                                @else
+                                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold text-white shadow-lg group-hover:ring-2 group-hover:ring-cyan-400/50 transition-all">
+                                        {{ substr($activity->host->name, 0, 1) }}
+                                    </div>
+                                @endif
+                            </a>
+                            
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider truncate">
+                                        Hosted by <a href="{{ route('profile.view', $activity->host->username) }}" class="hover:text-cyan-400 transition-colors">{{ '@' . $activity->host->username }}</a>
+                                    </div>
+                                </div>
+                                <a href="{{ route('profile.view', $activity->host->username) }}" class="font-bold text-white text-lg leading-tight hover:text-cyan-400 transition-colors block truncate">
+                                    {{ $activity->host->name }}
+                                </a>
+                            </div>
+                        </div>
 
-                    {{-- Public Link Button (Available to Everyone) --}}
-                    <div class="absolute top-6 right-6 z-10 mt-10 md:mt-0 md:static md:float-right md:ml-4"
-                             x-data="{
+                        {{-- Right Side: Actions (Status, Follow, Copy) --}}
+                        <div class="flex items-center gap-3 self-start md:ml-auto flex-wrap">
+                            {{-- Status Badge --}}
+                            @if($activity->status === 'draft')
+                                <span class="px-3 py-1 bg-gray-500/30 border border-gray-500/50 rounded-full text-xs font-bold text-gray-300 uppercase tracking-wider shadow-sm">Draft</span>
+                            @elseif($activity->status === 'active')
+                                <span class="px-3 py-1 bg-green-500/30 border border-green-500/50 rounded-full text-xs font-bold text-green-300 uppercase tracking-wider shadow-sm">Active</span>
+                            @elseif($activity->status === 'completed')
+                                <span class="px-3 py-1 bg-purple-500/30 border border-purple-500/50 rounded-full text-xs font-bold text-purple-300 uppercase tracking-wider shadow-sm">Completed</span>
+                            @elseif($activity->status === 'cancelled')
+                                <span class="px-3 py-1 bg-red-500/30 border border-red-500/50 rounded-full text-xs font-bold text-red-300 uppercase tracking-wider shadow-sm">Cancelled</span>
+                            @endif
+
+                            {{-- Follow Button --}}
+                            @auth
+                                @if(!$isHost)
+                                    <div class="scale-90 origin-center">
+                                        <livewire:follow-button :user-id="$activity->host->id" :is-following="$isFollowingHost" />
+                                    </div>
+                                @endif
+                            @endauth
+
+                             {{-- Copy Link Button --}}
+                             <div x-data="{
                                 copied: false,
                                 url: '{{ route('events.show', $activity) }}',
                                 copy() {
                                     navigator.clipboard.writeText(this.url).then(() => {
                                         this.copied = true;
-                                        // Dispatch toast event directly for global feedback
                                         window.dispatchEvent(new CustomEvent('show-toast', {
                                             detail: { message: 'Public link copied to clipboard!', type: 'success' }
                                         }));
@@ -144,44 +174,23 @@
                                     });
                                 }
                              }">
-                            <button @click="copy()"
-                                    class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r rounded-lg text-sm font-semibold hover:scale-105 transition-all shadow-lg"
-                                    :class="copied ? 'from-green-500 to-emerald-500 hover:shadow-green-500/50' : 'from-pink-500 to-purple-500 hover:shadow-pink-500/50'">
-                                
-                                {{-- Default Icon --}}
-                                <svg x-show="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
-                                </svg>
-
-                                {{-- Copied Icon --}}
-                                <svg x-show="copied" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                
-                                <span x-text="copied ? 'Copied!' : 'Copy Public Link'"></span>
-                            </button>
-                    </div>
-
-                    {{-- Host Info --}}
-                    <div class="mb-4">
-                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Hosted By</h3>
-                        <div class="flex items-center gap-3">
-                            @if($activity->host->profile_image_url)
-                                <img src="{{ Storage::url($activity->host->profile_image_url) }}" class="w-10 h-10 rounded-full object-cover border-2 border-white/10">
-                            @else
-                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-lg font-bold text-white">
-                                    {{ substr($activity->host->name, 0, 1) }}
-                                </div>
-                            @endif
-                            <div>
-                                <div class="font-semibold text-white">{{ $activity->host->name }}</div>
-                                <div class="text-xs text-gray-400">Member since {{ $activity->host->created_at->format('M Y') }}</div>
+                                <button @click="copy()"
+                                        class="flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 rounded-lg text-xs font-semibold hover:bg-purple-500/20 hover:border-purple-500/50 transition-all text-purple-300 shadow-sm"
+                                        :class="{ 'bg-green-500/10 border-green-500/30 text-green-400': copied }">
+                                    <svg x-show="!copied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                                    </svg>
+                                    <svg x-show="copied" x-cloak class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span x-text="copied ? 'Copied' : 'Copy Link'"></span>
+                                </button>
                             </div>
                         </div>
                     </div>
 
                     {{-- Title --}}
-                    <h1 class="text-4xl font-bold mb-4 text-white pr-24">{{ $activity->title }}</h1>
+                    <h1 class="text-3xl lg:text-5xl font-bold mb-4 text-white lead-tight">{{ $activity->title }}</h1>
 
                     {{-- Short Details --}}
                     <div class="flex flex-wrap gap-4 text-sm text-gray-300 mb-4">

@@ -28,7 +28,7 @@ class ActivityFactory extends Factory
             'end_time' => null,
             'max_attendees' => fake()->optional(0.7)->numberBetween(5, 30),
             'current_attendees' => 0,
-            'is_paid' => false,
+            'payment_type' => 'free',
             'price_cents' => null,
             'currency' => 'USD',
             'is_public' => true,

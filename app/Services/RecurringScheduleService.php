@@ -171,7 +171,7 @@ class RecurringScheduleService
             'recurring_schedule_id' => $schedule->id,
             'recurrence_date' => $date->toDateString(),
             'title' => $schedule->title,
-            'description' => $schedule->description,
+            'description' => $schedule->description ?? 'Recurring event: ' . $schedule->title,
             'location_name' => $locationName,
             'location_coordinates' => $locationCoordinates,
             'start_time' => $startTime,

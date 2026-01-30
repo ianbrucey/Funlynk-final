@@ -13,9 +13,9 @@
     @endif
 
     <!-- Header with Stats -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 p-3">
         <div>
-            <h3 class="text-xl font-bold">Join Requests</h3>
+            <h3 class="text-xl font-bold p-3">Join Requests</h3>
             @if($pendingCount > 0)
                 <span class="text-cyan-400 text-sm">{{ $pendingCount }} pending request{{ $pendingCount > 1 ? 's' : '' }}</span>
             @else

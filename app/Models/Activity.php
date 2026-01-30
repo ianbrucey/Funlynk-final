@@ -52,7 +52,6 @@ class Activity extends Model
             'recurrence_date' => 'date',
             'is_public' => 'boolean',
             'requires_approval' => 'boolean',
-            'is_paid' => 'boolean',
             'price_cents' => 'integer',
             'max_attendees' => 'integer',
             'current_attendees' => 'integer',
@@ -60,6 +59,23 @@ class Activity extends Model
             'edit_locked_at' => 'datetime',
             'original_values' => 'array',
         ];
+    }
+
+    /**
+     * Backward-compatible accessor for is_paid
+     * Returns true if payment_type is 'online' or 'at_door'
+     */
+    public function getIsPaidAttribute(): bool
+    {
+        return $this->payment_type !== 'free';
+    }
+
+    /**
+     * Check if this activity requires online payment before RSVP
+     */
+    public function getRequiresOnlinePaymentAttribute(): bool
+    {
+        return $this->payment_type === 'online';
     }
 
     /**

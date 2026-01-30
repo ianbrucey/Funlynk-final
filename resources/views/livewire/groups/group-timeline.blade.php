@@ -16,21 +16,13 @@
                 @if($canCreatePost || $canCreateEvent)
                 <div class="flex gap-2">
                     @if($canCreatePost)
-                    <button wire:click="createPost" wire:loading.attr="disabled" wire:loading.class="opacity-50 cursor-wait" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-sm disabled:hover:scale-100">
-                        <span wire:loading.remove wire:target="createPost">New Post</span>
-                        <span wire:loading wire:target="createPost" class="flex items-center gap-2">
-                            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            Loading...
-                        </span>
+                    <button @click="$dispatch('open-create-group-post-modal')" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-sm disabled:hover:scale-100">
+                        <span>New Post</span>
                     </button>
                     @endif
                     @if($canCreateEvent)
-                    <button wire:click="createEvent" wire:loading.attr="disabled" wire:loading.class="opacity-50 cursor-wait" class="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition text-sm disabled:hover:scale-100">
-                        <span wire:loading.remove wire:target="createEvent">New Event</span>
-                        <span wire:loading wire:target="createEvent" class="flex items-center gap-2">
-                            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            Loading...
-                        </span>
+                    <button @click="$dispatch('open-create-group-event-modal')" class="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition text-sm disabled:hover:scale-100">
+                        <span>New Event</span>
                     </button>
                     @endif
                 </div>
@@ -291,7 +283,7 @@
                 @auth
                     @if($group->memberships()->where('user_id', auth()->id())->exists())
                         <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                            <button wire:click="createPost" class="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
+                            <button @click="$dispatch('open-create-group-post-modal')" class="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
                                 <span class="flex items-center justify-center gap-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -299,7 +291,7 @@
                                     Create First Post
                                 </span>
                             </button>
-                            <button wire:click="createEvent" class="px-6 py-3 bg-slate-800/50 border border-cyan-500/50 rounded-xl font-semibold hover:border-cyan-400 transition">
+                            <button @click="$dispatch('open-create-group-event-modal')" class="px-6 py-3 bg-slate-800/50 border border-cyan-500/50 rounded-xl font-semibold hover:border-cyan-400 transition">
                                 <span class="flex items-center justify-center gap-2">
                                     <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>

@@ -2,19 +2,24 @@
     {{-- Modals at root level for proper z-index and positioning --}}
 
     <!-- Create/Edit Modal -->
-    @if($showCreateModal || $showEditModal)
+    <div x-data="{ open: false, isEdit: false }"
+         x-show="open"
+         x-cloak
+         x-on:open-create-schedule-modal.window="open = true; isEdit = false; $wire.call('handleOpenCreateModal')"
+         x-on:open-edit-schedule-modal.window="open = true; isEdit = true; $wire.call('handleOpenEditModal', $event.detail.scheduleId)"
+         x-on:close-schedule-modal.window="open = false"
+         x-on:keydown.escape.window="open = false"
+         class="relative z-50">
         <div class="fixed inset-0 z-50 overflow-y-auto" aria-modal="true">
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20">
-                <div class="fixed inset-0 bg-black/70 transition-opacity" wire:click="closeModals"></div>
+            <div class="flex items-end sm:items-center justify-center min-h-screen px-0 sm:px-4 pt-4 pb-0 sm:pb-20">
+                <div class="fixed inset-0 bg-black/70 transition-opacity" @click="open = false"></div>
 
-                <div class="relative w-full max-w-lg p-6 glass-card">
+                <div class="relative w-full sm:max-w-lg p-4 sm:p-6 glass-card rounded-t-2xl sm:rounded-xl max-h-[90vh] overflow-y-auto">
                     <div class="top-accent-center"></div>
 
-                    <h3 class="text-xl font-bold mb-4">
-                        {{ $showCreateModal ? 'Create Recurring Schedule' : 'Edit Schedule' }}
-                    </h3>
+                    <h3 class="text-lg sm:text-xl font-bold mb-4" x-text="isEdit ? 'Edit Schedule' : 'Create Recurring Schedule'"></h3>
 
-                    <form wire:submit.prevent="{{ $showCreateModal ? 'createSchedule' : 'updateSchedule' }}">
+                    <form wire:submit.prevent="{{ $showEditModal ? 'updateSchedule' : 'createSchedule' }}">
                         <!-- Title -->
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-300 mb-1">Event Title</label>
@@ -117,14 +122,24 @@
                             </select>
                         </div>
 
-                        <!-- Days of Week (for weekly) -->
+                        <!-- Days of Week (for weekly) - Using Alpine.js for instant updates -->
                         @if($frequency === 'weekly')
-                            <div class="mb-4">
+                            <div class="mb-4" x-data="{ 
+                                days: @entangle('daysOfWeek'),
+                                toggle(day) {
+                                    if (this.days.includes(day)) {
+                                        this.days = this.days.filter(d => d !== day);
+                                    } else {
+                                        this.days = [...this.days, day];
+                                    }
+                                }
+                            }">
                                 <label class="block text-sm font-medium text-gray-300 mb-2">Days of Week</label>
-                                <div class="flex flex-wrap gap-2">
+                                <div class="grid grid-cols-4 sm:flex sm:flex-wrap gap-2">
                                     @foreach(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day)
-                                        <button type="button" wire:click="toggleDay('{{ $day }}')"
-                                            class="px-3 py-1.5 rounded-lg text-sm transition {{ in_array($day, $daysOfWeek) ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50' : 'bg-slate-700/50 text-gray-400 border border-white/10' }}">
+                                        <button type="button" @click="toggle('{{ $day }}')"
+                                            class="px-3 py-2 sm:py-1.5 rounded-lg text-sm transition min-h-[44px] sm:min-h-0"
+                                            :class="days.includes('{{ $day }}') ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50' : 'bg-slate-700/50 text-gray-400 border border-white/10 active:scale-95'">
                                             {{ ucfirst(substr($day, 0, 3)) }}
                                         </button>
                                     @endforeach
@@ -149,18 +164,18 @@
                         <!-- Start Time -->
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-300 mb-1">Start Time</label>
-                            <div class="flex gap-2">
-                                <select wire:model="startTimeHour" class="flex-1 rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3">
+                            <div class="grid grid-cols-3 gap-2">
+                                <select wire:model="startTimeHour" class="rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3 min-h-[44px]">
                                     @for($h = 1; $h <= 12; $h++)
                                         <option value="{{ $h }}">{{ $h }}</option>
                                     @endfor
                                 </select>
-                                <select wire:model="startTimeMinute" class="flex-1 rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3">
+                                <select wire:model="startTimeMinute" class="rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3 min-h-[44px]">
                                     @foreach(['00', '15', '30', '45'] as $m)
                                         <option value="{{ $m }}">{{ $m }}</option>
                                     @endforeach
                                 </select>
-                                <select wire:model="startTimePeriod" class="flex-1 rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3">
+                                <select wire:model="startTimePeriod" class="rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3 min-h-[44px]">
                                     <option value="AM">AM</option>
                                     <option value="PM">PM</option>
                                 </select>
@@ -170,20 +185,20 @@
                         <!-- End Time (Optional) -->
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-300 mb-1">End Time (Optional)</label>
-                            <div class="flex gap-2">
-                                <select wire:model="endTimeHour" class="flex-1 rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3">
+                            <div class="grid grid-cols-3 gap-2">
+                                <select wire:model="endTimeHour" class="rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3 min-h-[44px]">
                                     <option value="">--</option>
                                     @for($h = 1; $h <= 12; $h++)
                                         <option value="{{ $h }}">{{ $h }}</option>
                                     @endfor
                                 </select>
-                                <select wire:model="endTimeMinute" class="flex-1 rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3">
+                                <select wire:model="endTimeMinute" class="rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3 min-h-[44px]">
                                     <option value="">--</option>
                                     @foreach(['00', '15', '30', '45'] as $m)
                                         <option value="{{ $m }}">{{ $m }}</option>
                                     @endforeach
                                 </select>
-                                <select wire:model="endTimePeriod" class="flex-1 rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3">
+                                <select wire:model="endTimePeriod" class="rounded-xl bg-slate-800/50 border border-white/10 text-white px-3 py-3 min-h-[44px]">
                                     <option value="">--</option>
                                     <option value="AM">AM</option>
                                     <option value="PM">PM</option>
@@ -195,7 +210,7 @@
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-300 mb-1">Generate events for next</label>
                             <select wire:model="generateWeeksAhead"
-                                class="w-full rounded-xl bg-slate-800/50 border border-white/10 text-white px-4 py-3 focus:border-cyan-500 focus:ring-cyan-500 transition">
+                                class="w-full rounded-xl bg-slate-800/50 border border-white/10 text-white px-4 py-3 focus:border-cyan-500 focus:ring-cyan-500 transition min-h-[44px]">
                                 @for($w = 1; $w <= 12; $w++)
                                     <option value="{{ $w }}">{{ $w }} {{ $w === 1 ? 'week' : 'weeks' }}</option>
                                 @endfor
@@ -203,14 +218,14 @@
                         </div>
 
                         <!-- Actions -->
-                        <div class="flex gap-3">
-                            <button type="button" wire:click="closeModals"
-                                class="flex-1 px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition">
+                        <div class="flex flex-col-reverse sm:flex-row gap-3 pb-4 sm:pb-0">
+                            <button type="button" @click="open = false"
+                                class="flex-1 px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition min-h-[44px]">
                                 Cancel
                             </button>
                             <button type="submit"
-                                class="flex-1 px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
-                                <span wire:loading.remove>{{ $showCreateModal ? 'Create Schedule' : 'Save Changes' }}</span>
+                                class="flex-1 px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all min-h-[44px]">
+                                <span wire:loading.remove x-text="isEdit ? 'Save Changes' : 'Create Schedule'"></span>
                                 <span wire:loading>Saving...</span>
                             </button>
                         </div>
@@ -218,13 +233,19 @@
                 </div>
             </div>
         </div>
-    @endif
+    </div>
 
     <!-- Delete Confirmation Modal -->
-    @if($showDeleteModal)
+    <div x-data="{ open: false, scheduleId: null }"
+         x-show="open"
+         x-cloak
+         x-on:open-delete-schedule-modal.window="open = true; scheduleId = $event.detail.scheduleId; $wire.call('handleOpenDeleteModal', $event.detail.scheduleId)"
+         x-on:close-delete-modal.window="open = false"
+         x-on:keydown.escape.window="open = false"
+         class="relative z-50">
         <div class="fixed inset-0 z-50 overflow-y-auto" aria-modal="true">
             <div class="flex items-center justify-center min-h-screen px-4">
-                <div class="fixed inset-0 bg-black/70 transition-opacity" wire:click="closeModals"></div>
+                <div class="fixed inset-0 bg-black/70 transition-opacity" @click="open = false"></div>
 
                 <div class="relative w-full max-w-md p-6 glass-card">
                     <h3 class="text-xl font-bold text-red-400 mb-4">Delete Schedule?</h3>
@@ -233,7 +254,7 @@
                         Past events will be kept for history.
                     </p>
                     <div class="flex gap-3">
-                        <button wire:click="closeModals"
+                        <button @click="open = false"
                             class="flex-1 px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl hover:border-cyan-500/50 transition">
                             Cancel
                         </button>
@@ -246,20 +267,27 @@
                 </div>
             </div>
         </div>
-    @endif
+    </div>
 
     <!-- View Events Modal -->
-    @if($showEventsModal && $viewingSchedule)
+    <div x-data="{ open: false }"
+         x-show="open"
+         x-cloak
+         x-on:open-events-modal.window="open = true; $wire.call('handleOpenEventsModal', $event.detail.scheduleId)"
+         x-on:close-events-modal.window="open = false"
+         x-on:keydown.escape.window="open = false"
+         class="relative z-50">
+        @if($viewingSchedule)
         <div class="fixed inset-0 z-50 overflow-y-auto" aria-modal="true">
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20">
-                <div class="fixed inset-0 bg-black/70 transition-opacity" wire:click="closeModals"></div>
+                <div class="fixed inset-0 bg-black/70 transition-opacity" @click="open = false"></div>
 
                 <div class="relative w-full max-w-lg p-6 glass-card max-h-[80vh] overflow-y-auto">
                     <div class="top-accent-center"></div>
 
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-xl font-bold">{{ $viewingSchedule->title }}</h3>
-                        <button wire:click="closeModals" class="text-gray-400 hover:text-white">
+                        <button @click="open = false" class="text-gray-400 hover:text-white">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
@@ -299,6 +327,7 @@
                 </div>
             </div>
         </div>
-    @endif
+        @endif
+    </div>
 
 </div>

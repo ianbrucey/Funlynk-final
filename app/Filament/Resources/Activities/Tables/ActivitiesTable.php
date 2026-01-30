@@ -37,8 +37,13 @@ class ActivitiesTable
                 TextColumn::make('current_attendees')
                     ->numeric()
                     ->sortable(),
-                IconColumn::make('is_paid')
-                    ->boolean(),
+                TextColumn::make('payment_type')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'free' => 'success',
+                        'online' => 'info',
+                        'at_door' => 'warning',
+                    }),
                 TextColumn::make('price_cents')
                     ->numeric()
                     ->sortable(),

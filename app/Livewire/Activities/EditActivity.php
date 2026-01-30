@@ -27,7 +27,7 @@ class EditActivity extends Component
     public $start_time = '';
     public $end_time = '';
     public $max_attendees = '';
-    public $is_paid = false;
+    public $payment_type = 'free';
     public $price = '';
     public $is_public = true;
     public $requires_approval = false;
@@ -87,7 +87,7 @@ class EditActivity extends Component
         $this->end_time = $activity->end_time ? $activity->end_time->format('Y-m-d\TH:i') : '';
 
         $this->max_attendees = $activity->max_attendees;
-        $this->is_paid = $activity->is_paid;
+        $this->payment_type = $activity->payment_type ?? 'free';
         $this->price = $activity->price_cents ? $activity->price_cents / 100 : '';
         $this->is_public = $activity->is_public;
         $this->requires_approval = $activity->requires_approval;
@@ -117,7 +117,7 @@ class EditActivity extends Component
             'start_time' => 'required|date',
             'end_time' => 'nullable|date|after:start_time',
             'max_attendees' => 'nullable|integer|min:1',
-            'price' => 'required_if:is_paid,true|nullable|numeric|min:0.01',
+            'price' => 'required_unless:payment_type,free|nullable|numeric|min:0.01',
             'newImages.*' => 'nullable|image|max:2048',
             'status' => 'required|in:draft,published,active,completed,cancelled',
         ];
@@ -131,9 +131,9 @@ class EditActivity extends Component
         ];
     }
 
-    public function updatedIsPaid($value)
+    public function updatedPaymentType($value)
     {
-        if (!$value) {
+        if ($value === 'free') {
             $this->price = '';
         }
     }
@@ -176,8 +176,8 @@ class EditActivity extends Component
                 'start_time' => $this->start_time,
                 'end_time' => $this->end_time ?: null,
                 'max_attendees' => $this->max_attendees ?: null,
-                'is_paid' => $this->is_paid,
-                'price_cents' => $this->is_paid ? (int) round($this->price * 100) : null,
+                'payment_type' => $this->payment_type,
+                'price_cents' => $this->payment_type !== 'free' ? (int) round($this->price * 100) : null,
                 'is_public' => $this->is_public,
                 'requires_approval' => $this->requires_approval,
                 'status' => $this->status,

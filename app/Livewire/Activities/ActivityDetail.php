@@ -25,6 +25,7 @@ class ActivityDetail extends Component
     public $spotsRemaining = null;
     public $isGroupEvent = false;
     public $group = null;
+    public bool $isFollowingHost = false;
 
     // Refund window state
     public ?ActivityRefundWindow $activeRefundWindow = null;
@@ -96,8 +97,15 @@ class ActivityDetail extends Component
                 ->where('user_id', auth()->id())
                 ->first();
 
-            // Check for active refund window and pending response
+        // Check for active refund window and pending response
             $this->loadRefundWindowState();
+        }
+
+        // Check if following host
+        if (auth()->check() && auth()->id() !== $this->activity->host_id) {
+            $this->isFollowingHost = \App\Models\Follow::where('follower_id', auth()->id())
+                ->where('following_id', $this->activity->host_id)
+                ->exists();
         }
     }
 

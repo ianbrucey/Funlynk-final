@@ -83,6 +83,7 @@ class CreateGroupPost extends Component
 
         $this->showModal = false;
         $this->dispatch('postCreated');
+        $this->dispatch('close-create-group-post-modal');
         session()->flash('success', 'Post created successfully!');
     }
 

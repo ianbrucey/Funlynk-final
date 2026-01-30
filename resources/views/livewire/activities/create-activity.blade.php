@@ -208,19 +208,74 @@
                         @error('max_attendees') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
-                    {{-- Paid Toggle --}}
-                    <div class="flex items-center gap-3">
-                        <input 
-                            type="checkbox" 
-                            wire:model.live="is_paid"
-                            id="is_paid"
-                            class="w-5 h-5 rounded bg-slate-800/50 border-white/10 text-cyan-500 focus:ring-cyan-500/50"
-                        />
-                        <label for="is_paid" class="text-sm font-semibold text-gray-300">This is a paid activity</label>
+                    {{-- Payment Type Selection --}}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-3">Payment Type</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {{-- Free --}}
+                            <label class="relative cursor-pointer">
+                                <input type="radio" wire:model.live="payment_type" value="free" class="peer sr-only">
+                                <div class="p-4 rounded-xl border-2 transition-all
+                                    peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10
+                                    border-white/10 bg-slate-800/50 hover:border-white/20">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-white">Free</p>
+                                            <p class="text-xs text-gray-400">No payment required</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            {{-- Pay Online --}}
+                            <label class="relative cursor-pointer">
+                                <input type="radio" wire:model.live="payment_type" value="online" class="peer sr-only">
+                                <div class="p-4 rounded-xl border-2 transition-all
+                                    peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10
+                                    border-white/10 bg-slate-800/50 hover:border-white/20">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-white">Pay Online</p>
+                                            <p class="text-xs text-gray-400">Via Stripe checkout</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            {{-- Pay at Door --}}
+                            <label class="relative cursor-pointer">
+                                <input type="radio" wire:model.live="payment_type" value="at_door" class="peer sr-only">
+                                <div class="p-4 rounded-xl border-2 transition-all
+                                    peer-checked:border-cyan-500 peer-checked:bg-cyan-500/10
+                                    border-white/10 bg-slate-800/50 hover:border-white/20">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-white">Pay at Door</p>
+                                            <p class="text-xs text-gray-400">Collect at event</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
                     </div>
 
-                    {{-- Stripe Error --}}
-                    @if($stripeError)
+                    {{-- Stripe Error (only for online payments) --}}
+                    @if($stripeError && $payment_type === 'online')
                         <div class="p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-xl text-yellow-300">
                             <p class="font-semibold mb-2">{{ $stripeError }}</p>
                             <a href="{{ route('stripe.onboarding') }}" class="inline-block px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg text-white font-semibold hover:scale-105 transition-all text-sm">
@@ -229,8 +284,8 @@
                         </div>
                     @endif
 
-                    {{-- Price --}}
-                    @if ($is_paid)
+                    {{-- Price (for online and at_door) --}}
+                    @if ($payment_type !== 'free')
                         <div>
                             <label class="block text-sm font-semibold text-gray-300 mb-2">Price ($) *</label>
                             <div class="relative">
@@ -248,29 +303,40 @@
                             @error('price') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                         </div>
 
-                        {{-- Platform Fee Info --}}
-                        <div class="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
-                            <div class="flex items-start gap-3">
-                                <svg class="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <div class="text-sm">
-                                    <p class="text-cyan-300 font-semibold mb-1">Platform Fee: 8% ($3 minimum)</p>
-                                    <p class="text-gray-400 text-xs leading-relaxed">
-                                        FunLynk charges 8% per ticket (minimum $3) to cover payment processing, platform maintenance, and support.
-                                        <span class="text-cyan-400">You keep 92% of ticket sales over $37.50.</span>
-                                    </p>
-                                    <div class="mt-2 pt-2 border-t border-cyan-500/20">
-                                        <p class="text-gray-400 text-xs">
-                                            <span class="font-semibold text-white">Examples:</span><br>
-                                            • $10 ticket → You receive $7.00 (after $3 fee)<br>
-                                            • $50 ticket → You receive $46.00 (after $4 fee)<br>
-                                            • $100 ticket → You receive $92.00 (after $8 fee)
+                        {{-- Platform Fee Info (only for online payments) --}}
+                        @if($payment_type === 'online')
+                            <div class="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div class="text-sm">
+                                        <p class="text-cyan-300 font-semibold mb-1">Platform Fee: 8% ($3 minimum)</p>
+                                        <p class="text-gray-400 text-xs leading-relaxed">
+                                            FunLynk charges 8% per ticket (minimum $3) to cover payment processing, platform maintenance, and support.
+                                            <span class="text-cyan-400">You keep 92% of ticket sales over $37.50.</span>
                                         </p>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        @endif
+
+                        {{-- Pay at Door Info --}}
+                        @if($payment_type === 'at_door')
+                            <div class="p-4 bg-orange-500/10 border border-orange-500/30 rounded-xl">
+                                <div class="flex items-start gap-3">
+                                    <svg class="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div class="text-sm">
+                                        <p class="text-orange-300 font-semibold mb-1">Payment collected at event</p>
+                                        <p class="text-gray-400 text-xs leading-relaxed">
+                                            Attendees can RSVP immediately. You'll collect payment when they arrive.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>

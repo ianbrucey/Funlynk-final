@@ -239,6 +239,7 @@ class ManageRecurringSchedules extends Component
 
         // Dispatch event to refresh the settings page
         $this->dispatch('schedule-created');
+        $this->dispatch('close-schedule-modal');
 
         session()->flash('success', 'Recurring schedule created and events generated!');
     }
@@ -276,6 +277,7 @@ class ManageRecurringSchedules extends Component
 
         $this->closeModals();
         $this->resetForm();
+        $this->dispatch('close-schedule-modal');
         session()->flash('success', 'Schedule updated successfully!');
     }
 
@@ -298,6 +300,7 @@ class ManageRecurringSchedules extends Component
         $service->deleteSchedule($schedule, deleteFutureEvents: true);
 
         $this->closeModals();
+        $this->dispatch('close-delete-modal');
         session()->flash('success', 'Schedule and future events deleted.');
     }
 

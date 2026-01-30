@@ -7,7 +7,7 @@
             <p class="text-gray-400 mt-2">Start a new community around your interests</p>
         </div>
 
-        <div class="relative p-8 glass-card">
+        <div class="relative p-4 glass-card">
             <div class="top-accent-center"></div>
 
             @if (session()->has('message'))

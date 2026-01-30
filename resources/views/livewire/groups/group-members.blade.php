@@ -1,5 +1,5 @@
 <div class="min-h-screen">
-    <div class="container mx-auto px-6 py-8">
+    <div class="container mx-auto py-8">
         <div class="relative p-8 glass-card max-w-7xl mx-auto">
             <div class="top-accent-center"></div>
 

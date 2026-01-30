@@ -35,10 +35,11 @@ class RsvpButton extends Component
             return redirect()->route('login');
         }
 
-        // If activity is paid and user doesn't have RSVP, redirect to checkout
-        if ($this->activity->is_paid && !$this->userRsvp) {
+        // If activity requires online payment and user doesn't have RSVP, redirect to checkout
+        if ($this->activity->payment_type === 'online' && !$this->userRsvp) {
             return redirect()->route('events.checkout', $this->activity);
         }
+        // For 'at_door' and 'free', allow immediate RSVP (handled below)
 
         $this->loading = true;
 

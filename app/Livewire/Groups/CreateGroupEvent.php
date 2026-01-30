@@ -134,6 +134,7 @@ class CreateGroupEvent extends Component
 
         $this->showModal = false;
         $this->dispatch('eventCreated');
+        $this->dispatch('close-create-group-event-modal');
         session()->flash('success', 'Event created successfully!');
     }
 

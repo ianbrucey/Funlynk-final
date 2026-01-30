@@ -1,13 +1,18 @@
-<div>
-    @if($showModal)
+<div x-data="{ open: false }"
+     x-show="open"
+     x-cloak
+     x-on:open-create-group-event-modal.window="open = true; $wire.call('openModal')"
+     x-on:close-create-group-event-modal.window="open = false"
+     x-on:keydown.escape.window="open = false"
+     class="relative z-50">
+
     <div class="fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
             <!-- Background overlay -->
-            <div class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75" wire:click="closeModal"></div>
+            <div class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75" @click="open = false"></div>
 
             <!-- Modal content -->
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="relative inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform rounded-2xl shadow-xl glass-card sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div class="relative inline-block w-full max-w-lg px-6 pt-5 pb-4 overflow-hidden text-left align-middle transition-all transform rounded-2xl shadow-xl glass-card sm:p-6">
                 <div class="top-accent-center"></div>
 
                 {{-- Header with event icon --}}
@@ -184,7 +189,7 @@
 
                     {{-- Action buttons --}}
                     <div class="flex justify-end gap-3 pt-2">
-                        <button type="button" wire:click="closeModal" class="px-5 py-2 text-gray-400 hover:text-white transition text-sm">
+                        <button type="button" @click="open = false" class="px-5 py-2 text-gray-400 hover:text-white transition text-sm">
                             Cancel
                         </button>
                         <button type="submit" wire:loading.attr="disabled" class="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full font-semibold hover:scale-105 transition-all text-white text-sm disabled:opacity-50 disabled:cursor-wait disabled:hover:scale-100">
@@ -199,7 +204,4 @@
             </div>
         </div>
     </div>
-    @endif
 </div>
-
-

@@ -22,7 +22,7 @@ class CreateActivity extends Component
     public $start_time = '';
     public $end_time = '';
     public $max_attendees = '';
-    public $is_paid = false;
+    public $payment_type = 'free';
     public $price = '';
     public $is_public = true;
     public $requires_approval = false;
@@ -67,7 +67,7 @@ class CreateActivity extends Component
             'start_time' => 'required|date|after:now',
             'end_time' => 'nullable|date|after:start_time',
             'max_attendees' => 'nullable|integer|min:1',
-            'price' => 'required_if:is_paid,true|nullable|numeric|min:0.01',
+            'price' => 'required_unless:payment_type,free|nullable|numeric|min:0.01',
             'coverImage' => 'nullable|image|max:2048',
         ];
     }
@@ -90,14 +90,14 @@ class CreateActivity extends Component
         ];
     }
 
-    public function updatedIsPaid($value)
+    public function updatedPaymentType($value)
     {
-        if ($value && !$this->canCreatePaidActivity) {
-            $this->is_paid = false;
-            $this->stripeError = 'You must connect your Stripe account before creating paid activities.';
+        if ($value === 'online' && !$this->canCreatePaidActivity) {
+            $this->payment_type = 'free';
+            $this->stripeError = 'You must connect your Stripe account before creating paid online activities.';
         } else {
             $this->stripeError = '';
-            if (!$value) {
+            if ($value === 'free') {
                 $this->price = '';
             }
         }
@@ -129,8 +129,8 @@ class CreateActivity extends Component
                 'end_time' => $this->end_time ?: null,
                 'max_attendees' => $this->max_attendees ?: null,
                 'current_attendees' => 0,
-                'is_paid' => $this->is_paid,
-                'price_cents' => $this->is_paid ? (int) round($this->price * 100) : null,
+                'payment_type' => $this->payment_type,
+                'price_cents' => $this->payment_type !== 'free' ? (int) round($this->price * 100) : null,
                 'currency' => 'USD',
                 'is_public' => $this->is_public,
                 'requires_approval' => $this->requires_approval,
