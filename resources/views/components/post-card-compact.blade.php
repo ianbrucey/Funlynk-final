@@ -199,7 +199,7 @@
     {{-- Footer --}}
     <div class="flex justify-between items-center mt-3 text-[0.8rem]" style="color: #8a93b2;">
         <a href="{{ route('posts.chat', $post->id) }}" class="flex items-center gap-1.5 hover:text-cyan-400 transition">
-            💬 Discussion
+            💬 Group Chat
         </a>
         <span>{{ $post->reaction_count ?? 0 }} going</span>
     </div>

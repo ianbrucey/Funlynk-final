@@ -68,7 +68,7 @@
     </div>
 
     {{-- Full-Height Chat --}}
-    <div class="flex-1 px-4 py-6">
+    <div class="flex-1 py-6">
         <div class="h-full">
             <livewire:chat.chat-component :conversationable="$post" />
         </div>

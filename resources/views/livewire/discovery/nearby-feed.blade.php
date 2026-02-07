@@ -215,7 +215,7 @@
                         {{-- Footer --}}
                         <div class="flex justify-between items-center mt-3 text-[0.8rem]" style="color: #8a93b2;">
                             <a href="{{ route('events.show', $item['data']) }}" class="flex items-center gap-1.5 hover:text-cyan-400 transition">
-                                💬 Discussion
+                                💬 Group Chat
                             </a>
                             <span>
                                 @if($item['data']->max_attendees)

@@ -6,15 +6,6 @@
                 <h1 class="text-3xl md:text-4xl font-bold px-4">
                     <span class="gradient-text">Notifications</span>
                 </h1>
-                @if($unreadCount > 0)
-                    <button
-                        wire:click="markAllAsRead"
-                        class="px-3 py-2 md:px-4 md:py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all text-xs md:text-sm whitespace-nowrap flex-shrink-0">
-                        <span class="hidden sm:inline">Mark all as read</span>
-                        <span class="sm:hidden">Mark all</span>
-                        <span class="ml-1">({{ $unreadCount }})</span>
-                    </button>
-                @endif
             </div>
         </div>
 

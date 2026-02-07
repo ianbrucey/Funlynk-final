@@ -114,15 +114,10 @@ class GroupShow extends Component
         // For public groups, join directly
         try {
             $groupService->addMember($this->group, auth()->user());
-            $this->isMember = true;
-            $this->membersCount++;
-
-            // Get or create group conversation for chat access
-            $groupChatService = app(GroupChatService::class);
-            $conversation = $groupChatService->getOrCreateGroupChat($this->group);
-            $this->conversationId = $conversation->id;
-
             session()->flash('success', 'Successfully joined the group!');
+            
+            // Full page refresh to reload all components correctly
+            $this->redirect(route('groups.show', $this->group->slug), navigate: true);
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to join group: ' . $e->getMessage());
         }
@@ -151,10 +146,10 @@ class GroupShow extends Component
         if (auth()->check() && $this->isMember) {
             try {
                 app(\App\Services\GroupService::class)->removeMember($this->group, auth()->user());
-                $this->isMember = false;
-                $this->membersCount--;
-                $this->conversationId = null; // Clear chat access
                 session()->flash('success', 'Successfully left the group!');
+                
+                // Full page refresh to reload all components correctly
+                $this->redirect(route('groups.show', $this->group->slug), navigate: true);
             } catch (\Exception $e) {
                 session()->flash('error', 'Failed to leave group: ' . $e->getMessage());
             }

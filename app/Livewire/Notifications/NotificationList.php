@@ -10,22 +10,31 @@ class NotificationList extends Component
 {
     use WithPagination;
 
+    /**
+     * Auto-mark all notifications as read when page loads (Facebook-style behavior)
+     */
+    public function mount(): void
+    {
+        if (auth()->check()) {
+            Notification::where('user_id', auth()->id())
+                ->where('is_read', false)
+                ->update([
+                    'is_read' => true,
+                    'read_at' => now(),
+                ]);
+        }
+    }
+
     public function markAsRead(string $notificationId): void
     {
         $notification = Notification::find($notificationId);
 
         if ($notification && $notification->user_id === auth()->id()) {
-            $notification->update(['read_at' => now()]);
+            $notification->update([
+                'is_read' => true,
+                'read_at' => now(),
+            ]);
         }
-    }
-
-    public function markAllAsRead(): void
-    {
-        Notification::where('user_id', auth()->id())
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
-
-        $this->resetPage();
     }
 
     public function handleNotificationClick(string $notificationId, string $url = ''): void

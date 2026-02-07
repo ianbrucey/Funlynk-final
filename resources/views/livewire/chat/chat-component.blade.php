@@ -1,7 +1,7 @@
 <div class="flex flex-col h-full bg-slate-900/50 backdrop-blur-lg border border-white/10 rounded-2xl overflow-hidden">
     {{-- Header (conditionally shown) --}}
     @if($showHeader)
-    <div class="px-6 py-4 border-b border-white/10 bg-gradient-to-r from-slate-800/50 to-slate-900/50">
+    <div class="px-3 py-4 border-b border-white/10 bg-gradient-to-r from-slate-800/50 to-slate-900/50">
         <div class="flex items-center justify-between">
             @if($conversation && $conversation->type === 'private')
                 {{-- DM Header: Show other user --}}
@@ -20,7 +20,7 @@
             @else
                 {{-- Group/Public Chat Header --}}
                 <div>
-                    <h3 class="text-lg font-semibold text-white">Chat</h3>
+                    <h3 class="text-lg font-semibold text-white">Group Chat</h3>
                     <p class="text-sm text-gray-400">{{ $conversation ? $conversation->participants->count() : 0 }} participants</p>
                 </div>
             @endif
@@ -35,11 +35,22 @@
 
     {{-- Messages Container --}}
     <div
-        class="flex-1 overflow-y-auto p-6 space-y-4"
+        class="flex-1 overflow-y-auto p-2 space-y-4 relative"
         x-data="{ scrollToBottom() { this.$el.scrollTop = this.$el.scrollHeight; } }"
         x-init="scrollToBottom()"
         @message-received.window="scrollToBottom()"
     >
+        {{-- Loading Overlay for sendMessage --}}
+        <div wire:loading.flex wire:target="sendMessage" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm z-10 items-center justify-center">
+            <div class="flex flex-col items-center gap-3">
+                <svg class="animate-spin h-8 w-8 text-pink-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-sm text-gray-400">Sending...</span>
+            </div>
+        </div>
+
         @forelse($messages as $message)
             <div class="flex {{ $message['is_mine'] ? 'justify-end' : 'justify-start' }}">
                 <div class="flex gap-3 max-w-[70%] {{ $message['is_mine'] ? 'flex-row-reverse' : 'flex-row' }}">
@@ -145,10 +156,18 @@
                 wire:click="sendMessage"
                 x-on:click="$nextTick(() => document.getElementById('chat-message-input').value = '')"
                 wire:loading.attr="disabled"
-                class="flex-shrink-0 p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
+                wire:loading.class="opacity-50 cursor-wait"
+                wire:target="sendMessage"
+                class="flex-shrink-0 p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white hover:scale-105 transition-transform disabled:hover:scale-100"
             >
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {{-- Send Icon (hidden when loading) --}}
+                <svg wire:loading.remove wire:target="sendMessage" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                {{-- Spinner (shown when loading) --}}
+                <svg wire:loading wire:target="sendMessage" class="animate-spin w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
             </button>
         </div>
