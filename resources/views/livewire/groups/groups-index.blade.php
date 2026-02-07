@@ -49,36 +49,63 @@
             @endauth
 
             <!-- Search and Filters -->
-            <div class="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
-                <!-- Search -->
-                <div class="relative">
-                    <input wire:model.live.debounce.300ms="search" type="text"
-                        placeholder="{{ $tab === 'my-groups' ? 'Search your groups...' : 'Search groups to discover...' }}"
-                        class="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 focus:outline-none transition text-white text-sm sm:text-base placeholder:text-gray-500">
-                    <svg class="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="mb-4 sm:mb-6">
+                <!-- Search Bar (Full Width) -->
+                <div class="relative mb-3">
+                    <svg class="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
+                    <input
+                        wire:model="search"
+                        wire:keydown.enter="$refresh"
+                        type="text"
+                        placeholder="{{ $tab === 'my-groups' ? 'Search your groups or #tags...' : 'Search groups or #tags...' }}"
+                        class="w-full pl-10 sm:pl-12 pr-10 py-3 sm:py-3.5 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 focus:outline-none transition text-white text-sm sm:text-base placeholder:text-gray-500"
+                    >
+                    @if($search)
+                        <button
+                            wire:click="$set('search', '')"
+                            type="button"
+                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    @endif
                 </div>
 
-                <!-- Filters Row -->
-                <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center">
-                    <!-- Privacy Filter -->
-                    <select wire:model.live="privacyFilter" class="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-slate-800/50 border border-white/10 rounded-xl focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 focus:outline-none transition text-white text-sm sm:text-base">
-                        <option value="all">All Groups</option>
-                        <option value="public">Public Only</option>
-                        <option value="private">Private Only</option>
+                <!-- Search Button (Full Width) -->
+                <button
+                    wire:click="$refresh"
+                    wire:loading.attr="disabled"
+                    wire:loading.class="opacity-50 cursor-wait"
+                    type="button"
+                    class="w-full mb-3 py-2.5 sm:py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold hover:scale-[1.02] transition-all disabled:hover:scale-100 flex items-center justify-center gap-2 text-sm sm:text-base"
+                >
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" wire:loading.remove fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <span wire:loading.remove>Search</span>
+                    <svg wire:loading class="animate-spin h-4 w-4 sm:h-5 sm:w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span wire:loading>Searching...</span>
+                </button>
+
+                <!-- Compact Filter Pills -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <select wire:model.live="privacyFilter" class="px-3 py-1.5 bg-slate-800/50 border border-white/10 rounded-lg focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 focus:outline-none transition text-white text-xs sm:text-sm">
+                        <option value="all">All Types</option>
+                        <option value="public">Public</option>
+                        <option value="private">Private</option>
                     </select>
 
-                    <!-- Tags -->
-                    @if($this->popularTags->count() > 0)
-                        <div class="flex flex-wrap gap-2 items-center -mx-1 px-1">
-                            @foreach($this->popularTags as $tag)
-                                <button wire:click="toggleTag('{{ $tag->id }}')"
-                                    class="px-3 py-1.5 sm:py-1 rounded-full text-xs sm:text-sm transition active:scale-95 {{ in_array($tag->id, $selectedTags) ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg' : 'bg-slate-800/50 border border-white/10 hover:bg-white/10 text-gray-300' }}">
-                                    #{{ $tag->name }}
-                                </button>
-                            @endforeach
-                        </div>
+                    @if($search)
+                        <span class="text-xs sm:text-sm text-gray-400">
+                            Results for "<span class="text-cyan-400">{{ $search }}</span>"
+                        </span>
                     @endif
                 </div>
             </div>
@@ -188,7 +215,7 @@
                     @empty
                         <div class="col-span-full text-center py-12 sm:py-16">
                             <div class="text-gray-500 text-5xl sm:text-6xl mb-4">🎉</div>
-                            @if($search || $privacyFilter !== 'all' || !empty($selectedTags))
+                            @if($search || $privacyFilter !== 'all')
                                 <p class="text-gray-400 text-sm sm:text-base">No groups found matching your criteria.</p>
                             @else
                                 <p class="text-gray-400 text-sm sm:text-base">You've joined all available groups!</p>

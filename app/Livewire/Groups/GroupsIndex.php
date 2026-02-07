@@ -3,10 +3,8 @@
 namespace App\Livewire\Groups;
 
 use App\Models\Group;
-use App\Models\Tag;
 use App\Services\GroupService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
@@ -26,9 +24,6 @@ class GroupsIndex extends Component
     #[Url(except: 'all')]
     public string $privacyFilter = 'all'; // 'public', 'private', 'all'
 
-    #[Url(except: [])]
-    public array $selectedTags = [];
-
     protected GroupService $groupService;
 
     public function boot(GroupService $groupService): void
@@ -42,24 +37,31 @@ class GroupsIndex extends Component
         $this->resetPage();
     }
 
-    public function updatedSearch(): void
-    {
-        $this->resetPage();
-    }
-
     public function updatedPrivacyFilter(): void
     {
         $this->resetPage();
     }
 
-    public function toggleTag(string $tagId): void
+    /**
+     * Parse search string to extract text query and #tags
+     * Example: "basketball #sports #fitness" returns ['query' => 'basketball', 'tags' => ['sports', 'fitness']]
+     */
+    protected function parseSearch(): array
     {
-        if (in_array($tagId, $this->selectedTags)) {
-            $this->selectedTags = array_values(array_diff($this->selectedTags, [$tagId]));
-        } else {
-            $this->selectedTags[] = $tagId;
+        $search = trim($this->search);
+
+        if (empty($search)) {
+            return ['query' => '', 'tags' => []];
         }
-        $this->resetPage();
+
+        // Extract hashtags
+        preg_match_all('/#(\w+)/', $search, $matches);
+        $tags = $matches[1] ?? [];
+
+        // Remove hashtags from search to get the text query
+        $query = trim(preg_replace('/#\w+/', '', $search));
+
+        return ['query' => $query, 'tags' => $tags];
     }
 
     /**
@@ -89,20 +91,6 @@ class GroupsIndex extends Component
     }
 
     /**
-     * Get popular tags (top 20 by usage count)
-     */
-    #[Computed]
-    public function popularTags(): Collection
-    {
-        return Tag::select('tags.id', 'tags.name')
-            ->join('group_tag', 'tags.id', '=', 'group_tag.tag_id')
-            ->groupBy('tags.id', 'tags.name')
-            ->orderByRaw('COUNT(*) DESC')
-            ->limit(20)
-            ->get();
-    }
-
-    /**
      * Get paginated groups for My Groups tab
      */
     #[Computed]
@@ -116,24 +104,27 @@ class GroupsIndex extends Component
             ->withCount('members')
             ->with('tags');
 
-        // Apply search filter
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('groups.name', 'ilike', '%' . $this->search . '%')
-                    ->orWhere('groups.description', 'ilike', '%' . $this->search . '%');
+        // Parse search for text query and #tags
+        $parsed = $this->parseSearch();
+
+        // Apply text search filter
+        if ($parsed['query']) {
+            $query->where(function ($q) use ($parsed) {
+                $q->where('groups.name', 'ilike', '%' . $parsed['query'] . '%')
+                    ->orWhere('groups.description', 'ilike', '%' . $parsed['query'] . '%');
+            });
+        }
+
+        // Apply tag filter from #hashtags in search
+        if (!empty($parsed['tags'])) {
+            $query->whereHas('tags', function ($q) use ($parsed) {
+                $q->whereIn('tags.name', $parsed['tags']);
             });
         }
 
         // Apply privacy filter
         if ($this->privacyFilter !== 'all') {
             $query->where('groups.privacy', $this->privacyFilter);
-        }
-
-        // Apply tag filter
-        if (!empty($this->selectedTags)) {
-            $query->whereHas('tags', function ($q) {
-                $q->whereIn('tags.id', $this->selectedTags);
-            });
         }
 
         return $query->orderBy('groups.name')->paginate(12);
@@ -154,24 +145,27 @@ class GroupsIndex extends Component
             $query->whereNotIn('id', $this->userGroupIds);
         }
 
-        // Apply search filter
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('name', 'ilike', '%' . $this->search . '%')
-                    ->orWhere('description', 'ilike', '%' . $this->search . '%');
+        // Parse search for text query and #tags
+        $parsed = $this->parseSearch();
+
+        // Apply text search filter
+        if ($parsed['query']) {
+            $query->where(function ($q) use ($parsed) {
+                $q->where('name', 'ilike', '%' . $parsed['query'] . '%')
+                    ->orWhere('description', 'ilike', '%' . $parsed['query'] . '%');
+            });
+        }
+
+        // Apply tag filter from #hashtags in search
+        if (!empty($parsed['tags'])) {
+            $query->whereHas('tags', function ($q) use ($parsed) {
+                $q->whereIn('tags.name', $parsed['tags']);
             });
         }
 
         // Apply privacy filter
         if ($this->privacyFilter !== 'all') {
             $query->where('privacy', $this->privacyFilter);
-        }
-
-        // Apply tag filter
-        if (!empty($this->selectedTags)) {
-            $query->whereHas('tags', function ($q) {
-                $q->whereIn('tags.id', $this->selectedTags);
-            });
         }
 
         return $query->orderByDesc('members_count')->paginate(12);
