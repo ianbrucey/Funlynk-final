@@ -119,15 +119,77 @@
     </div>
 
     {{-- Card Actions --}}
+    @php
+        $isOwner = auth()->check() && auth()->id() === $post->user_id;
+        $hasReacted = auth()->check() && $post->reactions->where('user_id', auth()->id())->where('reaction_type', 'im_down')->isNotEmpty();
+        $reactionCount = $post->reactions->where('reaction_type', 'im_down')->count();
+    @endphp
     <div class="grid gap-2.5 mt-3.5" style="grid-template-columns: 1fr auto;" onclick="event.stopPropagation()">
-        <livewire:posts.reaction-button
-            :post="$post"
-            size="sm"
-            :full-width="true"
-            :key="'reaction-'.$post->id" />
+        {{-- Static Reaction Button (no nested Livewire component) --}}
+        <div
+            x-data="{
+                hasReacted: {{ $hasReacted ? 'true' : 'false' }},
+                reactionCount: {{ $reactionCount }},
+                isOwner: {{ $isOwner ? 'true' : 'false' }},
+                loading: false,
+                async react() {
+                    if (this.isOwner || this.loading) return;
+                    this.loading = true;
+
+                    // Optimistic update
+                    if (this.hasReacted) {
+                        this.hasReacted = false;
+                        this.reactionCount = Math.max(0, this.reactionCount - 1);
+                    } else {
+                        this.hasReacted = true;
+                        this.reactionCount++;
+                    }
+
+                    // Dispatch to parent Livewire component
+                    $wire.dispatch('react-to-post', { postId: '{{ $post->id }}', reactionType: 'im_down' });
+
+                    // Reset loading after a short delay
+                    setTimeout(() => this.loading = false, 500);
+                }
+            }"
+        >
+            <button
+                @click.stop="react()"
+                :disabled="isOwner || loading"
+                :class="{
+                    'bg-gradient-to-r from-amber-500 to-orange-500 cursor-default': isOwner,
+                    'bg-gradient-to-r from-pink-600 to-purple-600 ring-2 ring-pink-400': !isOwner && hasReacted,
+                    'bg-gradient-to-r from-pink-500 to-purple-500 hover:scale-105': !isOwner && !hasReacted,
+                    'opacity-75 cursor-wait': loading
+                }"
+                class="w-full px-3 py-2 text-xs rounded-lg font-semibold transition-all"
+            >
+                <span class="flex items-center justify-center gap-2">
+                    {{-- Loading spinner --}}
+                    <span x-show="loading" class="inline-block">
+                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+
+                    {{-- Button content --}}
+                    <span x-show="!loading">
+                        <template x-if="isOwner">
+                            <span>👑 You're Hosting</span>
+                        </template>
+                        <template x-if="!isOwner">
+                            <span x-text="hasReacted ? '✓ I\'m down' : '👍 I\'m down'"></span>
+                        </template>
+                    </span>
+
+                    <span x-show="reactionCount > 0" class="bg-white/20 px-2 py-0.5 rounded-full text-xs" x-text="reactionCount"></span>
+                </span>
+            </button>
+        </div>
 
         <button
-            wire:click.stop="$dispatch('openInviteModal', { postId: '{{ $post->id }}' })"
+            onclick="event.stopPropagation(); Livewire.dispatch('openInviteModal', { postId: '{{ $post->id }}' })"
             class="px-3.5 py-3 rounded-xl cursor-pointer transition-all hover:bg-white/5"
             style="background: transparent; border: 1px solid rgba(255,255,255,0.08); color: #eef1ff;">
             Invite

@@ -1,4 +1,4 @@
-<div class="min-h-screen py-8">
+<div class="min-h-screen">
     <div class="container mx-auto ">
 
         
@@ -11,8 +11,8 @@
 
             <div class="relative p-4 glass-card lg:rounded-xl">
 
-                <div class=" lg:px-0 mb-6">
-                {{-- Search Bar --}}
+                {{-- Search Bar (Full Width) --}}
+                <div class="mb-4">
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -21,13 +21,15 @@
                         </div>
                         <input
                             type="text"
-                            wire:model.live.debounce.300ms="searchQuery"
+                            wire:model="searchQuery"
+                            wire:keydown.enter="search"
                             placeholder="👀 search for your thing :)"
                             class="w-full pl-12 pr-12 py-4 bg-slate-800/50 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50 transition text-lg"
                         >
                         @if($searchQuery)
                             <button
                                 wire:click="clearSearch"
+                                type="button"
                                 class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition"
                             >
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,15 +38,35 @@
                             </button>
                         @endif
                     </div>
-                    @if($searchQuery)
-                        <p class="mt-2 text-sm text-gray-400">
-                            Searching for "<span class="text-cyan-400">{{ $searchQuery }}</span>"
-                        </p>
-                    @endif
                 </div>
 
-                <div class="grid grid-cols-3 gap-4">
+                {{-- Search Button (Full Width) --}}
+                <button
+                    wire:click="search"
+                    wire:loading.attr="disabled"
+                    wire:loading.class="opacity-50 cursor-wait"
+                    type="button"
+                    class="w-full mb-4 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-[1.02] transition-all disabled:hover:scale-100 flex items-center justify-center gap-2"
+                >
+                    <svg class="w-5 h-5" wire:loading.remove wire:target="search" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <span wire:loading.remove wire:target="search">Search</span>
+                    <svg wire:loading wire:target="search" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span wire:loading wire:target="search">Searching...</span>
+                </button>
 
+                @if($searchQuery)
+                    <p class="mb-4 text-sm text-gray-400">
+                        Showing results for "<span class="text-cyan-400">{{ $searchQuery }}</span>"
+                    </p>
+                @endif
+
+                {{-- Filters Row --}}
+                <div class="grid grid-cols-3 gap-3">
                     {{-- Content Type Filter --}}
                     <div>
                         <label class="block text-xs font-semibold text-gray-400 mb-1">Show</label>
@@ -58,7 +80,7 @@
                     {{-- Distance Filter --}}
                     <div>
                         <label class="block text-xs font-semibold text-gray-400 mb-1">
-                            Distance: <span class="text-cyan-400">{{ $radius }} km</span>
+                            Distance: <span class="text-cyan-400">{{ $radius }}km</span>
                         </label>
                         <input
                             type="range"
@@ -80,7 +102,6 @@
                             <option value="month">This Month</option>
                         </select>
                     </div>
-
                 </div>
             </div>
         </div>

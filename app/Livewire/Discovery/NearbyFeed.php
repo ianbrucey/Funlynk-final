@@ -3,6 +3,7 @@
 namespace App\Livewire\Discovery;
 
 use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -37,7 +38,10 @@ class NearbyFeed extends Component
         $this->loadItems();
     }
 
-    public function updatedSearchQuery()
+    /**
+     * Button-triggered search - called when user clicks Search button or presses Enter
+     */
+    public function search(): void
     {
         $this->resetFeed();
     }
@@ -57,7 +61,10 @@ class NearbyFeed extends Component
         $this->resetFeed();
     }
 
-    public function clearSearch()
+    /**
+     * Clear search and reload default results
+     */
+    public function clearSearch(): void
     {
         $this->searchQuery = '';
         $this->resetFeed();
@@ -112,6 +119,15 @@ class NearbyFeed extends Component
         $this->totalItems = $result['total'];
     }
 
+    /**
+     * Handle reaction from Alpine.js button (dispatched via Livewire.dispatch)
+     */
+    #[On('react-to-post')]
+    public function handleReactToPost(string $postId, string $reactionType): void
+    {
+        $this->reactToPost($postId, $reactionType);
+    }
+
     public function reactToPost($postId, $reactionType)
     {
         try {
@@ -124,8 +140,8 @@ class NearbyFeed extends Component
             // Dispatch success event
             $this->dispatch('post-reacted', postId: $postId, reactionType: $reactionType, action: $result['action']);
 
-            // Update the specific post in the items array instead of reloading everything
-            $this->updatePostInItems($postId);
+            // Note: We don't update items array here to avoid re-render issues
+            // The Alpine.js component handles optimistic UI updates
         } catch (\Exception $e) {
             Log::error('reactToPost failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             // Handle error (user not authenticated, invalid reaction type, etc.)
