@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
         $middleware->alias([
             'onboarding.complete' => \App\Http\Middleware\EnsureOnboardingComplete::class,
             'capture.intent' => \App\Http\Middleware\CaptureIntendedAction::class,

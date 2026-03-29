@@ -1,58 +1,39 @@
 #!/bin/bash
-# FunLynk Deployment Script
-# This script handles the complete deployment process including database seeding
-
-set -e  # Exit on error
+set -e
 
 echo "🚀 Starting FunLynk deployment..."
 
-# Install PHP dependencies
-echo "📦 Installing PHP dependencies..."
-composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+# Pull the latest code (uncomment if deploying via git on server)
+# git pull origin main
 
-# Install Node dependencies and build assets
-echo "📦 Installing Node dependencies..."
-npm ci --audit false
+echo "📦 Building and starting Docker containers..."
+docker compose up -d --build
 
-echo "🏗️  Building frontend assets..."
-npm run build
+echo "⏳ Waiting for services to initialize (5 seconds)..."
+sleep 5
+
+echo "🛠 Running post-deployment tasks inside the app container..."
 
 # Run database migrations
-echo "🗄️  Running database migrations..."
-php artisan migrate --force
+echo "-> Running database migrations..."
+docker compose exec -T app php artisan migrate --force
 
-# Seed location data BEFORE indexing
-echo "🌍 Seeding location data..."
-php artisan db:seed --class=LocationSeeder --force
+# Cache optimization exactly suited for Laravel production
+echo "-> Caching configuration..."
+docker compose exec -T app php artisan config:cache
 
-# Clear and cache config/routes/views
-echo "🔧 Caching configuration..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+echo "-> Caching routes..."
+docker compose exec -T app php artisan route:cache
 
-# Create Meilisearch indexes
-echo "🔍 Creating Meilisearch indexes..."
-php artisan scout:index posts_index
-php artisan scout:index activities_index
-php artisan scout:index users_index
-php artisan scout:index locations_index
+echo "-> Caching views..."
+docker compose exec -T app php artisan view:cache
 
-# Sync index settings (filterable/sortable attributes)
-echo "⚙️  Syncing Meilisearch index settings..."
-php artisan scout:sync-index-settings
+# Restart Horizon workers to pick up new code
+echo "-> Restarting Horizon queue workers..."
+docker compose exec -T app php artisan horizon:terminate
 
-# Index search data (Meilisearch) - NOW data exists
-echo "📇 Indexing search data..."
-php artisan scout:import "App\Models\Post"
-php artisan scout:import "App\Models\Activity"
-php artisan scout:import "App\Models\User"
-php artisan scout:import "App\Models\Location"
+# Reload Octane (RoadRunner) to load new code into memory
+echo "-> Reloading Octane..."
+docker compose exec -T app php artisan octane:reload --server=roadrunner
 
-# Restart queue workers (if using Laravel Cloud queues)
-# Uncomment if you're using queue workers
-# echo "♻️  Restarting queue workers..."
-# php artisan queue:restart
-
-echo "✅ Deployment complete!"
-
+echo "✅ Deployment complete! The FunLynk app is up and running."

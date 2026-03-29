@@ -19,6 +19,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Illuminate\Support\Facades\URL::forceScheme('https');
+
         // Note: Event listeners are auto-discovered in Laravel 12
         // No manual registration needed - listeners in app/Listeners/ are automatically wired
     }

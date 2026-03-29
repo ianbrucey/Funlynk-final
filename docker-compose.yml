@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+      - reverb
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=production
+      - DB_HOST=pgsql
+      - REDIS_HOST=redis
+      - MEILISEARCH_HOST=http://meilisearch:7700
+    depends_on:
+      - pgsql
+      - redis
+
+  reverb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=pgsql
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+
+  horizon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["php", "artisan", "horizon"]
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=pgsql
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+      - pgsql
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["php", "artisan", "schedule:work"]
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=pgsql
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+      - pgsql
+
+  pgsql:
+    image: postgis/postgis:15-3.3-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-funlynk}
+      POSTGRES_USER: ${DB_USERNAME:-funlynk}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - pgsql_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --requirepass "${REDIS_PASSWORD:-funlynk_redis_2025}"
+    volumes:
+      - redis_data:/data
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_KEY:-funlynk_meili_master_key_2025}
+      MEILI_NO_ANALYTICS: 'true'
+    volumes:
+      - meilisearch_data:/meili_data
+
+volumes:
+  pgsql_data:
+  redis_data:
+  meilisearch_data:
+  caddy_data:
+  caddy_config:
