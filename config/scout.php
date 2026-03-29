@@ -139,6 +139,9 @@ return [
     'meilisearch' => [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
+        'client_options' => [
+            'timeout' => 120,
+        ],
         'index-settings' => [
             'posts_index' => [
                 'filterableAttributes' => ['status', 'category', 'user_id', '_geo'],
