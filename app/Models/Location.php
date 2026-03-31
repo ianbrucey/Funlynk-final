@@ -28,6 +28,11 @@ class Location extends Model
             return 30301;
     }
 
+    public function searchableChunkSize(): int
+    {
+        return 100;
+    }
+
 
     /**
      * Get the indexable data array for the model.

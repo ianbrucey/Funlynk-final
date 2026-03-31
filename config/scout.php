@@ -140,7 +140,7 @@ return [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
         'client_options' => [
-            'timeout' => 120,
+            'timeout' => 300,
         ],
         'index-settings' => [
             'posts_index' => [
