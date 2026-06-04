@@ -4,13 +4,16 @@ funlynk.com, www.funlynk.com {
     reverse_proxy app:8000
 }
 
-# The reverse proxy for WebSocket connections to Laravel Reverb
-ws.178.156.193.56.nip.io {
+ws.funlynk.com {
     reverse_proxy reverb:8080
 }
 
+storage.funlynk.com {
+    reverse_proxy minio:9000
+}
+
 # Fallback for IP access (useful for testing)
-http://178.156.193.56 {
+http://5.78.207.173 {
     reverse_proxy app:8000
 }
 

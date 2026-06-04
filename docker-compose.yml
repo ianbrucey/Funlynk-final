@@ -26,7 +26,6 @@ services:
       - APP_ENV=production
       - DB_HOST=pgsql
       - REDIS_HOST=redis
-      - MEILISEARCH_HOST=http://meilisearch:7700
     depends_on:
       - pgsql
       - redis
@@ -92,18 +91,22 @@ services:
     volumes:
       - redis_data:/data
 
-  meilisearch:
-    image: getmeili/meilisearch:v1.6
+  minio:
+    image: minio/minio:latest
     restart: unless-stopped
+    command: server /data --console-address ":9001"
     environment:
-      MEILI_MASTER_KEY: ${MEILISEARCH_KEY:-funlynk_meili_master_key_2025}
-      MEILI_NO_ANALYTICS: 'true'
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-funlynk}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-funlynk_minio_password_2025}
     volumes:
-      - meilisearch_data:/meili_data
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
 
 volumes:
   pgsql_data:
   redis_data:
-  meilisearch_data:
+  minio_data:
   caddy_data:
   caddy_config:
