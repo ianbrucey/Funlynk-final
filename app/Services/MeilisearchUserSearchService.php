@@ -35,8 +35,8 @@ class MeilisearchUserSearchService
         // Geo-proximity: filter and order by distance when available
         if ($radius && $currentUser && $currentUser->location_coordinates) {
             $userLocation = $currentUser->location_coordinates;
-            $builder->whereDistance('location_coordinates', $userLocation, '<=', $radius * 1000)
-                ->orderByDistance('location_coordinates', $userLocation, 'asc');
+            $builder->whereDistanceSphere('location_coordinates', $userLocation, '<=', $radius * 1000)
+                ->orderByDistanceSphere('location_coordinates', $userLocation, 'asc');
         } else {
             $builder->orderByDesc('follower_count');
         }

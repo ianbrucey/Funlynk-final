@@ -51,14 +51,14 @@ class DatabaseSearchService implements SearchServiceInterface
             $userLocation = new Point($user->latitude, $user->longitude, 4326);
             // Posts are capped at 10km
             $maxRadius = min($radius, 10) * 1000; // Convert to meters
-            $searchQuery->whereDistance('location_coordinates', $userLocation, '<=', $maxRadius);
+            $searchQuery->whereDistanceSphere('location_coordinates', $userLocation, '<=', $maxRadius);
         }
 
         // Add text search
         $searchQuery->where(function ($q) use ($query) {
             $q->where('title', 'ILIKE', "%{$query}%")
                 ->orWhere('description', 'ILIKE', "%{$query}%")
-                ->orWhereRaw("tags::text ILIKE ?", ["%{$query}%"]);
+                ->orWhereRaw('tags::text ILIKE ?', ["%{$query}%"]);
         });
 
         return $searchQuery
@@ -91,7 +91,7 @@ class DatabaseSearchService implements SearchServiceInterface
         if ($radius && $user->latitude && $user->longitude) {
             $userLocation = new Point($user->latitude, $user->longitude, 4326);
             $radiusMeters = $radius * 1000; // Convert to meters
-            $searchQuery->whereDistance('location_coordinates', $userLocation, '<=', $radiusMeters);
+            $searchQuery->whereDistanceSphere('location_coordinates', $userLocation, '<=', $radiusMeters);
         }
 
         return $searchQuery
@@ -104,4 +104,3 @@ class DatabaseSearchService implements SearchServiceInterface
             ]);
     }
 }
-

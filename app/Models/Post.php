@@ -46,7 +46,7 @@ class Post extends Model
             'pinned_at' => 'datetime',
         ];
     }
-    
+
     /**
      * Get the display author (User or Group)
      */
@@ -90,7 +90,7 @@ class Post extends Model
     {
         $point = new Point($lat, $lng, 4326);
 
-        return $query->whereDistance('location_coordinates', $point, '<=', $radiusMeters);
+        return $query->whereDistanceSphere('location_coordinates', $point, '<=', $radiusMeters);
     }
 
     /**

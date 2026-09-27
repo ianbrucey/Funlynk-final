@@ -95,13 +95,13 @@ class FeedService
 
         if ($userLocation instanceof Point) {
             $posts = Post::active()
-                ->whereDistance('location_coordinates', $userLocation, '<=', 10000)
+                ->whereDistanceSphere('location_coordinates', $userLocation, '<=', 10000)
                 ->get();
 
             $events = Activity::query()
                 ->where('status', 'published')
                 ->where('start_time', '>', now())
-                ->whereDistance('location_coordinates', $userLocation, '<=', 50000)
+                ->whereDistanceSphere('location_coordinates', $userLocation, '<=', 50000)
                 ->get();
         } else {
             // Fallback: no spatial filter
@@ -222,7 +222,7 @@ class FeedService
         $query = Post::query()
             ->with('user')
             ->where('status', 'active')
-            ->whereDistance('location_coordinates', $userLocation, '<=', $radiusKm * 1000);
+            ->whereDistanceSphere('location_coordinates', $userLocation, '<=', $radiusKm * 1000);
 
         $query->when($timeFilter !== 'all', function ($q) use ($timeFilter) {
             $now = now();
@@ -247,7 +247,7 @@ class FeedService
         // on non-aggregated expressions inside a count() query.
         $total = (clone $query)->toBase()->count();
 
-        $posts = $query->orderByDistance('location_coordinates', $userLocation, 'asc')
+        $posts = $query->orderByDistanceSphere('location_coordinates', $userLocation, 'asc')
             ->skip($offset)
             ->take($perPage)
             ->get();
@@ -275,7 +275,7 @@ class FeedService
             ->with('host')
             ->where('status', 'published')
             ->where('start_time', '>', now())
-            ->whereDistance('location_coordinates', $userLocation, '<=', $radiusKm * 1000);
+            ->whereDistanceSphere('location_coordinates', $userLocation, '<=', $radiusKm * 1000);
 
         $query->when($timeFilter !== 'all', function ($q) use ($timeFilter) {
             $now = now();
@@ -300,7 +300,7 @@ class FeedService
         // on non-aggregated expressions inside a count() query.
         $total = (clone $query)->toBase()->count();
 
-        $events = $query->orderByDistance('location_coordinates', $userLocation, 'asc')
+        $events = $query->orderByDistanceSphere('location_coordinates', $userLocation, 'asc')
             ->skip($offset)
             ->take($perPage)
             ->get();

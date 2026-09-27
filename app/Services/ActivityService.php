@@ -17,16 +17,14 @@ class ActivityService
 {
     /**
      * Create an activity from a Post (Post-to-Event conversion)
-     * 
-     * @param Post $post
-     * @param User|null $host Override host (defaults to post creator)
-     * @return Activity
+     *
+     * @param  User|null  $host  Override host (defaults to post creator)
      */
     public function createFromPost(Post $post, ?User $host = null): Activity
     {
         // Check if conversion already exists (idempotency)
         $existingConversion = PostConversion::where('post_id', $post->id)->first();
-        
+
         if ($existingConversion && $existingConversion->event_id) {
             return Activity::find($existingConversion->event_id);
         }
@@ -72,14 +70,12 @@ class ActivityService
 
     /**
      * Validate activity capacity
-     * 
-     * @param Activity $activity
-     * @param int $additionalAttendees
+     *
      * @return array ['valid' => bool, 'message' => string|null]
      */
     public function validateCapacity(Activity $activity, int $additionalAttendees = 1): array
     {
-        if (!$activity->max_attendees) {
+        if (! $activity->max_attendees) {
             return ['valid' => true, 'message' => null];
         }
 
@@ -87,9 +83,10 @@ class ActivityService
 
         if ($newTotal > $activity->max_attendees) {
             $available = $activity->max_attendees - $activity->current_attendees;
+
             return [
                 'valid' => false,
-                'message' => "Only {$available} spot(s) remaining. Cannot add {$additionalAttendees} attendee(s)."
+                'message' => "Only {$available} spot(s) remaining. Cannot add {$additionalAttendees} attendee(s).",
             ];
         }
 
@@ -98,13 +95,10 @@ class ActivityService
 
     /**
      * Check if activity is full
-     * 
-     * @param Activity $activity
-     * @return bool
      */
     public function isFull(Activity $activity): bool
     {
-        if (!$activity->max_attendees) {
+        if (! $activity->max_attendees) {
             return false;
         }
 
@@ -113,13 +107,12 @@ class ActivityService
 
     /**
      * Get available spots
-     * 
-     * @param Activity $activity
+     *
      * @return int|null Null if unlimited
      */
     public function getAvailableSpots(Activity $activity): ?int
     {
-        if (!$activity->max_attendees) {
+        if (! $activity->max_attendees) {
             return null;
         }
 
@@ -128,28 +121,22 @@ class ActivityService
 
     /**
      * Update activity status
-     * 
-     * @param Activity $activity
-     * @param string $newStatus
-     * @return bool
      */
     public function updateStatus(Activity $activity, string $newStatus): bool
     {
         $validTransitions = $this->getValidStatusTransitions($activity->status);
 
-        if (!in_array($newStatus, $validTransitions)) {
+        if (! in_array($newStatus, $validTransitions)) {
             return false;
         }
 
         $activity->update(['status' => $newStatus]);
+
         return true;
     }
 
     /**
      * Get valid status transitions from current status
-     * 
-     * @param string $currentStatus
-     * @return array
      */
     public function getValidStatusTransitions(string $currentStatus): array
     {
@@ -165,8 +152,7 @@ class ActivityService
 
     /**
      * Validate activity data
-     * 
-     * @param array $data
+     *
      * @return array ['valid' => bool, 'errors' => array]
      */
     public function validateActivityData(array $data): array
@@ -200,7 +186,7 @@ class ActivityService
 
         // Price validation
         if (isset($data['payment_type']) && $data['payment_type'] !== 'free') {
-            if (!isset($data['price_cents']) || $data['price_cents'] < 1) {
+            if (! isset($data['price_cents']) || $data['price_cents'] < 1) {
                 $errors['price_cents'] = 'Paid activities must have a price greater than 0';
             }
         }
@@ -218,27 +204,23 @@ class ActivityService
 
     /**
      * Get activities near a location
-     * 
-     * @param Point $location
-     * @param int $radiusMeters
-     * @param int $limit
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getActivitiesNearLocation(Point $location, int $radiusMeters = 50000, int $limit = 20)
     {
         return Activity::query()
-            ->whereDistance('location_coordinates', $location, '<=', $radiusMeters)
+            ->whereDistanceSphere('location_coordinates', $location, '<=', $radiusMeters)
             ->where('status', 'active')
             ->where('is_public', true)
-            ->orderByDistance('location_coordinates', $location)
+            ->orderByDistanceSphere('location_coordinates', $location)
             ->limit($limit)
             ->get();
     }
 
     /**
      * Get activities hosted by user
-     * 
-     * @param User $user
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getHostedActivities(User $user)
@@ -251,10 +233,6 @@ class ActivityService
 
     /**
      * Check if user can edit activity
-     * 
-     * @param Activity $activity
-     * @param User $user
-     * @return bool
      */
     public function canEdit(Activity $activity, User $user): bool
     {
@@ -264,16 +242,12 @@ class ActivityService
         }
 
         // TODO: Add admin check when role system is implemented
-        
+
         return false;
     }
 
     /**
      * Check if user can delete activity
-     * 
-     * @param Activity $activity
-     * @param User $user
-     * @return bool
      */
     public function canDelete(Activity $activity, User $user): bool
     {
@@ -283,16 +257,12 @@ class ActivityService
         }
 
         // TODO: Add admin check when role system is implemented
-        
+
         return false;
     }
 
     /**
      * Duplicate an activity (for recurring events)
-     *
-     * @param Activity $activity
-     * @param array $overrides
-     * @return Activity
      */
     public function duplicate(Activity $activity, array $overrides = []): Activity
     {
