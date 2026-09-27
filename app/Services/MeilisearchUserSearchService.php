@@ -7,7 +7,7 @@ use App\Models\User;
 class MeilisearchUserSearchService
 {
     /**
-     * Search for users using Meilisearch with infinite scroll support
+     * Search for users using PostgreSQL with infinite scroll support
      */
     public function search(
         ?string $query = null,
@@ -17,68 +17,44 @@ class MeilisearchUserSearchService
         int $page = 1,
         int $perPage = 20
     ): array {
-        // Build Meilisearch query
-        $searchQuery = $query ?? '';
-
-        // Calculate offset
         $offset = ($page - 1) * $perPage;
 
-        // Build filters
-        $filters = ['is_active = true'];
+        $builder = User::query()
+            ->where('is_active', true)
+            ->when($currentUser, fn ($q) => $q->whereKeyNot($currentUser->id));
 
-        // Exclude current user
-        if ($currentUser) {
-            $filters[] = "id != {$currentUser->id}";
+        // Filter by interests (ANY match on the JSON array)
+        if (! empty($interests)) {
+            $builder->where(function ($q) use ($interests) {
+                foreach ($interests as $interest) {
+                    $q->orWhereJsonContains('interests', $interest);
+                }
+            });
         }
 
-        // Filter by interests (ANY match)
-        if (!empty($interests)) {
-            $interestFilters = array_map(function ($interest) {
-                return "interests = '{$interest}'";
-            }, $interests);
-            $filters[] = '(' . implode(' OR ', $interestFilters) . ')';
-        }
-
-        // Build search parameters
-        $searchParams = [
-            'filter' => implode(' AND ', $filters),
-            'limit' => $perPage,
-            'offset' => $offset,
-            'attributesToRetrieve' => ['*'],
-        ];
-
-        // Add geo filtering if radius and user location provided
+        // Geo-proximity: filter and order by distance when available
         if ($radius && $currentUser && $currentUser->location_coordinates) {
-            $lat = $currentUser->location_coordinates->latitude;
-            $lng = $currentUser->location_coordinates->longitude;
-            $radiusMeters = $radius * 1000;
-
-            $searchParams['filter'] .= " AND _geoRadius({$lat}, {$lng}, {$radiusMeters})";
-            $searchParams['sort'] = ['_geoPoint(' . $lat . ', ' . $lng . '):asc'];
+            $userLocation = $currentUser->location_coordinates;
+            $builder->whereDistance('location_coordinates', $userLocation, '<=', $radius * 1000)
+                ->orderByDistance('location_coordinates', $userLocation, 'asc');
         } else {
-            // Sort by follower count if no geo filter
-            $searchParams['sort'] = ['follower_count:desc'];
+            $builder->orderByDesc('follower_count');
         }
 
-        // Perform search
-        $results = User::search($searchQuery, function ($meilisearch, $query, $options) use ($searchParams) {
-            $options = array_merge($options, $searchParams);
-            return $meilisearch->search($query, $options);
-        })->raw();
+        // Text search across identity fields
+        if (! empty($query)) {
+            $builder->where(function ($q) use ($query) {
+                $q->where('username', 'ILIKE', "%{$query}%")
+                    ->orWhere('display_name', 'ILIKE', "%{$query}%")
+                    ->orWhere('bio', 'ILIKE', "%{$query}%");
+            });
+        }
 
-        // Get total hits
-        $total = $results['estimatedTotalHits'] ?? 0;
+        // Count before adding the distance ordering – Postgres rejects ORDER BY
+        // on non-aggregated expressions inside a count() query.
+        $total = (clone $builder)->toBase()->count();
 
-        // Extract user IDs from results
-        $userIds = collect($results['hits'] ?? [])->pluck('id')->toArray();
-
-        // Load users from database maintaining Meilisearch order
-        $users = User::whereIn('id', $userIds)
-            ->get()
-            ->sortBy(function ($user) use ($userIds) {
-                return array_search($user->id, $userIds);
-            })
-            ->values();
+        $users = $builder->skip($offset)->take($perPage)->get();
 
         // Calculate if there are more results
         $currentlyLoaded = $offset + $users->count();
@@ -91,19 +67,19 @@ class MeilisearchUserSearchService
             'page' => $page,
         ];
     }
-    
+
     /**
      * Get popular interests from all users
      */
     public function getPopularInterests(int $limit = 20): array
     {
         $result = \DB::select(
-            "SELECT interest, count(*) as count
+            'SELECT interest, count(*) as count
              FROM users, jsonb_array_elements_text(interests::jsonb) as interest
              WHERE is_active = true AND interests IS NOT NULL
              GROUP BY interest
              ORDER BY count DESC
-             LIMIT ?",
+             LIMIT ?',
             [$limit]
         );
 

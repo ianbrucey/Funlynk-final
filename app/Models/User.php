@@ -12,12 +12,14 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Scout\Searchable;
+use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
 class User extends Authenticatable implements FilamentHasName
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
 
+    use HasSpatial;
     use HasUuids;
     use Notifiable;
     use Searchable;
@@ -244,7 +246,7 @@ class User extends Authenticatable implements FilamentHasName
     public function isMemberOf(Group|string|int $group): bool
     {
         $groupId = $group instanceof Group ? $group->id : $group;
-        
+
         return $this->groups()->where('groups.id', $groupId)->exists();
     }
 

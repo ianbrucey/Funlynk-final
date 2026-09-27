@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Activity;
 use App\Models\Post;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
@@ -16,7 +15,7 @@ class FeedService
      *
      * - Posts: capped at 10km radius
      * - Events: up to provided $radius (typically 25–50km)
-     * - Optional keyword search via Meilisearch
+     * - Optional keyword search via PostgreSQL ILIKE
      * - Supports pagination for infinite scroll
      */
     public function getNearbyFeed(
@@ -208,7 +207,7 @@ class FeedService
     }
 
     /**
-     * Internal: query nearby active posts using Meilisearch.
+     * Internal: query nearby active posts using PostgreSQL spatial queries.
      */
     protected function queryNearbyPosts(
         Point $userLocation,
@@ -218,65 +217,49 @@ class FeedService
         int $page = 1,
         int $perPage = 20
     ): array {
-        $radiusMeters = $radiusKm * 1000;
         $offset = ($page - 1) * $perPage;
 
-        // Build Meilisearch filters
-        $filters = ['status = active'];
+        $query = Post::query()
+            ->with('user')
+            ->where('status', 'active')
+            ->whereDistance('location_coordinates', $userLocation, '<=', $radiusKm * 1000);
 
-        // Add geo filter
-        $filters[] = "_geoRadius({$userLocation->latitude}, {$userLocation->longitude}, {$radiusMeters})";
-
-        // Add time filter if needed
-        if ($timeFilter !== 'all') {
+        $query->when($timeFilter !== 'all', function ($q) use ($timeFilter) {
             $now = now();
-            $timestamp = match ($timeFilter) {
-                'today' => $now->copy()->startOfDay()->timestamp,
-                'week' => $now->copy()->subWeek()->timestamp,
-                'month' => $now->copy()->subMonth()->timestamp,
-                default => null,
+
+            return match ($timeFilter) {
+                'today' => $q->where('created_at', '>=', $now->copy()->startOfDay()),
+                'week' => $q->where('created_at', '>=', $now->copy()->subWeek()),
+                'month' => $q->where('created_at', '>=', $now->copy()->subMonth()),
+                default => $q,
             };
+        });
 
-            if ($timestamp) {
-                $filters[] = "created_at >= {$timestamp}";
-            }
+        if ($searchQuery !== '') {
+            $query->where(function ($q) use ($searchQuery) {
+                $q->where('title', 'ILIKE', "%{$searchQuery}%")
+                    ->orWhere('description', 'ILIKE', "%{$searchQuery}%")
+                    ->orWhereRaw('tags::text ILIKE ?', ["%{$searchQuery}%"]);
+            });
         }
 
-        // Search using Meilisearch with optional keyword
-        $results = Post::search($searchQuery, function ($meilisearch, $query, $options) use ($filters, $userLocation, $offset, $perPage) {
-            $options['filter'] = implode(' AND ', $filters);
-            $options['sort'] = ['_geoPoint('.$userLocation->latitude.', '.$userLocation->longitude.'):asc'];
-            $options['limit'] = $perPage;
-            $options['offset'] = $offset;
+        // Count before adding the distance ordering – Postgres rejects ORDER BY
+        // on non-aggregated expressions inside a count() query.
+        $total = (clone $query)->toBase()->count();
 
-            return $meilisearch->search($query, $options);
-        })->raw();
-
-        // Extract IDs and load from database to get full Eloquent models with user relationship
-        $ids = collect($results['hits'] ?? [])->pluck('id')->toArray();
-
-        if (empty($ids)) {
-            return [
-                'items' => new EloquentCollection,
-                'total' => 0,
-            ];
-        }
-
-        $posts = Post::with('user')->whereIn('id', $ids)
-            ->get()
-            ->sortBy(function ($post) use ($ids) {
-                return array_search($post->id, $ids);
-            })
-            ->values();
+        $posts = $query->orderByDistance('location_coordinates', $userLocation, 'asc')
+            ->skip($offset)
+            ->take($perPage)
+            ->get();
 
         return [
             'items' => $posts,
-            'total' => $results['estimatedTotalHits'] ?? 0,
+            'total' => $total,
         ];
     }
 
     /**
-     * Internal: query nearby upcoming events using Meilisearch.
+     * Internal: query nearby upcoming events using PostgreSQL spatial queries.
      */
     protected function queryNearbyEvents(
         Point $userLocation,
@@ -286,63 +269,45 @@ class FeedService
         int $page = 1,
         int $perPage = 20
     ): array {
-        $radiusMeters = $radiusKm * 1000;
         $offset = ($page - 1) * $perPage;
 
-        // Build Meilisearch filters
-        $filters = [
-            'status = published',
-            'start_time > '.now()->timestamp,
-        ];
+        $query = Activity::query()
+            ->with('host')
+            ->where('status', 'published')
+            ->where('start_time', '>', now())
+            ->whereDistance('location_coordinates', $userLocation, '<=', $radiusKm * 1000);
 
-        // Add geo filter
-        $filters[] = "_geoRadius({$userLocation->latitude}, {$userLocation->longitude}, {$radiusMeters})";
-
-        // Add time filter if needed
-        if ($timeFilter !== 'all') {
+        $query->when($timeFilter !== 'all', function ($q) use ($timeFilter) {
             $now = now();
-            $timestamp = match ($timeFilter) {
-                'today' => $now->copy()->startOfDay()->timestamp,
-                'week' => $now->copy()->subWeek()->timestamp,
-                'month' => $now->copy()->subMonth()->timestamp,
-                default => null,
+
+            return match ($timeFilter) {
+                'today' => $q->where('start_time', '>=', $now->copy()->startOfDay()),
+                'week' => $q->where('start_time', '>=', $now->copy()->subWeek()),
+                'month' => $q->where('start_time', '>=', $now->copy()->subMonth()),
+                default => $q,
             };
+        });
 
-            if ($timestamp) {
-                $filters[] = "start_time >= {$timestamp}";
-            }
+        if ($searchQuery !== '') {
+            $query->where(function ($q) use ($searchQuery) {
+                $q->where('title', 'ILIKE', "%{$searchQuery}%")
+                    ->orWhere('description', 'ILIKE', "%{$searchQuery}%")
+                    ->orWhereHas('tags', fn ($tagQuery) => $tagQuery->where('name', 'ILIKE', "%{$searchQuery}%"));
+            });
         }
 
-        // Search using Meilisearch with optional keyword
-        $results = Activity::search($searchQuery, function ($meilisearch, $query, $options) use ($filters, $userLocation, $offset, $perPage) {
-            $options['filter'] = implode(' AND ', $filters);
-            $options['sort'] = ['_geoPoint('.$userLocation->latitude.', '.$userLocation->longitude.'):asc'];
-            $options['limit'] = $perPage;
-            $options['offset'] = $offset;
+        // Count before adding the distance ordering – Postgres rejects ORDER BY
+        // on non-aggregated expressions inside a count() query.
+        $total = (clone $query)->toBase()->count();
 
-            return $meilisearch->search($query, $options);
-        })->raw();
-
-        // Extract IDs and load from database to get full Eloquent models with user relationship
-        $ids = collect($results['hits'] ?? [])->pluck('id')->toArray();
-
-        if (empty($ids)) {
-            return [
-                'items' => new EloquentCollection,
-                'total' => 0,
-            ];
-        }
-
-        $events = Activity::with('host')->whereIn('id', $ids)
-            ->get()
-            ->sortBy(function ($activity) use ($ids) {
-                return array_search($activity->id, $ids);
-            })
-            ->values();
+        $events = $query->orderByDistance('location_coordinates', $userLocation, 'asc')
+            ->skip($offset)
+            ->take($perPage)
+            ->get();
 
         return [
             'items' => $events,
-            'total' => $results['estimatedTotalHits'] ?? 0,
+            'total' => $total,
         ];
     }
 
@@ -351,108 +316,61 @@ class FeedService
         $items = collect();
 
         if ($contentType !== 'events') {
-            // Use Meilisearch for keyword search even in fallback mode
+            $postsQuery = Post::with('user')->active()
+                ->when($timeFilter !== 'all', function ($q) use ($timeFilter) {
+                    $now = now();
+
+                    return match ($timeFilter) {
+                        'today' => $q->whereDate('created_at', $now->toDateString()),
+                        'week' => $q->where('created_at', '>=', $now->copy()->subWeek()),
+                        'month' => $q->where('created_at', '>=', $now->copy()->subMonth()),
+                        default => $q,
+                    };
+                });
+
             if (! empty($searchQuery)) {
-                $results = Post::search($searchQuery, function ($meilisearch, $query, $options) use ($timeFilter) {
-                    $filters = ['status = active'];
-
-                    if ($timeFilter !== 'all') {
-                        $now = now();
-                        $timestamp = match ($timeFilter) {
-                            'today' => $now->copy()->startOfDay()->timestamp,
-                            'week' => $now->copy()->subWeek()->timestamp,
-                            'month' => $now->copy()->subMonth()->timestamp,
-                            default => null,
-                        };
-                        if ($timestamp) {
-                            $filters[] = "created_at >= {$timestamp}";
-                        }
-                    }
-
-                    $options['filter'] = implode(' AND ', $filters);
-                    $options['limit'] = 20;
-
-                    return $meilisearch->search($query, $options);
-                })->raw();
-
-                $ids = collect($results['hits'] ?? [])->pluck('id')->toArray();
-                $posts = Post::with('user')->whereIn('id', $ids)->get()
-                    ->sortBy(fn ($post) => array_search($post->id, $ids))
-                    ->values()
-                    ->map(fn (Post $p) => ['type' => 'post', 'data' => $p]);
-            } else {
-                $posts = Post::with('user')->active()
-                    ->when($timeFilter !== 'all', function ($q) use ($timeFilter) {
-                        $now = now();
-
-                        return match ($timeFilter) {
-                            'today' => $q->whereDate('created_at', $now->toDateString()),
-                            'week' => $q->where('created_at', '>=', $now->copy()->subWeek()),
-                            'month' => $q->where('created_at', '>=', $now->copy()->subMonth()),
-                            default => $q,
-                        };
-                    })
-                    ->latest()
-                    ->limit(20)
-                    ->get()
-                    ->map(fn (Post $p) => ['type' => 'post', 'data' => $p]);
+                $postsQuery->where(function ($q) use ($searchQuery) {
+                    $q->where('title', 'ILIKE', "%{$searchQuery}%")
+                        ->orWhere('description', 'ILIKE', "%{$searchQuery}%")
+                        ->orWhereRaw('tags::text ILIKE ?', ["%{$searchQuery}%"]);
+                });
             }
+
+            $posts = $postsQuery->latest()
+                ->limit(20)
+                ->get()
+                ->map(fn (Post $p) => ['type' => 'post', 'data' => $p]);
 
             $items = $items->merge($posts);
         }
 
         if ($contentType !== 'posts') {
-            // Use Meilisearch for keyword search even in fallback mode
+            $eventsQuery = Activity::with('host')
+                ->where('status', 'published')
+                ->where('start_time', '>', now())
+                ->when($timeFilter !== 'all', function ($q) use ($timeFilter) {
+                    $now = now();
+
+                    return match ($timeFilter) {
+                        'today' => $q->whereDate('start_time', $now->toDateString()),
+                        'week' => $q->where('start_time', '>=', $now->copy()->subWeek()),
+                        'month' => $q->where('start_time', '>=', $now->copy()->subMonth()),
+                        default => $q,
+                    };
+                });
+
             if (! empty($searchQuery)) {
-                $results = Activity::search($searchQuery, function ($meilisearch, $query, $options) use ($timeFilter) {
-                    $filters = [
-                        'status = published',
-                        'start_time > '.now()->timestamp,
-                    ];
-
-                    if ($timeFilter !== 'all') {
-                        $now = now();
-                        $timestamp = match ($timeFilter) {
-                            'today' => $now->copy()->startOfDay()->timestamp,
-                            'week' => $now->copy()->subWeek()->timestamp,
-                            'month' => $now->copy()->subMonth()->timestamp,
-                            default => null,
-                        };
-                        if ($timestamp) {
-                            $filters[] = "start_time >= {$timestamp}";
-                        }
-                    }
-
-                    $options['filter'] = implode(' AND ', $filters);
-                    $options['limit'] = 20;
-
-                    return $meilisearch->search($query, $options);
-                })->raw();
-
-                $ids = collect($results['hits'] ?? [])->pluck('id')->toArray();
-                $events = Activity::with('host')->whereIn('id', $ids)->get()
-                    ->sortBy(fn ($event) => array_search($event->id, $ids))
-                    ->values()
-                    ->map(fn (Activity $e) => ['type' => 'event', 'data' => $e]);
-            } else {
-                $events = Activity::with('host')
-                    ->where('status', 'published')
-                    ->where('start_time', '>', now())
-                    ->when($timeFilter !== 'all', function ($q) use ($timeFilter) {
-                        $now = now();
-
-                        return match ($timeFilter) {
-                            'today' => $q->whereDate('start_time', $now->toDateString()),
-                            'week' => $q->where('start_time', '>=', $now->copy()->subWeek()),
-                            'month' => $q->where('start_time', '>=', $now->copy()->subMonth()),
-                            default => $q,
-                        };
-                    })
-                    ->latest('start_time')
-                    ->limit(20)
-                    ->get()
-                    ->map(fn (Activity $e) => ['type' => 'event', 'data' => $e]);
+                $eventsQuery->where(function ($q) use ($searchQuery) {
+                    $q->where('title', 'ILIKE', "%{$searchQuery}%")
+                        ->orWhere('description', 'ILIKE', "%{$searchQuery}%")
+                        ->orWhereHas('tags', fn ($tagQuery) => $tagQuery->where('name', 'ILIKE', "%{$searchQuery}%"));
+                });
             }
+
+            $events = $eventsQuery->latest('start_time')
+                ->limit(20)
+                ->get()
+                ->map(fn (Activity $e) => ['type' => 'event', 'data' => $e]);
 
             $items = $items->merge($events);
         }
