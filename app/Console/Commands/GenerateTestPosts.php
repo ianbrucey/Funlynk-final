@@ -36,12 +36,14 @@ class GenerateTestPosts extends Command
             $referencePost = Post::find($postId);
             if (! $referencePost) {
                 $this->error("Post with ID {$postId} not found!");
+
                 return 1;
             }
         } else {
             $referencePost = Post::first();
             if (! $referencePost) {
                 $this->error('No posts found in database!');
+
                 return 1;
             }
         }
@@ -56,6 +58,7 @@ class GenerateTestPosts extends Command
         $user = User::first();
         if (! $user) {
             $this->error('No users found in database! Please create a user first.');
+
             return 1;
         }
 
@@ -152,7 +155,7 @@ class GenerateTestPosts extends Command
         $this->newLine(2);
         $this->info("✅ Successfully created {$count} test posts!");
         $this->info("📍 Location: {$locationName} ({$baseLat}, {$baseLng})");
-        $this->info("🔍 Posts are spread within ~10km radius");
+        $this->info('🔍 Posts are spread within ~10km radius');
 
         return 0;
     }

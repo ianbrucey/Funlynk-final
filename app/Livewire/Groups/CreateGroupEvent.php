@@ -89,8 +89,9 @@ class CreateGroupEvent extends Component
     public function createEvent(GroupContentService $groupContentService)
     {
         // Check permission
-        if (!$this->group->canCreateEvent(auth()->user())) {
+        if (! $this->group->canCreateEvent(auth()->user())) {
             session()->flash('error', 'You do not have permission to create events in this group.');
+
             return;
         }
 

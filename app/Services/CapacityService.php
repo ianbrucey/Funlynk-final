@@ -12,8 +12,6 @@ class CapacityService
     /**
      * Check if a user can RSVP to an activity.
      *
-     * @param Activity $activity
-     * @param User $user
      * @return array ['allowed' => bool, 'reason' => string|null, 'status' => string]
      */
     public function canRsvp(Activity $activity, User $user): array
@@ -50,10 +48,7 @@ class CapacityService
     /**
      * Reserve a spot for a user (create RSVP).
      *
-     * @param Activity $activity
-     * @param User $user
-     * @param array $data Additional RSVP data (e.g., payment info)
-     * @return Rsvp
+     * @param  array  $data  Additional RSVP data (e.g., payment info)
      */
     public function reserve(Activity $activity, User $user, array $data = []): Rsvp
     {
@@ -62,8 +57,8 @@ class CapacityService
             $activity = Activity::where('id', $activity->id)->lockForUpdate()->first();
 
             $canRsvp = $this->canRsvp($activity, $user);
-            
-            if (!$canRsvp['allowed']) {
+
+            if (! $canRsvp['allowed']) {
                 throw new \Exception($canRsvp['reason']);
             }
 
@@ -93,9 +88,6 @@ class CapacityService
 
     /**
      * Cancel an RSVP and potentially promote from waitlist.
-     *
-     * @param Rsvp $rsvp
-     * @return bool
      */
     public function cancelRsvp(Rsvp $rsvp): bool
     {
@@ -105,7 +97,7 @@ class CapacityService
             if ($rsvp->status === 'attending') {
                 $activity->decrement('current_attendees');
                 $rsvp->update(['status' => 'declined']);
-                
+
                 // Try to promote from waitlist
                 $this->promoteFromWaitlist($activity);
             } else {
@@ -118,9 +110,6 @@ class CapacityService
 
     /**
      * Promote the next user from the waitlist.
-     *
-     * @param Activity $activity
-     * @return Rsvp|null
      */
     public function promoteFromWaitlist(Activity $activity): ?Rsvp
     {
@@ -138,9 +127,9 @@ class CapacityService
         if ($nextRsvp) {
             $nextRsvp->update(['status' => 'attending']);
             $activity->increment('current_attendees');
-            
+
             // TODO: Notify user they have been promoted
-            
+
             return $nextRsvp;
         }
 

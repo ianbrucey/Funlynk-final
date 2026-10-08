@@ -4,18 +4,19 @@ namespace App\Livewire\Groups;
 
 use App\Models\Group;
 use App\Models\GroupMember;
-use App\Models\User;
 use App\Services\GroupService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class GroupMembers extends Component
 {
-    use WithPagination, AuthorizesRequests;
+    use AuthorizesRequests, WithPagination;
 
     public $group;
+
     public $search = '';
+
     protected $queryString = ['search'];
 
     protected $listeners = ['memberRemoved' => '$refresh', 'roleChanged' => '$refresh'];
@@ -31,13 +32,13 @@ class GroupMembers extends Component
             $members = GroupMember::where('group_id', $this->group->id)
                 ->when($this->search, function ($query) {
                     $query->whereHas('user', function ($subQuery) {
-                        $subQuery->where('name', 'like', '%' . $this->search . '%');
+                        $subQuery->where('name', 'like', '%'.$this->search.'%');
                     });
                 })
                 ->with('user')
                 ->paginate(20);
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to load group members: ' . $e->getMessage());
+            session()->flash('error', 'Failed to load group members: '.$e->getMessage());
             $members = collect(); // Return an empty collection on error
         }
 
@@ -55,7 +56,7 @@ class GroupMembers extends Component
             app(GroupService::class)->removeMember($this->group, $groupMember->user);
             session()->flash('success', 'Member removed successfully.');
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to remove member: ' . $e->getMessage());
+            session()->flash('error', 'Failed to remove member: '.$e->getMessage());
         }
     }
 
@@ -68,7 +69,7 @@ class GroupMembers extends Component
             app(GroupService::class)->updateMemberRole($this->group, $groupMember->user, $newRole);
             session()->flash('success', 'Member role updated successfully.');
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to update member role: ' . $e->getMessage());
+            session()->flash('error', 'Failed to update member role: '.$e->getMessage());
         }
     }
 
@@ -79,7 +80,7 @@ class GroupMembers extends Component
             // Placeholder for inviting members functionality
             session()->flash('info', 'Invite members functionality coming soon!');
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to initiate invite process: ' . $e->getMessage());
+            session()->flash('error', 'Failed to initiate invite process: '.$e->getMessage());
         }
     }
 }

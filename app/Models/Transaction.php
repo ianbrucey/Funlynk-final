@@ -12,7 +12,9 @@ class Transaction extends Model
     use HasFactory, HasUuids;
 
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     protected $guarded = [];
 
     protected function casts(): array

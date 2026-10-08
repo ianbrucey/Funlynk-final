@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Services\FeedService;
 use App\Services\RecommendationEngine;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\DB;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
 describe('FeedService', function () {

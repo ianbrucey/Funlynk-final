@@ -33,7 +33,7 @@ class NotifyInterestedUsers implements ShouldQueue
         // Create notifications for each interested user
         foreach ($interestedUsers as $userId) {
             $user = User::find($userId);
-            if (!$user) {
+            if (! $user) {
                 continue;
             }
 
@@ -61,7 +61,7 @@ class NotifyInterestedUsers implements ShouldQueue
                         'start_time' => $event->activity->start_time->toIso8601String(),
                         'location' => $event->activity->location_name,
                         'price' => $price,
-                        'is_free' => !$event->activity->is_paid,
+                        'is_free' => ! $event->activity->is_paid,
                         'url' => route('events.show', $event->activity->id),
                     ],
                     'delivery_method' => 'in_app',

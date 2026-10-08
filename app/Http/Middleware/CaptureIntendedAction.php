@@ -11,8 +11,7 @@ class CaptureIntendedAction
 {
     public function __construct(
         protected ContextPreservationService $contextService
-    ) {
-    }
+    ) {}
 
     /**
      * Handle an incoming request.

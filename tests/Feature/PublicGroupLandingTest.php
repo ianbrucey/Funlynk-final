@@ -2,12 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Livewire\Groups\PublicGroupLanding;
 use App\Models\Group;
 use App\Models\User;
 use App\Services\GroupService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 class PublicGroupLandingTest extends TestCase

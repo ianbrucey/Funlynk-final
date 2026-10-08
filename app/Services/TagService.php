@@ -6,22 +6,20 @@ use App\Models\Tag;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class TagService
 {
     /**
      * Get trending tags based on usage count and recency
-     * 
-     * @param int $limit Number of trending tags to return
-     * @param int $days Number of days to consider for recency
-     * @return Collection
+     *
+     * @param  int  $limit  Number of trending tags to return
+     * @param  int  $days  Number of days to consider for recency
      */
     public function getTrendingTags(int $limit = 10, int $days = 7): Collection
     {
         return Cache::remember('tags:trending', 3600, function () use ($limit, $days) {
             $cutoffDate = now()->subDays($days);
-            
+
             return Tag::query()
                 ->select('tags.*')
                 ->selectRaw('
@@ -33,7 +31,7 @@ class TagService
                      END) as trending_score
                 ', [
                     $cutoffDate,
-                    now()->subDays($days * 2)
+                    now()->subDays($days * 2),
                 ])
                 ->where('usage_count', '>', 0)
                 ->orderByDesc('trending_score')
@@ -44,10 +42,9 @@ class TagService
 
     /**
      * Get tag suggestions based on search query
-     * 
-     * @param string $query Search query
-     * @param int $limit Maximum number of suggestions
-     * @return Collection
+     *
+     * @param  string  $query  Search query
+     * @param  int  $limit  Maximum number of suggestions
      */
     public function getSuggestions(string $query, int $limit = 10): Collection
     {
@@ -56,7 +53,7 @@ class TagService
         }
 
         return Tag::query()
-            ->where('name', 'ILIKE', '%' . $query . '%')
+            ->where('name', 'ILIKE', '%'.$query.'%')
             ->orderByDesc('usage_count')
             ->limit($limit)
             ->get();
@@ -64,11 +61,10 @@ class TagService
 
     /**
      * Create a new tag with auto-generated slug
-     * 
-     * @param string $name Tag name
-     * @param string|null $category Optional category
-     * @param string|null $description Optional description
-     * @return Tag
+     *
+     * @param  string  $name  Tag name
+     * @param  string|null  $category  Optional category
+     * @param  string|null  $description  Optional description
      */
     public function createTag(string $name, ?string $category = null, ?string $description = null): Tag
     {
@@ -83,9 +79,6 @@ class TagService
 
     /**
      * Increment usage count for a tag
-     * 
-     * @param Tag $tag
-     * @return void
      */
     public function incrementUsage(Tag $tag): void
     {
@@ -95,9 +88,6 @@ class TagService
 
     /**
      * Decrement usage count for a tag
-     * 
-     * @param Tag $tag
-     * @return void
      */
     public function decrementUsage(Tag $tag): void
     {
@@ -107,8 +97,6 @@ class TagService
 
     /**
      * Get tag analytics by category
-     * 
-     * @return Collection
      */
     public function getAnalyticsByCategory(): Collection
     {
@@ -124,9 +112,8 @@ class TagService
 
     /**
      * Get unused tags (usage_count = 0)
-     * 
-     * @param int $olderThanDays Only return tags older than X days
-     * @return Collection
+     *
+     * @param  int  $olderThanDays  Only return tags older than X days
      */
     public function getUnusedTags(int $olderThanDays = 30): Collection
     {
@@ -139,10 +126,9 @@ class TagService
 
     /**
      * Merge two tags (move all activities from source to target, delete source)
-     * 
-     * @param Tag $source Tag to merge from
-     * @param Tag $target Tag to merge into
-     * @return void
+     *
+     * @param  Tag  $source  Tag to merge from
+     * @param  Tag  $target  Tag to merge into
      */
     public function mergeTags(Tag $source, Tag $target): void
     {
@@ -180,8 +166,6 @@ class TagService
 
     /**
      * Recalculate usage counts for all tags
-     * 
-     * @return void
      */
     public function recalculateUsageCounts(): void
     {
@@ -205,8 +189,6 @@ class TagService
 
     /**
      * Clear trending tags cache
-     * 
-     * @return void
      */
     protected function clearTrendingCache(): void
     {
@@ -215,9 +197,8 @@ class TagService
 
     /**
      * Get featured tags
-     * 
-     * @param int $limit Maximum number of featured tags
-     * @return Collection
+     *
+     * @param  int  $limit  Maximum number of featured tags
      */
     public function getFeaturedTags(int $limit = 5): Collection
     {
@@ -230,8 +211,8 @@ class TagService
 
     /**
      * Validate tag moderation rules
-     * 
-     * @param string $name Tag name to validate
+     *
+     * @param  string  $name  Tag name to validate
      * @return array ['valid' => bool, 'message' => string|null]
      */
     public function validateTag(string $name): array

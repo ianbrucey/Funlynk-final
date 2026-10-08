@@ -53,10 +53,10 @@ class RecurringScheduleService
             return collect();
         }
 
-        $startDate = $schedule->last_generated_until 
+        $startDate = $schedule->last_generated_until
             ? Carbon::parse($schedule->last_generated_until)->addDay()
             : now()->startOfDay();
-        
+
         $endDate = now()->addWeeks($schedule->generate_weeks_ahead)->endOfDay();
 
         // Don't generate if we're already up to date
@@ -123,6 +123,7 @@ class RecurringScheduleService
 
             case 'weekly':
                 $dayName = strtolower($date->format('l'));
+
                 return in_array($dayName, $schedule->days_of_week ?? []);
 
             case 'monthly':
@@ -160,7 +161,7 @@ class RecurringScheduleService
         $locationCoordinates = $schedule->location_coordinates;
         $locationName = $schedule->location_name;
 
-        if (!$locationCoordinates && $schedule->group) {
+        if (! $locationCoordinates && $schedule->group) {
             $locationCoordinates = $schedule->group->location_coordinates;
             $locationName = $locationName ?: $schedule->group->location_name;
         }
@@ -171,7 +172,7 @@ class RecurringScheduleService
             'recurring_schedule_id' => $schedule->id,
             'recurrence_date' => $date->toDateString(),
             'title' => $schedule->title,
-            'description' => $schedule->description ?? 'Recurring event: ' . $schedule->title,
+            'description' => $schedule->description ?? 'Recurring event: '.$schedule->title,
             'location_name' => $locationName,
             'location_coordinates' => $locationCoordinates,
             'start_time' => $startTime,
@@ -188,6 +189,7 @@ class RecurringScheduleService
     public function updateSchedule(RecurringSchedule $schedule, array $data): RecurringSchedule
     {
         $schedule->update($data);
+
         return $schedule->fresh();
     }
 
@@ -229,4 +231,3 @@ class RecurringScheduleService
             ->get();
     }
 }
-

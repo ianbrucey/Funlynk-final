@@ -5,8 +5,8 @@ namespace App\Services;
 use App\Models\Activity;
 use App\Models\Rsvp;
 use App\Models\User;
-use Illuminate\Support\Str;
 use Exception;
+use Illuminate\Support\Str;
 
 class CheckInService
 {
@@ -18,8 +18,8 @@ class CheckInService
     /**
      * Generate unique check-in credentials (code and QR token) for an RSVP.
      *
-     * @param Rsvp $rsvp The RSVP to generate credentials for.
-     * @return void
+     * @param  Rsvp  $rsvp  The RSVP to generate credentials for.
+     *
      * @throws Exception If a unique code cannot be generated after multiple attempts.
      */
     public function generateCheckInCredentials(Rsvp $rsvp): void
@@ -36,8 +36,8 @@ class CheckInService
     /**
      * Validate a QR token against an activity and return the associated RSVP.
      *
-     * @param string $activityId The UUID of the activity.
-     * @param string $qrToken The QR token to validate.
+     * @param  string  $activityId  The UUID of the activity.
+     * @param  string  $qrToken  The QR token to validate.
      * @return Rsvp|null The matching RSVP model with user relationship loaded, or null if not found.
      */
     public function validateQrToken(string $activityId, string $qrToken): ?Rsvp
@@ -51,8 +51,8 @@ class CheckInService
     /**
      * Validate a check-in code against an activity and return the associated RSVP.
      *
-     * @param string $activityId The UUID of the activity.
-     * @param string $code The check-in code to validate (case-insensitive).
+     * @param  string  $activityId  The UUID of the activity.
+     * @param  string  $code  The check-in code to validate (case-insensitive).
      * @return Rsvp|null The matching RSVP model with user relationship loaded, or null if not found.
      */
     public function validateCheckInCode(string $activityId, string $code): ?Rsvp
@@ -66,10 +66,11 @@ class CheckInService
     /**
      * Perform the check-in for a given RSVP.
      *
-     * @param Rsvp $rsvp The RSVP to check in.
-     * @param string $method The method of check-in (e.g., 'qr', 'code', 'manual').
-     * @param User|null $checkedInBy The user who performed the check-in, if applicable.
+     * @param  Rsvp  $rsvp  The RSVP to check in.
+     * @param  string  $method  The method of check-in (e.g., 'qr', 'code', 'manual').
+     * @param  User|null  $checkedInBy  The user who performed the check-in, if applicable.
      * @return Rsvp The updated RSVP model.
+     *
      * @throws Exception If the RSVP is already checked in.
      */
     public function performCheckIn(Rsvp $rsvp, string $method, ?User $checkedInBy = null): Rsvp
@@ -79,7 +80,7 @@ class CheckInService
 
         if ($rsvp->checked_in_at !== null) {
             $userName = $rsvp->user->name ?? 'This attendee';
-            throw new Exception($userName . ' is already checked in.');
+            throw new Exception($userName.' is already checked in.');
         }
 
         $rsvp->update([
@@ -95,7 +96,7 @@ class CheckInService
     /**
      * Get check-in statistics for a given activity.
      *
-     * @param Activity $activity The activity to get statistics for.
+     * @param  Activity  $activity  The activity to get statistics for.
      * @return array An array containing total_rsvps, checked_in_count, pending_count, and check_in_percentage.
      */
     public function getActivityCheckInStats(Activity $activity): array
@@ -116,8 +117,9 @@ class CheckInService
     /**
      * Generate a unique 6-character alphanumeric code for an activity.
      *
-     * @param string $activityId The UUID of the activity to ensure code uniqueness within.
+     * @param  string  $activityId  The UUID of the activity to ensure code uniqueness within.
      * @return string The unique 6-character code.
+     *
      * @throws Exception If a unique code cannot be generated after multiple attempts.
      */
     private function generateUniqueCode(string $activityId): string
@@ -136,7 +138,7 @@ class CheckInService
                 ->where('check_in_code', $code)
                 ->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 return $code;
             }
         }
@@ -147,7 +149,7 @@ class CheckInService
     /**
      * Build QR code data payload for encoding.
      *
-     * @param Rsvp $rsvp The RSVP to build payload for.
+     * @param  Rsvp  $rsvp  The RSVP to build payload for.
      * @return array The payload array with activity_id, rsvp_id, and token.
      */
     public function buildQrPayload(Rsvp $rsvp): array

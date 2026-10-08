@@ -34,8 +34,9 @@ class GroupShow extends Component
     public function mount(Group $group): void
     {
         // Redirect non-authenticated users to public landing page
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             $this->redirect(route('groups.public', $group), navigate: true);
+
             return;
         }
 
@@ -69,7 +70,7 @@ class GroupShow extends Component
                 $this->conversationId = $conversation->id;
             }
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to load group details: ' . $e->getMessage());
+            session()->flash('error', 'Failed to load group details: '.$e->getMessage());
             $this->group = $group;
             $this->isMember = false;
             $this->isAdmin = false;
@@ -105,7 +106,7 @@ class GroupShow extends Component
                 $this->hasPendingRequest = true;
                 session()->flash('success', 'Join request sent! An admin will review your request.');
             } catch (\Exception $e) {
-                session()->flash('error', 'Failed to send join request: ' . $e->getMessage());
+                session()->flash('error', 'Failed to send join request: '.$e->getMessage());
             }
 
             return;
@@ -115,11 +116,11 @@ class GroupShow extends Component
         try {
             $groupService->addMember($this->group, auth()->user());
             session()->flash('success', 'Successfully joined the group!');
-            
+
             // Full page refresh to reload all components correctly
             $this->redirect(route('groups.show', $this->group->slug), navigate: true);
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to join group: ' . $e->getMessage());
+            session()->flash('error', 'Failed to join group: '.$e->getMessage());
         }
     }
 
@@ -147,11 +148,11 @@ class GroupShow extends Component
             try {
                 app(\App\Services\GroupService::class)->removeMember($this->group, auth()->user());
                 session()->flash('success', 'Successfully left the group!');
-                
+
                 // Full page refresh to reload all components correctly
                 $this->redirect(route('groups.show', $this->group->slug), navigate: true);
             } catch (\Exception $e) {
-                session()->flash('error', 'Failed to leave group: ' . $e->getMessage());
+                session()->flash('error', 'Failed to leave group: '.$e->getMessage());
             }
         } else {
             session()->flash('error', 'You are not a member or not logged in.');
@@ -176,7 +177,7 @@ class GroupShow extends Component
                 session()->flash('success', 'Group deleted successfully.');
                 // Example: return redirect()->route('groups.index');
             } catch (\Exception $e) {
-                session()->flash('error', 'Failed to delete group: ' . $e->getMessage());
+                session()->flash('error', 'Failed to delete group: '.$e->getMessage());
             }
         } else {
             session()->flash('error', 'You do not have permission to delete this group.');

@@ -2,8 +2,6 @@
 
 namespace App\Livewire\Discovery;
 
-use App\Models\Activity;
-use App\Models\Post;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -23,7 +21,7 @@ class ForYouFeed extends Component
             $this->dispatch('$refresh');
         } catch (\Exception $e) {
             // Handle error (user not authenticated, invalid reaction type, etc.)
-            session()->flash('error', 'Failed to react to post: ' . $e->getMessage());
+            session()->flash('error', 'Failed to react to post: '.$e->getMessage());
         }
     }
 

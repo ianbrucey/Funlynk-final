@@ -33,10 +33,10 @@ class ConfigureMeilisearchIndexes extends Command
             config('scout.meilisearch.host'),
             config('scout.meilisearch.key')
         );
-        
+
         $this->info('Configuring Posts index...');
-        
-        $postsIndex = $client->index((new Post())->searchableAs());
+
+        $postsIndex = $client->index((new Post)->searchableAs());
         $postsIndex->updateSettings([
             'filterableAttributes' => ['status', 'expires_at', 'created_at', '_geo'],
             'sortableAttributes' => ['created_at', 'expires_at', '_geo'],
@@ -65,12 +65,12 @@ class ConfigureMeilisearchIndexes extends Command
                 'hiking-trekking' => ['hiking', 'trekking'],
             ],
         ]);
-        
+
         $this->info('Posts index configured with typo tolerance and synonyms');
-        
+
         $this->info('Configuring Activities index...');
-        
-        $activitiesIndex = $client->index((new Activity())->searchableAs());
+
+        $activitiesIndex = $client->index((new Activity)->searchableAs());
         $activitiesIndex->updateSettings([
             'filterableAttributes' => ['status', 'start_time', 'created_at', '_geo'],
             'sortableAttributes' => ['created_at', 'start_time', '_geo'],
@@ -99,12 +99,12 @@ class ConfigureMeilisearchIndexes extends Command
                 'hiking-trekking' => ['hiking', 'trekking'],
             ],
         ]);
-        
+
         $this->info('Activities index configured with typo tolerance and synonyms');
-        
+
         $this->info('Configuring Users index...');
-        
-        $usersIndex = $client->index((new User())->searchableAs());
+
+        $usersIndex = $client->index((new User)->searchableAs());
         $usersIndex->updateSettings([
             'filterableAttributes' => ['id', 'is_active', 'interests', 'created_at', '_geo'],
             'sortableAttributes' => ['follower_count', 'created_at', '_geo'],
@@ -125,11 +125,11 @@ class ConfigureMeilisearchIndexes extends Command
                 ],
             ],
         ]);
-        
+
         $this->info('Users index configured with typo tolerance');
-        
+
         $this->info('✅ All Meilisearch indexes configured!');
-        
+
         return Command::SUCCESS;
     }
 }

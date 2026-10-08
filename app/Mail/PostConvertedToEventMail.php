@@ -30,6 +30,7 @@ class PostConvertedToEventMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         $hostName = $this->host->display_name ?? $this->host->username;
+
         return new Envelope(
             to: [new Address($this->recipient->email, $this->recipient->display_name ?? $this->recipient->username)],
             subject: "🎉 {$hostName} created an event from '{$this->post->title}'",
@@ -49,7 +50,7 @@ class PostConvertedToEventMail extends Mailable implements ShouldQueue
                 'activity' => $this->activity,
                 'host' => $this->host,
                 'eventUrl' => route('events.show', $this->activity->id),
-                'rsvpUrl' => route('events.show', $this->activity->id) . '#rsvp',
+                'rsvpUrl' => route('events.show', $this->activity->id).'#rsvp',
             ],
         );
     }

@@ -1,6 +1,5 @@
 <?php
 
-use App\Jobs\NotifyAttendeesOfChanges;
 use App\Models\Activity;
 use App\Models\ActivityEditLog;
 use App\Models\ActivityRefundWindow;
@@ -131,4 +130,3 @@ test('records paid attendee count in edit log', function () {
     $log = ActivityEditLog::where('activity_id', $this->activity->id)->first();
     expect($log->paid_attendee_count)->toBe(3);
 });
-

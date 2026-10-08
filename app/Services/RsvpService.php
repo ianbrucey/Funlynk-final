@@ -15,16 +15,11 @@ class RsvpService
 
     /**
      * Create an RSVP for a user to an activity.
-     *
-     * @param Activity $activity
-     * @param User $user
-     * @param array $data
-     * @return Rsvp
      */
     public function createRsvp(Activity $activity, User $user, array $data = []): Rsvp
     {
         // Validate activity is accepting RSVPs
-        if (!in_array($activity->status, ['published', 'active'])) {
+        if (! in_array($activity->status, ['published', 'active'])) {
             throw new \Exception('This activity is not accepting RSVPs.');
         }
 
@@ -34,16 +29,12 @@ class RsvpService
 
     /**
      * Update an existing RSVP.
-     *
-     * @param Rsvp $rsvp
-     * @param array $data
-     * @return Rsvp
      */
     public function updateRsvp(Rsvp $rsvp, array $data): Rsvp
     {
         return DB::transaction(function () use ($rsvp, $data) {
             $activity = Activity::where('id', $rsvp->activity_id)->lockForUpdate()->first();
-            
+
             $oldStatus = $rsvp->status;
             $newStatus = $data['status'] ?? $oldStatus;
 
@@ -61,15 +52,13 @@ class RsvpService
             }
 
             $rsvp->update($data);
+
             return $rsvp->fresh();
         });
     }
 
     /**
      * Cancel an RSVP.
-     *
-     * @param Rsvp $rsvp
-     * @return bool
      */
     public function cancelRsvp(Rsvp $rsvp): bool
     {
@@ -78,21 +67,17 @@ class RsvpService
 
     /**
      * Mark a user as attended.
-     *
-     * @param Rsvp $rsvp
-     * @return Rsvp
      */
     public function markAttended(Rsvp $rsvp): Rsvp
     {
         $rsvp->update(['attended' => true]);
+
         return $rsvp;
     }
 
     /**
      * Get all RSVPs for an activity.
      *
-     * @param Activity $activity
-     * @param string|null $status
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getActivityRsvps(Activity $activity, ?string $status = null)
@@ -110,8 +95,6 @@ class RsvpService
     /**
      * Get all RSVPs for a user.
      *
-     * @param User $user
-     * @param string|null $status
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getUserRsvps(User $user, ?string $status = null)
@@ -128,9 +111,6 @@ class RsvpService
 
     /**
      * Get waitlist count for an activity.
-     *
-     * @param Activity $activity
-     * @return int
      */
     public function getWaitlistCount(Activity $activity): int
     {
@@ -141,9 +121,6 @@ class RsvpService
 
     /**
      * Get attendance statistics for an activity.
-     *
-     * @param Activity $activity
-     * @return array
      */
     public function getAttendanceStats(Activity $activity): array
     {

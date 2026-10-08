@@ -45,6 +45,7 @@ class GenerateRecurringEvents implements ShouldQueue
                     'schedule_id' => $schedule->id,
                     'last_generated_until' => $schedule->last_generated_until?->toDateString(),
                 ]);
+
                 continue;
             }
 

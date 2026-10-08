@@ -91,10 +91,10 @@ describe('PostService', function () {
         $eligibility = $service->checkConversionEligibility($post->id);
 
         expect($eligibility['eligible'])->toBeTrue();
-        
+
         // With current test config (Soft=2, Strong=1), auto_convert is also true
-        // expect($eligibility['auto_convert'])->toBeFalse(); 
-        
+        // expect($eligibility['auto_convert'])->toBeFalse();
+
         $post->update(['reaction_count' => Post::CONVERSION_STRONG_THRESHOLD + 5]);
         $eligibility = $service->checkConversionEligibility($post->id);
 
@@ -125,7 +125,7 @@ describe('PostService', function () {
         expect($alreadyExpired->fresh()->status)->toBe('expired');
 
         // Ensure the job delegates to the service
-        $job = new ExpirePostsJob();
+        $job = new ExpirePostsJob;
         $job->handle($service);
 
         expect(Post::where('status', 'active')->count())->toBe(0);

@@ -86,11 +86,11 @@ class RefundWindowService
             ->where('refund_window_id', $window->id)
             ->firstOrFail();
 
-        if (!$response->isPending()) {
+        if (! $response->isPending()) {
             throw new \Exception('Response has already been recorded.');
         }
 
-        if (!$window->isActive()) {
+        if (! $window->isActive()) {
             throw new \Exception('Refund window has expired.');
         }
 
@@ -117,7 +117,7 @@ class RefundWindowService
             if ($transaction) {
                 // Process refund through Stripe
                 $this->paymentService->processRefund($transaction);
-                
+
                 $response->markAsRefunded($transaction->id);
             } else {
                 // No transaction found - just mark as refunded

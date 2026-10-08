@@ -35,7 +35,7 @@ class Register extends Component implements HasForms
         if (strlen($value) >= 3) {
             $username = Str::lower(Str::slug($value));
             $exists = User::where('username', $username)->exists();
-            $this->usernameAvailable = !$exists;
+            $this->usernameAvailable = ! $exists;
         } else {
             $this->usernameAvailable = null;
         }

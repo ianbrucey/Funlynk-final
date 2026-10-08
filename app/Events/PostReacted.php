@@ -47,7 +47,7 @@ class PostReacted implements ShouldBroadcast
     public function broadcastWith(): array
     {
         $reactor = $this->reaction->user;
-        
+
         return [
             'id' => (string) \Illuminate\Support\Str::uuid(),
             'type' => 'post_reaction',

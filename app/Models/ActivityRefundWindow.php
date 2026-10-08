@@ -13,11 +13,15 @@ class ActivityRefundWindow extends Model
     use HasFactory, HasUuids;
 
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     protected $guarded = [];
 
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_EXPIRED = 'expired';
+
     public const STATUS_CANCELLED = 'cancelled';
 
     public const WINDOW_HOURS = 72;
@@ -50,13 +54,13 @@ class ActivityRefundWindow extends Model
     public function scopeActive($query)
     {
         return $query->where('status', self::STATUS_ACTIVE)
-                     ->where('expires_at', '>', now());
+            ->where('expires_at', '>', now());
     }
 
     public function scopeExpired($query)
     {
         return $query->where('status', self::STATUS_ACTIVE)
-                     ->where('expires_at', '<=', now());
+            ->where('expires_at', '<=', now());
     }
 
     // Helpers
@@ -73,17 +77,19 @@ class ActivityRefundWindow extends Model
 
     public function timeRemaining(): ?string
     {
-        if (!$this->isActive()) {
+        if (! $this->isActive()) {
             return null;
         }
+
         return $this->expires_at->diffForHumans(['parts' => 2]);
     }
 
     public function hoursRemaining(): float
     {
-        if (!$this->isActive()) {
+        if (! $this->isActive()) {
             return 0;
         }
+
         return max(0, now()->diffInHours($this->expires_at, false));
     }
 }

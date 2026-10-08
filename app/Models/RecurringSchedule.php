@@ -87,7 +87,8 @@ class RecurringSchedule extends Model
         }
 
         $lastDay = array_pop($formattedDays);
-        return implode(', ', $formattedDays) . ' & ' . $lastDay;
+
+        return implode(', ', $formattedDays).' & '.$lastDay;
     }
 
     /**

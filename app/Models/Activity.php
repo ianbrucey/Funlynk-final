@@ -217,7 +217,7 @@ class Activity extends Model
 
         // Add date suffix for better uniqueness and SEO (e.g., "yoga-class-2025-01-08")
         if ($startTime) {
-            $baseSlug .= '-' . $startTime->format('Y-m-d');
+            $baseSlug .= '-'.$startTime->format('Y-m-d');
         }
 
         $slug = $baseSlug;
@@ -231,7 +231,7 @@ class Activity extends Model
         }
 
         while ($query->exists()) {
-            $slug = $baseSlug . '-' . $counter;
+            $slug = $baseSlug.'-'.$counter;
             $counter++;
 
             $query = static::where('slug', $slug);

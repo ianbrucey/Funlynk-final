@@ -16,26 +16,29 @@ class LocationSeeder extends Seeder
     {
         // Check if locations already seeded
         $existingCount = Location::count();
-        
+
         if ($existingCount > 41000) {
             $this->command->info("✓ Locations already seeded ({$existingCount} records), skipping...");
+
             return;
         }
 
         $csvPath = database_path('seeders/data/locations.csv');
 
-        if (!File::exists($csvPath)) {
+        if (! File::exists($csvPath)) {
             $this->command->error("❌ CSV file not found: {$csvPath}");
-            $this->command->error("Please run: python3 scripts/convert_sql_to_csv.py");
+            $this->command->error('Please run: python3 scripts/convert_sql_to_csv.py');
+
             return;
         }
 
         $this->command->info('Seeding locations from CSV...');
-        
+
         $handle = fopen($csvPath, 'r');
-        
+
         if ($handle === false) {
-            $this->command->error("❌ Failed to open CSV file");
+            $this->command->error('❌ Failed to open CSV file');
+
             return;
         }
 
@@ -75,7 +78,7 @@ class LocationSeeder extends Seeder
         }
 
         // Insert remaining records
-        if (!empty($batch)) {
+        if (! empty($batch)) {
             DB::table('locations')->insert($batch);
             $totalInserted += count($batch);
         }
@@ -83,9 +86,9 @@ class LocationSeeder extends Seeder
         fclose($handle);
 
         $duration = round(microtime(true) - $startTime, 2);
-        
+
         $this->command->info("✓ Successfully seeded {$totalInserted} locations in {$duration}s");
-        
+
         // Update the sequence for PostgreSQL
         if (DB::getDriverName() === 'pgsql') {
             $maxId = DB::table('locations')->max('id');
@@ -94,4 +97,3 @@ class LocationSeeder extends Seeder
         }
     }
 }
-

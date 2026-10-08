@@ -12,10 +12,7 @@ class SocialShareService
     /**
      * Record a social share
      *
-     * @param  Activity  $activity
      * @param  string  $platform  'instagram', 'facebook', 'twitter', 'whatsapp', 'copy_link'
-     * @param  User|null  $user
-     * @return SocialShare
      */
     public function recordShare(Activity $activity, string $platform, ?User $user = null): SocialShare
     {
@@ -29,11 +26,6 @@ class SocialShareService
 
     /**
      * Generate shareable URL with referral tracking
-     *
-     * @param  Activity  $activity
-     * @param  string  $platform
-     * @param  User|null  $user
-     * @return string
      */
     public function generateShareUrl(Activity $activity, string $platform, ?User $user = null): string
     {
@@ -53,9 +45,6 @@ class SocialShareService
 
     /**
      * Track click on shared link
-     *
-     * @param  string  $referralCode
-     * @return void
      */
     public function trackClick(string $referralCode): void
     {
@@ -65,9 +54,6 @@ class SocialShareService
 
     /**
      * Track conversion from shared link
-     *
-     * @param  string  $referralCode
-     * @return void
      */
     public function trackConversion(string $referralCode): void
     {
@@ -77,9 +63,6 @@ class SocialShareService
 
     /**
      * Get share analytics for an activity
-     *
-     * @param  Activity  $activity
-     * @return array
      */
     public function getShareAnalytics(Activity $activity): array
     {
@@ -104,8 +87,6 @@ class SocialShareService
 
     /**
      * Generate unique referral code
-     *
-     * @return string
      */
     protected function generateReferralCode(): string
     {
@@ -118,9 +99,6 @@ class SocialShareService
 
     /**
      * Get social share by referral code
-     *
-     * @param  string  $referralCode
-     * @return SocialShare|null
      */
     public function getShareByReferralCode(string $referralCode): ?SocialShare
     {
@@ -130,8 +108,6 @@ class SocialShareService
     /**
      * Get top performing shares for an activity
      *
-     * @param  Activity  $activity
-     * @param  int  $limit
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getTopShares(Activity $activity, int $limit = 10)
@@ -143,4 +119,3 @@ class SocialShareService
             ->get();
     }
 }
-

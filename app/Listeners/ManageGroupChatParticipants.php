@@ -59,4 +59,3 @@ class ManageGroupChatParticipants implements ShouldQueue
         );
     }
 }
-

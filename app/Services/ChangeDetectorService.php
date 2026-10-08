@@ -40,7 +40,9 @@ class ChangeDetectorService
 
     // Thresholds
     public const TITLE_CHANGE_THRESHOLD = 0.30; // 30% difference = significant
+
     public const TIME_CHANGE_HOURS_THRESHOLD = 2; // >2 hours = significant
+
     public const COSMETIC_TITLE_THRESHOLD = 0.05; // <5% = cosmetic (no notification)
 
     /**
@@ -107,6 +109,7 @@ class ChangeDetectorService
         if (in_array($field, ['start_time', 'end_time'])) {
             $oldCarbon = $oldValue instanceof Carbon ? $oldValue : Carbon::parse($oldValue);
             $newCarbon = $newValue instanceof Carbon ? $newValue : Carbon::parse($newValue);
+
             return $oldCarbon->equalTo($newCarbon);
         }
 
@@ -121,10 +124,14 @@ class ChangeDetectorService
 
     protected function pointsAreEqual(?Point $old, ?Point $new): bool
     {
-        if ($old === null && $new === null) return true;
-        if ($old === null || $new === null) return false;
-        
-        return abs($old->latitude - $new->latitude) < 0.0001 
+        if ($old === null && $new === null) {
+            return true;
+        }
+        if ($old === null || $new === null) {
+            return false;
+        }
+
+        return abs($old->latitude - $new->latitude) < 0.0001
             && abs($old->longitude - $new->longitude) < 0.0001;
     }
 
@@ -136,6 +143,7 @@ class ChangeDetectorService
             if ($newValue > $oldValue) {
                 return 'blocked';
             }
+
             // Decrease is allowed (minor)
             return 'minor';
         }
@@ -202,6 +210,7 @@ class ChangeDetectorService
         }
 
         $distance = levenshtein($str1, $str2);
+
         return 1 - ($distance / $maxLen);
     }
 
@@ -234,12 +243,12 @@ class ChangeDetectorService
     protected function classifyLocationChange(?string $oldLocation, ?string $newLocation): string
     {
         // Adding location to empty = minor
-        if (empty($oldLocation) && !empty($newLocation)) {
+        if (empty($oldLocation) && ! empty($newLocation)) {
             return 'minor';
         }
 
         // Removing location = significant
-        if (!empty($oldLocation) && empty($newLocation)) {
+        if (! empty($oldLocation) && empty($newLocation)) {
             return 'significant';
         }
 
@@ -260,17 +269,17 @@ class ChangeDetectorService
     protected function classifyCoordinateChange(mixed $oldCoords, mixed $newCoords): string
     {
         // If no coordinates involved, minor change
-        if (!$oldCoords instanceof Point && !$newCoords instanceof Point) {
+        if (! $oldCoords instanceof Point && ! $newCoords instanceof Point) {
             return 'minor';
         }
 
         // Adding coordinates = minor
-        if (!$oldCoords instanceof Point && $newCoords instanceof Point) {
+        if (! $oldCoords instanceof Point && $newCoords instanceof Point) {
             return 'minor';
         }
 
         // Removing coordinates = significant
-        if ($oldCoords instanceof Point && !$newCoords instanceof Point) {
+        if ($oldCoords instanceof Point && ! $newCoords instanceof Point) {
             return 'significant';
         }
 
@@ -306,6 +315,7 @@ class ChangeDetectorService
                 return true;
             }
         }
+
         return false;
     }
 
@@ -319,6 +329,7 @@ class ChangeDetectorService
                 return true;
             }
         }
+
         return false;
     }
 
@@ -327,7 +338,7 @@ class ChangeDetectorService
      */
     public function getSignificantChanges(array $changes): array
     {
-        return array_filter($changes, fn($c) => $c['category'] === 'significant');
+        return array_filter($changes, fn ($c) => $c['category'] === 'significant');
     }
 
     /**
@@ -335,6 +346,6 @@ class ChangeDetectorService
      */
     public function getBlockedChanges(array $changes): array
     {
-        return array_filter($changes, fn($c) => $c['category'] === 'blocked');
+        return array_filter($changes, fn ($c) => $c['category'] === 'blocked');
     }
 }

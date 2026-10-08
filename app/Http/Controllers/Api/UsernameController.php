@@ -23,7 +23,7 @@ class UsernameController extends Controller
 
         // Check if username exists, excluding current user if provided
         $query = User::where('username', $username);
-        
+
         if ($request->exclude_user_id) {
             $query->where('id', '!=', $request->exclude_user_id);
         }
@@ -31,9 +31,8 @@ class UsernameController extends Controller
         $exists = $query->exists();
 
         return response()->json([
-            'available' => !$exists,
+            'available' => ! $exists,
             'username' => $username,
         ]);
     }
 }
-

@@ -24,7 +24,7 @@ class TagsTable
                     ->sortable()
                     ->weight('bold')
                     ->description(fn ($record) => $record->description),
-                
+
                 TextColumn::make('category')
                     ->searchable()
                     ->sortable()
@@ -38,19 +38,19 @@ class TagsTable
                         'arts' => 'secondary',
                         default => 'gray',
                     }),
-                
+
                 TextColumn::make('usage_count')
                     ->numeric()
                     ->sortable()
                     ->label('Usage')
                     ->description('Times used in activities')
                     ->alignEnd(),
-                
+
                 IconColumn::make('is_featured')
                     ->boolean()
                     ->label('Featured')
                     ->sortable(),
-                
+
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -72,13 +72,13 @@ class TagsTable
                         'other' => 'Other',
                     ])
                     ->multiple(),
-                
+
                 TernaryFilter::make('is_featured')
                     ->label('Featured Tags')
                     ->placeholder('All tags')
                     ->trueLabel('Featured only')
                     ->falseLabel('Not featured'),
-                
+
                 SelectFilter::make('usage_count')
                     ->label('Usage Level')
                     ->options([
@@ -108,14 +108,14 @@ class TagsTable
                         ->requiresConfirmation()
                         ->action(fn (Collection $records) => $records->each->update(['is_featured' => true]))
                         ->deselectRecordsAfterCompletion(),
-                    
+
                     BulkAction::make('unfeature')
                         ->label('Remove from Featured')
                         ->icon('heroicon-o-star')
                         ->requiresConfirmation()
                         ->action(fn (Collection $records) => $records->each->update(['is_featured' => false]))
                         ->deselectRecordsAfterCompletion(),
-                    
+
                     BulkAction::make('categorize')
                         ->label('Set Category')
                         ->icon('heroicon-o-tag')
@@ -140,7 +140,7 @@ class TagsTable
                             $records->each->update(['category' => $data['category']]);
                         })
                         ->deselectRecordsAfterCompletion(),
-                    
+
                     DeleteBulkAction::make(),
                 ]),
             ])

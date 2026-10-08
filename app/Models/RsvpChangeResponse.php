@@ -12,10 +12,13 @@ class RsvpChangeResponse extends Model
     use HasFactory, HasUuids;
 
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     protected $guarded = [];
 
     public const RESPONSE_ACCEPTED = 'accepted';
+
     public const RESPONSE_REFUNDED = 'refunded';
 
     protected function casts(): array

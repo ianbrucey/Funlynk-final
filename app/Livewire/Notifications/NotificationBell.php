@@ -29,21 +29,22 @@ class NotificationBell extends Component
 
     public function mount(): void
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return;
         }
-        
+
         $this->loadNotifications();
     }
 
     public function loadNotifications(): void
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             $this->recentNotifications = collect();
             $this->unreadCount = 0;
+
             return;
         }
-        
+
         // Show recent notifications (both read and unread) so users can see what they clicked on
         $this->recentNotifications = Notification::where('user_id', auth()->id())
             ->orderBy('created_at', 'desc')

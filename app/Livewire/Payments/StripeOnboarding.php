@@ -9,9 +9,13 @@ use Livewire\Component;
 class StripeOnboarding extends Component
 {
     public ?string $status = null;
+
     public bool $isOnboarded = false;
+
     public bool $canAcceptPayments = false;
+
     public ?string $errorMessage = null;
+
     public ?array $requirements = null;
 
     public function mount()
@@ -22,9 +26,10 @@ class StripeOnboarding extends Component
     public function checkStatus()
     {
         $user = Auth::user();
-        
-        if (!$user->stripeAccount) {
+
+        if (! $user->stripeAccount) {
             $this->status = 'not_connected';
+
             return;
         }
 
@@ -45,7 +50,7 @@ class StripeOnboarding extends Component
                 $this->status = 'incomplete';
             }
         } catch (\Exception $e) {
-            $this->errorMessage = 'Error checking Stripe status: ' . $e->getMessage();
+            $this->errorMessage = 'Error checking Stripe status: '.$e->getMessage();
             $this->status = 'incomplete';
         }
     }
@@ -57,7 +62,7 @@ class StripeOnboarding extends Component
 
         try {
             // Create Stripe account if doesn't exist
-            if (!$user->stripeAccount) {
+            if (! $user->stripeAccount) {
                 $stripeConnectService->createConnectAccount($user);
                 $user->refresh();
             }
@@ -67,9 +72,9 @@ class StripeOnboarding extends Component
 
             // Redirect to Stripe onboarding
             return redirect()->away($onboardingUrl);
-            
+
         } catch (\Exception $e) {
-            $this->errorMessage = 'Error starting onboarding: ' . $e->getMessage();
+            $this->errorMessage = 'Error starting onboarding: '.$e->getMessage();
         }
     }
 

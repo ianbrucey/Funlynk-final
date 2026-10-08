@@ -1,9 +1,9 @@
 <?php
 
-use App\Models\User;
-use App\Models\Post;
-use Livewire\Livewire;
 use App\Livewire\Posts\CreatePost;
+use App\Models\Post;
+use App\Models\User;
+use Livewire\Livewire;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
 beforeEach(function () {
@@ -15,7 +15,7 @@ beforeEach(function () {
 
 it('can render the create post page', function () {
     $response = $this->get(route('posts.create'));
-    
+
     $response->assertStatus(200);
     $response->assertSeeLivewire(CreatePost::class);
 });
@@ -29,9 +29,9 @@ it('can create a post with required fields', function () {
         ->call('createPost')
         ->assertHasNoErrors()
         ->assertRedirect(route('feed.nearby'));
-    
+
     expect(Post::count())->toBe(1);
-    
+
     $post = Post::first();
     expect($post->title)->toBe('Coffee at Starbucks');
     expect($post->location_name)->toBe('Starbucks Downtown');
@@ -55,7 +55,7 @@ it('can create a post with all fields', function () {
         ->set('ttl_hours', 24)
         ->call('createPost')
         ->assertHasNoErrors();
-    
+
     $post = Post::first();
     expect($post->title)->toBe('Basketball game');
     expect($post->description)->toBe('Looking for players for a pickup game');
@@ -124,11 +124,11 @@ it('can add and remove tags', function () {
 
 it('limits tags to 5', function () {
     $component = Livewire::test(CreatePost::class);
-    
+
     for ($i = 1; $i <= 5; $i++) {
         $component->set('newTag', "tag{$i}")->call('addTag');
     }
-    
+
     $component
         ->set('newTag', 'tag6')
         ->call('addTag')
@@ -137,12 +137,12 @@ it('limits tags to 5', function () {
 
 it('can create a post as a group', function () {
     $group = \App\Models\Group::factory()->create(['created_by' => $this->user->id]);
-    
+
     // Ensure user is an admin member (if logic depends on membership)
     \App\Models\GroupMember::create([
         'group_id' => $group->id,
         'user_id' => $this->user->id,
-        'role' => 'admin'
+        'role' => 'admin',
     ]);
 
     Livewire::test(CreatePost::class)
@@ -154,7 +154,7 @@ it('can create a post as a group', function () {
         ->set('selected_group_id', $group->id)
         ->call('createPost')
         ->assertHasNoErrors();
-    
+
     $post = Post::where('title', 'Group Announcement')->first();
     expect($post->posted_as_group)->toBeTrue();
     expect($post->group_id)->toBe($group->id);
@@ -174,4 +174,3 @@ it('requires selected_group_id when posting as group', function () {
         ->call('createPost')
         ->assertHasErrors(['selected_group_id']);
 });
-

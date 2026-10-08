@@ -1,0 +1,17 @@
+# PHPStan configuration — FunLink
+# Level 7 is the standing gate (see AGENTS.md). The baseline captures
+# pre-existing brownfield findings; new code must be clean.
+
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    level: 7
+    paths:
+        - app
+        - routes
+        - database
+        - config
+    # Treat the baseline as the floor: every new finding fails the gate.
+    reportUnmatchedIgnoredErrors: false

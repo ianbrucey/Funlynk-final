@@ -8,7 +8,9 @@ use Livewire\Component;
 class PostChat extends Component
 {
     public Post $post;
+
     public $isGroupPost = false;
+
     public $group = null;
 
     public function mount(Post $post)

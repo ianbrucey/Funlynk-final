@@ -23,4 +23,3 @@ interface SearchServiceInterface
         string $contentType = 'all'
     ): Collection;
 }
-

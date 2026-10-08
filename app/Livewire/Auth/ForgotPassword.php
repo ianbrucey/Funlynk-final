@@ -23,12 +23,13 @@ class ForgotPassword extends Component
         $this->validate();
 
         // Throttle: 3 attempts per minute per email
-        $key = 'password-reset:' . $this->email;
+        $key = 'password-reset:'.$this->email;
         $maxAttempts = 3;
         $decayMinutes = 1;
 
         if (cache()->get($key, 0) >= $maxAttempts) {
             $this->addError('email', __('Too many password reset attempts. Please try again in a minute.'));
+
             return;
         }
 
@@ -55,4 +56,3 @@ class ForgotPassword extends Component
             ]);
     }
 }
-

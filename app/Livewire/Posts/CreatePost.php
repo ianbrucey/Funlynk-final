@@ -5,23 +5,34 @@ namespace App\Livewire\Posts;
 use App\Models\Post;
 use App\Services\PostService;
 use Livewire\Component;
-use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class CreatePost extends Component
 {
     // Form fields
     public $title = '';
+
     public $description = '';
+
     public $location_name = '';
+
     public $latitude = '';
+
     public $longitude = '';
+
     public $time_hint = '';
+
     public $mood = '';
+
     public $selectedTags = [];
+
     public $newTag = '';
+
     public $ttl_hours = 48;
+
     public $posted_as_group = false;
+
     public $userGroups = [];
+
     public $selected_group_id = '';
 
     protected PostService $postService;
@@ -38,7 +49,7 @@ class CreatePost extends Component
                 ->where('created_by', auth()->id())
                 ->orWhereHas('members', function ($q) {
                     $q->where('user_id', auth()->id())
-                      ->where('role', 'admin');
+                        ->where('role', 'admin');
                 })
                 ->orderBy('name')
                 ->get();
@@ -104,7 +115,7 @@ class CreatePost extends Component
 
             return redirect()->route('feed.nearby');
         } catch (\Exception $e) {
-            session()->flash('error', 'Error creating post: ' . $e->getMessage());
+            session()->flash('error', 'Error creating post: '.$e->getMessage());
         }
     }
 
@@ -123,6 +134,7 @@ class CreatePost extends Component
 
         if (count($this->selectedTags) >= 5) {
             $this->addError('selectedTags', 'Maximum 5 tags allowed for posts.');
+
             return;
         }
 
@@ -132,6 +144,7 @@ class CreatePost extends Component
         foreach ($this->selectedTags as $tag) {
             if (strcasecmp($tag['name'], $tagName) === 0) {
                 $this->reset('newTag');
+
                 return;
             }
         }
@@ -141,7 +154,7 @@ class CreatePost extends Component
         if ($tag) {
             $this->selectedTags[] = [
                 'id' => $tag->id,
-                'name' => $tag->name
+                'name' => $tag->name,
             ];
             $this->newTag = '';
         }

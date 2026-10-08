@@ -39,8 +39,8 @@ class ActivityEditService
         $blockedChanges = [];
         if ($activity->isEditLocked()) {
             $blockedChanges = $this->changeDetector->getBlockedChanges($changes);
-            
-            if (!empty($blockedChanges)) {
+
+            if (! empty($blockedChanges)) {
                 return [
                     'success' => false,
                     'message' => 'Some changes are not allowed after receiving payments.',
@@ -68,7 +68,7 @@ class ActivityEditService
             }
 
             // Create refund window if there are significant changes and paid attendees
-            if (!empty($significantChanges) && $activity->isEditLocked()) {
+            if (! empty($significantChanges) && $activity->isEditLocked()) {
                 $triggerLog = ActivityEditLog::where('activity_id', $activity->id)
                     ->where('change_category', 'significant')
                     ->latest()

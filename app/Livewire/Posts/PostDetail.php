@@ -10,7 +10,9 @@ use Livewire\Component;
 class PostDetail extends Component
 {
     public Post $post;
+
     public $isGroupPost = false;
+
     public $group = null;
 
     protected PostService $postService;

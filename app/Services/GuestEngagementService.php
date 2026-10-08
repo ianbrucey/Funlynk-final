@@ -13,10 +13,7 @@ class GuestEngagementService
     /**
      * Record guest interest in an event
      *
-     * @param  Activity  $activity
-     * @param  string  $email
      * @param  array  $metadata  ['source', 'utm_campaign', 'utm_source', 'utm_medium']
-     * @return EventInterest
      */
     public function recordInterest(Activity $activity, string $email, array $metadata = []): EventInterest
     {
@@ -37,10 +34,7 @@ class GuestEngagementService
     /**
      * Create or retrieve guest bookmark
      *
-     * @param  Activity  $activity
-     * @param  string|null  $guestToken
-     * @param  string|null  $source
-     * @return array  ['bookmark' => GuestBookmark, 'token' => string]
+     * @return array ['bookmark' => GuestBookmark, 'token' => string]
      */
     public function createBookmark(Activity $activity, ?string $guestToken = null, ?string $source = null): array
     {
@@ -67,7 +61,6 @@ class GuestEngagementService
     /**
      * Get all bookmarks for a guest token
      *
-     * @param  string  $guestToken
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getGuestBookmarks(string $guestToken)
@@ -84,10 +77,7 @@ class GuestEngagementService
     /**
      * Migrate guest data to user account after signup
      *
-     * @param  User  $user
-     * @param  string  $email
-     * @param  string|null  $guestToken
-     * @return array  ['interests' => int, 'bookmarks' => int]
+     * @return array ['interests' => int, 'bookmarks' => int]
      */
     public function migrateGuestData(User $user, string $email, ?string $guestToken = null): array
     {
@@ -110,10 +100,6 @@ class GuestEngagementService
 
     /**
      * Mark interest as converted to RSVP
-     *
-     * @param  EventInterest  $interest
-     * @param  string  $rsvpId
-     * @return EventInterest
      */
     public function convertInterestToRsvp(EventInterest $interest, string $rsvpId): EventInterest
     {
@@ -127,8 +113,6 @@ class GuestEngagementService
 
     /**
      * Generate unique guest token for cookie
-     *
-     * @return string
      */
     protected function generateGuestToken(): string
     {
@@ -137,10 +121,6 @@ class GuestEngagementService
 
     /**
      * Check if email has already expressed interest
-     *
-     * @param  Activity  $activity
-     * @param  string  $email
-     * @return bool
      */
     public function hasExpressedInterest(Activity $activity, string $email): bool
     {
@@ -149,4 +129,3 @@ class GuestEngagementService
             ->exists();
     }
 }
-

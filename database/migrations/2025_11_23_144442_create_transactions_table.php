@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestamp('refunded_at')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
-            
+
             $table->index('user_id');
             $table->index('activity_id');
             $table->index('rsvp_id');

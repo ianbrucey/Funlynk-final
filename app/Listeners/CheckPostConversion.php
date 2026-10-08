@@ -4,8 +4,6 @@ namespace App\Listeners;
 
 use App\Events\PostReacted;
 use App\Jobs\CheckPostConversionEligibility;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 
 class CheckPostConversion
 {

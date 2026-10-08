@@ -18,11 +18,11 @@ class EnsureOnboardingComplete
         $user = $request->user();
 
         // If user hasn't completed onboarding, redirect them
-        if ($user && !$user->hasCompletedOnboarding()) {
+        if ($user && ! $user->hasCompletedOnboarding()) {
             // Allow access to these specific routes
             $allowedRoutes = ['onboarding', 'profile.edit', 'logout'];
-            
-            if (!in_array($request->route()->getName(), $allowedRoutes)) {
+
+            if (! in_array($request->route()->getName(), $allowedRoutes)) {
                 return redirect()->route('onboarding')
                     ->with('info', 'Please complete your profile setup to access this feature.');
             }

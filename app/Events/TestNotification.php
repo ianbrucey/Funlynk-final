@@ -36,7 +36,7 @@ class TestNotification implements ShouldBroadcast
      */
     public function broadcastOn(): Channel
     {
-        return new Channel('user.' . $this->userId);
+        return new Channel('user.'.$this->userId);
     }
 
     /**
@@ -55,4 +55,3 @@ class TestNotification implements ShouldBroadcast
         return $this->notification;
     }
 }
-

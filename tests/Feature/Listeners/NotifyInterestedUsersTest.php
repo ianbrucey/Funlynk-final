@@ -1,7 +1,6 @@
 <?php
 
 use App\Events\PostConvertedToEvent;
-use App\Listeners\NotifyInterestedUsers;
 use App\Models\Activity;
 use App\Models\Notification;
 use App\Models\Post;
@@ -82,4 +81,3 @@ test('does not notify post owner when post is converted', function () {
     // Owner should not receive notification
     expect(Notification::where('user_id', $owner->id)->count())->toBe(0);
 });
-

@@ -28,9 +28,13 @@ class SearchUsers extends Component
 
     // Infinite scroll properties
     public $page = 1;
+
     public $perPage = 15; // Initial load: 15 users
+
     public $hasMore = true;
+
     public $users = [];
+
     public $totalUsers = 0;
 
     public function mount()
@@ -96,7 +100,7 @@ class SearchUsers extends Component
         $interest = ucwords(strtolower($interest));
 
         // Check if already selected
-        if (!in_array($interest, $this->selectedInterests)) {
+        if (! in_array($interest, $this->selectedInterests)) {
             $this->selectedInterests[] = $interest;
             $this->resetSearch();
         }
@@ -129,6 +133,7 @@ class SearchUsers extends Component
         // Cap at 200 users total
         if (count($this->users) >= 200) {
             $this->hasMore = false;
+
             return;
         }
 

@@ -4,7 +4,6 @@ namespace App\Livewire\Profile;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -49,7 +48,7 @@ class EditProfile extends Component
     {
         $user = Auth::user();
 
-        if (!$user->stripeAccount) {
+        if (! $user->stripeAccount) {
             return false;
         }
 
@@ -61,8 +60,8 @@ class EditProfile extends Component
         // Use DB query to avoid loading the Point object through Eloquent casting
         $userData = \DB::table('users')
             ->select('username', 'display_name', 'bio', 'interests', 'location_name', 'profile_image_url',
-                     \DB::raw('ST_Y(location_coordinates::geometry) as latitude'),
-                     \DB::raw('ST_X(location_coordinates::geometry) as longitude'))
+                \DB::raw('ST_Y(location_coordinates::geometry) as latitude'),
+                \DB::raw('ST_X(location_coordinates::geometry) as longitude'))
             ->where('id', Auth::id())
             ->first();
 
@@ -81,10 +80,10 @@ class EditProfile extends Component
     public function hydrate()
     {
         // Ensure coordinates are always primitives after hydration
-        if ($this->latitude !== null && !is_float($this->latitude) && !is_int($this->latitude)) {
+        if ($this->latitude !== null && ! is_float($this->latitude) && ! is_int($this->latitude)) {
             $this->latitude = (float) $this->latitude;
         }
-        if ($this->longitude !== null && !is_float($this->longitude) && !is_int($this->longitude)) {
+        if ($this->longitude !== null && ! is_float($this->longitude) && ! is_int($this->longitude)) {
             $this->longitude = (float) $this->longitude;
         }
     }
@@ -107,7 +106,7 @@ class EditProfile extends Component
             $exists = \App\Models\User::where('username', $username)
                 ->where('id', '!=', Auth::id())
                 ->exists();
-            $this->usernameAvailable = !$exists;
+            $this->usernameAvailable = ! $exists;
         } else {
             $this->usernameAvailable = null;
         }
@@ -182,6 +181,7 @@ class EditProfile extends Component
 
             if ($exists) {
                 $this->addError('username', 'This username is already taken.');
+
                 return;
             }
 
@@ -191,8 +191,9 @@ class EditProfile extends Component
         // Find the user model (without loading location_coordinates to avoid Point issues)
         $user = \App\Models\User::withoutGlobalScopes()->find($userId);
 
-        if (!$user) {
+        if (! $user) {
             $this->addError('save', 'User not found.');
+
             return;
         }
 
@@ -229,7 +230,7 @@ class EditProfile extends Component
             // Use component property instead of session flash for immediate display
             $this->successMessage = 'Profile updated successfully!';
         } catch (\Exception $e) {
-            $this->addError('save', 'Failed to save profile: ' . $e->getMessage());
+            $this->addError('save', 'Failed to save profile: '.$e->getMessage());
             \Log::error('Profile save failed', ['error' => $e->getMessage(), 'user_id' => $userId]);
         }
     }
@@ -282,8 +283,9 @@ class EditProfile extends Component
         $user = Auth::user();
 
         // Verify password
-        if (!password_verify($this->deletePassword, $user->password)) {
+        if (! password_verify($this->deletePassword, $user->password)) {
             $this->addError('deletePassword', 'The password you entered is incorrect.');
+
             return;
         }
 

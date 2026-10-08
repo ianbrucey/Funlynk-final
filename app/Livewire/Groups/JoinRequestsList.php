@@ -82,8 +82,8 @@ class JoinRequestsList extends Component
             })
             ->when($this->search, function ($q) {
                 $q->whereHas('user', function ($userQuery) {
-                    $userQuery->where('name', 'like', '%' . $this->search . '%')
-                        ->orWhere('username', 'like', '%' . $this->search . '%');
+                    $userQuery->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('username', 'like', '%'.$this->search.'%');
                 });
             })
             ->orderBy('created_at', 'desc');

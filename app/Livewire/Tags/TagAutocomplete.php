@@ -9,11 +9,15 @@ use Livewire\Component;
 class TagAutocomplete extends Component
 {
     public $search = '';
+
     public $selectedTags = [];
+
     public $suggestions = [];
+
     public $showSuggestions = false;
+
     public $maxTags = 10;
-    
+
     protected TagService $tagService;
 
     public function boot(TagService $tagService)
@@ -40,19 +44,19 @@ class TagAutocomplete extends Component
     public function selectTag($tagId)
     {
         $tag = Tag::find($tagId);
-        
-        if ($tag && !in_array($tag->id, array_column($this->selectedTags, 'id'))) {
+
+        if ($tag && ! in_array($tag->id, array_column($this->selectedTags, 'id'))) {
             if (count($this->selectedTags) < $this->maxTags) {
                 $this->selectedTags[] = [
                     'id' => $tag->id,
                     'name' => $tag->name,
                     'category' => $tag->category ?? null,
                 ];
-                
+
                 $this->dispatch('tagsUpdated', $this->selectedTags);
             }
         }
-        
+
         $this->search = '';
         $this->suggestions = [];
         $this->showSuggestions = false;
@@ -66,18 +70,19 @@ class TagAutocomplete extends Component
 
         // Validate tag
         $validation = $this->tagService->validateTag($this->search);
-        
-        if (!$validation['valid']) {
+
+        if (! $validation['valid']) {
             session()->flash('error', $validation['message']);
+
             return;
         }
 
         // Create new tag
         $tag = $this->tagService->createTag($this->search);
-        
+
         // Select the newly created tag
         $this->selectTag($tag->id);
-        
+
         session()->flash('success', 'Tag created successfully!');
     }
 
@@ -86,7 +91,7 @@ class TagAutocomplete extends Component
         if (isset($this->selectedTags[$index])) {
             unset($this->selectedTags[$index]);
             $this->selectedTags = array_values($this->selectedTags); // Re-index array
-            
+
             $this->dispatch('tagsUpdated', $this->selectedTags);
         }
     }

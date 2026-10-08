@@ -17,16 +17,20 @@ class OnboardingWizard extends Component
 
     // Location data (Step 1)
     public string $location_name = '';
+
     public ?float $latitude = null;
+
     public ?float $longitude = null;
 
     // Profile image (Step 2)
     #[Validate('nullable|image|max:6144')]
     public $profileImage = null;
+
     public ?string $uploadedImagePath = null;
 
     // Interests (Step 3)
     public array $interests = [];
+
     public string $newInterest = '';
 
     public function mount()
@@ -98,6 +102,7 @@ class OnboardingWizard extends Component
         // If we already have an uploaded image, just proceed
         if ($this->uploadedImagePath) {
             $this->currentStep = 3;
+
             return;
         }
 
@@ -142,10 +147,11 @@ class OnboardingWizard extends Component
 
         if (count($this->interests) >= 10) {
             $this->addError('interests', 'Maximum 10 interests allowed.');
+
             return;
         }
 
-        if (!in_array($interest, $this->interests)) {
+        if (! in_array($interest, $this->interests)) {
             $this->interests[] = $interest;
         }
 
@@ -174,9 +180,10 @@ class OnboardingWizard extends Component
         ]);
 
         // Ensure we have a profile image
-        if (!$this->uploadedImagePath) {
+        if (! $this->uploadedImagePath) {
             $this->addError('profileImage', 'Profile image is required.');
             $this->currentStep = 2;
+
             return;
         }
 

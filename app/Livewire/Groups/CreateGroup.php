@@ -34,7 +34,9 @@ class CreateGroup extends Component
 
     // Marketing / Landing Page Fields
     public string $emoji = '';
+
     public string $schedule_text = '';
+
     public string $meetup_label = 'Session';
 
     // Image uploads
@@ -44,13 +46,21 @@ class CreateGroup extends Component
 
     // Recurring Schedule Fields
     public bool $hasRecurringSchedule = false;
+
     public string $scheduleTitle = '';
+
     public array $scheduleDays = [];
+
     public string $scheduleStartHour = '6';
+
     public string $scheduleStartMinute = '00';
+
     public string $scheduleStartPeriod = 'PM';
+
     public ?string $scheduleEndHour = null;
+
     public ?string $scheduleEndMinute = null;
+
     public ?string $scheduleEndPeriod = null;
 
     protected GroupService $groupService;
@@ -185,6 +195,7 @@ class CreateGroup extends Component
         } elseif ($period === 'AM' && $h === 12) {
             $h = 0;
         }
+
         return sprintf('%02d:%s:00', $h, $minute);
     }
 
@@ -221,7 +232,7 @@ class CreateGroup extends Component
             $group = $this->groupService->createGroup(Auth::user(), $data);
 
             // Create recurring schedule if enabled
-            if ($this->hasRecurringSchedule && !empty($this->scheduleDays)) {
+            if ($this->hasRecurringSchedule && ! empty($this->scheduleDays)) {
                 $scheduleService = app(RecurringScheduleService::class);
 
                 $locationPoint = null;

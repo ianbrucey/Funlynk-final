@@ -13,6 +13,7 @@ class EventReminderNotification extends Notification implements ShouldQueue
     use Queueable;
 
     protected Activity $activity;
+
     protected int $minutesBefore;
 
     /**
@@ -42,8 +43,8 @@ class EventReminderNotification extends Notification implements ShouldQueue
     public function toDatabase(object $notifiable): array
     {
         $timeText = $this->minutesBefore >= 60
-            ? ($this->minutesBefore / 60) . ' hour' . ($this->minutesBefore > 60 ? 's' : '')
-            : $this->minutesBefore . ' minutes';
+            ? ($this->minutesBefore / 60).' hour'.($this->minutesBefore > 60 ? 's' : '')
+            : $this->minutesBefore.' minutes';
 
         return [
             'title' => "⏰ {$this->activity->title} starts in {$timeText}!",
@@ -68,8 +69,8 @@ class EventReminderNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         $timeText = $this->minutesBefore >= 60
-            ? ($this->minutesBefore / 60) . ' hour' . ($this->minutesBefore > 60 ? 's' : '')
-            : $this->minutesBefore . ' minutes';
+            ? ($this->minutesBefore / 60).' hour'.($this->minutesBefore > 60 ? 's' : '')
+            : $this->minutesBefore.' minutes';
 
         return [
             'title' => "⏰ {$this->activity->title} starts in {$timeText}!",

@@ -32,26 +32,28 @@ class TestReverbNotification extends Command
     {
         // Get user
         $userInput = $this->argument('user');
-        
+
         if ($userInput) {
             // Find user by ID or email
-            $user = is_numeric($userInput) 
+            $user = is_numeric($userInput)
                 ? User::find($userInput)
                 : User::where('email', $userInput)->first();
-            
-            if (!$user) {
+
+            if (! $user) {
                 $this->error("User not found: {$userInput}");
+
                 return self::FAILURE;
             }
         } else {
             // Use first user if no user specified
             $user = User::first();
-            
-            if (!$user) {
+
+            if (! $user) {
                 $this->error('No users found in database. Create a user first.');
+
                 return self::FAILURE;
             }
-            
+
             $this->info("No user specified. Using first user: {$user->email} (ID: {$user->id})");
         }
 
@@ -85,7 +87,7 @@ class TestReverbNotification extends Command
             $this->line('   • Reverb server is running: php artisan reverb:start');
             $this->line('   • User is logged in and on a page with notifications.js loaded');
             $this->line('   • VITE_REVERB_* environment variables are correct');
-            
+
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->components->error('❌ Failed to broadcast notification');
@@ -95,9 +97,8 @@ class TestReverbNotification extends Command
             $this->line('   • Ensure Reverb is running: php artisan reverb:start');
             $this->line('   • Check BROADCAST_CONNECTION=reverb in .env');
             $this->line('   • Verify Reverb credentials match in .env');
-            
+
             return self::FAILURE;
         }
     }
 }
-

@@ -36,19 +36,19 @@ class InboxIcon extends Component
 
     public function mount(): void
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return;
         }
-        
+
         $this->loadCounts();
     }
 
     public function loadCounts(): void
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return;
         }
-        
+
         $service = app(MessageRequestService::class);
         /** @var User $user */
         $user = auth()->user();

@@ -12,9 +12,13 @@ use Livewire\Component;
 class QrScanner extends Component
 {
     public Activity $activity;
+
     public ?Rsvp $lastCheckedIn = null;
+
     public ?string $errorMessage = null;
+
     public ?string $successMessage = null;
+
     public array $stats = [];
 
     public function mount(Activity $activity): void
@@ -32,21 +36,24 @@ class QrScanner extends Component
         try {
             $data = json_decode($payload, true);
 
-            if (!$data || !isset($data['token']) || !isset($data['activity_id'])) {
+            if (! $data || ! isset($data['token']) || ! isset($data['activity_id'])) {
                 $this->errorMessage = 'Invalid QR code format.';
+
                 return;
             }
 
             if ($data['activity_id'] !== $this->activity->id) {
                 $this->errorMessage = 'This ticket is for a different event.';
+
                 return;
             }
 
             $checkInService = app(CheckInService::class);
             $rsvp = $checkInService->validateQrToken($this->activity->id, $data['token']);
 
-            if (!$rsvp) {
+            if (! $rsvp) {
                 $this->errorMessage = 'Invalid QR code. Attendee not found.';
+
                 return;
             }
 
@@ -55,17 +62,18 @@ class QrScanner extends Component
 
             if ($rsvp->checked_in_at) {
                 $userName = $rsvp->user->name ?? 'This attendee';
-                $this->errorMessage = $userName . ' is already checked in.';
+                $this->errorMessage = $userName.' is already checked in.';
+
                 return;
             }
 
             $this->lastCheckedIn = $checkInService->performCheckIn($rsvp, 'qr_scan', auth()->user());
-            $this->successMessage = ($this->lastCheckedIn->user->name ?? 'Attendee') . ' checked in successfully!';
+            $this->successMessage = ($this->lastCheckedIn->user->name ?? 'Attendee').' checked in successfully!';
             $this->refreshStats();
 
             $this->dispatch('play-success-sound');
         } catch (\Exception $e) {
-            $this->errorMessage = 'Error processing check-in: ' . $e->getMessage();
+            $this->errorMessage = 'Error processing check-in: '.$e->getMessage();
         }
     }
 
@@ -79,4 +87,3 @@ class QrScanner extends Component
         return view('livewire.check-in.qr-scanner');
     }
 }
-

@@ -4,8 +4,6 @@ namespace App\Listeners;
 
 use App\Events\PostInvitationSent;
 use App\Models\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 
 class SendPostInvitationNotification
 {

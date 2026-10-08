@@ -135,12 +135,12 @@ class Group extends Model
      */
     public function canCreatePost(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         $membership = $this->memberships()->where('user_id', $user->id)->first();
-        if (!$membership) {
+        if (! $membership) {
             return false;
         }
 
@@ -156,12 +156,12 @@ class Group extends Model
      */
     public function canCreateEvent(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         $membership = $this->memberships()->where('user_id', $user->id)->first();
-        if (!$membership) {
+        if (! $membership) {
             return false;
         }
 
@@ -177,7 +177,7 @@ class Group extends Model
      */
     public function isAdmin(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 

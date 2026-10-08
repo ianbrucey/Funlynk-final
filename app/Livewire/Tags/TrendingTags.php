@@ -8,8 +8,11 @@ use Livewire\Component;
 class TrendingTags extends Component
 {
     public $limit = 10;
+
     public $days = 7;
+
     public $showUsageCount = true;
+
     public $clickable = true;
 
     protected TagService $tagService;

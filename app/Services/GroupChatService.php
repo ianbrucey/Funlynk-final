@@ -25,7 +25,7 @@ class GroupChatService extends ChatService
 
                 // Add all existing group members as participants
                 $memberIds = $group->members->pluck('id')->toArray();
-                if (!empty($memberIds)) {
+                if (! empty($memberIds)) {
                     $conversation->participants()->attach($memberIds);
                 }
             }
