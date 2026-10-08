@@ -1,69 +1,32 @@
-# <NNN> — <Feature name> — Contract
+# 000 — Test suite repair — Contract
 
-**Status:** DRAFT (→ APPROVED)
-**Date:** <YYYY-MM-DD>
+**Status:** APPROVED
+**Date:** 2026-10-08
 
-> The contract is the buildable truth. Views and components may request only
-> what this contract exposes. If implementation reveals a contract error, stop:
-> update and reapprove this artifact before continuing.
+## Summary
 
----
+**N/A — no new public contracts.** This spec adds no routes, services, or
+component APIs, with one exception:
 
-## Domain services
+### Exception — K5 route restoration
 
-| Method | Inputs | Outputs | Errors |
-|---|---|---|---|
-| <e.g. `FeedService::nearby(User $user, Point $at, int $radiusM)`> | <...> | <...> | <e.g. `InvalidRadiusException` → 422> |
+If execution confirms no existing route serves the public event page, the
+restored route must satisfy the three existing references exactly:
 
-## Routes
-
-| Method | Path | Component/Controller | Auth |
-|---|---|---|---|
-| <e.g. GET> | </feed/nearby> | <NearbyFeed> | <auth> |
-
-## Livewire components
-
-| Component | Properties | Actions | Events emitted/listened |
-|---|---|---|---|
-| <...> | <...> | <...> | <...> |
-
-## Validation
-
-Every input lists its rules and the exact error for each invalid input.
-
-| Input | Rules | Invalid → error |
-|---|---|---|
-| <...> | <...> | <...> |
-
-## Authorization
-
-**Every operation names its rule.** No operation without one.
-
-| Operation | Actor | Rule (policy/gate) | Denied behavior |
-|---|---|---|---|
-| <e.g. delete post> | <post owner> | <PostPolicy::delete> | <403, no existence leak> |
-
-## Payments (if touched)
-
-| Operation | Idempotency | State transitions | Failure / rollback |
-|---|---|---|---|
-| <...> | <e.g. idempotency key per checkout session> | <...> | <...> |
-
-## Real-time (if touched)
-
-| Event | Channel | Authorized for | Payload |
-|---|---|---|---|
-| <...> | <e.g. private-chat.{id}> | <...> | <only contract fields> |
-
-## Location (if touched)
-
-- Coordinates in: <...>
-- Radius applied: <...>
-- Coordinates out: <e.g. rounded/never — exact points never leave the server>
-
-## External integrations
-
-| Integration | Failure behavior |
+| Item | Requirement |
 |---|---|
-| <e.g. Stripe> | <...> |
-| <e.g. Meilisearch> | <degrade to DB search, log, alert> |
+| Route name | `events.public` |
+| Parameter | activity slug |
+| Access | guest-accessible (public event page) |
+| Consumers | `SocialShareService` (share URLs), `social-meta.blade.php` (og:url), `PublicEventViewTest` |
+
+### Standing contracts this spec must not break
+
+- `PostService::convertToEvent()` signature and return (`Activity`) — unchanged;
+  only the persistence payload inside `ActivityConversionService` changes (K3).
+- `ConversionEligibilityService` result shape (`should_prompt`, `reason`,
+  `threshold`, `reaction_count`) — unchanged; only threshold *values* may
+  change, and only per the K6 owner decision.
+- Notification payload keys consumed by existing components — K7 restores the
+  `message` key the components/tests already expect, or documents the rename
+  in `decisions.md` if the rename was intentional.
