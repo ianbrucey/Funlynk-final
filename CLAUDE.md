@@ -1,7 +1,7 @@
-# AGENTS.md — FunLink
+# CLAUDE.md — FunLink
 
 Agent handoff for this repository. Read this first, then the docs in the table below.
-This file and `CLAUDE.md` are exact mirrors — update both or neither.
+This file and `AGENTS.md` are exact mirrors — update both or neither.
 
 ## What FunLink is
 
