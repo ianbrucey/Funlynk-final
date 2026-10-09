@@ -61,7 +61,7 @@ class Rsvp extends Model
             ->whereNull('response')
             ->whereHas('refundWindow', function ($query) {
                 $query->where('status', ActivityRefundWindow::STATUS_ACTIVE)
-                      ->where('expires_at', '>', now());
+                    ->where('expires_at', '>', now());
             });
     }
 

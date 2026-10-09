@@ -21,7 +21,7 @@ return new class extends Migration
             $table->double('longitude');
             $table->string('county', 50);
             $table->string('timezone', 50)->nullable();
-            
+
             // Indexes for efficient lookups
             $table->index('city', 'idx_locations_city');
             $table->index('zip', 'idx_locations_zip');
@@ -38,4 +38,3 @@ return new class extends Migration
         Schema::dropIfExists('locations');
     }
 };
-

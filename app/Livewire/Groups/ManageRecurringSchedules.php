@@ -14,30 +14,49 @@ class ManageRecurringSchedules extends Component
 
     // Modal states
     public bool $showCreateModal = false;
+
     public bool $showEditModal = false;
+
     public bool $showDeleteModal = false;
+
     public bool $showEventsModal = false;
 
     // Form fields
     public string $title = '';
+
     public string $description = '';
+
     public string $locationName = '';
+
     public ?float $latitude = null;
+
     public ?float $longitude = null;
+
     public string $frequency = 'weekly';
+
     public array $daysOfWeek = [];
+
     public ?int $dayOfMonth = null;
+
     public string $startTimeHour = '6';
+
     public string $startTimeMinute = '00';
+
     public string $startTimePeriod = 'PM';
+
     public ?string $endTimeHour = null;
+
     public ?string $endTimeMinute = null;
+
     public ?string $endTimePeriod = null;
+
     public int $generateWeeksAhead = 4;
 
     // For editing
     public ?string $editingScheduleId = null;
+
     public ?string $deletingScheduleId = null;
+
     public ?string $viewingScheduleId = null;
 
     public function mount(Group $group): void
@@ -202,6 +221,7 @@ class ManageRecurringSchedules extends Component
         } elseif ($period === 'AM' && $h === 12) {
             $h = 0;
         }
+
         return sprintf('%02d:%s:00', $h, $minute);
     }
 

@@ -36,7 +36,7 @@ class RecommendationEngine
 
         // Interest-based reason
         $userInterests = collect($user->interests ?? [])->flatten()->filter()->values()->all();
-        $contentTags = collect($content->tags ?? [])->flatten()->filter()->values()->all();
+        $contentTags = collect($this->tagNames($content))->flatten()->filter()->values()->all();
         $matching = array_values(array_intersect($userInterests, $contentTags));
 
         if (! empty($matching)) {
@@ -84,10 +84,35 @@ class RecommendationEngine
         };
     }
 
+    /**
+     * Tag names for a piece of content, whatever its shape:
+     * activities carry Tag models; posts carry a JSON array of names.
+     *
+     * @return array<int, string>
+     */
+    private function tagNames(Post|Activity $content): array
+    {
+        if ($content instanceof Activity) {
+            return $content->tags->pluck('name')->all();
+        }
+
+        $tags = $content->tags;
+
+        if (is_string($tags)) {
+            $tags = json_decode($tags, true);
+        }
+
+        if (! is_array($tags)) {
+            return [];
+        }
+
+        return array_values(array_filter($tags, fn ($tag) => is_string($tag)));
+    }
+
     protected function interestScore(User $user, Post|Activity $content): float
     {
         $userInterests = collect($user->interests ?? [])->flatten()->filter()->values()->all();
-        $contentTags = collect($content->tags ?? [])->flatten()->filter()->values()->all();
+        $contentTags = collect($this->tagNames($content))->flatten()->filter()->values()->all();
 
         if ($userInterests === [] || $contentTags === []) {
             return 10.0; // small base score

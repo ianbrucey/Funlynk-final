@@ -19,13 +19,13 @@ class PostFactory extends Factory
     {
         $lat = fake()->latitude(37.0, 38.0); // San Francisco area
         $lng = fake()->longitude(-122.5, -122.0);
-        
+
         return [
             'user_id' => \App\Models\User::factory(),
             'title' => fake()->sentence(rand(3, 6)),
             'description' => fake()->optional(0.7)->paragraph(),
             'location_coordinates' => new Point($lat, $lng, 4326),
-            'location_name' => fake()->city() . ', CA',
+            'location_name' => fake()->city().', CA',
             'time_hint' => fake()->randomElement(['Tonight around 8pm', 'Tomorrow afternoon', 'This weekend', 'Later today', null]),
             'tags' => fake()->randomElements(['sports', 'music', 'outdoors', 'gaming', 'travel', 'food', 'art'], rand(1, 3)),
             'geo_hash' => null,

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -12,9 +11,7 @@ use Illuminate\Support\Facades\Validator;
 
 class PostReactionController extends Controller
 {
-    public function __construct(private PostService $postService)
-    {
-    }
+    public function __construct(private PostService $postService) {}
 
     /**
      * React to a post.

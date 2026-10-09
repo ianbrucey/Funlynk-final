@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Post;
 use App\Models\PostReaction;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PostSeeder extends Seeder
@@ -43,9 +42,11 @@ class PostSeeder extends Seeder
             ->each(function ($post) use ($users) {
                 $reactionCount = rand(3, 7);
                 $reactingUsers = $users->random(min($reactionCount, $users->count()));
-                
+
                 foreach ($reactingUsers as $index => $user) {
-                    if ($index >= $reactionCount) break;
+                    if ($index >= $reactionCount) {
+                        break;
+                    }
                     PostReaction::create([
                         'post_id' => $post->id,
                         'user_id' => $user->id,
@@ -53,7 +54,7 @@ class PostSeeder extends Seeder
                         'created_at' => now(),
                     ]);
                 }
-                
+
                 // Update reaction count
                 $post->update(['reaction_count' => $reactionCount]);
             });
@@ -70,9 +71,11 @@ class PostSeeder extends Seeder
             ->each(function ($post) use ($users) {
                 $reactionCount = rand(10, 15);
                 $reactingUsers = $users->random(min($reactionCount, $users->count()));
-                
+
                 foreach ($reactingUsers as $index => $user) {
-                    if ($index >= $reactionCount) break;
+                    if ($index >= $reactionCount) {
+                        break;
+                    }
                     PostReaction::create([
                         'post_id' => $post->id,
                         'user_id' => $user->id,
@@ -80,7 +83,7 @@ class PostSeeder extends Seeder
                         'created_at' => now(),
                     ]);
                 }
-                
+
                 // Update reaction count
                 $post->update(['reaction_count' => $reactionCount]);
             });

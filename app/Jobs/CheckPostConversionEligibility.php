@@ -27,7 +27,7 @@ class CheckPostConversionEligibility implements ShouldQueue
     {
         $post = Post::find($this->postId);
 
-        if (!$post || $post->status !== 'active') {
+        if (! $post || $post->status !== 'active') {
             return;
         }
 
@@ -36,11 +36,12 @@ class CheckPostConversionEligibility implements ShouldQueue
         // Auto-convert at strong threshold reactions
         if ($eligibility['auto_convert']) {
             event(new PostAutoConverted($post, $eligibility));
+
             return;
         }
 
         // Suggest conversion at soft threshold reactions (only once)
-        if ($eligibility['eligible'] && !$post->conversion_suggested_at) {
+        if ($eligibility['eligible'] && ! $post->conversion_suggested_at) {
             $post->update(['conversion_suggested_at' => now()]);
             event(new PostConversionSuggested($post, $eligibility));
         }

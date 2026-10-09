@@ -41,8 +41,8 @@ class CreateGroupPost extends Component
 
     public function toggleLocation(): void
     {
-        $this->showLocation = !$this->showLocation;
-        if (!$this->showLocation) {
+        $this->showLocation = ! $this->showLocation;
+        if (! $this->showLocation) {
             $this->locationName = null;
         }
     }
@@ -59,8 +59,9 @@ class CreateGroupPost extends Component
     public function createPost(GroupContentService $groupContentService)
     {
         // Check permission
-        if (!$this->group->canCreatePost(auth()->user())) {
+        if (! $this->group->canCreatePost(auth()->user())) {
             session()->flash('error', 'You do not have permission to create posts in this group.');
+
             return;
         }
 

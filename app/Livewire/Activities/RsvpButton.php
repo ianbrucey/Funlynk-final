@@ -11,7 +11,9 @@ use Livewire\Component;
 class RsvpButton extends Component
 {
     public Activity $activity;
+
     public ?Rsvp $userRsvp = null;
+
     public bool $loading = false;
 
     public function mount(Activity $activity)
@@ -31,12 +33,12 @@ class RsvpButton extends Component
 
     public function toggleRsvp()
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
         // If activity requires online payment and user doesn't have RSVP, redirect to checkout
-        if ($this->activity->payment_type === 'online' && !$this->userRsvp) {
+        if ($this->activity->payment_type === 'online' && ! $this->userRsvp) {
             return redirect()->route('events.checkout', $this->activity);
         }
         // For 'at_door' and 'free', allow immediate RSVP (handled below)
@@ -54,7 +56,7 @@ class RsvpButton extends Component
             } else {
                 // Create new RSVP (free activities only)
                 $this->userRsvp = $rsvpService->createRsvp($this->activity, Auth::user());
-                
+
                 if ($this->userRsvp->status === 'waitlist') {
                     session()->flash('success', 'Added to waitlist. You will be notified if a spot opens up.');
                 } else {
@@ -64,10 +66,10 @@ class RsvpButton extends Component
 
             // Refresh activity to get updated counts
             $this->activity->refresh();
-            
+
             // Dispatch event to update parent components
             $this->dispatch('rsvp-updated');
-            
+
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
         } finally {

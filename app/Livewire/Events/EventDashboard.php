@@ -13,6 +13,7 @@ use Livewire\Component;
 class EventDashboard extends Component
 {
     public string $filter = 'upcoming';
+
     public string $search = '';
 
     protected $queryString = ['filter', 'search'];
@@ -32,9 +33,9 @@ class EventDashboard extends Component
         // Apply search filter
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('title', 'ilike', '%' . $this->search . '%')
-                  ->orWhere('description', 'ilike', '%' . $this->search . '%')
-                  ->orWhere('location_name', 'ilike', '%' . $this->search . '%');
+                $q->where('title', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('description', 'ilike', '%'.$this->search.'%')
+                    ->orWhere('location_name', 'ilike', '%'.$this->search.'%');
             });
         }
 

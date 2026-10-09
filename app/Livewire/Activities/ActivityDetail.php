@@ -20,26 +20,39 @@ class ActivityDetail extends Component
     use AuthorizesRequests;
 
     public Activity $activity;
+
     public ?Rsvp $userRsvp = null;
+
     public $isHost = false;
+
     public $spotsRemaining = null;
+
     public $isGroupEvent = false;
+
     public $group = null;
+
     public bool $isFollowingHost = false;
 
     // Refund window state
     public ?ActivityRefundWindow $activeRefundWindow = null;
+
     public ?RsvpChangeResponse $pendingChangeResponse = null;
+
     public bool $showRefundModal = false;
 
     // Guest engagement state
     public bool $showInterestModal = false;
+
     public string $email = '';
+
     public string $source = '';
+
     public ?string $referralCode = null;
+
     public array $utmParams = [];
 
     protected ActivityService $activityService;
+
     protected RefundWindowService $refundWindowService;
 
     protected $rules = [
@@ -60,7 +73,7 @@ class ActivityDetail extends Component
         $this->activity = $activity->load(['host', 'tags', 'group']);
 
         // Check authorization - only restrict non-public activities for authenticated users
-        if (!$this->activity->is_public && auth()->check()) {
+        if (! $this->activity->is_public && auth()->check()) {
             $this->authorize('view', $this->activity);
         }
 
@@ -97,7 +110,7 @@ class ActivityDetail extends Component
                 ->where('user_id', auth()->id())
                 ->first();
 
-        // Check for active refund window and pending response
+            // Check for active refund window and pending response
             $this->loadRefundWindowState();
         }
 
@@ -111,7 +124,7 @@ class ActivityDetail extends Component
 
     protected function loadRefundWindowState(): void
     {
-        if (!$this->userRsvp || !$this->userRsvp->is_paid) {
+        if (! $this->userRsvp || ! $this->userRsvp->is_paid) {
             return;
         }
 
@@ -153,7 +166,7 @@ class ActivityDetail extends Component
 
         $result = $guestService->createBookmark($this->activity, $guestToken, $this->source);
 
-        if (!$guestToken) {
+        if (! $guestToken) {
             Cookie::queue('guest_token', $result['token'], 60 * 24 * 365); // 1 year
         }
 
@@ -195,6 +208,7 @@ class ActivityDetail extends Component
         if ($this->activityService->canDelete($this->activity, auth()->user())) {
             $this->activity->delete();
             session()->flash('success', 'Activity deleted successfully.');
+
             return redirect()->route('events.dashboard');
         } else {
             session()->flash('error', 'Cannot delete activity. It may have attendees or be completed.');
@@ -203,8 +217,9 @@ class ActivityDetail extends Component
 
     public function acceptChanges()
     {
-        if (!$this->userRsvp || !$this->activeRefundWindow || !$this->pendingChangeResponse) {
+        if (! $this->userRsvp || ! $this->activeRefundWindow || ! $this->pendingChangeResponse) {
             session()->flash('error', 'No pending changes to accept.');
+
             return;
         }
 
@@ -224,8 +239,9 @@ class ActivityDetail extends Component
 
     public function requestRefund()
     {
-        if (!$this->userRsvp || !$this->activeRefundWindow || !$this->pendingChangeResponse) {
+        if (! $this->userRsvp || ! $this->activeRefundWindow || ! $this->pendingChangeResponse) {
             session()->flash('error', 'No pending changes to respond to.');
+
             return;
         }
 
@@ -274,4 +290,3 @@ class ActivityDetail extends Component
             ->layout('layouts.app');
     }
 }
-

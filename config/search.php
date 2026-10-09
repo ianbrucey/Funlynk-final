@@ -45,4 +45,3 @@ return [
     'default_radius' => 25,
 
 ];
-

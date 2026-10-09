@@ -12,43 +12,66 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class EditActivity extends Component
 {
-    use WithFileUploads;
     use AuthorizesRequests;
+    use WithFileUploads;
 
     public Activity $activity;
 
     // Form fields
     public $title = '';
+
     public $description = '';
+
     public $activity_type = 'social';
+
     public $location_name = '';
+
     public $latitude = '';
+
     public $longitude = '';
+
     public $start_time = '';
+
     public $end_time = '';
+
     public $max_attendees = '';
+
     public $payment_type = 'free';
+
     public $price = '';
+
     public $is_public = true;
+
     public $requires_approval = false;
+
     public $status = '';
+
     public $selectedTags = [];
+
     public $newTag = '';
 
     // Image handling
     public $newImages = [];
+
     public $existingImages = [];
+
     public $imagesToDelete = [];
 
     // Edit protection state
     public bool $showWarningModal = false;
+
     public array $pendingChanges = [];
+
     public array $blockedChanges = [];
+
     public array $significantChanges = [];
+
     public bool $isEditLocked = false;
+
     public int $paidAttendeeCount = 0;
 
     protected ActivityService $activityService;
+
     protected ActivityEditService $activityEditService;
 
     public function boot(ActivityService $activityService, ActivityEditService $activityEditService)
@@ -96,7 +119,7 @@ class EditActivity extends Component
         $this->existingImages = $activity->images ?? [];
 
         // Load tags
-        $this->selectedTags = $activity->tags->map(function($tag) {
+        $this->selectedTags = $activity->tags->map(function ($tag) {
             return [
                 'id' => $tag->id,
                 'name' => $tag->name,
@@ -154,7 +177,7 @@ class EditActivity extends Component
 
         try {
             // Create location point
-            $locationPoint = new Point((float)$this->latitude, (float)$this->longitude);
+            $locationPoint = new Point((float) $this->latitude, (float) $this->longitude);
 
             // Handle images
             $finalImages = $this->existingImages;
@@ -193,17 +216,19 @@ class EditActivity extends Component
                 );
 
                 // Check for blocked changes
-                if (!$result['success'] && !empty($result['blocked_changes'])) {
+                if (! $result['success'] && ! empty($result['blocked_changes'])) {
                     $this->blockedChanges = $result['blocked_changes'];
                     session()->flash('error', $result['message']);
+
                     return;
                 }
 
                 // Check for significant changes - show warning modal
-                if (!empty($result['significant_changes']) && !$this->showWarningModal) {
+                if (! empty($result['significant_changes']) && ! $this->showWarningModal) {
                     $this->significantChanges = $result['significant_changes'];
                     $this->pendingChanges = $newValues;
                     $this->showWarningModal = true;
+
                     return;
                 }
             } else {
@@ -212,7 +237,7 @@ class EditActivity extends Component
             }
 
             // Sync tags
-            if (!empty($this->selectedTags)) {
+            if (! empty($this->selectedTags)) {
                 $tagIds = array_column($this->selectedTags, 'id');
                 $this->activity->tags()->sync($tagIds);
             } else {
@@ -223,7 +248,7 @@ class EditActivity extends Component
 
             return redirect()->route('events.show', $this->activity->id);
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to update activity: ' . $e->getMessage());
+            session()->flash('error', 'Failed to update activity: '.$e->getMessage());
         }
     }
 
@@ -242,13 +267,14 @@ class EditActivity extends Component
                 auth()->user()
             );
 
-            if (!$result['success']) {
+            if (! $result['success']) {
                 session()->flash('error', $result['message']);
+
                 return;
             }
 
             // Sync tags
-            if (!empty($this->selectedTags)) {
+            if (! empty($this->selectedTags)) {
                 $tagIds = array_column($this->selectedTags, 'id');
                 $this->activity->tags()->sync($tagIds);
             } else {
@@ -259,7 +285,7 @@ class EditActivity extends Component
 
             return redirect()->route('events.show', $this->activity->id);
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to update activity: ' . $e->getMessage());
+            session()->flash('error', 'Failed to update activity: '.$e->getMessage());
         }
     }
 
@@ -293,6 +319,7 @@ class EditActivity extends Component
 
         if (count($this->selectedTags) >= 10) {
             $this->addError('selectedTags', 'Maximum 10 tags allowed.');
+
             return;
         }
 
@@ -302,6 +329,7 @@ class EditActivity extends Component
         foreach ($this->selectedTags as $tag) {
             if (strcasecmp($tag['name'], $tagName) === 0) {
                 $this->reset('newTag');
+
                 return;
             }
         }
@@ -312,7 +340,7 @@ class EditActivity extends Component
             $this->selectedTags[] = [
                 'id' => $tag->id,
                 'name' => $tag->name,
-                'category' => $tag->category
+                'category' => $tag->category,
             ];
             $this->reset('newTag');
         }

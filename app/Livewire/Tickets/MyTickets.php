@@ -46,18 +46,19 @@ class MyTickets extends Component
 
         // Generate check-in credentials if missing
         foreach ($rsvps as $rsvp) {
-            if (!$rsvp->qr_token) {
+            if (! $rsvp->qr_token) {
                 $checkInService->generateCheckInCredentials($rsvp);
                 $rsvp->refresh();
             }
         }
 
         $filtered = $type === 'upcoming'
-            ? $rsvps->filter(fn($rsvp) => $rsvp->activity && $rsvp->activity->start_time >= $now)->sortBy('activity.start_time')
-            : $rsvps->filter(fn($rsvp) => $rsvp->activity && $rsvp->activity->start_time < $now)->sortByDesc('activity.start_time');
+            ? $rsvps->filter(fn ($rsvp) => $rsvp->activity && $rsvp->activity->start_time >= $now)->sortBy('activity.start_time')
+            : $rsvps->filter(fn ($rsvp) => $rsvp->activity && $rsvp->activity->start_time < $now)->sortByDesc('activity.start_time');
 
         return $filtered->map(function ($rsvp) use ($checkInService) {
             $qrPayload = $checkInService->buildQrPayload($rsvp);
+
             return (object) [
                 'rsvp' => $rsvp,
                 'activity' => $rsvp->activity,
@@ -89,4 +90,3 @@ class MyTickets extends Component
         return view('livewire.tickets.my-tickets');
     }
 }
-

@@ -10,15 +10,19 @@ use Livewire\Component;
 class CheckoutForm extends Component
 {
     public Activity $activity;
+
     public ?string $paymentIntentId = null;
+
     public ?string $clientSecret = null;
+
     public bool $processing = false;
+
     public ?string $errorMessage = null;
 
     public function mount(Activity $activity)
     {
         // Check if user is authenticated
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
@@ -44,7 +48,7 @@ class CheckoutForm extends Component
 
         try {
             $paymentService = app(PaymentService::class);
-            
+
             // Verify payment and create RSVP/Transaction
             $transaction = $paymentService->verifyAndProcessPayment(
                 $this->paymentIntentId,
@@ -53,9 +57,9 @@ class CheckoutForm extends Component
             );
 
             session()->flash('success', 'Payment successful! You\'re all set for this activity.');
-            
+
             return redirect()->route('events.show', $this->activity);
-            
+
         } catch (\Exception $e) {
             $this->errorMessage = $e->getMessage();
             $this->processing = false;

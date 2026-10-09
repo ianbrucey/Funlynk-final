@@ -70,7 +70,7 @@ class GroupsIndex extends Component
     #[Computed]
     public function userGroupIds(): array
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return [];
         }
 
@@ -83,7 +83,7 @@ class GroupsIndex extends Component
     #[Computed]
     public function myGroupsCount(): int
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return 0;
         }
 
@@ -96,7 +96,7 @@ class GroupsIndex extends Component
     #[Computed]
     public function myGroups(): LengthAwarePaginator
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 12);
         }
 
@@ -110,13 +110,13 @@ class GroupsIndex extends Component
         // Apply text search filter
         if ($parsed['query']) {
             $query->where(function ($q) use ($parsed) {
-                $q->where('groups.name', 'ilike', '%' . $parsed['query'] . '%')
-                    ->orWhere('groups.description', 'ilike', '%' . $parsed['query'] . '%');
+                $q->where('groups.name', 'ilike', '%'.$parsed['query'].'%')
+                    ->orWhere('groups.description', 'ilike', '%'.$parsed['query'].'%');
             });
         }
 
         // Apply tag filter from #hashtags in search
-        if (!empty($parsed['tags'])) {
+        if (! empty($parsed['tags'])) {
             $query->whereHas('tags', function ($q) use ($parsed) {
                 $q->whereIn('tags.name', $parsed['tags']);
             });
@@ -141,7 +141,7 @@ class GroupsIndex extends Component
             ->with('tags');
 
         // Exclude groups user is already a member of
-        if (Auth::check() && !empty($this->userGroupIds)) {
+        if (Auth::check() && ! empty($this->userGroupIds)) {
             $query->whereNotIn('id', $this->userGroupIds);
         }
 
@@ -151,13 +151,13 @@ class GroupsIndex extends Component
         // Apply text search filter
         if ($parsed['query']) {
             $query->where(function ($q) use ($parsed) {
-                $q->where('name', 'ilike', '%' . $parsed['query'] . '%')
-                    ->orWhere('description', 'ilike', '%' . $parsed['query'] . '%');
+                $q->where('name', 'ilike', '%'.$parsed['query'].'%')
+                    ->orWhere('description', 'ilike', '%'.$parsed['query'].'%');
             });
         }
 
         // Apply tag filter from #hashtags in search
-        if (!empty($parsed['tags'])) {
+        if (! empty($parsed['tags'])) {
             $query->whereHas('tags', function ($q) use ($parsed) {
                 $q->whereIn('tags.name', $parsed['tags']);
             });
@@ -173,7 +173,7 @@ class GroupsIndex extends Component
 
     public function joinGroup(string $groupId): void
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return;
         }
 
@@ -185,7 +185,7 @@ class GroupsIndex extends Component
                 $this->groupService->createJoinRequest($group, Auth::user());
                 session()->flash('success', 'Join request sent! An admin will review your request.');
             } catch (\Exception $e) {
-                session()->flash('error', 'Failed to send join request: ' . $e->getMessage());
+                session()->flash('error', 'Failed to send join request: '.$e->getMessage());
             }
 
             return;
@@ -199,13 +199,13 @@ class GroupsIndex extends Component
             unset($this->userGroupIds);
             unset($this->myGroupsCount);
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to join group: ' . $e->getMessage());
+            session()->flash('error', 'Failed to join group: '.$e->getMessage());
         }
     }
 
     public function leaveGroup(string $groupId): void
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return;
         }
 
@@ -217,7 +217,7 @@ class GroupsIndex extends Component
             unset($this->userGroupIds);
             unset($this->myGroupsCount);
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to leave group: ' . $e->getMessage());
+            session()->flash('error', 'Failed to leave group: '.$e->getMessage());
         }
     }
 

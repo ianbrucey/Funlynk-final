@@ -15,15 +15,15 @@ return new class extends Migration
             // Rename/restructure content fields
             $table->renameColumn('content', 'title');
             $table->text('description')->nullable()->after('title');
-            
+
             // Add new fields
             $table->string('time_hint')->nullable()->after('approximate_time');
             $table->enum('status', ['active', 'expired', 'converted'])->default('active')->after('expires_at');
             $table->timestamp('conversion_suggested_at')->nullable()->after('conversion_triggered_at');
-            
+
             // Rename columns
             $table->renameColumn('evolved_to_event_id', 'converted_to_activity_id');
-            
+
             // Add index on status
             $table->index('status');
         });

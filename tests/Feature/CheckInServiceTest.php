@@ -158,4 +158,3 @@ describe('getActivityCheckInStats', function () {
         expect($stats['check_in_percentage'])->toBe(40.0);
     });
 });
-

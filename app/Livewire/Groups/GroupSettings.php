@@ -110,13 +110,13 @@ class GroupSettings extends Component
         // Handle avatar upload
         if ($this->avatarImage) {
             $avatarPath = $this->avatarImage->store('groups/avatars', 'public');
-            $data['avatar_url'] = '/storage/' . $avatarPath;
+            $data['avatar_url'] = '/storage/'.$avatarPath;
         }
 
         // Handle cover image upload
         if ($this->coverImage) {
             $coverPath = $this->coverImage->store('groups/covers', 'public');
-            $data['cover_image_url'] = '/storage/' . $coverPath;
+            $data['cover_image_url'] = '/storage/'.$coverPath;
         }
 
         $groupService->updateGroup($this->group, $data);

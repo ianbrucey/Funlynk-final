@@ -72,17 +72,17 @@ class NotificationList extends Component
 
         if (! empty($this->search)) {
             $query->where(function ($q) {
-                $term = '%' . $this->search . '%';
-                
+                $term = '%'.$this->search.'%';
+
                 // Search user-facing text fields
                 $q->where('data->actor_name', 'like', $term)
-                  ->orWhere('data->post_title', 'like', $term)
-                  ->orWhere('data->message', 'like', $term)
-                  ->orWhere('data->reactor_name', 'like', $term)
-                  ->orWhere('data->inviter_name', 'like', $term)
-                  ->orWhere('data->post_location', 'like', $term)
-                  ->orWhere('title', 'like', $term)
-                  ->orWhere('message', 'like', $term);
+                    ->orWhere('data->post_title', 'like', $term)
+                    ->orWhere('data->message', 'like', $term)
+                    ->orWhere('data->reactor_name', 'like', $term)
+                    ->orWhere('data->inviter_name', 'like', $term)
+                    ->orWhere('data->post_location', 'like', $term)
+                    ->orWhere('title', 'like', $term)
+                    ->orWhere('message', 'like', $term);
             });
         }
 

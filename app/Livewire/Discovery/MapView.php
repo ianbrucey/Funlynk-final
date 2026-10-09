@@ -2,15 +2,16 @@
 
 namespace App\Livewire\Discovery;
 
-use App\Models\Activity;
-use App\Models\Post;
 use Livewire\Component;
 
 class MapView extends Component
 {
     public $userLat;
+
     public $userLng;
+
     public $radius = 10; // km
+
     public $contentType = 'all'; // all, posts, events
 
     public function mount()
@@ -37,7 +38,7 @@ class MapView extends Component
     public function render()
     {
         return view('livewire.discovery.map-view', [
-            'markers' => $this->getMapData()
+            'markers' => $this->getMapData(),
         ])->layout('layouts.app', ['title' => 'Map View']);
     }
 }

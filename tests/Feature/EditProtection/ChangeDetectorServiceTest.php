@@ -6,7 +6,7 @@ use App\Services\ChangeDetectorService;
 use Carbon\Carbon;
 
 beforeEach(function () {
-    $this->service = new ChangeDetectorService();
+    $this->service = new ChangeDetectorService;
     $this->host = User::factory()->create();
     $this->activity = Activity::factory()->create([
         'host_id' => $this->host->id,
@@ -143,4 +143,3 @@ test('getSignificantChanges filters correctly', function () {
     expect($significant)->toHaveCount(1);
     expect($significant[0]['field'])->toBe('title');
 });
-

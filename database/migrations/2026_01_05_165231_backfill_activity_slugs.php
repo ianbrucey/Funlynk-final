@@ -19,7 +19,7 @@ return new class extends Migration
 
             // Ensure uniqueness
             while (Activity::where('slug', $slug)->where('id', '!=', $activity->id)->exists()) {
-                $slug = $baseSlug . '-' . $counter;
+                $slug = $baseSlug.'-'.$counter;
                 $counter++;
             }
 

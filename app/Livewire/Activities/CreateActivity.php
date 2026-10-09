@@ -14,21 +14,37 @@ class CreateActivity extends Component
 
     // Form fields
     public $title = '';
+
     public $description = '';
+
     public $activity_type = 'social';
+
     public $location_name = '';
+
     public $latitude = '';
+
     public $longitude = '';
+
     public $start_time = '';
+
     public $end_time = '';
+
     public $max_attendees = '';
+
     public $payment_type = 'free';
+
     public $price = '';
+
     public $is_public = true;
+
     public $requires_approval = false;
+
     public $selectedTags = [];
+
     public $newTag = '';
+
     public $coverImage = null;
+
     public $stripeError = '';
 
     protected ActivityService $activityService;
@@ -41,8 +57,8 @@ class CreateActivity extends Component
     public function getCanCreatePaidActivityProperty()
     {
         $user = auth()->user();
-        
-        if (!$user->stripeAccount) {
+
+        if (! $user->stripeAccount) {
             return false;
         }
 
@@ -92,7 +108,7 @@ class CreateActivity extends Component
 
     public function updatedPaymentType($value)
     {
-        if ($value === 'online' && !$this->canCreatePaidActivity) {
+        if ($value === 'online' && ! $this->canCreatePaidActivity) {
             $this->payment_type = 'free';
             $this->stripeError = 'You must connect your Stripe account before creating paid online activities.';
         } else {
@@ -109,7 +125,7 @@ class CreateActivity extends Component
 
         try {
             // Create location point
-            $locationPoint = new Point((float)$this->latitude, (float)$this->longitude);
+            $locationPoint = new Point((float) $this->latitude, (float) $this->longitude);
 
             // Upload cover image to S3
             $coverImagePath = null;
@@ -139,16 +155,16 @@ class CreateActivity extends Component
             ]);
 
             // Attach tags
-            if (!empty($this->selectedTags)) {
+            if (! empty($this->selectedTags)) {
                 $tagIds = array_column($this->selectedTags, 'id');
                 $activity->tags()->sync($tagIds);
             }
 
             session()->flash('success', 'Activity created successfully!');
-            
+
             return redirect()->route('events.show', $activity->id);
         } catch (\Exception $e) {
-            session()->flash('error', 'Error creating activity: ' . $e->getMessage());
+            session()->flash('error', 'Error creating activity: '.$e->getMessage());
         }
     }
 
@@ -173,6 +189,7 @@ class CreateActivity extends Component
 
         if (count($this->selectedTags) >= 10) {
             $this->addError('selectedTags', 'Maximum 10 tags allowed.');
+
             return;
         }
 
@@ -182,6 +199,7 @@ class CreateActivity extends Component
         foreach ($this->selectedTags as $tag) {
             if (strcasecmp($tag['name'], $tagName) === 0) {
                 $this->reset('newTag');
+
                 return;
             }
         }
@@ -191,7 +209,7 @@ class CreateActivity extends Component
         if ($tag) {
             $this->selectedTags[] = [
                 'id' => $tag->id,
-                'name' => $tag->name
+                'name' => $tag->name,
             ];
             $this->newTag = '';
         }

@@ -2,16 +2,19 @@
 
 namespace App\Livewire\Groups;
 
-use Livewire\Component;
-use App\Models\Group;
 use App\Models\Activity;
+use App\Models\Group;
 use App\Services\GroupService;
+use Livewire\Component;
 
 class PublicGroupLanding extends Component
 {
     public Group $group;
+
     public ?Activity $nextActivity = null;
+
     public $admins;
+
     public $tags;
 
     public function mount(Group $group)
@@ -19,6 +22,7 @@ class PublicGroupLanding extends Component
         // Redirect authenticated members to full workspace
         if (auth()->check() && auth()->user()->isMemberOf($group)) {
             $this->redirect(route('groups.show', $group), navigate: true);
+
             return;
         }
 
@@ -41,9 +45,10 @@ class PublicGroupLanding extends Component
 
     public function joinGroup(GroupService $groupService)
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             // Open the auth modal for unauthenticated users
             $this->dispatch('openGroupAuthModal', groupId: $this->group->id);
+
             return;
         }
 

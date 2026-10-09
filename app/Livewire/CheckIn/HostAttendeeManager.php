@@ -14,13 +14,18 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class HostAttendeeManager extends Component
 {
-
     public Activity $activity;
+
     public Collection $rsvps;
+
     public array $stats;
+
     public string $search = '';
+
     public string $manualCode = '';
+
     public ?string $errorMessage = null;
+
     public ?string $successMessage = null;
 
     protected CheckInService $checkInService;
@@ -47,19 +52,21 @@ class HostAttendeeManager extends Component
 
         if (empty($this->manualCode)) {
             $this->errorMessage = 'Check-in code cannot be empty.';
+
             return;
         }
 
         try {
             $rsvp = $this->checkInService->validateCheckInCode($this->activity->id, $this->manualCode);
 
-            if (!$rsvp) {
+            if (! $rsvp) {
                 $this->errorMessage = 'Invalid check-in code.';
+
                 return;
             }
 
             $this->checkInService->performCheckIn($rsvp, 'code', auth()->user());
-            $this->successMessage = 'Attendee ' . $rsvp->user->name . ' checked in successfully!';
+            $this->successMessage = 'Attendee '.$rsvp->user->name.' checked in successfully!';
             $this->manualCode = '';
             $this->refreshList();
         } catch (Exception $e) {
@@ -76,7 +83,7 @@ class HostAttendeeManager extends Component
             abort_unless($rsvp->activity_id === $this->activity->id, 403);
 
             $this->checkInService->performCheckIn($rsvp, 'host_manual', auth()->user());
-            $this->successMessage = 'Attendee ' . $rsvp->user->name . ' manually checked in successfully!';
+            $this->successMessage = 'Attendee '.$rsvp->user->name.' manually checked in successfully!';
             $this->refreshList();
         } catch (Exception $e) {
             $this->errorMessage = $e->getMessage();

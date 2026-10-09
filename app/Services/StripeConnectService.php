@@ -13,11 +13,11 @@ class StripeConnectService
     public function __construct()
     {
         $stripeSecret = config('services.stripe.secret');
-        
+
         if (empty($stripeSecret)) {
             throw new \Exception('Stripe secret key is not configured. Please add STRIPE_SECRET_KEY to your .env file.');
         }
-        
+
         $this->stripe = new StripeClient($stripeSecret);
     }
 
@@ -93,7 +93,7 @@ class StripeConnectService
      */
     public function canAcceptPayments(User $user): bool
     {
-        if (!$user->stripeAccount) {
+        if (! $user->stripeAccount) {
             return false;
         }
 

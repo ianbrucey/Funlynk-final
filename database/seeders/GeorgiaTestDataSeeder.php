@@ -63,7 +63,7 @@ class GeorgiaTestDataSeeder extends Seeder
         }
 
         $this->command->info('Creating 100 posts with Georgia coordinates...');
-        
+
         // Create 100 posts with Georgia coordinates
         $postTitles = [
             'Basketball game at the park',
@@ -98,7 +98,7 @@ class GeorgiaTestDataSeeder extends Seeder
             // Point constructor: (latitude, longitude, srid)
             Post::factory()->create([
                 'user_id' => $users[array_rand($users)]->id,
-                'title' => $postTitles[array_rand($postTitles)] . ' #' . ($i + 1),
+                'title' => $postTitles[array_rand($postTitles)].' #'.($i + 1),
                 'description' => $postDescriptions[array_rand($postDescriptions)],
                 'location_coordinates' => new Point($lat, $lng),
                 'location_name' => 'Dacula, GA',
@@ -108,7 +108,7 @@ class GeorgiaTestDataSeeder extends Seeder
         }
 
         $this->command->info('Creating 50 activities with Georgia coordinates...');
-        
+
         // Create 50 activities
         $activityTitles = [
             'Basketball Tournament',
@@ -130,7 +130,7 @@ class GeorgiaTestDataSeeder extends Seeder
             // Point constructor: (latitude, longitude, srid)
             Activity::factory()->create([
                 'host_id' => $users[array_rand($users)]->id,
-                'title' => $activityTitles[array_rand($activityTitles)] . ' #' . ($i + 1),
+                'title' => $activityTitles[array_rand($activityTitles)].' #'.($i + 1),
                 'location_coordinates' => new Point($lat, $lng),
                 'location_name' => 'Dacula, GA',
                 'start_time' => now()->addDays(rand(1, 30)),
@@ -141,4 +141,3 @@ class GeorgiaTestDataSeeder extends Seeder
         $this->command->info('✅ Seeding complete! Created 150 users, 100 posts, and 50 activities.');
     }
 }
-

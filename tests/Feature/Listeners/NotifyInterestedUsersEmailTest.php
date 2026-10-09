@@ -129,4 +129,3 @@ test('respects email_on_post_converted preference', function () {
     Mail::assertNotQueued(PostConvertedToEventMail::class);
     expect(Notification::where('user_id', $user->id)->count())->toBe(1);
 });
-

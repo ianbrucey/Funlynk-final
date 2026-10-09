@@ -69,12 +69,12 @@ return new class extends Migration
         });
 
         // Step 6: Restore original constraint
-        DB::statement("
+        DB::statement('
             ALTER TABLE activities ADD CONSTRAINT valid_price CHECK (
                 (is_paid = FALSE AND price_cents IS NULL) OR
                 (is_paid = TRUE AND price_cents > 0)
             )
-        ");
+        ');
 
         // Step 7: Add back the is_paid index
         Schema::table('activities', function (Blueprint $table) {

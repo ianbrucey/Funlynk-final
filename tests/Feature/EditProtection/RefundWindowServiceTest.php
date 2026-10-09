@@ -7,7 +7,6 @@ use App\Models\Rsvp;
 use App\Models\RsvpChangeResponse;
 use App\Models\User;
 use App\Services\RefundWindowService;
-use Carbon\Carbon;
 
 beforeEach(function () {
     $this->service = app(RefundWindowService::class);
@@ -140,4 +139,3 @@ test('throws exception when responding to expired window', function () {
 
     $this->service->processResponse($rsvp, $window, RsvpChangeResponse::RESPONSE_ACCEPTED);
 })->throws(Exception::class, 'Refund window has expired.');
-

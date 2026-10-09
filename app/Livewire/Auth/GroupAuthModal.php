@@ -5,8 +5,8 @@ namespace App\Livewire\Auth;
 use App\Models\Group;
 use App\Models\User;
 use App\Services\ContextPreservationService;
-use App\Services\GuestEngagementService;
 use App\Services\GroupService;
+use App\Services\GuestEngagementService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
@@ -21,15 +21,20 @@ class GroupAuthModal extends Component
     use WithFileUploads;
 
     public ?Group $group = null;
+
     public bool $show = false;
+
     public string $mode = 'quick-join'; // 'quick-join' or 'sign-in'
 
     // Form fields
     public string $email = '';
+
     public string $password = '';
+
     public $profilePhoto = null;
 
     public bool $processing = false;
+
     public ?string $errorMessage = null;
 
     protected function rules()
@@ -97,6 +102,7 @@ class GroupAuthModal extends Component
             $this->errorMessage = 'This email is already registered. Please sign in instead.';
             $this->mode = 'sign-in';
             $this->processing = false;
+
             return;
         }
 
@@ -104,14 +110,14 @@ class GroupAuthModal extends Component
             // Generate username from email + timestamp
             $emailPrefix = Str::before($this->email, '@');
             $timestamp = now()->format('ymd');
-            $username = Str::slug($emailPrefix) . "_" . $timestamp;
+            $username = Str::slug($emailPrefix).'_'.$timestamp;
             $username = Str::lower($username);
 
             // Ensure username is unique
             $counter = 1;
             $originalUsername = $username;
             while (User::where('username', $username)->exists()) {
-                $username = $originalUsername . $counter;
+                $username = $originalUsername.$counter;
                 $counter++;
             }
 
@@ -181,9 +187,10 @@ class GroupAuthModal extends Component
 
         $this->validate();
 
-        if (!Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
+        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
             $this->errorMessage = 'Invalid email or password.';
             $this->processing = false;
+
             return;
         }
 
@@ -209,8 +216,9 @@ class GroupAuthModal extends Component
         GroupService $groupService,
         User $user
     ): mixed {
-        if (!$this->group) {
+        if (! $this->group) {
             $this->redirect(route('feed.nearby'), navigate: true);
+
             return null;
         }
 
@@ -219,6 +227,7 @@ class GroupAuthModal extends Component
             session()->flash('info', 'You\'re already a member of this group!');
             $this->show = false;
             $this->redirect(route('groups.show', $this->group), navigate: true);
+
             return null;
         }
 
@@ -226,7 +235,7 @@ class GroupAuthModal extends Component
             if ($this->group->privacy === 'public') {
                 // Public group - auto-join
                 $groupService->addMember($this->group, $user);
-                session()->flash('success', 'Welcome to ' . $this->group->name . '!');
+                session()->flash('success', 'Welcome to '.$this->group->name.'!');
                 $this->show = false;
                 $this->redirect(route('groups.show', $this->group), navigate: true);
             } else {
@@ -242,6 +251,7 @@ class GroupAuthModal extends Component
         }
 
         $contextService->clearIntendedAction();
+
         return null;
     }
 

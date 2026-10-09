@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestampTz('created_at')->useCurrent();
             $table->timestampTz('viewed_at')->nullable();
             $table->timestampTz('reacted_at')->nullable();
-            
+
             $table->unique(['post_id', 'inviter_id', 'invitee_id']);
             $table->index(['post_id']);
             $table->index(['invitee_id', 'status']);

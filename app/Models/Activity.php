@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
@@ -111,7 +112,10 @@ class Activity extends Model
         return $this->belongsTo(RecurringSchedule::class);
     }
 
-    public function tags()
+    /**
+     * @return BelongsToMany<Tag, $this>
+     */
+    public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class, 'activity_tag');
     }
@@ -217,7 +221,7 @@ class Activity extends Model
 
         // Add date suffix for better uniqueness and SEO (e.g., "yoga-class-2025-01-08")
         if ($startTime) {
-            $baseSlug .= '-' . $startTime->format('Y-m-d');
+            $baseSlug .= '-'.$startTime->format('Y-m-d');
         }
 
         $slug = $baseSlug;
@@ -231,7 +235,7 @@ class Activity extends Model
         }
 
         while ($query->exists()) {
-            $slug = $baseSlug . '-' . $counter;
+            $slug = $baseSlug.'-'.$counter;
             $counter++;
 
             $query = static::where('slug', $slug);
@@ -270,7 +274,7 @@ class Activity extends Model
             'id' => $this->id,
             'title' => $this->title,
             'description' => $this->description,
-            'tags' => $this->tags?->pluck('name')->toArray() ?? [],
+            'tags' => $this->tags->pluck('name')->toArray(),
             'location_name' => $this->location_name,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,

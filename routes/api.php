@@ -19,7 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/posts/{post}/react', [PostReactionController::class, 'react']);
     Route::delete('/posts/{post}/react', [PostReactionController::class, 'unreact']);
     Route::get('/posts/{post}/reactions', [PostReactionController::class, 'getReactions']);
-    
+
     // Post invitations
     Route::post('/posts/{post}/invite', [PostReactionController::class, 'invite']);
     Route::get('/users/me/invitations', [PostReactionController::class, 'getInvitations']);

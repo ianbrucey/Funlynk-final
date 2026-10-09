@@ -10,6 +10,7 @@ use Livewire\Component;
 class FollowButton extends Component
 {
     public string $userId;
+
     public bool $isFollowing = false;
 
     public function mount(string $userId, bool $isFollowing = false): void
@@ -20,8 +21,9 @@ class FollowButton extends Component
 
     public function toggle(): void
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             $this->redirect(route('login'));
+
             return;
         }
 

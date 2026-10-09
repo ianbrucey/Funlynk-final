@@ -13,7 +13,9 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 class MyTicket extends Component
 {
     public Activity $activity;
+
     public ?Rsvp $rsvp = null;
+
     public ?string $qrCodeSvg = null;
 
     public function mount(Activity $activity): void
@@ -21,14 +23,15 @@ class MyTicket extends Component
         $this->activity = $activity;
         $this->rsvp = auth()->user()->rsvps()->where('activity_id', $activity->id)->first();
 
-        if (!$this->rsvp) {
+        if (! $this->rsvp) {
             session()->flash('error', 'You do not have an RSVP for this activity.');
             $this->redirect(route('events.show', $activity));
+
             return;
         }
 
         // Generate check-in credentials if missing
-        if (!$this->rsvp->qr_token) {
+        if (! $this->rsvp->qr_token) {
             app(CheckInService::class)->generateCheckInCredentials($this->rsvp);
             $this->rsvp->refresh();
         }

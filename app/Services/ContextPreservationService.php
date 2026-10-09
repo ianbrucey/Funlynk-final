@@ -11,10 +11,8 @@ class ContextPreservationService
     /**
      * Capture user intent to interact with an activity
      *
-     * @param  Activity  $activity
      * @param  string  $intentType  'rsvp', 'view', 'interested'
      * @param  array  $metadata  ['source', 'referral_code', 'utm_params']
-     * @return void
      */
     public function captureIntent(Activity $activity, string $intentType, array $metadata = []): void
     {
@@ -32,10 +30,8 @@ class ContextPreservationService
     /**
      * Capture user intent to join a group
      *
-     * @param  Group  $group
      * @param  string  $intentType  'join', 'view'
      * @param  array  $metadata  ['source', 'referral_code', 'utm_params']
-     * @return void
      */
     public function captureGroupIntent(Group $group, string $intentType, array $metadata = []): void
     {
@@ -52,8 +48,6 @@ class ContextPreservationService
 
     /**
      * Get intended action from session
-     *
-     * @return array|null
      */
     public function getIntendedAction(): ?array
     {
@@ -62,8 +56,6 @@ class ContextPreservationService
 
     /**
      * Clear intended action from session
-     *
-     * @return void
      */
     public function clearIntendedAction(): void
     {
@@ -72,9 +64,6 @@ class ContextPreservationService
 
     /**
      * Get redirect URL based on intended action
-     *
-     * @param  array  $action
-     * @return string
      */
     public function getRedirectUrl(array $action): string
     {
@@ -98,9 +87,6 @@ class ContextPreservationService
 
     /**
      * Capture referral code from URL
-     *
-     * @param  string  $referralCode
-     * @return void
      */
     public function captureReferralCode(string $referralCode): void
     {
@@ -111,7 +97,6 @@ class ContextPreservationService
      * Capture UTM parameters from URL
      *
      * @param  array  $utmParams  ['source', 'medium', 'campaign']
-     * @return void
      */
     public function captureUtmParams(array $utmParams): void
     {
@@ -120,8 +105,6 @@ class ContextPreservationService
 
     /**
      * Get all tracking metadata from session
-     *
-     * @return array
      */
     public function getTrackingMetadata(): array
     {
@@ -134,8 +117,6 @@ class ContextPreservationService
 
     /**
      * Check if there is an intended action
-     *
-     * @return bool
      */
     public function hasIntendedAction(): bool
     {
@@ -144,8 +125,6 @@ class ContextPreservationService
 
     /**
      * Get referral code from session
-     *
-     * @return string|null
      */
     public function getReferralCode(): ?string
     {
@@ -154,8 +133,6 @@ class ContextPreservationService
 
     /**
      * Get UTM parameters from session
-     *
-     * @return array|null
      */
     public function getUtmParams(): ?array
     {
@@ -164,12 +141,9 @@ class ContextPreservationService
 
     /**
      * Clear all tracking metadata
-     *
-     * @return void
      */
     public function clearTrackingMetadata(): void
     {
         Session::forget(['intended_action', 'referral_code', 'utm_params']);
     }
 }
-

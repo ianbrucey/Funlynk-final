@@ -70,15 +70,16 @@ class GroupTimeline extends Component
         // Placeholder for deleting an item
         // In a real app, this would interact with a service and check authorization
         session()->flash('message', "Deleted {$itemType} {$itemId}!");
-        $this->items = array_filter($this->items, fn ($item) => !($item->id === $itemId && $item->type === $itemType));
+        $this->items = array_filter($this->items, fn ($item) => ! ($item->id === $itemId && $item->type === $itemType));
         $this->items = array_values($this->items); // Re-index array
     }
 
     public function pinPost(string $postId): void
     {
         // Check if user is admin
-        if (!$this->group->isAdmin(auth()->user())) {
+        if (! $this->group->isAdmin(auth()->user())) {
             session()->flash('error', 'Only admins can pin posts.');
+
             return;
         }
 
@@ -86,6 +87,7 @@ class GroupTimeline extends Component
         $pinnedCount = $this->group->posts()->where('is_pinned', true)->count();
         if ($pinnedCount >= 3) {
             session()->flash('error', 'Maximum 3 posts can be pinned. Unpin one first.');
+
             return;
         }
 
@@ -104,8 +106,9 @@ class GroupTimeline extends Component
     public function unpinPost(string $postId): void
     {
         // Check if user is admin
-        if (!$this->group->isAdmin(auth()->user())) {
+        if (! $this->group->isAdmin(auth()->user())) {
             session()->flash('error', 'Only admins can unpin posts.');
+
             return;
         }
 

@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -22,15 +21,20 @@ class EventAuthModal extends Component
     use WithFileUploads;
 
     public ?Activity $activity = null;
+
     public bool $show = false;
+
     public string $mode = 'quick-join'; // 'quick-join' or 'sign-in'
 
     // Form fields
     public string $email = '';
+
     public string $password = '';
+
     public $profilePhoto = null;
 
     public bool $processing = false;
+
     public ?string $errorMessage = null;
 
     protected function rules()
@@ -98,6 +102,7 @@ class EventAuthModal extends Component
             $this->errorMessage = 'This email is already registered. Please sign in instead.';
             $this->mode = 'sign-in';
             $this->processing = false;
+
             return;
         }
 
@@ -105,14 +110,14 @@ class EventAuthModal extends Component
             // Generate username from email + timestamp (e.g., john260110 for john@email.com on Jan 10, 2026)
             $emailPrefix = Str::before($this->email, '@');
             $timestamp = now()->format('ymd'); // YYMMDD format (e.g., 260110)
-            $username = Str::slug($emailPrefix) . "_" . $timestamp;
+            $username = Str::slug($emailPrefix).'_'.$timestamp;
             $username = Str::lower($username);
 
             // Ensure username is unique (add incrementing number if needed)
             $counter = 1;
             $originalUsername = $username;
             while (User::where('username', $username)->exists()) {
-                $username = $originalUsername . $counter;
+                $username = $originalUsername.$counter;
                 $counter++;
             }
 
@@ -183,9 +188,10 @@ class EventAuthModal extends Component
 
         $this->validate();
 
-        if (!Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
+        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
             $this->errorMessage = 'Invalid email or password.';
             $this->processing = false;
+
             return;
         }
 
@@ -211,13 +217,14 @@ class EventAuthModal extends Component
         RsvpService $rsvpService,
         User $user
     ): mixed {
-        if (!$this->activity) {
+        if (! $this->activity) {
             $this->redirect(route('feed.nearby'), navigate: true);
+
             return null;
         }
 
         // Check if event is free or paid
-        if (!$this->activity->is_paid) {
+        if (! $this->activity->is_paid) {
             // Free event - auto-RSVP
             try {
                 $rsvpService->createRsvp($this->activity, $user, ['status' => 'attending']);
@@ -231,8 +238,11 @@ class EventAuthModal extends Component
         } else {
             // Paid event - redirect to checkout (full page load for Stripe.js)
             $contextService->clearIntendedAction();
+
             return redirect()->route('events.checkout', $this->activity);
         }
+
+        return null;
     }
 
     public function render()

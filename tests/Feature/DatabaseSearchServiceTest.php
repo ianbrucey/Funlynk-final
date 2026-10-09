@@ -3,7 +3,6 @@
 use App\Contracts\SearchServiceInterface;
 use App\Models\Activity;
 use App\Models\Post;
-use App\Models\Tag;
 use App\Models\User;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
@@ -168,4 +167,3 @@ it('excludes expired posts', function () {
 
     expect($results)->toBeEmpty();
 });
-

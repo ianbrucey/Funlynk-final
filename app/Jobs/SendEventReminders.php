@@ -87,6 +87,7 @@ class SendEventReminders implements ShouldQueue
                     'user_id' => $rsvp->user_id,
                     'event_id' => $event->id,
                 ]);
+
                 continue;
             }
 

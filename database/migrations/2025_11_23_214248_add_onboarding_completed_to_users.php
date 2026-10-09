@@ -18,7 +18,7 @@ return new class extends Migration
 
         // Backfill for existing users with location - they've effectively completed onboarding
         DB::statement(
-            "UPDATE users SET onboarding_completed_at = created_at WHERE location_coordinates IS NOT NULL AND onboarding_completed_at IS NULL"
+            'UPDATE users SET onboarding_completed_at = created_at WHERE location_coordinates IS NOT NULL AND onboarding_completed_at IS NULL'
         );
     }
 

@@ -11,7 +11,9 @@ use Stripe\StripeClient;
 class PaymentService
 {
     protected StripeClient $stripe;
+
     protected float $platformFeePercentage = 0.08; // 8%
+
     protected int $minimumPlatformFeeCents = 300; // $3.00 minimum
 
     public function __construct()
@@ -28,7 +30,7 @@ class PaymentService
     /**
      * Calculate platform fee with percentage and minimum
      *
-     * @param int $amount Amount in cents
+     * @param  int  $amount  Amount in cents
      * @return int Platform fee in cents
      */
     protected function calculatePlatformFee(int $amount): int
@@ -48,7 +50,7 @@ class PaymentService
         $platformFee = $this->calculatePlatformFee($amount);
 
         // Check if host has Stripe Connect account
-        if (!$activity->host->stripeAccount || !$activity->host->stripeAccount->canAcceptPayments()) {
+        if (! $activity->host->stripeAccount || ! $activity->host->stripeAccount->canAcceptPayments()) {
             throw new \Exception('Host has not completed Stripe onboarding. Cannot process payment.');
         }
 
@@ -92,7 +94,7 @@ class PaymentService
             $paymentIntent = $this->stripe->paymentIntents->retrieve($paymentIntentId);
 
             if ($paymentIntent->status !== 'succeeded') {
-                throw new \Exception('Payment not successful. Status: ' . $paymentIntent->status);
+                throw new \Exception('Payment not successful. Status: '.$paymentIntent->status);
             }
 
             $amount = $paymentIntent->amount;
@@ -125,7 +127,7 @@ class PaymentService
             ]);
 
             // Lock editing on first paid RSVP (edit protection)
-            if (!$activity->isEditLocked()) {
+            if (! $activity->isEditLocked()) {
                 $activity->lockEditing();
             }
 

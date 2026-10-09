@@ -18,7 +18,7 @@ return new class extends Migration
             $table->json('requirements')->nullable();
             $table->timestamp('onboarded_at')->nullable();
             $table->timestamps();
-            
+
             $table->index('user_id');
             $table->index('stripe_account_id');
         });

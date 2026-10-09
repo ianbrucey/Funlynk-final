@@ -68,7 +68,7 @@ class SocialLoginController extends Controller
 
                 if ($activity) {
                     // If user hasn't completed onboarding, copy location from event
-                    if (!$user->hasCompletedOnboarding() && $eventContext['activity_location']['lat']) {
+                    if (! $user->hasCompletedOnboarding() && $eventContext['activity_location']['lat']) {
                         $user->update([
                             'location_name' => $eventContext['activity_location']['name'],
                             'location_coordinates' => new Point(
@@ -81,9 +81,10 @@ class SocialLoginController extends Controller
 
                     // Auto-RSVP for free events or redirect to checkout
                     session()->forget('oauth_event_context');
-                    if (!$eventContext['is_paid']) {
+                    if (! $eventContext['is_paid']) {
                         try {
                             $rsvpService->createRsvp($activity, $user, ['status' => 'attending']);
+
                             return redirect()->route('events.show', $activity)
                                 ->with('success', 'You\'re all set! You\'ve successfully joined this event.');
                         } catch (\Exception $e) {

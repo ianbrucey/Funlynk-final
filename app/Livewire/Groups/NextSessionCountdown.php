@@ -9,8 +9,11 @@ use Livewire\Component;
 class NextSessionCountdown extends Component
 {
     public Group $group;
+
     public ?Activity $nextSession = null;
+
     public bool $hasRsvped = false;
+
     public int $rsvpCount = 0;
 
     public function mount(Group $group)

@@ -6,7 +6,6 @@ use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login as LoginForm;
 use App\Livewire\Auth\Register as RegisterForm;
 use App\Livewire\Auth\ResetPassword;
-use App\Livewire\Dashboard\UserDashboard;
 use App\Livewire\Groups\CreateGroup;
 use App\Livewire\Groups\GroupSettings;
 use App\Livewire\Groups\GroupShow;
@@ -155,4 +154,3 @@ Route::get('/groups/{group:slug}', GroupShow::class)->name('groups.show');
 Route::get('/events/{activity}', \App\Livewire\Activities\ActivityDetail::class)
     ->name('events.show')
     ->middleware(['web', 'capture.intent', 'throttle:60,1']);
-
