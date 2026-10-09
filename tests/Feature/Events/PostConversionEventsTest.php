@@ -50,7 +50,7 @@ test('SendConversionPromptNotification creates notification for post owner', fun
     expect($notification->data['post_title'])->toBe('Test Post');
     expect($notification->data['reaction_count'])->toBe(5);
     expect($notification->data['threshold'])->toBe('soft');
-    expect($notification->data['message'])->toContain('5 people are interested');
+    expect($notification->message)->toContain('5 people are interested');
 });
 
 test('SendConversionPromptNotification uses strong message for 10+ reactions', function () {
@@ -67,8 +67,8 @@ test('SendConversionPromptNotification uses strong message for 10+ reactions', f
 
     $notification = Notification::where('user_id', $user->id)->first();
 
-    expect($notification->data['message'])->toContain('10+ people want to join');
-    expect($notification->data['message'])->toContain('🔥');
+    expect($notification->message)->toContain('10+ people want to join');
+    expect($notification->message)->toContain('🔥');
 });
 
 test('PostConvertedToEvent event dispatches correctly', function () {
@@ -136,7 +136,8 @@ test('MigratePostInvitations creates notifications for invited users', function 
     $activity = Activity::factory()->create([
         'title' => 'Converted Event',
         'location_name' => 'Test Location',
-        'price' => 15,
+        'payment_type' => 'online',
+        'price_cents' => 1500,
     ]);
     $conversion = PostConversion::factory()->create([
         'post_id' => $post->id,
@@ -237,7 +238,7 @@ test('MigratePostInvitations only migrates pending invitations', function () {
     $acceptedInvitation = PostInvitation::factory()->create([
         'post_id' => $post->id,
         'inviter_id' => $inviter->id,
-        'status' => 'accepted',
+        'status' => 'reacted',
     ]);
 
     $event = new PostConvertedToEvent($post, $activity, $conversion);
@@ -249,5 +250,5 @@ test('MigratePostInvitations only migrates pending invitations', function () {
     $acceptedInvitation->refresh();
 
     expect($pendingInvitation->status)->toBe('migrated');
-    expect($acceptedInvitation->status)->toBe('accepted'); // Unchanged
+    expect($acceptedInvitation->status)->toBe('reacted'); // Unchanged
 });

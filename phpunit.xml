@@ -35,5 +35,11 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="STRIPE_SECRET_KEY" value="sk_test_dummy"/>
+        <env name="STRIPE_PUBLISHABLE_KEY" value="pk_test_dummy"/>
+        <env name="AWS_ACCESS_KEY_ID" value="testing"/>
+        <env name="AWS_SECRET_ACCESS_KEY" value="testing"/>
+        <env name="AWS_DEFAULT_REGION" value="us-east-1"/>
+        <env name="AWS_BUCKET" value="testing"/>
     </php>
 </phpunit>

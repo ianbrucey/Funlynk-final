@@ -23,10 +23,10 @@ class Post extends Model
 
     protected $guarded = [];
 
-    // Conversion thresholds (test values - change to 5 and 10 for production)
-    public const CONVERSION_SOFT_THRESHOLD = 2;    // Soft prompt at 2 reactions (production: 5)
+    // Conversion thresholds
+    public const CONVERSION_SOFT_THRESHOLD = 5;    // Soft prompt at 5 reactions
 
-    public const CONVERSION_STRONG_THRESHOLD = 5;  // Strong prompt/auto-convert at 1 reaction (production: 10)
+    public const CONVERSION_STRONG_THRESHOLD = 10; // Strong prompt/auto-convert at 10 reactions
 
     protected function casts(): array
     {

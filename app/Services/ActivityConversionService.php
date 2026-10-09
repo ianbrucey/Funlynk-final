@@ -27,15 +27,19 @@ class ActivityConversionService
             }
 
             // Determine pricing
-            $isPaid = ($eventData['price'] ?? 0) > 0;
-            $priceCents = $isPaid ? (int) round($eventData['price'] * 100) : null;
+            $price = $eventData['price'] ?? 0;
+            if (! is_numeric($price)) {
+                throw new \InvalidArgumentException('Event price must be numeric');
+            }
+            $isPaid = (float) $price > 0;
+            $priceCents = $isPaid ? (int) round((float) $price * 100) : null;
 
             // Create activity with pre-filled data
             $activity = Activity::create([
-                'id' => Str::uuid(),
+                'id' => (string) Str::uuid(),
                 'host_id' => $host->id,
                 'title' => $eventData['title'] ?? $post->title,
-                'description' => $eventData['description'] ?? $post->description,
+                'description' => $eventData['description'] ?? $post->description ?? '',
                 'activity_type' => 'social', // Default type for converted posts
                 'location_name' => $eventData['location_name'] ?? $post->location_name,
                 'location_coordinates' => $eventData['location_coordinates'] ?? $post->location_coordinates,
@@ -43,7 +47,7 @@ class ActivityConversionService
                 'end_time' => $eventData['end_time'],
                 'max_attendees' => $eventData['max_attendees'],
                 'price_cents' => $priceCents,
-                'is_paid' => $isPaid,
+                'payment_type' => $isPaid ? 'online' : 'free',
                 'status' => 'published',
                 'originated_from_post_id' => $post->id,
             ]);

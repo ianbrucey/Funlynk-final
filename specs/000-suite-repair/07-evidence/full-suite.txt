@@ -1,0 +1,33 @@
+# php artisan test — 2026-10-09T20:19Z — branch feat/000-suite-repair
+   PASS  Tests\Unit\ExampleTest
+   PASS  Tests\Unit\ModelsRelationshipsTest
+   PASS  Tests\Feature\CheckInServiceTest
+   PASS  Tests\Feature\CreatePostTest
+   PASS  Tests\Feature\Database\PostConversionMigrationsTest
+   WARN  Tests\Feature\DatabaseSearchServiceTest
+   PASS  Tests\Feature\EditProfileTest
+   PASS  Tests\Feature\EditProtection\ActivityEditServiceTest
+   PASS  Tests\Feature\EditProtection\ChangeDetectorServiceTest
+   PASS  Tests\Feature\EditProtection\RefundWindowServiceTest
+   PASS  Tests\Feature\Events\PostConversionEventsTest
+   PASS  Tests\Feature\ExampleTest
+   PASS  Tests\Feature\FeedServiceTest
+   PASS  Tests\Feature\GroupsIntegrationTest
+   PASS  Tests\Feature\GroupsLivewireTest
+   PASS  Tests\Feature\Listeners\NotifyInterestedUsersEmailTest
+   PASS  Tests\Feature\Listeners\NotifyInterestedUsersTest
+   PASS  Tests\Feature\Livewire\Notifications\NotificationBellTest
+   WARN  Tests\Feature\MeilisearchSearchServiceTest
+   PASS  Tests\Feature\PostGISSetupTest
+   PASS  Tests\Feature\PostServiceTest
+   PASS  Tests\Feature\PublicEventViewTest
+   PASS  Tests\Feature\PublicGroupLandingTest
+   PASS  Tests\Feature\Services\ActivityConversionServiceTest
+   PASS  Tests\Feature\Services\ConversionEligibilityServiceTest
+   PASS  Tests\Feature\Services\GuestEngagementServiceTest
+   PASS  Tests\Feature\Services\PostServiceConversionExecutionTest
+   PASS  Tests\Feature\Services\PostServiceConversionTest
+   PASS  Tests\Feature\UserResourceTest
+   PASS  Tests\Feature\UsernameValidationTest
+  Tests:    2 skipped, 201 passed (548 assertions)
+  Duration: 163.77s

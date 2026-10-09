@@ -6337,12 +6337,6 @@ parameters:
 			path: app/Services/PaymentService.php
 
 		-
-			message: '#^Method App\\Services\\PostService\:\:checkConversionEligibility\(\) should return array\{eligible\: bool, auto_convert\: bool, reaction_count\: int, threshold_5\: int, threshold_10\: int\} but returns array\{eligible\: bool, auto_convert\: bool, reaction_count\: int\<0, max\>, threshold_soft\: 2, threshold_strong\: 5\}\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Services/PostService.php
-
-		-
 			message: '#^Method App\\Services\\PostService\:\:convertToEvent\(\) has parameter \$eventData with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1

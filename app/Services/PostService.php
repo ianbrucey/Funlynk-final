@@ -222,8 +222,8 @@ class PostService
      *     eligible: bool,
      *     auto_convert: bool,
      *     reaction_count: int,
-     *     threshold_5: int,
-     *     threshold_10: int,
+     *     threshold_soft: int,
+     *     threshold_strong: int,
      * }
      */
     public function checkConversionEligibility(string $postId): array

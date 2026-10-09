@@ -149,6 +149,11 @@ Route::get('/g/{group:slug}', \App\Livewire\Groups\PublicGroupLanding::class)->n
 // Group detail route - handles auth redirect internally
 Route::get('/groups/{group:slug}', GroupShow::class)->name('groups.show');
 
+// Public event share page (slug-based, guest-accessible)
+Route::get('/e/{activity:slug}', \App\Livewire\PublicEventView::class)
+    ->name('events.public')
+    ->middleware(['capture.intent', 'throttle:60,1']);
+
 // Public Event Routes (accessible without login) - UUID-based
 // MUST be last to avoid catching specific routes like /events/create
 Route::get('/events/{activity}', \App\Livewire\Activities\ActivityDetail::class)

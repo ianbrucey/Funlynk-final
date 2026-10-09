@@ -37,7 +37,7 @@ describe('FeedService', function () {
 
         $service = app(FeedService::class);
 
-        $items = $service->getNearbyFeed($user, radius: 25, contentType: 'all', timeFilter: 'all');
+        $items = $service->getNearbyFeed($user, radius: 25, contentType: 'all', timeFilter: 'all')['items'];
 
         $types = $items->pluck('type');
         $ids = $items->pluck('data.id');
