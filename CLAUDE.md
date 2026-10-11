@@ -103,6 +103,12 @@ first, then the test.
 - **This is a live app.** Migrations must be backward-compatible. No breaking
   schema or contract change ships without a data/backfill plan. Refactors of
   hot paths (the timeline) ship behind the spec's rollout plan, not as drive-bys.
+  **[D] 2026-10-11 — relaxed until pilot launch (~2026-10-21):** production has
+  no users yet, so breaking migrations and atomic hot-path cutovers are allowed.
+  Rules return in full on launch day. See `BUILD_PROTOCOL.md` → Brownfield rules.
+- **Roadmap is decided** (`BUILD_PROTOCOL.md` §7): 001 timeline performance →
+  002 cards + images (`x-fl.*` component library) → 003 detail pages →
+  004 group chat → 005 timeline algorithm. One spec at a time.
 - **Keep the dev journal** (`dev-journal/`): `bug-fixes/` (symptom → root cause →
   fix → the recurrence guard), `domain-knowledge/` (topic-named),
   `progress/` (done / in progress / next / decisions). Scan it before starting work.

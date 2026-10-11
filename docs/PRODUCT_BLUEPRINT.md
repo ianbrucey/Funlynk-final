@@ -20,8 +20,8 @@ group chat. Hosts sell tickets and get paid through Stripe.
 - **[D]** Posts carry reactions (`PostReaction` — "I'm down" / "Join me" style engagement).
 - **[D]** Posts have chat (`PostChat` at `/posts/{post}/chat`, `Conversation`/`Message` models) — group chat instead of comment sections.
 - **[P]** Posts are ephemeral (24–48h) with ~5–10km discovery radius; expiry enforced server-side.
-- **[P]** Engagement thresholds drive conversion: ~5 reactions suggest conversion, ~10 auto-convert.
-- **[O]** Exact conversion thresholds and expiry windows as currently configured.
+- **[D]** Engagement thresholds drive conversion: 5 reactions (soft prompt), 10 (strong prompt) — `Post::CONVERSION_*_THRESHOLD`, owner decision 2026-10-09 (spec 000, 000-D05).
+- **[O]** Exact post expiry windows as currently configured.
 
 ### Events (structured activities)
 
@@ -69,7 +69,11 @@ Laravel Horizon · Laravel Scout + Meilisearch · Stripe · S3 storage.
 ## Open questions [O]
 
 - Exact live production URL and Laravel Cloud deploy trigger configuration.
-- Exact conversion thresholds and post expiry windows as currently configured.
-- Timeline performance budget (set by the timeline refactor spec).
+- Exact post expiry windows as currently configured.
 - Whether legacy agent-system dirs (`context-engine/`, `agent-swarm/`, `dev-logs/`) are archived or kept read-only.
-- Refactor program order beyond Phase 1 (timeline) — roadmap is [P] until approved.
+
+## Resolved [D]
+
+- 2026-10-11 — Roadmap and pilot cut approved (`BUILD_PROTOCOL.md` §7).
+- 2026-10-11 — Timeline performance budget: server feed data < 200 ms at 10k posts; first cards visible < 1 s on a phone over 4G.
+- 2026-10-11 — Pilot: fewer than 100 users, launching ~2026-10-21. Live-app rules relaxed until launch day (`BUILD_PROTOCOL.md`, Brownfield rules).
