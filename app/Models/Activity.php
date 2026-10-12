@@ -87,6 +87,9 @@ class Activity extends Model
         return 'event';
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function host(): BelongsTo
     {
         return $this->belongsTo(User::class, 'host_id');

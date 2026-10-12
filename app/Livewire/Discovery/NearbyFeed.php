@@ -45,7 +45,7 @@ class NearbyFeed extends Component
      * mount()/render() cycle (and its feed query) to Livewire's follow-up
      * request. Root element must match the component view's root (<div>).
      */
-    public function placeholder()
+    public function placeholder(): \Illuminate\Contracts\View\View
     {
         // The real render() call below sets the page layout, but for a
         // #[Lazy] component the placeholder is what actually renders first

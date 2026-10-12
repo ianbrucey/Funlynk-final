@@ -6,6 +6,7 @@ use App\Models\Activity;
 use App\Models\Post;
 use App\Models\PostReaction;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -316,6 +317,8 @@ class FeedService
 
     /**
      * Posts matching status/time/search filters — no radius, no order, no limit.
+     *
+     * @return Builder<Post>
      */
     private function basePostQuery(string $timeFilter, string $searchQuery): Builder
     {
@@ -348,6 +351,8 @@ class FeedService
     /**
      * Published, upcoming events matching time/search filters — no radius,
      * no order, no limit.
+     *
+     * @return Builder<Activity>
      */
     private function baseEventQuery(string $timeFilter, string $searchQuery): Builder
     {
@@ -383,6 +388,11 @@ class FeedService
      * (exposed to the caller as `distance_km`). ST_DWithin can use the
      * existing GIST index on `location_coordinates`; whereDistanceSphere
      * cannot (spec 001 archaeology).
+     *
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
      */
     private function applySpatialFilter(Builder $query, Point $point, int $meters): Builder
     {
@@ -399,6 +409,9 @@ class FeedService
      * one merged, newest-first list. Fetches perPage+1 from each source so
      * `hasMore` is exact with no extra COUNT(*) query.
      *
+     * @param  Builder<Post>|null  $postQuery
+     * @param  Builder<Activity>|null  $eventQuery
+     * @param  array{t: string, id: string}|null  $cursorData
      * @return array{items: list<array<string, mixed>>, nextCursor: ?string, hasMore: bool}
      */
     private function paginateMerged(?User $user, ?Builder $postQuery, ?Builder $eventQuery, ?array $cursorData, int $perPage): array
@@ -415,8 +428,8 @@ class FeedService
 
         $viewerReactedIds = $this->viewerReactedPostIds($user, $posts);
 
-        $merged = $posts->map(fn (Post $p) => $this->mapPostToFeedItem($p, $viewerReactedIds))
-            ->merge($events->map(fn (Activity $e) => $this->mapEventToFeedItem($e)))
+        $merged = $posts->toBase()->map(fn (Post $p) => $this->mapPostToFeedItem($p, $viewerReactedIds))
+            ->merge($events->toBase()->map(fn (Activity $e) => $this->mapEventToFeedItem($e)))
             ->sort(fn (array $a, array $b) => $b['created_at'] <=> $a['created_at'] ?: strcmp($b['id'], $a['id']))
             ->values();
 
@@ -424,12 +437,19 @@ class FeedService
         $page = $merged->take(min($perPage, self::ITEM_CAP))->values();
 
         return [
-            'items' => $page->all(),
+            'items' => array_values($page->all()),
             'nextCursor' => $page->isNotEmpty() ? $this->encodeCursor($page->last()) : null,
             'hasMore' => $poolSize > $page->count(),
         ];
     }
 
+    /**
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @param  array{t: string, id: string}|null  $cursorData
+     * @return Builder<TModel>
+     */
     private function applyCursor(Builder $query, ?array $cursorData): Builder
     {
         if ($cursorData === null) {
@@ -446,6 +466,9 @@ class FeedService
         });
     }
 
+    /**
+     * @param  array<string, mixed>  $item
+     */
     private function encodeCursor(array $item): string
     {
         return base64_encode((string) json_encode(['t' => $item['created_at'], 'id' => $item['id']]));
@@ -493,12 +516,14 @@ class FeedService
     }
 
     /**
+     * @param  Collection<int, string>  $viewerReactedIds
      * @return array<string, mixed>
      */
     private function mapPostToFeedItem(Post $post, Collection $viewerReactedIds): array
     {
-        $isGroup = (bool) ($post->posted_as_group && $post->group);
-        $author = $isGroup ? $post->group : $post->user;
+        $group = $post->posted_as_group ? $post->group : null;
+        $isGroup = $group !== null;
+        $user = $post->user;
 
         return [
             'type' => 'post',
@@ -506,20 +531,20 @@ class FeedService
             'user_id' => $post->user_id,
             'title' => $post->title,
             'description' => $post->description,
-            'author_name' => $isGroup ? $author->name : ($author?->display_name ?? $author?->username ?? 'Unknown User'),
-            'author_image_url' => $isGroup ? $author->avatar_url : $author?->profile_image_url,
-            'author_url' => $isGroup ? route('groups.show', $author) : ($author ? route('profile.view', $author->username) : '#'),
+            'author_name' => $group !== null ? $group->name : ($user->display_name ?? $user->username ?? 'Unknown User'),
+            'author_image_url' => $group !== null ? $group->avatar_url : $user->profile_image_url,
+            'author_url' => $group !== null ? route('groups.show', $group) : route('profile.view', $user->username),
             'is_group_post' => $isGroup,
             'location_name' => $post->location_name,
             'distance_km' => isset($post->distance_km) ? round((float) $post->distance_km, 1) : null,
             'created_at' => $post->created_at->toIso8601String(),
-            'created_at_human' => $post->created_at->diffForHumans(null, true).' ago',
+            'created_at_human' => $post->created_at->diffForHumans(syntax: CarbonInterface::DIFF_ABSOLUTE).' ago',
             'approximate_time_human' => optional($post->approximate_time)->format('M j, g:i A'),
             'mood' => $post->mood,
             'tags' => $post->tags ?? [],
             'time_hint' => $post->time_hint,
             'expires_at' => optional($post->expires_at)->toIso8601String(),
-            'expires_in_human' => $post->expires_at ? $post->expires_at->diffForHumans(null, true) : null,
+            'expires_in_human' => $post->expires_at->diffForHumans(syntax: CarbonInterface::DIFF_ABSOLUTE),
             'status' => $post->status,
             'reaction_count' => $post->reaction_count,
             'viewer_reacted' => $viewerReactedIds->contains($post->id),
@@ -540,12 +565,12 @@ class FeedService
             'type' => 'event',
             'id' => $event->id,
             'title' => $event->title,
-            'author_name' => $event->host?->display_name ?? $event->host?->username ?? 'Unknown Host',
-            'author_image_url' => $event->host?->profile_image_url,
+            'author_name' => $event->host->display_name ?? $event->host->username ?? 'Unknown Host',
+            'author_image_url' => $event->host->profile_image_url,
             'location_name' => $event->location_name,
             'distance_km' => isset($event->distance_km) ? round((float) $event->distance_km, 1) : null,
             'created_at' => $event->created_at->toIso8601String(),
-            'created_at_human' => $event->created_at->diffForHumans(null, true).' ago',
+            'created_at_human' => $event->created_at->diffForHumans(syntax: CarbonInterface::DIFF_ABSOLUTE).' ago',
             'images' => $event->images ?? [],
             'start_time' => optional($event->start_time)->toIso8601String(),
             'start_time_human' => optional($event->start_time)->format('M j, g:i A'),
