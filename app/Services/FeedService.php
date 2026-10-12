@@ -544,7 +544,7 @@ class FeedService
             'tags' => $post->tags ?? [],
             'time_hint' => $post->time_hint,
             'expires_at' => optional($post->expires_at)->toIso8601String(),
-            'expires_in_human' => $post->expires_at ? $post->expires_at->diffForHumans(syntax: CarbonInterface::DIFF_ABSOLUTE) : null,
+            'expires_in_human' => $post->expires_at->diffForHumans(syntax: CarbonInterface::DIFF_ABSOLUTE),
             'status' => $post->status,
             'reaction_count' => $post->reaction_count,
             'viewer_reacted' => $viewerReactedIds->contains($post->id),

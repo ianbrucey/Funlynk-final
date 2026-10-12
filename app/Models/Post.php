@@ -259,7 +259,7 @@ class Post extends Model
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
             'status' => $this->status,
-            'expires_at' => $this->expires_at?->timestamp,
+            'expires_at' => $this->expires_at->timestamp,
             'created_at' => $this->created_at->timestamp,
         ];
 
