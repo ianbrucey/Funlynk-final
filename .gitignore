@@ -36,3 +36,6 @@ android/build
 android/local.properties
 rr
 .rr.yaml
+
+# agent scratch notes (never commit)
+scratch.md

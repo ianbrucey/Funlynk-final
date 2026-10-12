@@ -1,6 +1,6 @@
 # 001 — Timeline performance — Strategic brief
 
-**Status:** IN REVIEW
+**Status:** APPROVED
 **Author:** orchestrator (Augment Agent)
 **Date:** 2026-10-11
 
@@ -31,9 +31,9 @@ under 1 second on a phone over 4G, with feed data returned by the server in unde
 - [D] Location queries go through the spatial layer (`matanyadaev/laravel-eloquent-spatial`) — no hand-rolled distance math.
 - [D] Authorization server-side: the feed is an authenticated, onboarded-user route.
 - [D] Pre-pilot relaxation 2026-10-11: atomic cutover allowed, no flag required.
-- [O] 001-O1 feed order until spec 005 → **stop condition:** C-06 cannot be written to a final order; keep the current per-type ordering until decided.
-- [O] 001-O2 post/event radius defaults → **stop condition:** C-07 tests the current 30 km default only.
-- [O] 001-O3 For-You feed in scope → **stop condition:** For-You is audited but not changed.
+- [D] 001-O1 resolved 2026-10-12: feed order is one merged list, newest first (posts by creation time, events by when posted); distance only filters. C-06 is written to this order.
+- [D] 001-O2 resolved 2026-10-12: default radius is 10 km for posts, 50 km for events; slider kept. C-07 tests these defaults.
+- [D] 001-O3 resolved 2026-10-12: For-You is audited but not changed in spec 001; it is owned by spec 005.
 
 ## Production impact
 
@@ -86,4 +86,4 @@ search. New features of any kind.
 - [x] Governing [D]/[P]/[O] items linked; [O] stop conditions stated
 - [x] Production impact + rollback plan stated
 - [x] Security and privacy classification complete
-- [ ] Product owner approved — **approver:** <name> · **date:** <YYYY-MM-DD>
+- [x] Product owner approved — **approver:** product owner · **date:** 2026-10-12
