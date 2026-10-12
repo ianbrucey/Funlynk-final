@@ -77,16 +77,16 @@
                         </select>
                     </div>
 
-                    {{-- Distance Filter --}}
+                    {{-- Event Radius Filter (posts are a fixed 10km, not adjustable) --}}
                     <div>
                         <label class="block text-xs font-semibold text-gray-400 mb-1">
-                            Distance: <span class="text-cyan-400">{{ $radius }}km</span>
+                            Event radius: <span class="text-cyan-400">{{ $eventRadiusKm }}km</span>
                         </label>
                         <input
                             type="range"
-                            wire:model.live.debounce.150ms="radius"
-                            min="1"
-                            max="100"
+                            wire:model.live.debounce.150ms="eventRadiusKm"
+                            min="10"
+                            max="50"
                             step="1"
                             class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
                         >
@@ -110,122 +110,9 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" wire:loading.class="opacity-50">
             @forelse($items as $item)
                 @if($item['type'] === 'post')
-                    {{-- Post Card (Compact) --}}
-                    <x-post-card-compact :post="$item['data']" />
+                    <x-post-card-compact :post="$item" />
                 @else
-                    {{-- Event Card (Compact) --}}
-                    <div class="relative rounded-[18px] p-4 h-full flex flex-col group"
-                         style="background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), #111933; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 12px 30px rgba(0,0,0,0.35);">
-
-                        {{-- Converted Badge --}}
-                        @if($item['data']->originated_from_post_id)
-                            <div class="absolute top-3 right-3 z-10">
-                                <span class="px-2 py-0.5 rounded-full text-xs font-bold text-purple-300"
-                                      style="background: rgba(139,92,246,0.3); border: 1px solid rgba(139,92,246,0.5);">
-                                    ⭐
-                                </span>
-                            </div>
-                        @endif
-
-                        {{-- Card Header --}}
-                        <div class="flex items-center gap-3">
-                            {{-- Avatar --}}
-                            @if($item['data']->host?->profile_image_url)
-                                <img
-                                    src="{{ Storage::url($item['data']->host->profile_image_url) }}"
-                                    alt="{{ $item['data']->host->display_name ?? $item['data']->host->username }}"
-                                    class="w-11 h-11 rounded-full object-cover"
-                                >
-                            @else
-                                <div class="w-11 h-11 rounded-full grid place-items-center font-bold text-white"
-                                     style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">
-                                    {{ strtoupper(substr($item['data']->host?->display_name ?? $item['data']->host?->username ?? '?', 0, 1)) }}
-                                </div>
-                            @endif
-
-                            {{-- Host & Role --}}
-                            <div class="flex-1 min-w-0">
-                                <p class="font-semibold text-white leading-tight truncate">
-                                    {{ $item['data']->host?->display_name ?? $item['data']->host?->username ?? 'Unknown Host' }}
-                                </p>
-                                <p class="text-xs" style="color: #8a93b2;">Hosting</p>
-                            </div>
-
-                            {{-- Price Badge --}}
-                            <span class="text-xs font-semibold" style="color: #8a93b2;">
-                                @if($item['data']->is_paid)
-                                    ${{ number_format($item['data']->price, 2) }}
-                                @else
-                                    Free
-                                @endif
-                            </span>
-                        </div>
-
-                        {{-- Event Image --}}
-                        @if($item['data']->images && count($item['data']->images) > 0)
-                            <div class="relative mt-3 -mx-4 overflow-hidden h-36">
-                                <img src="{{ Storage::url($item['data']->images[0]) }}"
-                                     class="w-full h-full object-cover cursor-pointer"
-                                     alt="{{ $item['data']->title }}"
-                                     onclick="window.location.href='{{ route('events.show', $item['data']) }}'">
-                                @if(count($item['data']->images) > 1)
-                                    <div class="absolute bottom-2 right-2 px-2 py-1 rounded-full text-xs text-white"
-                                         style="background: rgba(15,23,42,0.8); backdrop-filter: blur(4px);">
-                                        +{{ count($item['data']->images) - 1 }}
-                                    </div>
-                                @endif
-                            </div>
-                        @endif
-
-                        {{-- Card Body --}}
-                        <div class="mt-3 flex-1 cursor-pointer" onclick="window.location.href='{{ route('events.show', $item['data']) }}'">
-                            <h3 class="text-[1.1rem] font-bold text-white mb-1.5 line-clamp-2">{{ $item['data']->title }}</h3>
-
-                            {{-- Meta Row --}}
-                            <div class="flex flex-wrap items-center gap-2 text-[0.85rem]" style="color: #8a93b2;">
-                                <span class="py-1 px-2.5 rounded-full"
-                                      style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
-                                    📅 {{ $item['data']->start_time->format('M j, g:i A') }}
-                                </span>
-                                @if($item['data']->location_name)
-                                    <span class="py-1 px-2.5 rounded-full"
-                                          style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
-                                        📍 {{ Str::limit($item['data']->location_name, 25) }}
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-
-                        {{-- Card Actions --}}
-                        <div class="grid gap-2.5 mt-3.5" style="grid-template-columns: 1fr auto;">
-                            <button
-                                onclick="event.stopPropagation(); window.location.href='{{ route('events.show', $item['data']) }}'"
-                                class="py-3 rounded-xl font-semibold cursor-pointer transition-all hover:scale-[1.02]"
-                                style="background: linear-gradient(90deg, #06b6d4, #3b82f6); border: none; color: white;">
-                                🎟️ RSVP
-                            </button>
-                            <button
-                                wire:click.stop="$dispatch('openActivityInviteModal', { activityId: '{{ $item['data']->id }}' })"
-                                class="px-3.5 py-3 rounded-xl cursor-pointer transition-all hover:bg-white/5"
-                                style="background: transparent; border: 1px solid rgba(255,255,255,0.08); color: #eef1ff;">
-                                Invite
-                            </button>
-                        </div>
-
-                        {{-- Footer --}}
-                        <div class="flex justify-between items-center mt-3 text-[0.8rem]" style="color: #8a93b2;">
-                            <a href="{{ route('events.show', $item['data']) }}" class="flex items-center gap-1.5 hover:text-cyan-400 transition">
-                                💬 Group Chat
-                            </a>
-                            <span>
-                                @if($item['data']->max_attendees)
-                                    <span class="text-cyan-400 font-semibold">{{ max(0, $item['data']->max_attendees - $item['data']->rsvps()->count()) }}</span> spots left
-                                @else
-                                    <span class="text-cyan-400 font-semibold">{{ $item['data']->rsvps()->count() }}</span> going
-                                @endif
-                            </span>
-                        </div>
-                    </div>
+                    <x-event-card-compact :event="$item" />
                 @endif
             @empty
                 {{-- Empty State - Spans full grid --}}
@@ -286,7 +173,7 @@
                             Load More
                         </button>
                         <p class="text-sm text-gray-400 mt-2">
-                            Showing {{ count($items) }} of {{ $totalItems }} items
+                            Showing {{ count($items) }} items
                         </p>
                     </div>
                     <div wire:loading wire:target="loadMore" class="flex items-center justify-center gap-3">

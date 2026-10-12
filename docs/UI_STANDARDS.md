@@ -66,6 +66,16 @@ conflict, success. Destructive actions (delete post, cancel event, refund)
 require explicit confirmation. Real-time updates (chat, reactions, notifications)
 arrive over Reverb — the UI degrades gracefully when the socket drops.
 
+**[D] 2026-10-12 — Skeleton loading for lazy feed/list components.** Any
+Livewire component whose initial query is non-trivial (a feed, a list, a
+search result set) is `#[Lazy]` with a `placeholder()` that renders a pulsing
+skeleton matching the final content's card/row shape — never a spinner over a
+blank page, and never a query running inside `mount()` that blocks first
+paint. The skeleton is a glass-morphism card shape using the same spacing and
+corner radius as the real card, with a `animate-pulse` fill instead of
+content. First proven by Spec 001 (timeline performance):
+`App\Livewire\Discovery\NearbyFeed` + `nearby-feed-skeleton.blade.php`.
+
 ## 6. Performance is a UI property
 
 - The timeline must feel **instant**. Bulky, slow page rendering is a defect.

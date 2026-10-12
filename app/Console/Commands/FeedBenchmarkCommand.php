@@ -95,51 +95,26 @@ class FeedBenchmarkCommand extends Command
         $this->output->writeln('done');
 
         // --- C-01 / C-02: timing + query count for the first feed page ---
+        // Items are plain FeedItem arrays (Ticket 1), not Eloquent models, so
+        // there is no per-card N+1 or Livewire-rehydration query to simulate
+        // here any more — that invariant is covered directly by
+        // test_nearby_feed_query_count_is_constant and
+        // test_reacting_to_post_runs_bounded_queries (Ticket 2).
         $timingsMs = [];
         $queryCount = null;
+        $itemsReturned = 0;
         for ($i = 0; $i < $iterations; $i++) {
             DB::flushQueryLog();
             DB::enableQueryLog();
             $start = hrtime(true);
-            $result = $feedService->getNearbyFeed(user: $viewer, radius: 50, page: 1, perPage: 30);
+            $result = $feedService->getNearbyFeed(user: $viewer, eventRadiusKm: 50, perPage: 30);
             $timingsMs[] = (hrtime(true) - $start) / 1e6;
             $queryCount = count(DB::getQueryLog());
+            $itemsReturned = count($result['items']);
             DB::disableQueryLog();
         }
         sort($timingsMs);
         $p95 = $timingsMs[(int) floor(0.95 * (count($timingsMs) - 1))];
-
-        // --- N+1 simulation: per-card cost as the blade view computes it today ---
-        DB::flushQueryLog();
-        DB::enableQueryLog();
-        foreach ($result['items'] as $item) {
-            if ($item['type'] === 'post') {
-                /** @var Post $post */
-                $post = $item['data'];
-                $post->reactions->where('reaction_type', 'im_down')->count();
-            } else {
-                /** @var Activity $event */
-                $event = $item['data'];
-                $event->rsvps()->count();
-                $event->rsvps()->count();
-            }
-        }
-        $cardQueries = count(DB::getQueryLog());
-        DB::disableQueryLog();
-
-        // --- Livewire-rehydration simulation: re-fetch every loaded item by id,
-        //     as Livewire does for each public property on every subsequent request ---
-        DB::flushQueryLog();
-        DB::enableQueryLog();
-        foreach ($result['items'] as $item) {
-            if ($item['type'] === 'post') {
-                Post::query()->find($item['data']->id);
-            } else {
-                Activity::query()->find($item['data']->id);
-            }
-        }
-        $rehydrationQueries = count(DB::getQueryLog());
-        DB::disableQueryLog();
 
         // --- EXPLAIN for the underlying spatial query ---
         $explainPosts = $this->explainNearbyPosts($viewer->location_coordinates, 10);
@@ -147,14 +122,12 @@ class FeedBenchmarkCommand extends Command
         $explainPostsDWithin = $this->explainDWithin($viewer->location_coordinates, 10);
 
         return [
-            'items_returned' => $result['items']->count(),
-            'total' => $result['total'],
+            'items_returned' => $itemsReturned,
+            'has_more' => $result['hasMore'] ? 'yes' : 'no',
             'timing_ms_min' => round($timingsMs[0], 2),
             'timing_ms_avg' => round(array_sum($timingsMs) / count($timingsMs), 2),
             'timing_ms_p95' => round($p95, 2),
             'feed_query_count' => $queryCount,
-            'card_render_query_count' => $cardQueries,
-            'livewire_rehydration_query_count' => $rehydrationQueries,
             'explain_posts' => $explainPosts,
             'explain_events' => $explainEvents,
             'explain_posts_dwithin' => $explainPostsDWithin,
@@ -420,17 +393,15 @@ class FeedBenchmarkCommand extends Command
     {
         $this->newLine();
         $this->table(
-            ['scale', 'items', 'total', 'min ms', 'avg ms', 'p95 ms', 'feed queries', 'card-render queries', 'rehydration queries'],
+            ['scale', 'items', 'has more', 'min ms', 'avg ms', 'p95 ms', 'feed queries'],
             collect($results)->map(fn ($r, $scale) => [
                 $scale,
                 $r['items_returned'],
-                $r['total'],
+                $r['has_more'],
                 $r['timing_ms_min'],
                 $r['timing_ms_avg'],
                 $r['timing_ms_p95'],
                 $r['feed_query_count'],
-                $r['card_render_query_count'],
-                $r['livewire_rehydration_query_count'],
             ])->toArray()
         );
 

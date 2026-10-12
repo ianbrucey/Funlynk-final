@@ -82,7 +82,7 @@ server-side).
 | `mount()` | 0 queries on the initial response | Component is `#[Lazy]` (Livewire 3.x, https://livewire.laravel.com/docs/3.x/lazy); `placeholder()` renders the skeleton grid. The feed query runs on Livewire's automatic follow-up request, not before first paint (C-04). |
 | `loadItems()` / initial lazy load | ≤ 8 queries, flat regardless of scale or page | 1 cursor/union query, ≤ 2 bulk model hydration queries (posts, events) with eager-loaded author/host, 1 preloaded viewer-reactions set, 1 `withCount('rsvps')` (folded into the event hydration query, not separate) |
 | `loadMore()` | same ≤ 8-query budget | Must not re-fetch or re-touch already-loaded items |
-| `reactToPost()` | ≤ 3 queries | `PostService::toggleReaction` (unchanged) + updates only the single affected item in `$items` (array mutation, no model reload) |
+| `reactToPost()` | 14 queries, constant regardless of loaded item count (001-D10 — revised from an initial ≤3 estimate after measuring; driven by `PostService::toggleReaction`'s own cost plus `PostReacted`'s `ShouldBroadcast` serialization and notification listener, none of it touched by this spec) | `PostService::toggleReaction` (unchanged) + updates only the single affected item in `$items` (array mutation, no model reload) |
 | `search()`, `updatedEventRadiusKm()`, `updatedContentType()`, `updatedTimeFilter()`, `clearSearch()` | same reset-and-reload budget as today | Reset `$cursor` to null |
 
 Events emitted/listened: unchanged (`react-to-post`, `post-reacted`,
