@@ -1,6 +1,6 @@
 # 001 — Timeline performance — Contract
 
-**Status:** IN REVIEW
+**Status:** APPROVED
 **Date:** 2026-10-12
 **Archaeology:** `01-archaeology.md` · **Schema delta:** `02-schema-delta.md` (none)
 
@@ -118,4 +118,4 @@ Events emitted/listened: unchanged (`react-to-post`, `post-reacted`,
 
 ## Approval gate
 
-- [ ] Product owner approved the radius-split decision above — **approver:** \<name\> · **date:** \<YYYY-MM-DD\>
+- [x] Product owner approved the radius-split decision above — **approver:** product owner · **date:** 2026-10-12
