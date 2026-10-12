@@ -13,6 +13,9 @@ use Laravel\Scout\Searchable;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
+/**
+ * @property \Illuminate\Support\Carbon $expires_at
+ */
 class Post extends Model
 {
     use HasFactory, HasSpatial, HasUuids, Searchable;
@@ -118,6 +121,9 @@ class Post extends Model
         return $query->where('status', 'converted');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -143,6 +149,9 @@ class Post extends Model
         return $this->belongsTo(Activity::class, 'converted_to_activity_id');
     }
 
+    /**
+     * @return BelongsTo<Group, $this>
+     */
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);

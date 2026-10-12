@@ -103,6 +103,7 @@ class FeedBenchmarkCommand extends Command
         $timingsMs = [];
         $queryCount = null;
         $itemsReturned = 0;
+        $result = ['items' => [], 'nextCursor' => null, 'hasMore' => false];
         for ($i = 0; $i < $iterations; $i++) {
             DB::flushQueryLog();
             DB::enableQueryLog();
@@ -117,9 +118,11 @@ class FeedBenchmarkCommand extends Command
         $p95 = $timingsMs[(int) floor(0.95 * (count($timingsMs) - 1))];
 
         // --- EXPLAIN for the underlying spatial query ---
-        $explainPosts = $this->explainNearbyPosts($viewer->location_coordinates, 10);
-        $explainEvents = $this->explainNearbyPosts($viewer->location_coordinates, 50, Activity::class, 'start_time', 'published');
-        $explainPostsDWithin = $this->explainDWithin($viewer->location_coordinates, 10);
+        /** @var Point $viewerLocation */
+        $viewerLocation = $viewer->location_coordinates;
+        $explainPosts = $this->explainNearbyPosts($viewerLocation, 10);
+        $explainEvents = $this->explainNearbyPosts($viewerLocation, 50, Activity::class, 'start_time', 'published');
+        $explainPostsDWithin = $this->explainDWithin($viewerLocation, 10);
 
         return [
             'items_returned' => $itemsReturned,
@@ -151,7 +154,7 @@ class FeedBenchmarkCommand extends Command
 
         $plan = DB::select($sql);
 
-        return array_map(fn ($row) => $row->{'QUERY PLAN'}, $plan);
+        return array_values(array_map(fn ($row) => $row->{'QUERY PLAN'}, $plan));
     }
 
     /**
@@ -383,7 +386,7 @@ class FeedBenchmarkCommand extends Command
 
         $plan = DB::select('EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) '.$sql, $bindings);
 
-        return array_map(fn ($row) => $row->{'QUERY PLAN'}, $plan);
+        return array_values(array_map(fn ($row) => $row->{'QUERY PLAN'}, $plan));
     }
 
     /**

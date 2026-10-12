@@ -14,6 +14,9 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Scout\Searchable;
 use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
+/**
+ * @property \MatanYadaev\EloquentSpatial\Objects\Point|null $location_coordinates
+ */
 class User extends Authenticatable implements FilamentHasName
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -197,6 +200,9 @@ class User extends Authenticatable implements FilamentHasName
         return $this->hasMany(Follow::class, 'follower_id');
     }
 
+    /**
+     * @return HasOne<StripeAccount, $this>
+     */
     public function stripeAccount(): HasOne
     {
         return $this->hasOne(StripeAccount::class);
