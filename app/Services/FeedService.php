@@ -415,8 +415,8 @@ class FeedService
 
         $viewerReactedIds = $this->viewerReactedPostIds($user, $posts);
 
-        $merged = $posts->map(fn (Post $p) => $this->mapPostToFeedItem($p, $viewerReactedIds))
-            ->merge($events->map(fn (Activity $e) => $this->mapEventToFeedItem($e)))
+        $merged = $posts->toBase()->map(fn (Post $p) => $this->mapPostToFeedItem($p, $viewerReactedIds))
+            ->merge($events->toBase()->map(fn (Activity $e) => $this->mapEventToFeedItem($e)))
             ->sort(fn (array $a, array $b) => $b['created_at'] <=> $a['created_at'] ?: strcmp($b['id'], $a['id']))
             ->values();
 

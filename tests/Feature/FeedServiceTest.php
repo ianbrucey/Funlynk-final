@@ -48,6 +48,33 @@ describe('FeedService', function () {
         expect($ids)->not->toContain($farPost->id);
     });
 
+    it('merges cleanly when events match but no posts do (and vice versa)', function () {
+        $user = User::factory()->create([
+            'location_coordinates' => new Point(37.7749, -122.4194, 4326),
+        ]);
+
+        $event = Activity::factory()->create([
+            'location_coordinates' => new Point(37.7751, -122.4196, 4326),
+            'status' => 'published',
+            'start_time' => now()->addDay(),
+        ]);
+
+        $service = app(FeedService::class);
+
+        $eventsOnly = $service->getNearbyFeed($user, eventRadiusKm: 25, contentType: 'all', timeFilter: 'all');
+        expect(collect($eventsOnly['items'])->pluck('id'))->toContain($event->id);
+
+        Activity::query()->delete();
+        $post = Post::factory()->create([
+            'user_id' => $user->id,
+            'location_coordinates' => new Point(37.7750, -122.4195, 4326),
+            'status' => 'active',
+        ]);
+
+        $postsOnly = $service->getNearbyFeed($user, eventRadiusKm: 25, contentType: 'all', timeFilter: 'all');
+        expect(collect($postsOnly['items'])->pluck('id'))->toContain($post->id);
+    });
+
     it('uses RecommendationEngine for For You feed', function () {
         $user = User::factory()->create([
             'location_coordinates' => new Point(37.7749, -122.4194, 4326),
