@@ -1,6 +1,6 @@
 # 001 — Timeline performance — Implementation plan
 
-**Status:** DRAFT (→ APPROVED)
+**Status:** APPROVED
 **Date:** 2026-10-12
 **Brief:** `00-brief.md` (APPROVED) · **Contract:** `03-contract.md` (APPROVED) ·
 **Schema delta:** `02-schema-delta.md` (none) · **Mockup:** `05-ui-mockup.html` (APPROVED)
