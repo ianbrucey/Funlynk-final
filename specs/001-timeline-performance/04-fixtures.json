@@ -1,1 +1,128 @@
-{"_comment":"Canonical fixtures for <NNN> — <Feature name>. Normal case plus adversarial cases. ONE definition only: either this JSON is loaded by test helpers/seeders, or the code fixture is canonical and the spec points to it. Never two hand-written copies.","adversarial":{"_comment":"cross-cutting hostile inputs every feature should consider","failed_payment":{"scenario":"card declined at checkout"},"malformed_inputs":["empty strings","overlong text","negative prices","invalid coordinates"],"out_of_radius_location":{"_note":"far outside discovery radius","lat":40.71,"lng":-74.0}},"events":[{"_comment":"normal case: open event with capacity","capacity":50,"host_id":"user-owner-1","id":"event-open-1","rsvp_count":12,"ticket_price_cents":2500},{"_comment":"adversarial: sold-out event","capacity":10,"host_id":"user-owner-1","id":"event-soldout-1","rsvp_count":10,"ticket_price_cents":2500}],"posts":[{"_comment":"normal case: live post in radius","expires_at":"<24h in future>","id":"post-live-1","location":{"_note":"synthetic coordinates","lat":33.77,"lng":-118.19},"owner_id":"user-owner-1"},{"_comment":"adversarial: expired post must not appear","expires_at":"<1h in past>","id":"post-expired-1","location":{"lat":33.77,"lng":-118.19},"owner_id":"user-owner-1"}],"users":[{"_comment":"owner with full rights","id":"user-owner-1","role":"user","username":"synthetic_owner"},{"_comment":"adversarial: unrelated user, no relationship","id":"user-stranger-1","role":"user","username":"synthetic_stranger"},{"_comment":"adversarial: guest (unauthenticated)","id":"guest","role":"guest","username":null}]}
+{
+  "_comment": "Canonical fixtures for 001 — Timeline performance. Shapes match the FeedItem contract in 03-contract.md. Used by 05-ui-mockup.html and by the plan's Pest tests (one definition — the mockup must not hand-roll different sample data).",
+  "viewer": {
+    "id": "user-viewer-1",
+    "location_name": "Long Beach, CA",
+    "_note": "coordinates exist server-side only; never in a fixture consumed by the UI layer"
+  },
+  "feed_page_1": {
+    "_comment": "first lazy-loaded page: mixed posts/events, newest first (001-O1), merged list",
+    "cursor": "eyJ0IjoiMjAyNi0xMC0xMlQxODowMDowMFoiLCJpZCI6InBvc3QtbmVhci0xIn0=",
+    "hasMore": true,
+    "items": [
+      {
+        "type": "post",
+        "id": "post-near-1",
+        "title": "Pickup volleyball at the beach, come thru",
+        "author_name": "synthetic_owner",
+        "author_image_url": null,
+        "location_name": "Long Beach, CA",
+        "distance_km": 1.2,
+        "created_at": "2026-10-12T18:00:00Z",
+        "description": "Bringing a net, need 4 more.",
+        "tags": ["volleyball", "beach", "casual"],
+        "time_hint": "now",
+        "expires_at": "2026-10-13T18:00:00Z",
+        "status": "active",
+        "reaction_count": 3,
+        "viewer_reacted": false,
+        "conversion_eligible": false,
+        "converted_activity_id": null
+      },
+      {
+        "type": "event",
+        "id": "event-near-1",
+        "title": "Sunset Rooftop Jazz Night",
+        "author_name": "synthetic_host",
+        "author_image_url": "/images/fixtures/host-1.jpg",
+        "location_name": "Downtown LA",
+        "distance_km": 14.6,
+        "created_at": "2026-10-12T15:00:00Z",
+        "images": ["/images/fixtures/event-1-a.jpg", "/images/fixtures/event-1-b.jpg"],
+        "start_time": "2026-10-18T02:00:00Z",
+        "rsvp_count": 42,
+        "max_attendees": 80,
+        "spots_remaining": 38
+      },
+      {
+        "type": "post",
+        "id": "post-soft-eligible-1",
+        "_comment": "soft conversion threshold (>=5 reactions per decisions.md) — badge shows, owner-only",
+        "title": "Impromptu trivia night, who's in?",
+        "author_name": "synthetic_owner",
+        "author_image_url": "/images/fixtures/owner-2.jpg",
+        "location_name": "Belmont Shore",
+        "distance_km": 3.8,
+        "created_at": "2026-10-12T12:00:00Z",
+        "description": "Winner gets bragging rights.",
+        "tags": ["trivia", "bar"],
+        "time_hint": "tonight",
+        "expires_at": "2026-10-13T12:00:00Z",
+        "status": "active",
+        "reaction_count": 6,
+        "viewer_reacted": true,
+        "conversion_eligible": true,
+        "converted_activity_id": null
+      },
+      {
+        "type": "post",
+        "id": "post-converted-1",
+        "_comment": "already converted — card shows the converted overlay, not the reaction button",
+        "title": "Weekly 5k run club",
+        "author_name": "synthetic_owner",
+        "author_image_url": null,
+        "location_name": "Shoreline Village",
+        "distance_km": 2.1,
+        "created_at": "2026-10-10T07:00:00Z",
+        "description": "Became a recurring event — join the structured version.",
+        "tags": ["running", "fitness"],
+        "time_hint": "recurring",
+        "expires_at": "2026-10-11T07:00:00Z",
+        "status": "converted",
+        "reaction_count": 14,
+        "viewer_reacted": true,
+        "conversion_eligible": false,
+        "converted_activity_id": "event-from-post-1"
+      }
+    ]
+  },
+  "adversarial": {
+    "_comment": "cross-cutting hostile/edge cases the plan and mockup must both handle",
+    "expired_post_excluded": {
+      "id": "post-expired-1",
+      "expires_at": "2026-10-11T00:00:00Z",
+      "_note": "must never appear in feed_page_1 — FeedService excludes it server-side, not a client filter"
+    },
+    "out_of_radius_post": {
+      "id": "post-far-1",
+      "distance_km": 42.0,
+      "_note": "beyond the fixed 10km post radius (001-O2) — must never appear regardless of event radius slider"
+    },
+    "out_of_radius_event": {
+      "id": "event-far-1",
+      "distance_km": 61.0,
+      "_note": "beyond the 50km event radius ceiling — excluded even with eventRadiusKm=50"
+    },
+    "soldout_event": {
+      "id": "event-soldout-1",
+      "rsvp_count": 10,
+      "max_attendees": 10,
+      "spots_remaining": 0
+    },
+    "no_image_event": {
+      "id": "event-no-image-1",
+      "images": [],
+      "_note": "mockup must render a placeholder, not a broken <img>"
+    },
+    "unauthenticated_viewer": {
+      "_note": "guest hitting /feed/nearby redirects to login (route middleware, unchanged — see 03-contract.md Authorization)"
+    },
+    "malformed_cursor": {
+      "cursor": "not-valid-base64!!",
+      "_note": "FeedService must treat as null and restart from newest, never 500 (see 03-contract.md Validation)"
+    },
+    "viewer_without_location": {
+      "_note": "falls back to FeedService::getFallbackNearbyFeed per existing behavior, unchanged by this spec"
+    }
+  }
+}
