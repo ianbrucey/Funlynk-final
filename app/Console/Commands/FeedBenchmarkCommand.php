@@ -30,6 +30,21 @@ class FeedBenchmarkCommand extends Command
 
     private const CENTER_LNG = -83.9875616;
 
+    /**
+     * Other metro areas, far enough from the viewer that nothing placed near
+     * them can ever fall inside the viewer's radius. Without this, a
+     * single-city fixture makes almost every row "nearby", which hides the
+     * real selectivity benefit (or cost) of a spatial index.
+     *
+     * @var list<array{0: float, 1: float}>
+     */
+    private const OTHER_METROS = [
+        [40.7128, -74.0060],   // New York
+        [34.0522, -118.2437],  // Los Angeles
+        [41.8781, -87.6298],   // Chicago
+        [47.6062, -122.3321],  // Seattle
+    ];
+
     public function handle(FeedService $feedService): int
     {
         $scales = array_map('intval', explode(',', (string) $this->option('scales')));
@@ -129,6 +144,7 @@ class FeedBenchmarkCommand extends Command
         // --- EXPLAIN for the underlying spatial query ---
         $explainPosts = $this->explainNearbyPosts($viewer->location_coordinates, 10);
         $explainEvents = $this->explainNearbyPosts($viewer->location_coordinates, 50, Activity::class, 'start_time', 'published');
+        $explainPostsDWithin = $this->explainDWithin($viewer->location_coordinates, 10);
 
         return [
             'items_returned' => $result['items']->count(),
@@ -141,7 +157,28 @@ class FeedBenchmarkCommand extends Command
             'livewire_rehydration_query_count' => $rehydrationQueries,
             'explain_posts' => $explainPosts,
             'explain_events' => $explainEvents,
+            'explain_posts_dwithin' => $explainPostsDWithin,
         ];
+    }
+
+    /**
+     * Same post query, but filtered with ST_DWithin on the geography column
+     * instead of whereDistanceSphere — to check whether this predicate can
+     * use the existing idx_posts_location GIST index.
+     *
+     * @return list<string>
+     */
+    private function explainDWithin(Point $location, int $radiusKm): array
+    {
+        $grammar = DB::connection()->getQueryGrammar();
+        $point = $location->toSqlExpression(DB::connection())->getValue($grammar);
+        $meters = $radiusKm * 1000;
+
+        $sql = "EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) SELECT * FROM posts WHERE status = 'active' AND ST_DWithin(location_coordinates, {$point}, {$meters}) ORDER BY ST_Distance(location_coordinates, {$point}) ASC LIMIT 30";
+
+        $plan = DB::select($sql);
+
+        return array_map(fn ($row) => $row->{'QUERY PLAN'}, $plan);
     }
 
     /**
@@ -155,9 +192,16 @@ class FeedBenchmarkCommand extends Command
         $now = now();
 
         for ($i = 0; $i < $count; $i++) {
-            // 70% inside the 10km post radius, 30% outside (up to ~40km away)
-            $withinRadius = $i % 10 < 7;
-            [$lat, $lng] = $this->pointAtDistance($withinRadius ? rand(0, 9000) : rand(12000, 40000));
+            if ($i % 5 === 0) {
+                // 20% near the viewer's metro: 70% inside the 10km post
+                // radius, 30% just outside it (up to ~40km away).
+                $withinRadius = $i % 10 < 7;
+                [$lat, $lng] = $this->pointAtDistance($withinRadius ? rand(0, 9000) : rand(12000, 40000));
+            } else {
+                // 80% scattered across distant metros — always outside the
+                // viewer's radius, giving the dataset realistic selectivity.
+                [$lat, $lng] = $this->pointNearOtherMetro();
+            }
 
             $status = match (true) {
                 $i % 50 === 0 => 'expired',
@@ -207,9 +251,15 @@ class FeedBenchmarkCommand extends Command
         $now = now();
 
         for ($i = 0; $i < $count; $i++) {
-            // 70% inside the 50km event radius, 30% outside
-            $withinRadius = $i % 10 < 7;
-            [$lat, $lng] = $this->pointAtDistance($withinRadius ? rand(0, 45000) : rand(55000, 100000));
+            if ($i % 5 === 0) {
+                // 20% near the viewer's metro: 70% inside the 50km event
+                // radius, 30% just outside it.
+                $withinRadius = $i % 10 < 7;
+                [$lat, $lng] = $this->pointAtDistance($withinRadius ? rand(0, 45000) : rand(55000, 100000));
+            } else {
+                // 80% scattered across distant metros.
+                [$lat, $lng] = $this->pointNearOtherMetro();
+            }
 
             $status = $i % 30 === 0 ? 'cancelled' : 'published';
 
@@ -329,6 +379,22 @@ class FeedBenchmarkCommand extends Command
     }
 
     /**
+     * A random point within ~20km of one of the other, distant metros.
+     *
+     * @return array{0: float, 1: float}
+     */
+    private function pointNearOtherMetro(): array
+    {
+        [$lat, $lng] = self::OTHER_METROS[array_rand(self::OTHER_METROS)];
+        $bearing = deg2rad(rand(0, 359));
+        $meters = rand(0, 20000);
+        $deltaLat = ($meters * cos($bearing)) / 111_320;
+        $deltaLng = ($meters * sin($bearing)) / (111_320 * cos(deg2rad($lat)));
+
+        return [$lat + $deltaLat, $lng + $deltaLng];
+    }
+
+    /**
      * @return list<string>
      */
     private function explainNearbyPosts(Point $location, int $radiusKm, string $model = Post::class, string $orderColumn = 'created_at', string $status = 'active'): array
@@ -375,6 +441,9 @@ class FeedBenchmarkCommand extends Command
             $this->newLine();
             $this->line("<comment>EXPLAIN — events spatial query at scale {$scale}:</comment>");
             $this->line(implode("\n", $r['explain_events']));
+            $this->newLine();
+            $this->line("<comment>EXPLAIN — posts via ST_DWithin at scale {$scale}:</comment>");
+            $this->line(implode("\n", $r['explain_posts_dwithin']));
         }
     }
 }
