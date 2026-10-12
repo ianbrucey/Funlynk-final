@@ -1,0 +1,170 @@
+== scale: 100 posts ==
+  seeding posts... done
+  seeding events... done
+  seeding reactions/rsvps... done
+== scale: 1000 posts ==
+  seeding posts... done
+  seeding events... done
+  seeding reactions/rsvps... done
+== scale: 10000 posts ==
+  seeding posts... done
+  seeding events... done
+  seeding reactions/rsvps... done
+
++-------+-------+-------+--------+--------+--------+--------------+---------------------+---------------------+
+| scale | items | total | min ms | avg ms | p95 ms | feed queries | card-render queries | rehydration queries |
++-------+-------+-------+--------+--------+--------+--------------+---------------------+---------------------+
+| 100   | 16    | 18    | 10.17  | 17.75  | 12.68  | 6            | 17                  | 16                  |
+| 1000  | 30    | 186   | 14.23  | 16.09  | 17.36  | 6            | 45                  | 30                  |
+| 10000 | 30    | 1866  | 45.22  | 49.27  | 55.83  | 6            | 45                  | 30                  |
++-------+-------+-------+--------+--------+--------+--------------+---------------------+---------------------+
+
+EXPLAIN — posts spatial query at scale 100:
+Limit  (cost=33.17..33.18 rows=1 width=2010) (actual time=0.219..0.225 rows=17.00 loops=1)
+  Buffers: shared hit=4
+  ->  Sort  (cost=33.17..33.18 rows=1 width=2010) (actual time=0.218..0.221 rows=17.00 loops=1)
+        Sort Key: (st_distance(geography((location_coordinates)::geometry), '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, false))
+        Sort Method: quicksort  Memory: 29kB
+        Buffers: shared hit=4
+        ->  Index Scan using posts_status_reaction_count_index on posts  (cost=0.14..33.16 rows=1 width=2010) (actual time=0.042..0.190 rows=17.00 loops=1)
+              Index Cond: ((status)::text = 'active'::text)
+              Filter: (st_distance(geography((location_coordinates)::geometry), '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, false) <= '10000'::double precision)
+              Rows Removed by Filter: 80
+              Index Searches: 1
+              Buffers: shared hit=4
+Planning Time: 0.232 ms
+Execution Time: 0.270 ms
+
+EXPLAIN — events spatial query at scale 100:
+Limit  (cost=33.17..33.17 rows=1 width=3692) (actual time=0.061..0.062 rows=1.00 loops=1)
+  Buffers: shared hit=2
+  ->  Sort  (cost=33.17..33.17 rows=1 width=3692) (actual time=0.060..0.061 rows=1.00 loops=1)
+        Sort Key: (st_distance(geography((location_coordinates)::geometry), '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, false))
+        Sort Method: quicksort  Memory: 25kB
+        Buffers: shared hit=2
+        ->  Index Scan using idx_activities_status on activities  (cost=0.13..33.16 rows=1 width=3692) (actual time=0.047..0.054 rows=1.00 loops=1)
+              Index Cond: ((status)::text = 'published'::text)
+              Filter: (st_distance(geography((location_coordinates)::geometry), '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, false) <= '50000'::double precision)
+              Rows Removed by Filter: 8
+              Index Searches: 1
+              Buffers: shared hit=2
+Planning Time: 0.258 ms
+Execution Time: 0.104 ms
+
+EXPLAIN — posts via ST_DWithin at scale 100:
+Limit  (cost=33.16..33.17 rows=1 width=2010) (actual time=2.524..2.532 rows=17.00 loops=1)
+  Buffers: shared hit=4
+  ->  Sort  (cost=33.16..33.17 rows=1 width=2010) (actual time=2.523..2.527 rows=17.00 loops=1)
+        Sort Key: (st_distance(location_coordinates, '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, true))
+        Sort Method: quicksort  Memory: 29kB
+        Buffers: shared hit=4
+        ->  Index Scan using posts_status_reaction_count_index on posts  (cost=0.14..33.15 rows=1 width=2010) (actual time=1.746..2.476 rows=17.00 loops=1)
+              Index Cond: ((status)::text = 'active'::text)
+              Filter: st_dwithin(location_coordinates, '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, '10000'::double precision, true)
+              Rows Removed by Filter: 80
+              Index Searches: 1
+              Buffers: shared hit=4
+Planning:
+  Buffers: shared hit=25
+Planning Time: 1.507 ms
+Execution Time: 2.611 ms
+
+EXPLAIN — posts spatial query at scale 1000:
+Limit  (cost=33.18..33.19 rows=1 width=2010) (actual time=1.798..1.806 rows=30.00 loops=1)
+  Buffers: shared hit=34
+  ->  Sort  (cost=33.18..33.19 rows=1 width=2010) (actual time=1.797..1.801 rows=30.00 loops=1)
+        Sort Key: (st_distance(geography((location_coordinates)::geometry), '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, false))
+        Sort Method: top-N heapsort  Memory: 37kB
+        Buffers: shared hit=34
+        ->  Index Scan using posts_status_reaction_count_index on posts  (cost=0.14..33.17 rows=1 width=2010) (actual time=0.069..1.660 rows=170.00 loops=1)
+              Index Cond: ((status)::text = 'active'::text)
+              Filter: (st_distance(geography((location_coordinates)::geometry), '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, false) <= '10000'::double precision)
+              Rows Removed by Filter: 800
+              Index Searches: 1
+              Buffers: shared hit=34
+Planning Time: 0.216 ms
+Execution Time: 1.855 ms
+
+EXPLAIN — events spatial query at scale 1000:
+Limit  (cost=33.17..33.18 rows=1 width=3692) (actual time=0.262..0.268 rows=16.00 loops=1)
+  Buffers: shared hit=5
+  ->  Sort  (cost=33.17..33.18 rows=1 width=3692) (actual time=0.261..0.264 rows=16.00 loops=1)
+        Sort Key: (st_distance(geography((location_coordinates)::geometry), '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, false))
+        Sort Method: quicksort  Memory: 29kB
+        Buffers: shared hit=5
+        ->  Index Scan using idx_activities_status on activities  (cost=0.13..33.16 rows=1 width=3692) (actual time=0.046..0.235 rows=16.00 loops=1)
+              Index Cond: ((status)::text = 'published'::text)
+              Filter: (st_distance(geography((location_coordinates)::geometry), '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, false) <= '50000'::double precision)
+              Rows Removed by Filter: 80
+              Index Searches: 1
+              Buffers: shared hit=5
+Planning Time: 0.400 ms
+Execution Time: 0.316 ms
+
+EXPLAIN — posts via ST_DWithin at scale 1000:
+Limit  (cost=33.17..33.17 rows=1 width=2010) (actual time=2.322..2.331 rows=30.00 loops=1)
+  Buffers: shared hit=34
+  ->  Sort  (cost=33.17..33.17 rows=1 width=2010) (actual time=2.321..2.325 rows=30.00 loops=1)
+        Sort Key: (st_distance(location_coordinates, '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, true))
+        Sort Method: top-N heapsort  Memory: 37kB
+        Buffers: shared hit=34
+        ->  Index Scan using posts_status_reaction_count_index on posts  (cost=0.14..33.16 rows=1 width=2010) (actual time=0.057..2.156 rows=170.00 loops=1)
+              Index Cond: ((status)::text = 'active'::text)
+              Filter: st_dwithin(location_coordinates, '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, '10000'::double precision, true)
+              Rows Removed by Filter: 800
+              Index Searches: 1
+              Buffers: shared hit=34
+Planning Time: 0.361 ms
+Execution Time: 2.382 ms
+
+EXPLAIN — posts spatial query at scale 10000:
+Limit  (cost=125.99..126.00 rows=2 width=2010) (actual time=18.025..18.038 rows=30.00 loops=1)
+  Buffers: shared hit=328
+  ->  Sort  (cost=125.99..126.00 rows=2 width=2010) (actual time=18.023..18.030 rows=30.00 loops=1)
+        Sort Key: (st_distance(geography((location_coordinates)::geometry), '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, false))
+        Sort Method: top-N heapsort  Memory: 38kB
+        Buffers: shared hit=328
+        ->  Bitmap Heap Scan on posts  (cost=4.32..125.98 rows=2 width=2010) (actual time=0.772..16.668 rows=1700.00 loops=1)
+              Recheck Cond: ((status)::text = 'active'::text)
+              Filter: (st_distance(geography((location_coordinates)::geometry), '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, false) <= '10000'::double precision)
+              Rows Removed by Filter: 8000
+              Heap Blocks: exact=318
+              Buffers: shared hit=328
+              ->  Bitmap Index Scan on posts_status_reaction_count_index  (cost=0.00..4.32 rows=6 width=0) (actual time=0.571..0.571 rows=10767.00 loops=1)
+                    Index Cond: ((status)::text = 'active'::text)
+                    Index Searches: 1
+                    Buffers: shared hit=10
+Planning Time: 0.257 ms
+Execution Time: 18.116 ms
+
+EXPLAIN — events spatial query at scale 10000:
+Limit  (cost=33.18..33.19 rows=1 width=3692) (actual time=1.878..1.887 rows=30.00 loops=1)
+  Buffers: shared hit=33
+  ->  Sort  (cost=33.18..33.19 rows=1 width=3692) (actual time=1.877..1.881 rows=30.00 loops=1)
+        Sort Key: (st_distance(geography((location_coordinates)::geometry), '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, false))
+        Sort Method: top-N heapsort  Memory: 37kB
+        Buffers: shared hit=33
+        ->  Index Scan using idx_activities_status on activities  (cost=0.14..33.17 rows=1 width=3692) (actual time=0.058..1.724 rows=166.00 loops=1)
+              Index Cond: ((status)::text = 'published'::text)
+              Filter: (st_distance(geography((location_coordinates)::geometry), '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, false) <= '50000'::double precision)
+              Rows Removed by Filter: 800
+              Index Searches: 1
+              Buffers: shared hit=33
+Planning Time: 0.250 ms
+Execution Time: 1.942 ms
+
+EXPLAIN — posts via ST_DWithin at scale 10000:
+Limit  (cost=33.42..33.43 rows=1 width=2010) (actual time=7.560..7.568 rows=30.00 loops=1)
+  Buffers: shared hit=1899
+  ->  Sort  (cost=33.42..33.43 rows=1 width=2010) (actual time=7.559..7.562 rows=30.00 loops=1)
+        Sort Key: (st_distance(location_coordinates, '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, true))
+        Sort Method: top-N heapsort  Memory: 38kB
+        Buffers: shared hit=1899
+        ->  Index Scan using idx_posts_location on posts  (cost=0.40..33.41 rows=1 width=2010) (actual time=0.067..6.239 rows=1700.00 loops=1)
+              Index Cond: (location_coordinates && _st_expand('0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, '10000'::double precision))
+              Filter: (((status)::text = 'active'::text) AND st_dwithin(location_coordinates, '0101000020E610000045B2913534FF54C0933E085CB2F94040'::geography, '10000'::double precision, true))
+              Rows Removed by Filter: 300
+              Index Searches: 1
+              Buffers: shared hit=1899
+Planning Time: 0.236 ms
+Execution Time: 7.769 ms

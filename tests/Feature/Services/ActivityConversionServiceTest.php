@@ -41,7 +41,7 @@ test('successfully converts post to event', function () {
     expect($activity)->toBeInstanceOf(Activity::class);
     expect($activity->title)->toBe('Test Post');
     expect($activity->description)->toBe('Test Description');
-    expect($activity->user_id)->toBe($this->user->id);
+    expect($activity->host_id)->toBe($this->user->id);
     expect($activity->originated_from_post_id)->toBe($post->id);
     expect($activity->status)->toBe('published');
 
@@ -67,7 +67,7 @@ test('creates post conversion record', function () {
 
     expect($conversion)->not->toBeNull();
     expect($conversion->event_id)->toBe($activity->id);
-    expect($conversion->converted_by)->toBe($this->user->id);
+    expect($conversion->activity->host_id)->toBe($this->user->id);
     expect($conversion->reactions_at_conversion)->toBe(7);
     expect($conversion->trigger_type)->toBe('manual');
 });

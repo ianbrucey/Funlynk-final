@@ -6,7 +6,7 @@ $badgeClasses = $threshold === 'strong'
     : 'bg-gradient-to-r from-amber-500 to-orange-500';
 @endphp
 
-@if($post->isEligibleForConversion() && !$post->hasReachedDismissLimit())
+@if($post['conversion_eligible'])
     {{-- <div class="absolute top-2 right-2 z-10">
         <button
             wire:click.stop="openConversionModal('{{ $post->id }}')"

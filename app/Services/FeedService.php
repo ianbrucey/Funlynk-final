@@ -4,83 +4,72 @@ namespace App\Services;
 
 use App\Models\Activity;
 use App\Models\Post;
+use App\Models\PostReaction;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class FeedService
 {
     /**
-     * Get nearby feed mixing posts and events around the user.
+     * Posts always use this radius. Not a parameter — callers cannot widen it
+     * (spec 001, 001-O2).
+     */
+    public const POST_RADIUS_KM = 10;
+
+    public const EVENT_RADIUS_MIN_KM = 10;
+
+    public const EVENT_RADIUS_MAX_KM = 50;
+
+    private const EVENT_RADIUS_DEFAULT_KM = 50;
+
+    private const ITEM_CAP = 200;
+
+    /**
+     * Get the merged nearby feed (posts + events), newest first, cursor-paginated.
      *
-     * - Posts: capped at 10km radius
-     * - Events: up to provided $radius (typically 25–50km)
-     * - Optional keyword search via PostgreSQL ILIKE
-     * - Supports pagination for infinite scroll
+     * - Posts: fixed 10km radius.
+     * - Events: 10–50km, clamped server-side regardless of client input.
+     * - Optional keyword search via PostgreSQL ILIKE.
+     * - Items are plain arrays (never Eloquent models) so Livewire never
+     *   rehydrates them from the database on every interaction.
+     *
+     * @return array{items: list<array<string, mixed>>, nextCursor: ?string, hasMore: bool}
      */
     public function getNearbyFeed(
         User $user,
-        int $radius = 10,
+        ?string $cursor = null,
         string $contentType = 'all',
         string $timeFilter = 'all',
         string $searchQuery = '',
-        int $page = 1,
-        int $perPage = 20
+        int $eventRadiusKm = self::EVENT_RADIUS_DEFAULT_KM,
+        int $perPage = 30
     ): array {
         $userLocation = $user->location_coordinates;
 
-        // If user has no coordinates, just fall back to simple recency-based lists
         if (! $userLocation instanceof Point) {
-            return $this->getFallbackNearbyFeed($contentType, $timeFilter, $searchQuery, $page, $perPage);
+            return $this->getFallbackNearbyFeed($user, $contentType, $timeFilter, $searchQuery, $cursor, $perPage);
         }
 
-        $items = collect();
-        $totalPosts = 0;
-        $totalEvents = 0;
+        $eventRadiusKm = max(self::EVENT_RADIUS_MIN_KM, min(self::EVENT_RADIUS_MAX_KM, $eventRadiusKm));
+        $cursorData = $this->decodeCursor($cursor);
 
-        // Calculate how many of each type to fetch based on content type
-        // For 'all', we want a mix, so fetch equal amounts and merge
-        $postsPerPage = $contentType === 'events' ? 0 : ($contentType === 'all' ? (int) ceil($perPage / 2) : $perPage);
-        $eventsPerPage = $contentType === 'posts' ? 0 : ($contentType === 'all' ? (int) floor($perPage / 2) : $perPage);
+        $postQuery = $contentType === 'events' ? null : $this->applySpatialFilter(
+            $this->basePostQuery($timeFilter, $searchQuery),
+            $userLocation,
+            self::POST_RADIUS_KM * 1000
+        );
 
-        // Posts within 5–10km
-        if ($contentType !== 'events') {
-            $postsResult = $this->queryNearbyPosts($userLocation, $radius, $timeFilter, $searchQuery, $page, $postsPerPage);
-            $posts = $postsResult['items']->map(fn (Post $p) => ['type' => 'post', 'data' => $p]);
-            $totalPosts = $postsResult['total'];
+        $eventQuery = $contentType === 'posts' ? null : $this->applySpatialFilter(
+            $this->baseEventQuery($timeFilter, $searchQuery),
+            $userLocation,
+            $eventRadiusKm * 1000
+        );
 
-            $items = $items->merge($posts);
-        }
-
-        // Events within desired radius
-        if ($contentType !== 'posts') {
-            $eventsResult = $this->queryNearbyEvents($userLocation, $radius, $timeFilter, $searchQuery, $page, $eventsPerPage);
-            $events = $eventsResult['items']->map(fn (Activity $e) => ['type' => 'event', 'data' => $e]);
-            $totalEvents = $eventsResult['total'];
-
-            $items = $items->merge($events);
-        }
-
-        // Sort by temporal relevance – posts get a boost so they show higher
-        $sortedItems = $items->sortByDesc(function (array $item) {
-            if ($item['type'] === 'post') {
-                return $item['data']->created_at->timestamp + 100000; // boost posts
-            }
-
-            return $item['data']->start_time->timestamp;
-        })->values();
-
-        // Calculate if there are more items
-        $totalItems = $totalPosts + $totalEvents;
-        $currentlyLoaded = ($page - 1) * $perPage + $sortedItems->count();
-        $hasMore = $currentlyLoaded < $totalItems && $currentlyLoaded < 200; // Cap at 200 items
-
-        return [
-            'items' => $sortedItems,
-            'hasMore' => $hasMore,
-            'total' => $totalItems,
-            'page' => $page,
-        ];
+        return $this->paginateMerged($user, $postQuery, $eventQuery, $cursorData, $perPage);
     }
 
     /**
@@ -311,79 +300,261 @@ class FeedService
         ];
     }
 
-    protected function getFallbackNearbyFeed(string $contentType, string $timeFilter, string $searchQuery = '', int $page = 1, int $perPage = 20): array
+    /**
+     * Fallback feed for a viewer with no saved location: plain recency lists,
+     * same cursor/array contract as the spatial path, just no radius filter.
+     *
+     * @return array{items: list<array<string, mixed>>, nextCursor: ?string, hasMore: bool}
+     */
+    protected function getFallbackNearbyFeed(User $user, string $contentType, string $timeFilter, string $searchQuery = '', ?string $cursor = null, int $perPage = 30): array
     {
-        $items = collect();
+        $postQuery = $contentType === 'events' ? null : $this->basePostQuery($timeFilter, $searchQuery);
+        $eventQuery = $contentType === 'posts' ? null : $this->baseEventQuery($timeFilter, $searchQuery);
 
-        if ($contentType !== 'events') {
-            $postsQuery = Post::with('user')->active()
-                ->when($timeFilter !== 'all', function ($q) use ($timeFilter) {
-                    $now = now();
+        return $this->paginateMerged($user, $postQuery, $eventQuery, $this->decodeCursor($cursor), $perPage);
+    }
 
-                    return match ($timeFilter) {
-                        'today' => $q->whereDate('created_at', $now->toDateString()),
-                        'week' => $q->where('created_at', '>=', $now->copy()->subWeek()),
-                        'month' => $q->where('created_at', '>=', $now->copy()->subMonth()),
-                        default => $q,
-                    };
-                });
+    /**
+     * Posts matching status/time/search filters — no radius, no order, no limit.
+     */
+    private function basePostQuery(string $timeFilter, string $searchQuery): Builder
+    {
+        $query = Post::query()
+            ->with(['user', 'group'])
+            ->active();
 
-            if (! empty($searchQuery)) {
-                $postsQuery->where(function ($q) use ($searchQuery) {
-                    $q->where('title', 'ILIKE', "%{$searchQuery}%")
-                        ->orWhere('description', 'ILIKE', "%{$searchQuery}%")
-                        ->orWhereRaw('tags::text ILIKE ?', ["%{$searchQuery}%"]);
-                });
-            }
+        $query->when($timeFilter !== 'all', function (Builder $q) use ($timeFilter) {
+            $now = now();
 
-            $posts = $postsQuery->latest()
-                ->limit(20)
-                ->get()
-                ->map(fn (Post $p) => ['type' => 'post', 'data' => $p]);
+            return match ($timeFilter) {
+                'today' => $q->where('created_at', '>=', $now->copy()->startOfDay()),
+                'week' => $q->where('created_at', '>=', $now->copy()->subWeek()),
+                'month' => $q->where('created_at', '>=', $now->copy()->subMonth()),
+                default => $q,
+            };
+        });
 
-            $items = $items->merge($posts);
+        if ($searchQuery !== '') {
+            $query->where(function (Builder $q) use ($searchQuery) {
+                $q->where('title', 'ILIKE', "%{$searchQuery}%")
+                    ->orWhere('description', 'ILIKE', "%{$searchQuery}%")
+                    ->orWhereRaw('tags::text ILIKE ?', ["%{$searchQuery}%"]);
+            });
         }
 
-        if ($contentType !== 'posts') {
-            $eventsQuery = Activity::with('host')
-                ->where('status', 'published')
-                ->where('start_time', '>', now())
-                ->when($timeFilter !== 'all', function ($q) use ($timeFilter) {
-                    $now = now();
+        return $query;
+    }
 
-                    return match ($timeFilter) {
-                        'today' => $q->whereDate('start_time', $now->toDateString()),
-                        'week' => $q->where('start_time', '>=', $now->copy()->subWeek()),
-                        'month' => $q->where('start_time', '>=', $now->copy()->subMonth()),
-                        default => $q,
-                    };
-                });
+    /**
+     * Published, upcoming events matching time/search filters — no radius,
+     * no order, no limit.
+     */
+    private function baseEventQuery(string $timeFilter, string $searchQuery): Builder
+    {
+        $query = Activity::query()
+            ->with('host')
+            ->where('status', 'published')
+            ->where('start_time', '>', now());
 
-            if (! empty($searchQuery)) {
-                $eventsQuery->where(function ($q) use ($searchQuery) {
-                    $q->where('title', 'ILIKE', "%{$searchQuery}%")
-                        ->orWhere('description', 'ILIKE', "%{$searchQuery}%")
-                        ->orWhereHas('tags', fn ($tagQuery) => $tagQuery->where('name', 'ILIKE', "%{$searchQuery}%"));
-                });
-            }
+        $query->when($timeFilter !== 'all', function (Builder $q) use ($timeFilter) {
+            $now = now();
 
-            $events = $eventsQuery->latest('start_time')
-                ->limit(20)
-                ->get()
-                ->map(fn (Activity $e) => ['type' => 'event', 'data' => $e]);
+            return match ($timeFilter) {
+                'today' => $q->where('start_time', '>=', $now->copy()->startOfDay()),
+                'week' => $q->where('start_time', '>=', $now->copy()->subWeek()),
+                'month' => $q->where('start_time', '>=', $now->copy()->subMonth()),
+                default => $q,
+            };
+        });
 
-            $items = $items->merge($events);
+        if ($searchQuery !== '') {
+            $query->where(function (Builder $q) use ($searchQuery) {
+                $q->where('title', 'ILIKE', "%{$searchQuery}%")
+                    ->orWhere('description', 'ILIKE', "%{$searchQuery}%")
+                    ->orWhereHas('tags', fn ($tagQuery) => $tagQuery->where('name', 'ILIKE', "%{$searchQuery}%"));
+            });
         }
 
-        // For fallback, we don't have accurate totals, so just return what we have
-        // and assume there might be more if we got a full page
-        $hasMore = $items->count() >= $perPage && $page < 10; // Cap at 10 pages for fallback
+        return $query;
+    }
+
+    /**
+     * Add an ST_DWithin radius filter plus a selected ST_Distance column
+     * (exposed to the caller as `distance_km`). ST_DWithin can use the
+     * existing GIST index on `location_coordinates`; whereDistanceSphere
+     * cannot (spec 001 archaeology).
+     */
+    private function applySpatialFilter(Builder $query, Point $point, int $meters): Builder
+    {
+        $grammar = DB::connection()->getQueryGrammar();
+        $pointSql = $point->toSqlExpression(DB::connection())->getValue($grammar);
+
+        return $query
+            ->addSelect(['*', DB::raw("ST_Distance(location_coordinates, {$pointSql}) / 1000 AS distance_km")])
+            ->whereRaw("ST_DWithin(location_coordinates, {$pointSql}, ?)", [$meters]);
+    }
+
+    /**
+     * Keyset-paginate two independently filtered queries (posts, events) as
+     * one merged, newest-first list. Fetches perPage+1 from each source so
+     * `hasMore` is exact with no extra COUNT(*) query.
+     *
+     * @return array{items: list<array<string, mixed>>, nextCursor: ?string, hasMore: bool}
+     */
+    private function paginateMerged(?User $user, ?Builder $postQuery, ?Builder $eventQuery, ?array $cursorData, int $perPage): array
+    {
+        $fetchLimit = $perPage + 1;
+
+        $posts = $postQuery
+            ? $this->applyCursor($postQuery, $cursorData)->orderByDesc('created_at')->orderByDesc('id')->limit($fetchLimit)->get()
+            : collect();
+
+        $events = $eventQuery
+            ? $this->applyCursor($eventQuery, $cursorData)->withCount('rsvps')->orderByDesc('created_at')->orderByDesc('id')->limit($fetchLimit)->get()
+            : collect();
+
+        $viewerReactedIds = $this->viewerReactedPostIds($user, $posts);
+
+        $merged = $posts->map(fn (Post $p) => $this->mapPostToFeedItem($p, $viewerReactedIds))
+            ->merge($events->map(fn (Activity $e) => $this->mapEventToFeedItem($e)))
+            ->sort(fn (array $a, array $b) => $b['created_at'] <=> $a['created_at'] ?: strcmp($b['id'], $a['id']))
+            ->values();
+
+        $poolSize = $merged->count();
+        $page = $merged->take(min($perPage, self::ITEM_CAP))->values();
 
         return [
-            'items' => $items->values(),
-            'hasMore' => $hasMore,
-            'total' => $items->count(), // Approximate
-            'page' => $page,
+            'items' => $page->all(),
+            'nextCursor' => $page->isNotEmpty() ? $this->encodeCursor($page->last()) : null,
+            'hasMore' => $poolSize > $page->count(),
+        ];
+    }
+
+    private function applyCursor(Builder $query, ?array $cursorData): Builder
+    {
+        if ($cursorData === null) {
+            return $query;
+        }
+
+        $cursorTime = Carbon::parse($cursorData['t']);
+
+        return $query->where(function (Builder $q) use ($cursorTime, $cursorData) {
+            $q->where('created_at', '<', $cursorTime)
+                ->orWhere(function (Builder $q2) use ($cursorTime, $cursorData) {
+                    $q2->where('created_at', '=', $cursorTime)->where('id', '<', $cursorData['id']);
+                });
+        });
+    }
+
+    private function encodeCursor(array $item): string
+    {
+        return base64_encode((string) json_encode(['t' => $item['created_at'], 'id' => $item['id']]));
+    }
+
+    /**
+     * @return ?array{t: string, id: string}
+     */
+    private function decodeCursor(?string $cursor): ?array
+    {
+        if ($cursor === null || $cursor === '') {
+            return null;
+        }
+
+        $decoded = base64_decode($cursor, true);
+        if ($decoded === false) {
+            return null;
+        }
+
+        $data = json_decode($decoded, true);
+        if (! is_array($data) || ! isset($data['t'], $data['id']) || ! is_string($data['t']) || ! is_string($data['id'])) {
+            return null;
+        }
+
+        return ['t' => $data['t'], 'id' => $data['id']];
+    }
+
+    /**
+     * One query for every loaded post's reaction state — never one per card.
+     *
+     * @param  Collection<int, Post>  $posts
+     * @return Collection<int, string>
+     */
+    private function viewerReactedPostIds(?User $user, Collection $posts): Collection
+    {
+        if (! $user || $posts->isEmpty()) {
+            return collect();
+        }
+
+        return PostReaction::query()
+            ->where('user_id', $user->id)
+            ->where('reaction_type', 'im_down')
+            ->whereIn('post_id', $posts->pluck('id'))
+            ->pluck('post_id');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapPostToFeedItem(Post $post, Collection $viewerReactedIds): array
+    {
+        $isGroup = (bool) ($post->posted_as_group && $post->group);
+        $author = $isGroup ? $post->group : $post->user;
+
+        return [
+            'type' => 'post',
+            'id' => $post->id,
+            'user_id' => $post->user_id,
+            'title' => $post->title,
+            'description' => $post->description,
+            'author_name' => $isGroup ? $author->name : ($author?->display_name ?? $author?->username ?? 'Unknown User'),
+            'author_image_url' => $isGroup ? $author->avatar_url : $author?->profile_image_url,
+            'author_url' => $isGroup ? route('groups.show', $author) : ($author ? route('profile.view', $author->username) : '#'),
+            'is_group_post' => $isGroup,
+            'location_name' => $post->location_name,
+            'distance_km' => isset($post->distance_km) ? round((float) $post->distance_km, 1) : null,
+            'created_at' => $post->created_at->toIso8601String(),
+            'created_at_human' => $post->created_at->diffForHumans(null, true).' ago',
+            'approximate_time_human' => optional($post->approximate_time)->format('M j, g:i A'),
+            'mood' => $post->mood,
+            'tags' => $post->tags ?? [],
+            'time_hint' => $post->time_hint,
+            'expires_at' => optional($post->expires_at)->toIso8601String(),
+            'expires_in_human' => $post->expires_at ? $post->expires_at->diffForHumans(null, true) : null,
+            'status' => $post->status,
+            'reaction_count' => $post->reaction_count,
+            'viewer_reacted' => $viewerReactedIds->contains($post->id),
+            'conversion_eligible' => $post->isEligibleForConversion(),
+            'converted_activity_id' => $post->converted_to_activity_id,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapEventToFeedItem(Activity $event): array
+    {
+        $rsvpCount = (int) ($event->rsvps_count ?? 0);
+        $spotsRemaining = $event->max_attendees !== null ? max(0, $event->max_attendees - $rsvpCount) : null;
+
+        return [
+            'type' => 'event',
+            'id' => $event->id,
+            'title' => $event->title,
+            'author_name' => $event->host?->display_name ?? $event->host?->username ?? 'Unknown Host',
+            'author_image_url' => $event->host?->profile_image_url,
+            'location_name' => $event->location_name,
+            'distance_km' => isset($event->distance_km) ? round((float) $event->distance_km, 1) : null,
+            'created_at' => $event->created_at->toIso8601String(),
+            'created_at_human' => $event->created_at->diffForHumans(null, true).' ago',
+            'images' => $event->images ?? [],
+            'start_time' => optional($event->start_time)->toIso8601String(),
+            'start_time_human' => optional($event->start_time)->format('M j, g:i A'),
+            'is_paid' => $event->is_paid,
+            'price' => $event->is_paid ? round(($event->price_cents ?? 0) / 100, 2) : null,
+            'rsvp_count' => $rsvpCount,
+            'max_attendees' => $event->max_attendees,
+            'spots_remaining' => $spotsRemaining,
+            'converted_from_post' => $event->originated_from_post_id !== null,
         ];
     }
 }

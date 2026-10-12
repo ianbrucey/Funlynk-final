@@ -30,7 +30,7 @@ test('convertToEvent successfully converts post', function () {
     $activity = $this->service->convertToEvent($post->id, $eventData);
 
     expect($activity)->toBeInstanceOf(Activity::class);
-    expect($activity->user_id)->toBe($this->user->id);
+    expect($activity->host_id)->toBe($this->user->id);
 });
 
 test('convertToEvent throws exception if not post owner', function () {
@@ -141,7 +141,7 @@ test('convertToEvent allows explicit user parameter', function () {
 
     $activity = $this->service->convertToEvent($post->id, $eventData, $otherUser);
 
-    expect($activity->user_id)->toBe($otherUser->id);
+    expect($activity->host_id)->toBe($otherUser->id);
 });
 
 test('convertToEvent eager loads relationships', function () {

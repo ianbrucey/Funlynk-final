@@ -219,14 +219,14 @@ class GroupsLivewireTest extends TestCase
         Livewire::actingAs($member)
             ->test(CreateGroupPost::class, ['group' => $group])
             ->call('openModal')
-            ->set('title', 'Test Post Title')
-            ->set('description', 'Test post description')
-            ->set('expiresAt', now()->addDays(2)->format('Y-m-d H:i:s'))
+            ->set('content', 'Test post description')
+            ->set('expiresIn', '48')
             ->call('createPost')
             ->assertHasNoErrors();
 
         $this->assertDatabaseHas('posts', [
-            'title' => 'Test Post Title',
+            'title' => 'Test post description',
+            'description' => 'Test post description',
             'group_id' => $group->id,
             'user_id' => $member->id,
         ]);

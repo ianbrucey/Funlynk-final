@@ -40,6 +40,14 @@ data if this ships?"*
 
 ### Brownfield rules (live app — non-negotiable)
 
+> **[D] 2026-10-11 — Pre-pilot relaxation (owner).** Production has no users
+> until the pilot launches. Until pilot launch day: migrations may be breaking
+> (no backfill plan required, since there is no user data to protect), and
+> hot-path refactors may ship as atomic cutovers without a flag/percentage
+> rollout. Still in force: migrations run cleanly on deploy, contract changes
+> update every consumer in the same change, and the post-merge smoke test.
+> **On pilot launch day these rules return in full** — record the date here.
+
 - **Migrations are backward-compatible.** Additive first; renames and drops ship
   with a data/backfill plan in the brief. No migration may orphan production data.
 - **No breaking contract changes without a migration path.** If an API, event,
@@ -95,7 +103,7 @@ docs/
   UI_STANDARDS.md            [D] — galaxy theme, glass morphism, mobile-first
   BUILD_PROTOCOL.md          [D] — this document
   PLANNING_PROTOCOL.md       [D] — per-feature lifecycle
-  ROADMAP.md                 [P] — refactor program order; owner to approve
+  (roadmap)                  [D] 2026-10-11 — lives in §7 of this document
 ```
 
 Each decision is tagged:
@@ -420,27 +428,28 @@ PostgreSQL), `DOMAIN_MODEL.md`, `SECURITY.md`.
 
 **Exit verdict:** a trivial branch passes all gates and the smoke test.
 
-### Phase 1 — Timeline performance refactor
+### Roadmap — [D] approved by the owner 2026-10-11
 
-The feed is the front door and currently feels bulky and slow. Full spec:
-archaeology of the current rendering pipeline, performance budget, approved
-HTML mockup, backend-out tickets (query → component → view), rollout plan.
+One spec per workstream, one at a time, each with its own discussion and
+decisions before its brief. Pilot launches ~2026-10-21 with fewer than 100 users.
 
-**Exit verdict:** the timeline meets its budget on production-shaped data with
-all verdicts green.
+| Order | Spec | Workstream | Pilot |
+|---|---|---|---|
+| 1 | 001 | **Timeline performance** — measured audit at 100 / 1k / 10k posts, then fixes. Budget below. | before pilot |
+| 2 | 002 | **Post and event cards + image pipeline** — HTML mockups first (a from-scratch UI is allowed); builds the `x-fl.*` component library. | before pilot |
+| 3 | 003 | **Detail pages** (event/post show pages) on the `x-fl.*` components. | light polish if time allows |
+| 4 | 004 | **Group chat** (post chat — planning together, not comments). | after pilot |
+| 5 | 005 | **Timeline algorithm** — friends/following vs. nearby. Spec 001 must not block it. | after pilot (a minimal "following first" option may ship before) |
+| 6 | — | Payments and trust hardening: idempotency, refund windows, webhooks, payouts. | after pilot |
 
-### Phase 2 — Page-by-page UI consistency pass
+**[D] 2026-10-11 — Timeline performance budget:** feed data returned by the
+server in < 200 ms at 10k posts; first cards visible in < 1 s on a phone over 4G.
 
-Apply the approved galaxy/mobile-first standards across the remaining screens,
-one spec per surface, reusing the timeline's proven components.
+**[D] 2026-10-11 — Component namespace:** `resources/views/components/fl/`,
+used as `<x-fl.button>`, `<x-fl.card>`, etc.
 
-### Phase 3 — Payments and trust hardening
-
-Idempotency audit, refund windows, webhook resilience, host payout flows —
-spec'd and tested to the architecture laws.
-
-Phase order is [P] — the product owner approves the roadmap before Phase 1
-briefing begins.
+**Exit verdict (each spec):** its claims' verdicts are green and the post-merge
+smoke test passes.
 
 ---
 

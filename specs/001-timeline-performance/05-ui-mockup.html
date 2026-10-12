@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>001 — Timeline performance — UI mockup (FunLink)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; color: #e5e7eb;
+    background: radial-gradient(ellipse at 20% 10%, #1e1b4b 0%, #0b0620 55%, #050310 100%); min-height: 100vh; }
+  .stars { position: fixed; inset: 0; pointer-events: none; opacity: .5;
+    background-image: radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+                      radial-gradient(1px 1px at 70% 10%, #fff, transparent),
+                      radial-gradient(1.5px 1.5px at 40% 70%, #a5f3fc, transparent),
+                      radial-gradient(1px 1px at 90% 60%, #fff, transparent),
+                      radial-gradient(1px 1px at 10% 85%, #f0abfc, transparent); }
+  .wrap { position: relative; max-width: 480px; margin: 0 auto; padding: 16px; }
+  @media (min-width: 900px) { .wrap { max-width: 1100px; } .feed-grid { grid-template-columns: repeat(2, 1fr); } }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  h2 { font-size: 1.05rem; margin: 22px 0 10px; color: #a5f3fc; }
+  .hint { color: #9ca3af; font-size: .85rem; margin-bottom: 12px; }
+  .state-label { display: inline-block; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em;
+    background: rgba(34,211,238,.15); color: #67e8f9; border: 1px solid rgba(34,211,238,.3);
+    padding: 3px 10px; border-radius: 999px; margin-bottom: 10px; }
+  .layout-note { border: 1px dashed rgba(255,255,255,.2); border-radius: 12px; padding: 16px; margin: 24px 0; }
+  .filter-card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 16px;
+    backdrop-filter: blur(12px); padding: 16px; margin-bottom: 16px; }
+  input[type=search] { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 12px;
+    background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.12); color: #fff; }
+  .slider-row { display: flex; align-items: center; gap: 10px; }
+  .slider-row label { font-size: .85rem; color: #cbd5e1; white-space: nowrap; }
+  .slider-row input[type=range] { flex: 1; accent-color: #ec4899; }
+  .slider-note { font-size: .75rem; color: #67e8f9; margin-top: 6px; }
+  .feed-grid { display: grid; gap: 16px; }
+  .card { background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), #111933;
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 16px; position: relative; }
+  .card .top { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .avatar { width: 40px; height: 40px; border-radius: 999px; background: linear-gradient(135deg,#ff3d9a,#8b5cf6);
+    display: grid; place-items: center; font-weight: 700; }
+  .meta { font-size: .75rem; color: #8a93b2; }
+  .chip { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .72rem;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); color: #8a93b2; margin-right: 6px; }
+  .chip.distance { color: #67e8f9; border-color: rgba(34,211,238,.3); }
+  .chip.kind-event { color: #f0abfc; border-color: rgba(240,171,252,.3); }
+  .title { font-weight: 700; margin: 6px 0; }
+  .btn-primary { display: inline-block; padding: 10px 18px; border: none; cursor: pointer;
+    background: linear-gradient(90deg, #ec4899, #a855f7); color: #fff; border-radius: 10px; font-weight: 600; width: 100%; }
+  /* Skeleton — new pattern this spec introduces (#[Lazy] placeholder) */
+  .skel { background: rgba(255,255,255,.08); border-radius: 8px; animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
+  .skel-avatar { width: 40px; height: 40px; border-radius: 999px; }
+  .skel-line { height: 12px; margin: 6px 0; }
+  .converted-banner { position: absolute; inset: 0; border-radius: 18px; background: rgba(5,3,16,.72);
+    display: flex; align-items: center; justify-content: center; text-align: center; font-size: .8rem; padding: 12px; }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="wrap">
+
+  <h1>Timeline performance — mockup</h1>
+  <p class="hint">Spec <strong>001</strong> · Status: DRAFT · Synthetic data only (see <code>04-fixtures.json</code>) ·
+  390px layout first, then desktop. No visual redesign — cards keep today's look (Spec 002 owns that);
+  this mockup only shows what this spec changes: the loading state, the radius control, and paging.</p>
+
+  <!-- ============ 390px MOBILE ============ -->
+  <div class="layout-note"><span class="state-label">Layout · 390px mobile</span></div>
+
+  <h2>Filters — Event radius (was: shared "Radius")</h2>
+  <div class="filter-card">
+    <span class="state-label">default</span>
+    <input type="search" placeholder="👀 search for your thing :)">
+    <div class="slider-row">
+      <label for="r">Event radius</label>
+      <input id="r" type="range" min="10" max="50" value="50">
+      <span>50km</span>
+    </div>
+    <p class="slider-note">Posts always show within 10km — not adjustable. The slider now only widens or narrows events.</p>
+  </div>
+
+  <h2>Loading state (new — skeleton, not a blank page)</h2>
+  <div class="filter-card">
+    <span class="state-label">loading</span>
+    <p class="hint">Component is <code>#[Lazy]</code>; this skeleton paints immediately, before the feed query runs.</p>
+    <div class="feed-grid">
+      <div class="card">
+        <div class="top"><div class="skel skel-avatar"></div><div style="flex:1"><div class="skel skel-line" style="width:60%"></div><div class="skel skel-line" style="width:30%"></div></div></div>
+        <div class="skel skel-line" style="width:90%"></div>
+        <div class="skel skel-line" style="width:70%"></div>
+      </div>
+      <div class="card">
+        <div class="top"><div class="skel skel-avatar"></div><div style="flex:1"><div class="skel skel-line" style="width:50%"></div><div class="skel skel-line" style="width:35%"></div></div></div>
+        <div class="skel skel-line" style="width:80%"></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Default state — merged feed, newest first</h2>
+  <div class="feed-grid">
+    <div class="card">
+      <div class="top"><div class="avatar">S</div><div><div class="meta">synthetic_owner · 2h ago</div></div></div>
+      <span class="chip distance">1.2km</span><span class="chip">volleyball</span>
+      <div class="title">Pickup volleyball at the beach, come thru</div>
+      <button class="btn-primary">👍 I'm down <span style="opacity:.8">(3)</span></button>
+    </div>
+    <div class="card">
+      <div class="top"><div class="avatar">S</div><div><div class="meta">synthetic_host · 5h ago</div></div></div>
+      <span class="chip distance kind-event">14.6km · event</span><span class="chip">42 going</span>
+      <div class="title">Sunset Rooftop Jazz Night</div>
+      <button class="btn-primary">View event</button>
+    </div>
+    <div class="card">
+      <div class="top"><div class="avatar">S</div><div><div class="meta">synthetic_owner · 8h ago</div></div></div>
+      <span class="chip distance">2.1km</span><span class="chip">running</span>
+      <div class="converted-banner">🎉 Converted to a structured event — tap to view</div>
+      <div class="title" style="opacity:.3">Weekly 5k run club</div>
+    </div>
+  </div>
+
+  <h2>Load more (cursor-based, replaces numbered pages)</h2>
+  <div class="filter-card" style="text-align:center">
+    <span class="state-label">loading more</span>
+    <p class="hint">Scrolling near the bottom fetches the next cursor page — no "Page 2" link, no re-fetch of items already on screen.</p>
+    <button class="btn-primary" style="width:auto">Load more</button>
+  </div>
+
+  <h2>Empty state</h2>
+  <div class="filter-card"><span class="state-label">empty</span>
+    <p class="hint">Nothing within 10km right now. Try widening the event radius, or check back soon — posts refresh constantly.</p>
+  </div>
+
+  <!-- ============ DESKTOP ============ -->
+  <div class="layout-note"><span class="state-label">Layout · desktop</span>
+    <p class="hint">Same skeleton/default/load-more states, two-column grid. Filters bar unchanged in position.</p></div>
+  <div class="feed-grid">
+    <div class="card"><div class="top"><div class="avatar">S</div><div><div class="meta">synthetic_owner · 2h ago</div></div></div>
+      <span class="chip distance">1.2km</span><div class="title">Pickup volleyball at the beach</div></div>
+    <div class="card"><div class="top"><div class="avatar">S</div><div><div class="meta">synthetic_host · 5h ago</div></div></div>
+      <span class="chip distance kind-event">14.6km · event</span><div class="title">Sunset Rooftop Jazz Night</div></div>
+  </div>
+
+</div>
+</body>
+</html>

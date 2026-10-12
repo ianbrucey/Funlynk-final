@@ -28,6 +28,10 @@ class MigratePostInvitations
             Notification::create([
                 'user_id' => $invitation->invitee_id,
                 'type' => 'post_invitation_converted',
+                'title' => 'A post you were invited to is now an event!',
+                'message' => "\"{$event->activity->title}\" is now an event. RSVP to save your spot.",
+                'delivery_method' => 'in_app',
+                'delivery_status' => 'sent',
                 'data' => [
                     'post_id' => $event->post->id,
                     'post_title' => $event->post->title,
@@ -36,8 +40,8 @@ class MigratePostInvitations
                     'inviter_name' => $invitation->inviter->display_name ?? $invitation->inviter->name,
                     'start_time' => $event->activity->start_time->toIso8601String(),
                     'location' => $event->activity->location_name,
-                    'price' => $event->activity->price,
-                    'is_free' => $event->activity->price == 0,
+                    'price' => $event->activity->price_cents ? $event->activity->price_cents / 100 : 0,
+                    'is_free' => $event->activity->payment_type === 'free',
                 ],
             ]);
 

@@ -30,8 +30,7 @@ class PublicGroupLandingTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('groups.public', $group))
-            ->assertStatus(200)
-            ->assertSee('Welcome Back!');
+            ->assertRedirect(route('groups.show', $group));
     }
 
     public function test_can_render_public_group_landing_as_non_member_authenticated()

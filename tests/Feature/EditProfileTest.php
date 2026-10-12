@@ -67,7 +67,7 @@ test('user cannot add more than 10 interests', function () {
 });
 
 test('user can upload profile image', function () {
-    Storage::fake('public');
+    Storage::fake('s3');
     $user = User::factory()->create();
 
     $file = UploadedFile::fake()->image('profile.jpg', 200, 200);
@@ -80,16 +80,16 @@ test('user can upload profile image', function () {
 
     $user->refresh();
     expect($user->profile_image_url)->not->toBeNull();
-    Storage::disk('public')->assertExists($user->profile_image_url);
+    Storage::disk('s3')->assertExists($user->profile_image_url);
 });
 
 test('user can remove profile image', function () {
-    Storage::fake('public');
+    Storage::fake('s3');
     $user = User::factory()->create([
         'profile_image_url' => 'profiles/test.jpg',
     ]);
 
-    Storage::disk('public')->put('profiles/test.jpg', 'fake content');
+    Storage::disk('s3')->put('profiles/test.jpg', 'fake content');
 
     Livewire::actingAs($user)
         ->test('profile.edit-profile')
@@ -98,7 +98,7 @@ test('user can remove profile image', function () {
 
     $user->refresh();
     expect($user->profile_image_url)->toBeNull();
-    Storage::disk('public')->assertMissing('profiles/test.jpg');
+    Storage::disk('s3')->assertMissing('profiles/test.jpg');
 });
 
 test('user can update location with coordinates', function () {

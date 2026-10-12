@@ -6,9 +6,17 @@
 
 ## Deltas
 
-**None.** This spec creates, edits, and re-runs no migrations.
+**One additive delta (amended 2026-10-09, owner-approved — `decisions.md` 000-D06):**
 
-The one schema-adjacent finding (archaeology K3) is an app-code bug, not a
+| Migration | Change |
+|---|---|
+| `2026_10_09_200347_add_migrated_status_to_post_invitations_table` | Widen `post_invitations_status_check` to `pending, viewed, reacted, ignored, migrated` |
+
+Execution found that `MigratePostInvitations` writes `status = 'migrated'`,
+which the original CHECK constraint rejects, rolling back every conversion of
+a post with pending invitations. No existing migration is edited.
+
+The original schema-adjacent finding (archaeology K3) is an app-code bug, not a
 schema gap: migration `2026_01_30_144455_add_payment_type_to_activities_table`
 intentionally replaced `activities.is_paid` with `payment_type`. The schema is
 correct as migrated; `ActivityConversionService` still writes the dropped
@@ -19,7 +27,7 @@ mapping: paid → `'online'`, free → `'free'`).
 
 | Change | Production data impact | Rollback safe? |
 |---|---|---|
-| (none) | none | N/A |
+| Widen `post_invitations_status_check` | none — existing rows already satisfy the wider constraint | Yes — `down()` maps `migrated` → `pending`, then restores the original constraint |
 
 ## Fold-back
 

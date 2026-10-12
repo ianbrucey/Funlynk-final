@@ -215,7 +215,7 @@ test('can filter by geo proximity', function () {
 
     expect($results)->toHaveCount(1)
         ->and($results->first()['data']->location_name)->toBe('San Francisco');
-});
+})->skip(fn () => config('scout.driver') !== 'meilisearch', 'Geo filtering requires a live Meilisearch engine');
 
 test('handles empty query gracefully', function () {
     $service = app(SearchServiceInterface::class);

@@ -66,13 +66,6 @@ jobs:
         run: vendor/bin/phpstan analyse --no-progress
 
       - name: Pest (test suite on PostgreSQL + PostGIS)
-        # TEMPORARY (2026-10-08): the suite has 61 pre-existing failures
-        # (brownfield test rot — QueryException/ViewException/TypeError across
-        # conversion, groups, and event tests; see dev-journal). They are NOT
-        # caused by this ticket and are NOT fixed here (no opportunistic
-        # cleanup). Until the suite-repair spec lands, Pest reports but does
-        # not gate; Pint, PHPStan, and the asset build are hard gates.
-        continue-on-error: true
         env:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
