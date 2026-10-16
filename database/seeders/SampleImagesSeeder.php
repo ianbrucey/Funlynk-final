@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\Activity;
 use App\Models\Group;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -28,7 +30,7 @@ class SampleImagesSeeder extends Seeder
     public function run(): void
     {
         if (app()->isProduction()) {
-            $this->command?->error('SampleImagesSeeder must not run in production.');
+            $this->command->error('SampleImagesSeeder must not run in production.');
 
             return;
         }
@@ -56,13 +58,16 @@ class SampleImagesSeeder extends Seeder
             ])->saveQuietly();
         });
 
-        $this->command?->info("Sample images assigned: {$activities} activities, {$users} users, {$groups} groups.");
+        $this->command->info("Sample images assigned: {$activities} activities, {$users} users, {$groups} groups.");
     }
 
     /**
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $query
      * @param  array<int, string>  $paths
      */
-    private function assign($query, array $paths, callable $apply): int
+    private function assign(Builder $query, array $paths, callable $apply): int
     {
         $count = 0;
 
@@ -114,12 +119,18 @@ class SampleImagesSeeder extends Seeder
 
     private function placeholder(int $seed, int $width, int $height): string
     {
-        $image = imagecreatetruecolor($width, $height);
+        $image = imagecreatetruecolor(max(1, $width), max(1, $height));
+
+        if ($image === false) {
+            return '';
+        }
+
         $hue = ($seed * 47) % 360;
 
         for ($y = 0; $y < $height; $y++) {
             [$r, $g, $b] = $this->hsv(($hue + ($y / $height) * 60) % 360, 0.6, 0.35 + 0.4 * ($y / $height));
-            imagefilledrectangle($image, 0, $y, $width, $y, imagecolorallocate($image, $r, $g, $b));
+            $color = imagecolorallocate($image, max(0, min(255, $r)), max(0, min(255, $g)), max(0, min(255, $b)));
+            imagefilledrectangle($image, 0, $y, $width, $y, $color === false ? 0 : $color);
         }
 
         ob_start();

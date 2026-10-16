@@ -9,6 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Laravel\Socialite\AbstractUser;
 use Laravel\Socialite\Contracts\User as ProviderUser;
 
 class SocialAccountService
@@ -63,11 +64,11 @@ class SocialAccountService
      */
     protected function hasVerifiedEmail(ProviderUser $providerUser, string $provider): bool
     {
-        if ($provider !== 'google') {
+        if ($provider !== 'google' || ! $providerUser instanceof AbstractUser) {
             return false;
         }
 
-        $raw = (array) $providerUser->getRaw();
+        $raw = $providerUser->getRaw();
 
         return filter_var($raw['email_verified'] ?? $raw['verified_email'] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
