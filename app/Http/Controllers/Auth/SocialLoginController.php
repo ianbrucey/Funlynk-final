@@ -103,6 +103,10 @@ class SocialLoginController extends Controller
                 ->with('status', __('Connected :provider account successfully.', [
                     'provider' => ucfirst($provider),
                 ]));
+        } catch (\DomainException) {
+            return redirect()->route('login')->withErrors([
+                'social' => __('An account with this email already exists. Sign in with your password instead.'),
+            ]);
         } catch (\Throwable $exception) {
             Log::error('Social login failed', [
                 'provider' => $provider,

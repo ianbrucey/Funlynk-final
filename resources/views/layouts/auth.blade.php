@@ -183,6 +183,45 @@
                 background: linear-gradient(to right, #ec4899, #8b5cf6) !important;
             }
 
+            /* Filament's component CSS is not loaded on auth pages, so size the switch here */
+            button.fi-toggle[role="switch"] {
+                position: relative;
+                display: inline-flex;
+                flex-shrink: 0;
+                width: 2.75rem;
+                height: 1.5rem;
+                border-radius: 9999px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                background: rgba(30, 41, 59, 0.8);
+                cursor: pointer;
+                transition: background 0.2s ease;
+            }
+
+            button.fi-toggle[role="switch"]::before {
+                content: '';
+                position: absolute;
+                top: 2px;
+                left: 2px;
+                width: 1.125rem;
+                height: 1.125rem;
+                border-radius: 9999px;
+                background: white;
+                transition: transform 0.2s ease;
+            }
+
+            button.fi-toggle-on[role="switch"] {
+                background: linear-gradient(to right, #ec4899, #8b5cf6);
+                border-color: transparent;
+            }
+
+            button.fi-toggle-on[role="switch"]::before {
+                transform: translateX(1.25rem);
+            }
+
+            button.fi-toggle[role="switch"] > * {
+                display: none;
+            }
+
             /* Placeholder styling */
             .fi-input::placeholder,
             .fi-textarea::placeholder {

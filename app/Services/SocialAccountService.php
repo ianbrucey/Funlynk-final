@@ -4,10 +4,12 @@ namespace App\Services;
 
 use App\Models\SocialAccount;
 use App\Models\User;
+use DomainException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Laravel\Socialite\AbstractUser;
 use Laravel\Socialite\Contracts\User as ProviderUser;
 
 class SocialAccountService
@@ -32,6 +34,10 @@ class SocialAccountService
 
         $user = $this->findMatchingUser($providerUser);
 
+        if ($user && ! $this->hasVerifiedEmail($providerUser, $provider)) {
+            throw new DomainException('An account with this email already exists.');
+        }
+
         if (! $user) {
             $user = $this->createUserFromProvider($providerUser);
         }
@@ -50,6 +56,21 @@ class SocialAccountService
         }
 
         return User::where('email', $email)->first();
+    }
+
+    /**
+     * Only Google reports whether the email is verified; other providers are never trusted
+     * to take over an existing account by email alone.
+     */
+    protected function hasVerifiedEmail(ProviderUser $providerUser, string $provider): bool
+    {
+        if ($provider !== 'google' || ! $providerUser instanceof AbstractUser) {
+            return false;
+        }
+
+        $raw = $providerUser->getRaw();
+
+        return filter_var($raw['email_verified'] ?? $raw['verified_email'] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
 
     protected function createUserFromProvider(ProviderUser $providerUser): User

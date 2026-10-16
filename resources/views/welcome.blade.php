@@ -24,6 +24,7 @@
                 color: white;
                 position: relative;
                 overflow-x: hidden;
+                display: flow-root;
             }
 
             /* Aurora borealis effect */
