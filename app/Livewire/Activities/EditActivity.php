@@ -185,7 +185,7 @@ class EditActivity extends Component
             // Add new images to S3
             if ($this->newImages) {
                 foreach ($this->newImages as $image) {
-                    $finalImages[] = $image->store('activities', 's3');
+                    $finalImages[] = app(\App\Services\ImageProcessor::class)->store($image, 'activities', 'cover', 's3');
                 }
             }
 

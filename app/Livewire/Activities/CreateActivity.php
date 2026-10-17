@@ -130,7 +130,7 @@ class CreateActivity extends Component
             // Upload cover image to S3
             $coverImagePath = null;
             if ($this->coverImage) {
-                $coverImagePath = $this->coverImage->store('activities', 's3');
+                $coverImagePath = app(\App\Services\ImageProcessor::class)->store($this->coverImage, 'activities', 'cover', 's3');
             }
 
             // Create activity

@@ -2,6 +2,8 @@
 
 use App\Models\SocialAccount;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Socialite\Contracts\Provider;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
@@ -26,6 +28,44 @@ function mockSocialite(string $provider, SocialiteUser $user): void
     $driver->shouldReceive('user')->andReturn($user);
     Socialite::shouldReceive('driver')->with($provider)->andReturn($driver);
 }
+
+function fakeJpegBytes(int $width = 1200, int $height = 800): string
+{
+    $image = imagecreatetruecolor($width, $height);
+    ob_start();
+    imagejpeg($image);
+
+    return (string) ob_get_clean();
+}
+
+beforeEach(function () {
+    Storage::fake('s3');
+    Http::fake(['example.com/*' => Http::response(fakeJpegBytes(), 200, ['Content-Type' => 'image/jpeg'])]);
+});
+
+it('imports the provider photo for a new social user, resized', function () {
+    mockSocialite('google', fakeProviderUser('g-img', 'img@example.com'));
+
+    $this->get(route('social.callback', 'google'));
+
+    $user = User::where('email', 'img@example.com')->firstOrFail();
+    expect($user->profile_image_url)->not->toBeNull();
+    Storage::disk('s3')->assertExists($user->profile_image_url);
+    [$width, $height] = getimagesizefromstring(Storage::disk('s3')->get($user->profile_image_url));
+    expect($width)->toBe(400)->and($height)->toBe(400);
+});
+
+it('still signs in when the provider photo cannot be fetched', function () {
+    Http::swap(new Illuminate\Http\Client\Factory);
+    Http::fake(['example.com/*' => Http::response('nope', 500)]);
+    mockSocialite('google', fakeProviderUser('g-fail', 'fail@example.com'));
+
+    $this->get(route('social.callback', 'google'));
+
+    $user = User::where('email', 'fail@example.com')->firstOrFail();
+    expect($user->profile_image_url)->toBeNull();
+    $this->assertAuthenticatedAs($user);
+});
 
 it('redirects to facebook and google', function (string $provider) {
     $driver = Mockery::mock(Provider::class);
