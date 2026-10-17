@@ -217,7 +217,7 @@ class EditProfile extends Component
             }
 
             // Store new image to S3
-            $path = $this->profile_image->store('profiles', 's3');
+            $path = app(\App\Services\ImageProcessor::class)->store($this->profile_image, 'profiles', 'avatar', 's3');
             $user->profile_image_url = $path;
             $this->current_profile_image_url = $path;
         }

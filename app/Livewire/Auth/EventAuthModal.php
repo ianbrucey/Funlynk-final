@@ -124,7 +124,7 @@ class EventAuthModal extends Component
             // Handle profile photo upload to S3
             $profileImageUrl = null;
             if ($this->profilePhoto) {
-                $profileImageUrl = $this->profilePhoto->store('profile-images', 's3');
+                $profileImageUrl = app(\App\Services\ImageProcessor::class)->store($this->profilePhoto, 'profile-images', 'avatar', 's3');
             }
 
             // Get location from activity if available - create a new Point object

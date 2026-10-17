@@ -154,11 +154,7 @@
                                 </div>
                             </div>
                         @else
-                            <div class="w-40 h-40 rounded-full bg-slate-800/50 border-2 border-dashed border-white/20 flex items-center justify-center">
-                                <svg class="w-16 h-16 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
-                            </div>
+                            <x-fl.avatar :name="auth()->user()->display_name" class="w-40 h-40 ring-4 ring-white/10" />
                         @endif
 
                         <div class="w-full max-w-md">
@@ -205,6 +201,13 @@
                             </svg>
                             Back
                         </button>
+                        @unless($profileImage || $uploadedImagePath)
+                            <button
+                                wire:click="skipPhoto"
+                                class="btn btn-ghost text-gray-300 hover:text-white hover:bg-white/10">
+                                Skip for now
+                            </button>
+                        @endunless
                         <button
                             wire:click="nextStepFromPhoto"
                             wire:loading.attr="disabled"

@@ -112,7 +112,7 @@ class OnboardingWizard extends Component
         ]);
 
         // Upload to S3 immediately and save to user
-        $path = $this->profileImage->store('profile-images', 's3');
+        $path = app(\App\Services\ImageProcessor::class)->store($this->profileImage, 'profile-images', 'avatar', 's3');
 
         Auth::user()->update([
             'profile_image_url' => $path,
@@ -121,6 +121,16 @@ class OnboardingWizard extends Component
         $this->uploadedImagePath = $path;
         $this->profileImage = null; // Clear the temporary file
 
+        $this->currentStep = 3;
+    }
+
+    /**
+     * Step 2 (Photo) -> Step 3 (Interests) without a photo.
+     * The user keeps the initials avatar until they add one.
+     */
+    public function skipPhoto(): void
+    {
+        $this->profileImage = null;
         $this->currentStep = 3;
     }
 
@@ -178,14 +188,6 @@ class OnboardingWizard extends Component
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
         ]);
-
-        // Ensure we have a profile image
-        if (! $this->uploadedImagePath) {
-            $this->addError('profileImage', 'Profile image is required.');
-            $this->currentStep = 2;
-
-            return;
-        }
 
         $user = Auth::user();
 

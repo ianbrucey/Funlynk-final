@@ -162,7 +162,7 @@ class ConvertPostModal extends Component
 
             // Handle image upload to S3
             if ($this->image) {
-                $eventData['image_path'] = $this->image->store('activities', 's3');
+                $eventData['image_path'] = app(\App\Services\ImageProcessor::class)->store($this->image, 'activities', 'cover', 's3');
             }
 
             \Log::info('About to convert post to event', ['eventData' => $eventData]);
