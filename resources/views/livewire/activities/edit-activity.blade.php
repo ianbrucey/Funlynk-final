@@ -575,7 +575,7 @@
     @endif
 
     <script>
-    document.addEventListener('livewire:init', () => {
+    (window.Livewire ? (fn) => fn() : (fn) => document.addEventListener('livewire:init', fn))(() => {
         // Load Google Places API
         if (!window.google || !window.google.maps || !window.google.maps.places) {
             const script = document.createElement('script');
