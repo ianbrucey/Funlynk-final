@@ -10,11 +10,14 @@
             :threshold="$post['reaction_count'] >= 10 ? 'strong' : 'soft'" />
     @endif
 
+    {{-- Type Badge --}}
+    <span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full text-[0.7rem] font-bold" style="background: rgba(103,232,249,0.9); color: #083344;">POST · {{ $post['expires_in_human'] ?? '' }} left</span>
+
     {{-- Converted Overlay (for converted posts) --}}
     <x-converted-post-overlay :post="$post" />
 
     {{-- Card Header --}}
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 mt-7">
         {{-- Avatar --}}
         <a href="{{ $post['author_url'] }}" class="block shrink-0 transition hover:opacity-80" onclick="event.stopPropagation()">
             @if($post['author_image_url'])
@@ -175,7 +178,7 @@
     </div>
 
     {{-- Footer --}}
-    <div class="flex justify-between items-center mt-3 text-[0.8rem]" style="color: #8a93b2;">
+    <div class="flex justify-between items-center mt-3 pt-3 text-[0.8rem] border-t border-white/10" style="color: #8a93b2;">
         <a href="{{ route('posts.chat', $post['id']) }}" class="flex items-center gap-1.5 hover:text-cyan-400 transition">
             💬 Group Chat
         </a>

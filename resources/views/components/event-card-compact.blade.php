@@ -1,7 +1,10 @@
 @props(['event'])
 
 <div class="relative rounded-[18px] p-4 h-full flex flex-col group"
-     style="background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), #111933; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 12px 30px rgba(0,0,0,0.35);">
+     style="background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), #111933; border: 1px solid rgba(255,255,255,0.08); border-left: 3px solid #f0abfc; box-shadow: 0 12px 30px rgba(0,0,0,0.35);">
+
+    {{-- Type Badge --}}
+    <span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full text-[0.7rem] font-bold" style="background: rgba(240,171,252,0.95); color: #3b0764;">EVENT · {{ $event['start_time_human'] }}</span>
 
     {{-- Converted Badge --}}
     @if($event['converted_from_post'])
@@ -14,7 +17,7 @@
     @endif
 
     {{-- Card Header --}}
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 mt-7">
         {{-- Avatar --}}
         @if($event['author_image_url'])
             <img
@@ -49,7 +52,7 @@
 
     {{-- Event Image --}}
     @if(!empty($event['images']))
-        <div class="relative mt-3 -mx-4 overflow-hidden h-36">
+        <div class="relative mt-3 -mx-4 overflow-hidden aspect-video">
             <img src="{{ \App\Services\ImageProcessor::url($event['images'][0]) }}"
                  class="w-full h-full object-cover cursor-pointer"
                  alt="{{ $event['title'] }}"
@@ -62,7 +65,7 @@
             @endif
         </div>
     @else
-        <div class="relative mt-3 -mx-4 h-36 flex items-center justify-center"
+        <div class="relative mt-3 -mx-4 aspect-video flex items-center justify-center"
              style="background: rgba(255,255,255,0.03);">
             <span class="text-3xl opacity-40">📅</span>
         </div>
@@ -104,7 +107,7 @@
     </div>
 
     {{-- Footer --}}
-    <div class="flex justify-between items-center mt-3 text-[0.8rem]" style="color: #8a93b2;">
+    <div class="flex justify-between items-center mt-3 pt-3 text-[0.8rem] border-t border-white/10" style="color: #8a93b2;">
         <a href="{{ route('events.show', $event['id']) }}" class="flex items-center gap-1.5 hover:text-cyan-400 transition">
             💬 Group Chat
         </a>
