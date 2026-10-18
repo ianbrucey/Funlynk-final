@@ -63,11 +63,11 @@
                                 <select wire:model.live="distance"
                                         class="px-3 py-2 text-sm bg-slate-800/50 border border-white/10 rounded-lg text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none max-w-[140px] sm:max-w-none">
                                     <option value="">Anywhere</option>
-                                    <option value="5">Within 5km</option>
-                                    <option value="10">Within 10km</option>
-                                    <option value="25">Within 25km</option>
-                                    <option value="50">Within 50km</option>
-                                    <option value="100">Within 100km</option>
+                                    <option value="5">Within 3 mi</option>
+                                    <option value="10">Within 6 mi</option>
+                                    <option value="25">Within 15 mi</option>
+                                    <option value="50">Within 31 mi</option>
+                                    <option value="100">Within 62 mi</option>
                                 </select>
                             @else
                                 <a href="{{ route('profile.edit') }}" 
