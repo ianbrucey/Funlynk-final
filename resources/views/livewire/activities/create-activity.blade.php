@@ -428,6 +428,22 @@
                 </div>
             </div>
 
+            @if($errors->any())
+                <div class="max-w-xl mx-auto p-4 rounded-xl bg-red-500/10 border border-red-500/40 text-sm text-red-300">
+                    <p class="font-semibold mb-1">Please fix {{ $errors->count() }} {{ Str::plural('thing', $errors->count()) }} before continuing:</p>
+                    <ul class="list-disc pl-5">
+                        @foreach($errors->all() as $message)
+                            <li>{{ $message }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <div wire:loading.flex wire:target="createActivity" class="fixed inset-0 z-[100] items-center justify-center bg-black/70 backdrop-blur-sm">
+                <div class="glass-card rounded-2xl px-8 py-6 text-center">
+                    <svg class="animate-spin h-10 w-10 mx-auto text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    <p class="mt-4 font-semibold text-white">Creating your event…</p>
+                </div>
+            </div>
             {{-- Submit Button --}}
             <div class="flex gap-4 justify-center">
                 <a 
@@ -437,10 +453,10 @@
                     Cancel
                 </a>
                 <button 
-                    type="submit"
+                    type="submit" wire:loading.attr="disabled" wire:target="createActivity"
                     class="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all shadow-lg"
                 >
-                    Create Activity
+                    <span wire:loading.remove wire:target="createActivity">Create Activity</span><span wire:loading wire:target="createActivity">Please wait…</span>
                 </button>
             </div>
         </form>

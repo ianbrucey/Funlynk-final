@@ -266,8 +266,8 @@
                 </div>
 
                 <div>
-                    <button type="submit" class="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
-                        Create Group
+                    <button type="submit" wire:loading.attr="disabled" wire:target="createGroup" class="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all disabled:opacity-60">
+                        <span wire:loading.remove wire:target="createGroup">Create Group</span><span wire:loading wire:target="createGroup">Creating…</span>
                     </button>
                 </div>
             </form>
