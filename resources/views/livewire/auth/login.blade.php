@@ -63,8 +63,9 @@
                 </div>
 
                 <div class="mt-6">
-                    <button type="submit" class="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
-                        Sign in
+                    <button type="submit" wire:loading.attr="disabled" wire:target="authenticate" class="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all disabled:opacity-60 disabled:hover:scale-100">
+                        <span wire:loading.remove wire:target="authenticate">Sign in</span>
+                        <span wire:loading wire:target="authenticate">Signing in…</span>
                     </button>
                 </div>
             </form>
