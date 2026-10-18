@@ -22,7 +22,7 @@
         body {
             font-family: 'Inter', sans-serif;
             /* background: linear-gradient(to bottom right, #0a0a1a, #0f1729, #0a0a1a); */
-            background: linear-gradient(to bottom right, #0a0a1a,rgb(44, 64, 112), #0a0a1a);
+            background: radial-gradient(ellipse at 20% 0%, #14123a 0%, #060414 50%, #020108 100%) fixed;
             min-height: 100vh;
             color: white;
             position: relative;

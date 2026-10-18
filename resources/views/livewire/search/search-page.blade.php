@@ -52,10 +52,10 @@
                         <select
                             wire:model.live="radius"
                             class="px-3 py-1 bg-slate-700/50 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500/50">
-                            <option value="5">5 km</option>
-                            <option value="10">10 km</option>
-                            <option value="25">25 km</option>
-                            <option value="50">50 km</option>
+                            <option value="5">3 mi</option>
+                            <option value="10">6 mi</option>
+                            <option value="25">15 mi</option>
+                            <option value="50">31 mi</option>
                         </select>
                     @endif
                 </div>

@@ -18,6 +18,8 @@ class NearbyFeed extends Component
 
     public int $eventRadiusKm = 50; // km, 10-50, clamped server-side; posts are a fixed 10km
 
+    public int $eventRadiusMiles = 31; // display/input unit; km stays the stored contract
+
     public $contentType = 'all'; // all, posts, events
 
     public $timeFilter = 'all'; // all, today, week, month
@@ -67,6 +69,19 @@ class NearbyFeed extends Component
     {
         $this->eventRadiusKm = max(FeedService::EVENT_RADIUS_MIN_KM, min(FeedService::EVENT_RADIUS_MAX_KM, (int) $this->eventRadiusKm));
         $this->resetFeed();
+    }
+
+    public function updatedEventRadiusMiles(): void
+    {
+        $miles = max(6, min(31, (int) $this->eventRadiusMiles));
+        $this->eventRadiusMiles = $miles;
+        $this->eventRadiusKm = (int) round($miles * 1.609344);
+        $this->updatedEventRadiusKm();
+    }
+
+    public function getFiltersActiveProperty(): bool
+    {
+        return $this->timeFilter !== 'all' || $this->eventRadiusMiles !== 31;
     }
 
     public function updatedContentType()
