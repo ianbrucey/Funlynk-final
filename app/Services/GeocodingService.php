@@ -25,8 +25,14 @@ class GeocodingService
 
         $cacheKey = 'geocode:'.md5(mb_strtolower($query));
 
-        if (is_array($cached = Cache::get($cacheKey))) {
-            return $cached;
+        $cached = Cache::get($cacheKey);
+
+        if (is_array($cached) && isset($cached['name'], $cached['lat'], $cached['lng'])) {
+            return [
+                'name' => (string) $cached['name'],
+                'lat' => (float) $cached['lat'],
+                'lng' => (float) $cached['lng'],
+            ];
         }
 
         try {

@@ -21,11 +21,13 @@ trait ResolvesTypedLocation
             return;
         }
 
-        if (blank($this->{$nameProperty})) {
+        $typedName = data_get($this, $nameProperty);
+
+        if (blank($typedName)) {
             return;
         }
 
-        $place = app(GeocodingService::class)->geocode((string) $this->{$nameProperty});
+        $place = app(GeocodingService::class)->geocode((string) $typedName);
 
         if ($place === null) {
             if (! $required) {
