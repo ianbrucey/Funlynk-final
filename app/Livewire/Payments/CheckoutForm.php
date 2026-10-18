@@ -33,12 +33,23 @@ class CheckoutForm extends Component
 
         $this->activity = $activity;
 
-        // Create payment intent
-        $paymentService = app(PaymentService::class);
-        $intent = $paymentService->createPaymentIntent($activity, Auth::user());
+        $hostStripeAccount = $activity->host->stripeAccount;
 
-        $this->paymentIntentId = $intent['payment_intent_id'];
-        $this->clientSecret = $intent['client_secret'];
+        if (! $hostStripeAccount || ! $hostStripeAccount->canAcceptPayments()) {
+            $this->errorMessage = 'The host of this event hasn\'t finished setting up payments yet, so tickets can\'t be purchased right now. Please check back later or contact the host.';
+
+            return;
+        }
+
+        try {
+            $intent = app(PaymentService::class)->createPaymentIntent($activity, Auth::user());
+
+            $this->paymentIntentId = $intent['payment_intent_id'];
+            $this->clientSecret = $intent['client_secret'];
+        } catch (\Exception $e) {
+            report($e);
+            $this->errorMessage = 'We couldn\'t start your payment. Please try again in a moment.';
+        }
     }
 
     public function verifyPayment()

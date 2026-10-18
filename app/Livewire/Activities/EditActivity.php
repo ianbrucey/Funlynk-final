@@ -175,6 +175,17 @@ class EditActivity extends Component
         $this->authorize('update', $this->activity);
         $this->validate();
 
+        if ($this->payment_type === 'online' && $this->activity->payment_type !== 'online') {
+            $stripeAccount = auth()->user()->stripeAccount;
+
+            if (! $stripeAccount || ! $stripeAccount->canAcceptPayments()) {
+                $this->payment_type = $this->activity->payment_type ?? 'free';
+                $this->addError('payment_type', 'You must connect your Stripe account before making an activity paid.');
+
+                return;
+            }
+        }
+
         try {
             // Create location point
             $locationPoint = new Point((float) $this->latitude, (float) $this->longitude);

@@ -123,6 +123,13 @@ class CreateActivity extends Component
     {
         $this->validate();
 
+        if ($this->payment_type === 'online' && ! $this->getCanCreatePaidActivityProperty()) {
+            $this->payment_type = 'free';
+            $this->stripeError = 'You must connect your Stripe account before creating paid online activities.';
+
+            return;
+        }
+
         try {
             // Create location point
             $locationPoint = new Point((float) $this->latitude, (float) $this->longitude);
