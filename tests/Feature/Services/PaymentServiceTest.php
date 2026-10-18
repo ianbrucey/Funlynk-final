@@ -140,3 +140,32 @@ it('does not create an rsvp when the payment has not succeeded', function () {
     expect(Transaction::count())->toBe(0)
         ->and($activity->rsvps()->count())->toBe(0);
 });
+
+it('shows a friendly message on checkout when the host has not finished onboarding', function () {
+    $activity = paidActivity(hostCanAcceptPayments: false);
+
+    Livewire\Livewire::actingAs(User::factory()->create())
+        ->test(App\Livewire\Payments\CheckoutForm::class, ['activity' => $activity])
+        ->assertSet('clientSecret', null)
+        ->assertSee("hasn't finished setting up payments")
+        ->assertDontSee('id="payment-form"', false);
+});
+
+it('refuses to create a paid activity server-side when the host is not onboarded', function () {
+    $host = User::factory()->create();
+
+    Livewire\Livewire::actingAs($host)
+        ->test(App\Livewire\Activities\CreateActivity::class)
+        ->set('title', 'Paid Hike')
+        ->set('description', 'A long enough description')
+        ->set('location_name', 'Trailhead')
+        ->set('latitude', '40.7')
+        ->set('longitude', '-74.0')
+        ->set('payment_type', 'free')
+        ->set('price', '25')
+        ->set('start_time', now()->addDays(2)->format('Y-m-d\TH:i'))
+        ->set('payment_type', 'online')
+        ->call('createActivity');
+
+    expect(Activity::where('host_id', $host->id)->where('payment_type', 'online')->count())->toBe(0);
+});

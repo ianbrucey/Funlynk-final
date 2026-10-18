@@ -36,7 +36,7 @@
             </button>
 
             {{-- Create Menu (Slides Up) --}}
-            <div x-show="open"
+            <div x-show="open" x-cloak
                  @click.away="open = false"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 translate-y-4"

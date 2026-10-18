@@ -44,6 +44,7 @@
                     </div>
                 @endif
 
+                @if($clientSecret)
                 <form id="payment-form">
                     {{-- Stripe Card Element --}}
                     <div class="mb-6">
@@ -65,6 +66,7 @@
                         </span>
                     </button>
                 </form>
+                @endif
 
                 {{-- Security Notice --}}
                 <div class="mt-6 text-center text-sm text-gray-400">
@@ -118,6 +120,7 @@
         }
     </style>
 
+    @if($clientSecret)
     <script src="https://js.stripe.com/v3/"></script>
     <script>
         document.addEventListener('livewire:navigated', () => {
@@ -193,4 +196,5 @@
             });
         });
     </script>
+    @endif
 </div>
