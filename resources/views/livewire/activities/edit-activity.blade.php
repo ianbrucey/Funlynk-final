@@ -83,7 +83,7 @@
                             wire:model="title"
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                         />
-                        @error('title') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('title') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Activity Type --}}
@@ -104,7 +104,7 @@
                             <option value="education">📚 Education</option>
                             <option value="other">✨ Other</option>
                         </select>
-                        @error('activity_type') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('activity_type') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Description --}}
@@ -115,7 +115,7 @@
                             rows="4"
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                         ></textarea>
-                        @error('description') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('description') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Images --}}
@@ -150,7 +150,7 @@
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-pink-500 file:to-purple-500 file:text-white hover:file:scale-105 file:transition-all"
                         />
                         <p class="text-xs text-gray-400 mt-1">Add more images (Max 5 total)</p>
-                        @error('newImages.*') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('newImages.*') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>
@@ -194,8 +194,8 @@
                         </div>
 
                         <p class="text-xs text-gray-500 mt-1">Start typing to search for a location</p>
-                        @error('location_name') <span class="text-red-400 text-sm mt-1 block">{{ $message }}</span> @enderror
-                        @error('latitude') <span class="text-red-400 text-sm mt-1 block">Please select a valid location from the list</span> @enderror
+                        @error('location_name') <span data-field-error class="text-red-400 text-sm mt-1 block">{{ $message }}</span> @enderror
+                        @error('latitude') <span data-field-error class="text-red-400 text-sm mt-1 block">Please select a valid location from the list</span> @enderror
                     </div>
                 </div>
             </div>
@@ -219,7 +219,7 @@
                             wire:model="start_time"
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                         />
-                        @error('start_time') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('start_time') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-300 mb-2">End Time (Optional)</label>
@@ -228,7 +228,7 @@
                             wire:model="end_time"
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                         />
-                        @error('end_time') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('end_time') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>
@@ -255,7 +255,7 @@
                             min="1"
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                         />
-                        @error('max_attendees') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('max_attendees') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Payment Type Selection --}}
@@ -338,7 +338,7 @@
                                     class="w-full pl-8 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                                 />
                             </div>
-                            @error('price') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                            @error('price') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                         </div>
 
                         @if($payment_type === 'at_door')
@@ -404,7 +404,7 @@
                             <option value="completed">Completed</option>
                             <option value="cancelled">Cancelled</option>
                         </select>
-                        @error('status') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('status') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>
@@ -449,7 +449,7 @@
                     @endif
                     <div class="label mt-2">
                         <span class="text-xs text-gray-500">{{ count($selectedTags) }}/10 tags</span>
-                        @error('selectedTags') <span class="text-xs text-red-400 ml-2">{{ $message }}</span> @enderror
+                        @error('selectedTags') <span data-field-error class="text-xs text-red-400 ml-2">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>

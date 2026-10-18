@@ -53,7 +53,7 @@
                                         <option value="{{ $group->id }}">{{ $group->name }}</option>
                                     @endforeach
                                 </select>
-                                @error('selected_group_id') <span class="text-red-400 text-sm mt-1 block">{{ $message }}</span> @enderror
+                                @error('selected_group_id') <span data-field-error class="text-red-400 text-sm mt-1 block">{{ $message }}</span> @enderror
                             </div>
                         @endif
                     </div>
@@ -82,7 +82,7 @@
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white"
                             autofocus
                         />
-                        @error('title') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('title') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Location --}}
@@ -112,8 +112,8 @@
                         </div>
 
                         <p class="text-xs text-gray-500 mt-1">Start typing to search for a location</p>
-                        @error('location_name') <span class="text-red-400 text-sm mt-1 block">{{ $message }}</span> @enderror
-                        @error('latitude') <span class="text-red-400 text-sm mt-1 block">Please select a valid location from the list</span> @enderror
+                        @error('location_name') <span data-field-error class="text-red-400 text-sm mt-1 block">{{ $message }}</span> @enderror
+                        @error('latitude') <span data-field-error class="text-red-400 text-sm mt-1 block">Please select a valid location from the list</span> @enderror
                     </div>
                 </div>
             </div>
@@ -140,7 +140,7 @@
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white"
                         ></textarea>
                         <p class="text-xs text-gray-400 mt-1">{{ strlen($description ?? '') }}/500 characters</p>
-                        @error('description') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('description') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Time Hint --}}
@@ -153,7 +153,7 @@
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white"
                         />
                         <p class="text-xs text-gray-400 mt-1">Keep it casual - no need for exact times</p>
-                        @error('time_hint') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('time_hint') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Mood --}}
@@ -170,7 +170,7 @@
                             <option value="chill">😌 Chill</option>
                             <option value="adventurous">🚀 Adventurous</option>
                         </select>
-                        @error('mood') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('mood') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>
@@ -218,7 +218,7 @@
                         @endif
                         <div class="label mt-2">
                             <span class="text-xs text-gray-500">{{ count($selectedTags) }}/5 tags</span>
-                            @error('selectedTags') <span class="text-xs text-red-400 ml-2">{{ $message }}</span> @enderror
+                            @error('selectedTags') <span data-field-error class="text-xs text-red-400 ml-2">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
@@ -234,7 +234,7 @@
                             <option value="72">72 hours</option>
                         </select>
                         <p class="text-xs text-gray-400 mt-1">Posts automatically expire after this time</p>
-                        @error('ttl_hours') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('ttl_hours') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>
