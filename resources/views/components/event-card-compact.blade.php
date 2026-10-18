@@ -81,6 +81,11 @@
                   style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
                 📅 {{ $event['start_time_human'] }}
             </span>
+@if(isset($event['distance_km']))
+                <span class="py-1 px-2.5 rounded-full" style="background: rgba(34,211,238,0.12); border: 1px solid rgba(34,211,238,0.3); color: #67e8f9;">
+                    {{ number_format($event['distance_km'] * 0.621371, 1) }} mi
+                </span>
+            @endif
             @if($event['location_name'])
                 <span class="py-1 px-2.5 rounded-full"
                       style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
