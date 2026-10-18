@@ -13,7 +13,7 @@
         {{-- Avatar --}}
         @if($post->user?->profile_image_url)
             <img
-                src="{{ Storage::url($post->user->profile_image_url) }}"
+                src="{{ \App\Services\ImageProcessor::url($post->user->profile_image_url) }}"
                 alt="{{ $post->user->display_name ?? $post->user->username }}"
                 class="w-10 h-10 rounded-full object-cover ring-2 ring-pink-500/50 bg-slate-800"
             >

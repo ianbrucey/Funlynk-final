@@ -46,7 +46,7 @@
                     <!-- User Info -->
                     <div class="flex items-center gap-4">
                         @if($request->user->profile_image_url)
-                            <img src="{{ Storage::url($request->user->profile_image_url) }}"
+                            <img src="{{ \App\Services\ImageProcessor::url($request->user->profile_image_url) }}"
                                  alt="{{ $request->user->name ?: $request->user->username }}"
                                  class="w-12 h-12 rounded-full object-cover border-2 border-purple-500/50">
                         @else

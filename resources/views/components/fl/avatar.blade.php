@@ -13,7 +13,7 @@
     $gradient = $gradients[abs(crc32(mb_strtolower($label))) % count($gradients)];
     $words = preg_split('/\s+/u', $label, -1, PREG_SPLIT_NO_EMPTY);
     $initials = mb_strtoupper(mb_substr($words[0], 0, 1).(count($words) > 1 ? mb_substr(end($words), 0, 1) : ''));
-    $url = $src ? (\Illuminate\Support\Str::startsWith($src, ['http://', 'https://', '/']) ? $src : \Illuminate\Support\Facades\Storage::url($src)) : null;
+    $url = $src ? (\Illuminate\Support\Str::startsWith($src, ['http://', 'https://', '/']) ? $src : \App\Services\ImageProcessor::url($src)) : null;
 @endphp
 
 @if($url)

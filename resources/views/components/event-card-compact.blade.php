@@ -18,7 +18,7 @@
         {{-- Avatar --}}
         @if($event['author_image_url'])
             <img
-                src="{{ Storage::url($event['author_image_url']) }}"
+                src="{{ \App\Services\ImageProcessor::url($event['author_image_url']) }}"
                 alt="{{ $event['author_name'] }}"
                 class="w-11 h-11 rounded-full object-cover"
             >
@@ -50,7 +50,7 @@
     {{-- Event Image --}}
     @if(!empty($event['images']))
         <div class="relative mt-3 -mx-4 overflow-hidden h-36">
-            <img src="{{ Storage::url($event['images'][0]) }}"
+            <img src="{{ \App\Services\ImageProcessor::url($event['images'][0]) }}"
                  class="w-full h-full object-cover cursor-pointer"
                  alt="{{ $event['title'] }}"
                  onclick="window.location.href='{{ route('events.show', $event['id']) }}'">

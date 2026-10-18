@@ -43,7 +43,7 @@
                     <div class="flex items-center gap-3 mb-4">
                         @if($post->user?->profile_image_url)
                             <img
-                                src="{{ Storage::url($post->user->profile_image_url) }}"
+                                src="{{ \App\Services\ImageProcessor::url($post->user->profile_image_url) }}"
                                 alt="{{ $post->user->display_name ?? $post->user->username }}"
                                 class="w-12 h-12 rounded-full object-cover ring-2 ring-pink-500/50 bg-slate-800"
                             >
@@ -178,7 +178,7 @@
                     <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Posted By</h3>
                     <div class="flex items-center gap-4">
                         @if($post->user->profile_image_url)
-                            <img src="{{ Storage::url($post->user->profile_image_url) }}" class="w-12 h-12 rounded-full object-cover border-2 border-white/10">
+                            <img src="{{ \App\Services\ImageProcessor::url($post->user->profile_image_url) }}" class="w-12 h-12 rounded-full object-cover border-2 border-white/10">
                         @else
                             <div class="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-xl font-bold text-white">
                                 {{ substr($post->user->display_name ?? $post->user->username, 0, 1) }}

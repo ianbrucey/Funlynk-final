@@ -142,7 +142,7 @@
                                 <div class="flex items-center sm:items-start gap-4">
                                     <a href="{{ route('profile.view', $user['username']) }}" class="flex-shrink-0">
                                         @if($user['profile_image_url'] ?? null)
-                                            <img src="{{ Storage::url($user['profile_image_url']) }}"
+                                            <img src="{{ \App\Services\ImageProcessor::url($user['profile_image_url']) }}"
                                                  alt="{{ $user['display_name'] ?? $user['username'] }}"
                                                  class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover bg-slate-800 ring-2 ring-white/10 group-hover:ring-cyan-500/50 transition-all">
                                         @else

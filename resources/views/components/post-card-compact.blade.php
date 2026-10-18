@@ -19,7 +19,7 @@
         <a href="{{ $post['author_url'] }}" class="block shrink-0 transition hover:opacity-80" onclick="event.stopPropagation()">
             @if($post['author_image_url'])
                 <img
-                    src="{{ $post['is_group_post'] ? $post['author_image_url'] : Storage::url($post['author_image_url']) }}"
+                    src="{{ $post['is_group_post'] ? $post['author_image_url'] : \App\Services\ImageProcessor::url($post['author_image_url']) }}"
                     alt="{{ $post['author_name'] }}"
                     class="w-11 h-11 rounded-full object-cover"
                 >

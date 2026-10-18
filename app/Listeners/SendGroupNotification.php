@@ -13,7 +13,6 @@ use App\Models\User;
 use App\Notifications\GroupNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\Storage;
 
 class SendGroupNotification implements ShouldQueue
 {
@@ -44,7 +43,7 @@ class SendGroupNotification implements ShouldQueue
             return null;
         }
 
-        return Storage::url($user->profile_image_url);
+        return \App\Services\ImageProcessor::url($user->profile_image_url);
     }
 
     /**

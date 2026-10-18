@@ -36,7 +36,7 @@
                                 @if ($profile_image)
                                     <img src="{{ $profile_image->temporaryUrl() }}" alt="Preview" />
                                 @elseif ($current_profile_image_url)
-                                    <img src="{{ Storage::url($current_profile_image_url) }}" alt="Current" />
+                                    <img src="{{ \App\Services\ImageProcessor::url($current_profile_image_url) }}" alt="Current" />
                                 @else
                                     <div class="w-full h-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
                                         <span class="text-xl font-bold text-white">{{ substr($display_name ?? 'U', 0, 1) }}</span>

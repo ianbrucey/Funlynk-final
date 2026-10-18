@@ -44,7 +44,7 @@
                                              :style="`transform: translateX(-${currentSlide * 100}%)`">
                                             @foreach($item['data']->images as $image)
                                                 <div class="w-full h-full flex-shrink-0 flex items-center justify-center">
-                                                    <img src="{{ Storage::url($image) }}"
+                                                    <img src="{{ \App\Services\ImageProcessor::url($image) }}"
                                                          class="max-w-full max-h-full object-contain"
                                                          alt="{{ $item['data']->title }}">
                                                 </div>
