@@ -2,7 +2,7 @@
 <nav class="fixed bottom-0 inset-x-0 z-[100] bg-slate-900/95 backdrop-blur-lg border-t border-white/10 md:hidden safe-area-bottom">
     <div class="flex items-center justify-between h-16 px-4 max-w-screen-sm mx-auto">
         {{-- Home --}}
-        <a href="{{ route('feed.nearby') }}"
+        <a wire:navigate href="{{ route('feed.nearby') }}"
            class="relative flex flex-col items-center justify-center py-2 px-2 rounded-xl transition-all {{ request()->routeIs('feed.nearby') ? 'text-cyan-400' : 'text-gray-400 hover:text-white' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -14,7 +14,7 @@
         </a>
 
         {{-- Search/People --}}
-        <a href="{{ route('search.users') }}"
+        <a wire:navigate href="{{ route('search.users') }}"
            class="relative flex flex-col items-center justify-center py-2 px-2 rounded-xl transition-all {{ request()->routeIs('search.users') ? 'text-cyan-400' : 'text-gray-400 hover:text-white' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -45,7 +45,7 @@
                  x-transition:leave-start="opacity-100 translate-y-0"
                  x-transition:leave-end="opacity-0 translate-y-4"
                  class="absolute bottom-20 left-1/2 -translate-x-1/2 w-56 bg-slate-900/95 backdrop-blur-lg border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-                <a href="{{ route('posts.create') }}" class="block px-4 py-4 hover:bg-white/10 transition">
+                <a wire:navigate href="{{ route('posts.create') }}" class="block px-4 py-4 hover:bg-white/10 transition">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,7 +58,7 @@
                         </div>
                     </div>
                 </a>
-                <a href="{{ route('events.create') }}" class="block px-4 py-4 hover:bg-white/10 transition border-t border-white/5">
+                <a wire:navigate href="{{ route('events.create') }}" class="block px-4 py-4 hover:bg-white/10 transition border-t border-white/5">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,7 +71,7 @@
                         </div>
                     </div>
                 </a>
-                <a href="{{ route('groups.create') }}" class="block px-4 py-4 hover:bg-white/10 transition border-t border-white/5">
+                <a wire:navigate href="{{ route('groups.create') }}" class="block px-4 py-4 hover:bg-white/10 transition border-t border-white/5">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,7 +88,7 @@
         </div>
 
         {{-- Groups --}}
-        <a href="{{ route('groups.index') }}"
+        <a wire:navigate href="{{ route('groups.index') }}"
            class="relative flex flex-col items-center justify-center py-2 px-2 rounded-xl transition-all {{ request()->routeIs('groups.*') ? 'text-cyan-400' : 'text-gray-400 hover:text-white' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -100,7 +100,7 @@
         </a>
 
         {{-- Notifications/Alerts --}}
-        <a href="{{ route('notifications.index') }}"
+        <a wire:navigate href="{{ route('notifications.index') }}"
            class="relative flex flex-col items-center justify-center py-2 px-2 rounded-xl transition-all {{ request()->routeIs('notifications.*') ? 'text-cyan-400' : 'text-gray-400 hover:text-white' }}">
             @php
                 $unreadCount = auth()->user()->notifications()->where('is_read', false)->count();

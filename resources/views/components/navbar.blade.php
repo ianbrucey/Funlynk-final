@@ -2,7 +2,7 @@
     <div class="container mx-auto px-4 md:px-6">
         <div class="flex items-center justify-between h-16 md:h-20">
             <!-- Logo -->
-            <a href="{{ route('feed.nearby') }}" class="flex items-center gap-2 md:gap-3 group">
+            <a wire:navigate href="{{ route('feed.nearby') }}" class="flex items-center gap-2 md:gap-3 group">
                 <div class="w-10 h-10 md:w-14 md:h-14 flex items-center justify-center p-0.5 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl">
                     <div class="bg-slate-900 rounded-xl w-full h-full flex items-center justify-center p-1.5 md:p-2">
                         <img src="{{ asset('images/fl-logo-icon-only.png') }}" alt="FunLynk" class="w-full h-full object-contain">
@@ -21,7 +21,7 @@
             <div class="hidden md:flex items-center gap-2 md:gap-4">
                 @auth
                 <!-- Home/Nearby Feed -->
-                <a href="{{ route('feed.nearby') }}"
+                <a wire:navigate href="{{ route('feed.nearby') }}"
                    class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('feed.nearby') ? 'bg-white/10' : '' }}"
                    title="Home">
                     <svg class="w-6 h-6 {{ request()->routeIs('feed.nearby') ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,7 +33,7 @@
                 </a>
 
                 {{-- For You Feed TODO: renable when ready | maybe use photos and videos of activities?? --}}
-                {{-- <a href="{{ route('feed.for-you') }}"
+                {{-- <a wire:navigate href="{{ route('feed.for-you') }}"
                    class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('feed.for-you') ? 'bg-white/10' : '' }}"
                    title="For You">
                     <svg class="w-6 h-6 {{ request()->routeIs('feed.for-you') ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,7 +45,7 @@
                 </a> --}}
 
                 <!-- Find People -->
-                <a href="{{ route('search.users') }}"
+                <a wire:navigate href="{{ route('search.users') }}"
                    class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('search.users') ? 'bg-white/10' : '' }}"
                    title="Find People">
                     <svg class="w-6 h-6 {{ request()->routeIs('search.users') ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,7 +57,7 @@
                 </a>
 
                 <!-- Groups -->
-                <a href="{{ route('groups.index') }}"
+                <a wire:navigate href="{{ route('groups.index') }}"
                    class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('groups.*') ? 'bg-white/10' : '' }}"
                    title="Groups">
                     <svg class="w-6 h-6 {{ request()->routeIs('groups.*') ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,7 +69,7 @@
                 </a>
 
                 {{-- My Events --}}
-                <a href="{{ route('events.dashboard') }}"
+                <a wire:navigate href="{{ route('events.dashboard') }}"
                    class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('events.*')  ? 'bg-white/10' : '' }}"
                    title="My Events">
                     <svg class="w-6 h-6 {{ request()->routeIs('events.*')  ? 'text-cyan-400' : 'text-gray-300' }} group-hover:text-cyan-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,7 +96,7 @@
                          @click.away="open = false"
                          x-transition
                          class="absolute right-0 mt-2 w-56 glass-card border border-white/10 rounded-xl overflow-hidden">
-                        <a href="{{ route('posts.create') }}" class="block px-4 py-3 hover:bg-white/10 transition">
+                        <a wire:navigate href="{{ route('posts.create') }}" class="block px-4 py-3 hover:bg-white/10 transition">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center">
                                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,7 +109,7 @@
                                 </div>
                             </div>
                         </a>
-                        <a href="{{ route('events.create') }}" class="block px-4 py-3 hover:bg-white/10 transition">
+                        <a wire:navigate href="{{ route('events.create') }}" class="block px-4 py-3 hover:bg-white/10 transition">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
                                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,7 +122,7 @@
                                 </div>
                             </div>
                         </a>
-                        <a href="{{ route('groups.create') }}" class="block px-4 py-3 hover:bg-white/10 transition border-t border-white/5">
+                        <a wire:navigate href="{{ route('groups.create') }}" class="block px-4 py-3 hover:bg-white/10 transition border-t border-white/5">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center">
                                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,7 +145,7 @@
                 <livewire:direct-messages.inbox-icon />
 
                 <!-- Profile -->
-                <a href="{{ route('profile.show') }}"
+                <a wire:navigate href="{{ route('profile.show') }}"
                    class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('profile.*') ? 'bg-white/10' : '' }}"
                    title="Profile">
                     @if(Auth::user()->profile_image_url)
@@ -175,7 +175,7 @@
                          @click.away="open = false"
                          x-transition
                          class="absolute right-0 mt-2 w-48 glass-card border border-white/10 rounded-xl overflow-hidden">
-                        <a href="{{ route('events.dashboard') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-white {{ request()->routeIs('events.dashboard') ? 'bg-white/10 text-cyan-400' : '' }}">
+                        <a wire:navigate href="{{ route('events.dashboard') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-white {{ request()->routeIs('events.dashboard') ? 'bg-white/10 text-cyan-400' : '' }}">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -183,7 +183,7 @@
                                 <span>My Events</span>
                             </div>
                         </a>
-                        <a href="{{ route('tickets.index') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-white {{ request()->routeIs('tickets.*') ? 'bg-white/10 text-cyan-400' : '' }}">
+                        <a wire:navigate href="{{ route('tickets.index') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-white {{ request()->routeIs('tickets.*') ? 'bg-white/10 text-cyan-400' : '' }}">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
@@ -191,7 +191,7 @@
                                 <span>My Tickets</span>
                             </div>
                         </a>
-                        <a href="{{ route('profile.edit') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-white">
+                        <a wire:navigate href="{{ route('profile.edit') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-white">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -201,7 +201,7 @@
                             </div>
                         </a>
                         @if(!Auth::user()->stripeAccount || !Auth::user()->stripeAccount->canAcceptPayments())
-                            <a href="{{ route('stripe.onboarding') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-white border-t border-white/5">
+                            <a wire:navigate href="{{ route('stripe.onboarding') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 hover:text-white border-t border-white/5">
                                 <div class="flex items-center gap-3">
                                     <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -227,11 +227,11 @@
                 
                 @guest
                 <!-- Guest user buttons -->
-                <a href="{{ route('login') }}"
+                <a wire:navigate href="{{ route('login') }}"
                    class="px-4 py-2 text-gray-300 hover:text-white transition font-semibold">
                     Log In
                 </a>
-                <a href="{{ route('register') }}"
+                <a wire:navigate href="{{ route('register') }}"
                    class="px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all shadow-lg text-white">
                     Sign Up
                 </a>
@@ -271,7 +271,7 @@
                         </div>
 
                         {{-- Profile Link --}}
-                        <a href="{{ route('profile.show') }}" class="block px-4 py-3 hover:bg-white/10 transition {{ request()->routeIs('profile.show') ? 'bg-white/10 text-cyan-400' : 'text-gray-300' }}">
+                        <a wire:navigate href="{{ route('profile.show') }}" class="block px-4 py-3 hover:bg-white/10 transition {{ request()->routeIs('profile.show') ? 'bg-white/10 text-cyan-400' : 'text-gray-300' }}">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -281,7 +281,7 @@
                         </a>
 
                         {{-- My Events --}}
-                        <a href="{{ route('events.dashboard') }}" class="block px-4 py-3 hover:bg-white/10 transition {{ request()->routeIs('events.*') ? 'bg-white/10 text-cyan-400' : 'text-gray-300' }}">
+                        <a wire:navigate href="{{ route('events.dashboard') }}" class="block px-4 py-3 hover:bg-white/10 transition {{ request()->routeIs('events.*') ? 'bg-white/10 text-cyan-400' : 'text-gray-300' }}">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -291,7 +291,7 @@
                         </a>
 
                         {{-- My Tickets --}}
-                        <a href="{{ route('tickets.index') }}" class="block px-4 py-3 hover:bg-white/10 transition {{ request()->routeIs('tickets.*') ? 'bg-white/10 text-cyan-400' : 'text-gray-300' }}">
+                        <a wire:navigate href="{{ route('tickets.index') }}" class="block px-4 py-3 hover:bg-white/10 transition {{ request()->routeIs('tickets.*') ? 'bg-white/10 text-cyan-400' : 'text-gray-300' }}">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
@@ -301,7 +301,7 @@
                         </a>
 
                         {{-- Groups --}}
-                        <a href="{{ route('groups.index') }}" class="block px-4 py-3 hover:bg-white/10 transition {{ request()->routeIs('groups.*') ? 'bg-white/10 text-cyan-400' : 'text-gray-300' }}">
+                        <a wire:navigate href="{{ route('groups.index') }}" class="block px-4 py-3 hover:bg-white/10 transition {{ request()->routeIs('groups.*') ? 'bg-white/10 text-cyan-400' : 'text-gray-300' }}">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -311,7 +311,7 @@
                         </a>
 
                         {{-- Messages --}}
-                        <a href="{{ route('messages.index') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 border-t border-white/5 {{ request()->routeIs('messages.*') ? 'bg-white/10 text-cyan-400' : '' }}">
+                        <a wire:navigate href="{{ route('messages.index') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300 border-t border-white/5 {{ request()->routeIs('messages.*') ? 'bg-white/10 text-cyan-400' : '' }}">
                             <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
@@ -322,7 +322,7 @@
 
 
                         {{-- Settings --}}
-                        <a href="{{ route('profile.edit') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300">
+                        <a wire:navigate href="{{ route('profile.edit') }}" class="block px-4 py-3 hover:bg-white/10 transition text-gray-300">
                              <div class="flex items-center gap-3">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -346,8 +346,8 @@
                         </form>
                     @else
                         {{-- Guest Links --}}
-                        <a href="{{ route('login') }}" class="block px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 transition">Log In</a>
-                        <a href="{{ route('register') }}" class="block px-4 py-3 text-cyan-400 hover:text-cyan-300 hover:bg-white/10 transition border-t border-white/5">Sign Up</a>
+                        <a wire:navigate href="{{ route('login') }}" class="block px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 transition">Log In</a>
+                        <a wire:navigate href="{{ route('register') }}" class="block px-4 py-3 text-cyan-400 hover:text-cyan-300 hover:bg-white/10 transition border-t border-white/5">Sign Up</a>
                     @endauth
                 </div>
             </div>

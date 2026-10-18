@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>002 — Feed search/filters, background, event badge — UI mockup (FunLink)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; color: #e5e7eb; min-height: 100vh;
+    background: radial-gradient(ellipse at 20% 0%, #14123a 0%, #060414 50%, #020108 100%); }
+  .stars { position: fixed; inset: 0; pointer-events: none; opacity: .3;
+    background-image: radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 70% 10%, #fff, transparent), radial-gradient(1px 1px at 40% 70%, #a5f3fc, transparent), radial-gradient(1px 1px at 90% 60%, #fff, transparent); }
+  .wrap { position: relative; max-width: 480px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.3rem; } h2 { font-size: 1rem; margin: 26px 0 8px; color: #a5f3fc; }
+  .hint { color: #9ca3af; font-size: .82rem; margin-bottom: 10px; }
+  .label { display: inline-block; font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; background: rgba(34,211,238,.15); color: #67e8f9; border: 1px solid rgba(34,211,238,.3); padding: 3px 10px; border-radius: 999px; margin-bottom: 8px; }
+  .glass { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; backdrop-filter: blur(12px); padding: 12px; margin-bottom: 14px; }
+  .searchrow { display: flex; gap: 8px; }
+  .searchrow input { flex: 1; padding: 12px; border-radius: 12px; background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.12); color: #fff; }
+  .iconbtn { width: 46px; border-radius: 12px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); color: #fff; font-size: 1.1rem; }
+  .iconbtn.on { border-color: #22d3ee; color: #22d3ee; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .pill { padding: 6px 14px; border-radius: 999px; font-size: .8rem; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); }
+  .pill.on { background: linear-gradient(90deg,#ec4899,#a855f7); border-color: transparent; }
+  .panel { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.1); }
+  .panel .row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: .85rem; }
+  .panel input[type=range] { flex: 1; accent-color: #ec4899; }
+  .summary { font-size: .78rem; color: #67e8f9; margin-top: 8px; }
+  .card { background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), #0e1330; border: 1px solid rgba(255,255,255,.08); border-radius: 18px; overflow: hidden; margin-bottom: 12px; position: relative; }
+  .card.event { border-left: 3px solid #f0abfc; }
+  .card .body { padding: 14px; }
+  .photo { aspect-ratio: 16/9; background: linear-gradient(135deg,#6d28d9,#0ea5e9); display: grid; place-items: center; color: rgba(255,255,255,.7); font-size: .8rem; }
+  .badge { position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 999px; font-size: .7rem; font-weight: 700; background: rgba(240,171,252,.95); color: #3b0764; }
+  .badge.post { background: rgba(103,232,249,.9); color: #083344; }
+  .row2 { display: flex; gap: 8px; align-items: center; font-size: .75rem; color: #8a93b2; margin-bottom: 6px; }
+  .title { font-weight: 700; margin: 4px 0; }
+  .chip { padding: 2px 9px; border-radius: 999px; font-size: .7rem; border: 1px solid rgba(34,211,238,.3); color: #67e8f9; }
+  .themes { display: grid; gap: 12px; }
+  .swatch { border-radius: 14px; padding: 14px; border: 1px solid rgba(255,255,255,.1); font-size: .8rem; }
+  .sw-a { background: radial-gradient(ellipse at 20% 10%, #1e1b4b, #0b0620 55%, #050310); }
+  .sw-b { background: radial-gradient(ellipse at 20% 0%, #14123a, #060414 50%, #020108); }
+  .sw-c { background: #05030f; }
+  @media (min-width: 900px) { .wrap { max-width: 1000px; } .themes { grid-template-columns: repeat(3,1fr); } .grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; } .grid .card { margin: 0; } }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="wrap">
+  <h1>Feed search, filters, background, event badge</h1>
+  <p class="hint">Synthetic data. Resize to 390px for mobile; widen for desktop. Distances in miles (storage stays km).</p>
+
+  <h2>1. Search + filters (A1, A2, A8)</h2>
+  <span class="label">State A — collapsed (default)</span>
+  <div class="glass">
+    <div class="searchrow"><input placeholder="Search for your thing"><button class="iconbtn">⚙</button></div>
+    <div class="chips"><span class="pill on">All</span><span class="pill">Posts</span><span class="pill">Events</span></div>
+  </div>
+
+  <span class="label">State B — filters open</span>
+  <div class="glass">
+    <div class="searchrow"><input value="pickleball"><button class="iconbtn on">⚙</button></div>
+    <div class="chips"><span class="pill">All</span><span class="pill on">Posts</span><span class="pill">Events</span></div>
+    <div class="panel">
+      <div class="row"><span>When</span><span class="pill on">Any</span><span class="pill">Today</span><span class="pill">Week</span><span class="pill">Month</span></div>
+      <div class="row"><span>Event radius</span><input type="range" min="6" max="31" value="20"><b>12 mi</b></div>
+      <div class="summary">Posts: 6 mi · Events: up to 12 mi</div>
+    </div>
+  </div>
+  <p class="hint">Search bar is always visible and one line. Everything else lives behind the ⚙ button; chips show the active content type. The icon lights up when any filter is active.</p>
+
+  <h2>2. Event vs post cards (A4, A6)</h2>
+  <div class="grid">
+    <div class="card event">
+      <span class="badge">EVENT · Sat 7pm</span>
+      <div class="photo">16:9 event photo</div>
+      <div class="body">
+        <div class="row2"><span>Hosted by Maya</span><span class="chip">3.2 mi</span><span class="chip">$12</span></div>
+        <div class="title">Sunset Pickleball Mixer</div>
+        <div class="row2">18 going · 12 spots left</div>
+      </div>
+    </div>
+    <div class="card">
+      <span class="badge post">POST · 2h left</span>
+      <div class="body" style="padding-top:40px">
+        <div class="row2"><span>Jordan</span><span class="chip">0.8 mi</span></div>
+        <div class="title">Anyone want to rally at the courts?</div>
+        <div class="row2">4 are down</div>
+      </div>
+    </div>
+  </div>
+  <p class="hint">Events: pink badge, left accent edge, 16:9 photo (the same ratio on desktop and mobile), date, price. Posts: cyan badge, no photo block, time remaining.</p>
+
+  <h2>3. Background options (A5)</h2>
+  <div class="themes">
+    <div class="swatch sw-a"><b>Current</b><br>Purple-tinted</div>
+    <div class="swatch sw-b"><b>Option 1 (suggested)</b><br>Darker, subtle blue-violet glow</div>
+    <div class="swatch sw-c"><b>Option 2</b><br>Near-black, flat</div>
+  </div>
+  <p class="hint">Cards keep their own surface color so they stay readable on every option.</p>
+</div>
+</body>
+</html>
