@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Groups;
 
+use App\Livewire\Concerns\ResolvesTypedLocation;
 use App\Services\GroupService;
 use App\Services\RecurringScheduleService;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,7 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class CreateGroup extends Component
 {
+    use ResolvesTypedLocation;
     use WithFileUploads;
 
     public string $name = '';
@@ -201,6 +203,7 @@ class CreateGroup extends Component
 
     public function createGroup()
     {
+        $this->resolveTypedLocation();
         $this->validate();
 
         try {

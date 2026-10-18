@@ -34,7 +34,7 @@
                     <input type="text" id="name" wire:model.blur="name"
                            class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                            placeholder="e.g., Local Hiking Enthusiasts">
-                    @error('name') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                    @error('name') <span data-field-error class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="mb-4">
@@ -42,7 +42,7 @@
                     <textarea id="description" wire:model.blur="description"
                               class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                               rows="4" placeholder="Tell us what your group is about..."></textarea>
-                    @error('description') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                    @error('description') <span data-field-error class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="mb-4">
@@ -52,7 +52,7 @@
                         <option value="public">Public (Anyone can see and join)</option>
                         <option value="private">Private (Only members can see content, join by invitation or approval)</option>
                     </select>
-                    @error('privacy') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                    @error('privacy') <span data-field-error class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
                 </div>
 
                 <!-- Dynamic Tags Input (type-and-enter) -->
@@ -86,7 +86,7 @@
                         </div>
                     @endif
                     <p class="text-xs text-gray-500 mt-1">{{ count($tags) }}/10 tags</p>
-                    @error('tags') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                    @error('tags') <span data-field-error class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
                 </div>
 
                 <!-- Marketing / Identity Fields -->
@@ -96,14 +96,14 @@
                         <input type="text" id="emoji" wire:model.blur="emoji"
                                class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white text-center text-2xl"
                                placeholder="🥋">
-                        @error('emoji') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                        @error('emoji') <span data-field-error class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
                     </div>
                     <div class="col-span-2">
                         <label for="meetup_label" class="block text-gray-300 text-sm font-semibold mb-2">Activities Called...</label>
                         <input type="text" id="meetup_label" wire:model.blur="meetup_label"
                                class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                                placeholder="e.g. Session, Jam, Class, Meetup">
-                        @error('meetup_label') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                        @error('meetup_label') <span data-field-error class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
@@ -113,7 +113,7 @@
                            class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                            placeholder="e.g. Sundays at 4pm">
                     <p class="text-xs text-gray-500 mt-1">Displayed when no specific events are scheduled.</p>
-                    @error('schedule_text') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                    @error('schedule_text') <span data-field-error class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
                 </div>
 
                 <!-- Recurring Schedule (Optional) -->
@@ -136,7 +136,7 @@
                                 <label class="block text-sm font-medium text-gray-300 mb-1">Event Title</label>
                                 <input type="text" wire:model="scheduleTitle" placeholder="e.g., Morning Training"
                                     class="w-full rounded-xl bg-slate-800/50 border border-white/10 text-white px-4 py-3 focus:border-cyan-500 focus:ring-cyan-500 transition">
-                                @error('scheduleTitle') <span class="text-red-400 text-xs">{{ $message }}</span> @enderror
+                                @error('scheduleTitle') <span data-field-error class="text-red-400 text-xs">{{ $message }}</span> @enderror
                             </div>
 
                             <!-- Days of Week -->
@@ -150,7 +150,7 @@
                                         </button>
                                     @endforeach
                                 </div>
-                                @error('scheduleDays') <span class="text-red-400 text-xs">{{ $message }}</span> @enderror
+                                @error('scheduleDays') <span data-field-error class="text-red-400 text-xs">{{ $message }}</span> @enderror
                             </div>
 
                             <!-- Start Time -->
@@ -209,6 +209,7 @@
                     <div class="relative" wire:ignore>
                         <input type="text"
                                id="group-location-input"
+                               wire:model="location_name"
                                value="{{ $location_name }}"
                                placeholder="Search for a city..."
                                class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
@@ -233,8 +234,8 @@
                     @else
                         <p class="text-xs text-gray-500 mt-1">Start typing to search for a location</p>
                     @endif
-                    @error('location_name') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
-                    @error('latitude') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                    @error('location_name') <span data-field-error class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                    @error('latitude') <span data-field-error class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
                 <!-- Avatar Image -->
@@ -248,7 +249,7 @@
                             <p class="text-green-400 text-sm">Preview: {{ $avatarImage->getClientOriginalName() }}</p>
                         </div>
                     @endif
-                    @error('avatarImage') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                    @error('avatarImage') <span data-field-error class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
                 </div>
 
                 <!-- Cover Image -->
@@ -262,12 +263,12 @@
                             <p class="text-green-400 text-sm mt-2">Preview: {{ $coverImage->getClientOriginalName() }}</p>
                         </div>
                     @endif
-                    @error('coverImage') <span class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
+                    @error('coverImage') <span data-field-error class="text-red-400 text-xs mt-1">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <button type="submit" class="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
-                        Create Group
+                    <button type="submit" wire:loading.attr="disabled" wire:target="createGroup" class="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all disabled:opacity-60">
+                        <span wire:loading.remove wire:target="createGroup">Create Group</span><span wire:loading wire:target="createGroup">Creating…</span>
                     </button>
                 </div>
             </form>
@@ -276,7 +277,7 @@
 </div>
 
 <script>
-document.addEventListener('livewire:init', () => {
+(window.Livewire ? (fn) => fn() : (fn) => document.addEventListener('livewire:init', fn))(() => {
     // Load Google Places API
     if (!window.google || !window.google.maps || !window.google.maps.places) {
         const script = document.createElement('script');
@@ -295,6 +296,12 @@ document.addEventListener('livewire:init', () => {
     function initializeGroupAutocomplete() {
         const input = document.getElementById('group-location-input');
         if (!input) return;
+
+            input.addEventListener('input', () => {
+                const component = Livewire.find(input.closest('[wire\\:id]').getAttribute('wire:id'));
+                component.$wire.$set('latitude', '', false);
+                component.$wire.$set('longitude', '', false);
+            });
 
         const autocomplete = new google.maps.places.Autocomplete(input, {
             types: ['(cities)'],

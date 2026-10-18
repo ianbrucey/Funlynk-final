@@ -37,7 +37,7 @@
                             placeholder="Event name (e.g., Sunday Open Mat)"
                             class="w-full rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-cyan-500 px-4 py-3 text-lg"
                         >
-                        @error('title') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('title') <span data-field-error class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Description (optional) --}}
@@ -48,7 +48,7 @@
                             placeholder="Add details (optional)"
                             class="w-full rounded-xl bg-slate-800/50 border border-white/10 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-cyan-500 px-4 py-3 resize-none"
                         ></textarea>
-                        @error('description') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        @error('description') <span data-field-error class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Location with Google Places Autocomplete --}}
@@ -111,12 +111,13 @@
                             x-ref="locationInput"
                             type="text"
                             wire:model="locationName"
+                            x-on:input="$wire.latitude = null; $wire.longitude = null"
                             placeholder="Search for a location..."
                             autocomplete="off"
                             class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 px-0"
                         >
                     </div>
-                    @error('locationName') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    @error('locationName') <span data-field-error class="text-red-500 text-sm">{{ $message }}</span> @enderror
 
                     {{-- Date & Time Section --}}
                     <div class="p-4 rounded-xl bg-slate-800/30 border border-white/5 space-y-3">
@@ -135,7 +136,7 @@
                                 min="{{ now()->format('Y-m-d') }}"
                                 class="w-full rounded-lg bg-slate-700/50 border border-white/10 text-white focus:border-cyan-500 focus:ring-cyan-500 px-3 py-2"
                             >
-                            @error('startDate') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            @error('startDate') <span data-field-error class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
 
                         {{-- Time picker (simplified) --}}
@@ -185,7 +186,7 @@
                             class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 px-0"
                         >
                     </div>
-                    @error('maxAttendees') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    @error('maxAttendees') <span data-field-error class="text-red-500 text-sm">{{ $message }}</span> @enderror
 
                     {{-- Action buttons --}}
                     <div class="flex justify-end gap-3 pt-2">

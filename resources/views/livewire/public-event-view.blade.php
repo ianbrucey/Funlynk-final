@@ -263,7 +263,7 @@
 
     {{-- Share URL Handler Script --}}
     <script>
-        document.addEventListener('livewire:initialized', () => {
+        (window.Livewire ? (fn) => fn() : (fn) => document.addEventListener('livewire:initialized', fn))(() => {
             Livewire.on('share-url-generated', (event) => {
                 const { platform, url } = event[0];
 

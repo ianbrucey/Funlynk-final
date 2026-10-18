@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Activities;
 
+use App\Livewire\Concerns\ResolvesTypedLocation;
 use App\Models\Activity;
 use App\Services\ActivityService;
 use Livewire\Component;
@@ -10,6 +11,7 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class CreateActivity extends Component
 {
+    use ResolvesTypedLocation;
     use WithFileUploads;
 
     // Form fields
@@ -121,6 +123,7 @@ class CreateActivity extends Component
 
     public function createActivity()
     {
+        $this->resolveTypedLocation();
         $this->validate();
 
         if ($this->payment_type === 'online' && ! $this->getCanCreatePaidActivityProperty()) {

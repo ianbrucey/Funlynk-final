@@ -619,7 +619,7 @@
     </script>
     @else
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        (document.readyState === 'loading' ? (fn) => document.addEventListener('DOMContentLoaded', fn) : (fn) => fn())(() => {
             const mapElement = document.getElementById('activity-map');
             if (mapElement) {
                 mapElement.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">Location not available</div>';
@@ -689,7 +689,7 @@
 
     {{-- Copy to Clipboard Script --}}
     <script>
-        document.addEventListener('livewire:initialized', () => {
+        (window.Livewire ? (fn) => fn() : (fn) => document.addEventListener('livewire:initialized', fn))(() => {
             Livewire.on('copy-to-clipboard', (event) => {
                 const url = event.url;
 
@@ -768,7 +768,7 @@
 
     {{-- Share URL Handler Script --}}
     <script>
-        document.addEventListener('livewire:initialized', () => {
+        (window.Livewire ? (fn) => fn() : (fn) => document.addEventListener('livewire:initialized', fn))(() => {
             Livewire.on('share-url-generated', (event) => {
                 const { platform, url } = event[0];
 

@@ -53,7 +53,7 @@
                                         <option value="{{ $group->id }}">{{ $group->name }}</option>
                                     @endforeach
                                 </select>
-                                @error('selected_group_id') <span class="text-red-400 text-sm mt-1 block">{{ $message }}</span> @enderror
+                                @error('selected_group_id') <span data-field-error class="text-red-400 text-sm mt-1 block">{{ $message }}</span> @enderror
                             </div>
                         @endif
                     </div>
@@ -82,7 +82,7 @@
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white"
                             autofocus
                         />
-                        @error('title') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('title') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Location --}}
@@ -93,6 +93,7 @@
                             <input
                                 type="text"
                                 id="location-autocomplete-input"
+                                wire:model="location_name"
                                 value="{{ $location_name }}"
                                 placeholder="Search for a location..."
                                 class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white"
@@ -112,8 +113,8 @@
                         </div>
 
                         <p class="text-xs text-gray-500 mt-1">Start typing to search for a location</p>
-                        @error('location_name') <span class="text-red-400 text-sm mt-1 block">{{ $message }}</span> @enderror
-                        @error('latitude') <span class="text-red-400 text-sm mt-1 block">Please select a valid location from the list</span> @enderror
+                        @error('location_name') <span data-field-error class="text-red-400 text-sm mt-1 block">{{ $message }}</span> @enderror
+                        @error('latitude') <span data-field-error class="text-red-400 text-sm mt-1 block">Please select a valid location from the list</span> @enderror
                     </div>
                 </div>
             </div>
@@ -140,7 +141,7 @@
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white"
                         ></textarea>
                         <p class="text-xs text-gray-400 mt-1">{{ strlen($description ?? '') }}/500 characters</p>
-                        @error('description') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('description') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Time Hint --}}
@@ -153,7 +154,7 @@
                             class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-pink-500/50 focus:outline-none transition text-white"
                         />
                         <p class="text-xs text-gray-400 mt-1">Keep it casual - no need for exact times</p>
-                        @error('time_hint') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('time_hint') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Mood --}}
@@ -170,7 +171,7 @@
                             <option value="chill">😌 Chill</option>
                             <option value="adventurous">🚀 Adventurous</option>
                         </select>
-                        @error('mood') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('mood') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>
@@ -218,7 +219,7 @@
                         @endif
                         <div class="label mt-2">
                             <span class="text-xs text-gray-500">{{ count($selectedTags) }}/5 tags</span>
-                            @error('selectedTags') <span class="text-xs text-red-400 ml-2">{{ $message }}</span> @enderror
+                            @error('selectedTags') <span data-field-error class="text-xs text-red-400 ml-2">{{ $message }}</span> @enderror
                         </div>
                     </div>
 
@@ -234,11 +235,27 @@
                             <option value="72">72 hours</option>
                         </select>
                         <p class="text-xs text-gray-400 mt-1">Posts automatically expire after this time</p>
-                        @error('ttl_hours') <span class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
+                        @error('ttl_hours') <span data-field-error class="text-red-400 text-sm mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
             </div>
 
+            @if($errors->any())
+                <div class="max-w-xl mx-auto p-4 rounded-xl bg-red-500/10 border border-red-500/40 text-sm text-red-300">
+                    <p class="font-semibold mb-1">Please fix {{ $errors->count() }} {{ Str::plural('thing', $errors->count()) }} before continuing:</p>
+                    <ul class="list-disc pl-5">
+                        @foreach($errors->all() as $message)
+                            <li>{{ $message }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <div wire:loading.flex wire:target="createPost" class="fixed inset-0 z-[100] items-center justify-center bg-black/70 backdrop-blur-sm">
+                <div class="glass-card rounded-2xl px-8 py-6 text-center">
+                    <svg class="animate-spin h-10 w-10 mx-auto text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    <p class="mt-4 font-semibold text-white">Posting…</p>
+                </div>
+            </div>
             {{-- Submit Button --}}
             <div class="flex gap-4 justify-center pb-6">
                 <a
@@ -248,10 +265,10 @@
                     Cancel
                 </a>
                 <button
-                    type="submit"
+                    type="submit" wire:loading.attr="disabled" wire:target="createPost"
                     class="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all shadow-lg"
                 >
-                    Post Now
+                    <span wire:loading.remove wire:target="createPost">Post Now</span><span wire:loading wire:target="createPost">Please wait…</span>
                 </button>
             </div>
         </form>
@@ -281,7 +298,7 @@
     </style>
 
     <script>
-    document.addEventListener('livewire:init', () => {
+    (window.Livewire ? (fn) => fn() : (fn) => document.addEventListener('livewire:init', fn))(() => {
         // Load Google Places API
         if (!window.google || !window.google.maps || !window.google.maps.places) {
             const script = document.createElement('script');
@@ -300,6 +317,12 @@
         function initializeAutocomplete() {
             const input = document.getElementById('location-autocomplete-input');
             if (!input) return;
+
+            input.addEventListener('input', () => {
+                const component = Livewire.find(input.closest('[wire\\:id]').getAttribute('wire:id'));
+                component.$wire.$set('latitude', '', false);
+                component.$wire.$set('longitude', '', false);
+            });
 
             const autocomplete = new google.maps.places.Autocomplete(input, {
                 types: ['establishment', 'geocode'],

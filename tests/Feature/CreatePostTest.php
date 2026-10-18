@@ -174,3 +174,42 @@ it('requires selected_group_id when posting as group', function () {
         ->call('createPost')
         ->assertHasErrors(['selected_group_id']);
 });
+
+it('geocodes a typed city on the server when autocomplete gave no coordinates', function () {
+    config(['services.google.places_api_key' => 'test-key']);
+    Illuminate\Support\Facades\Http::fake([
+        'maps.googleapis.com/*' => Illuminate\Support\Facades\Http::response([
+            'status' => 'OK',
+            'results' => [[
+                'formatted_address' => 'Austin, TX, USA',
+                'geometry' => ['location' => ['lat' => 30.2672, 'lng' => -97.7431]],
+            ]],
+        ]),
+    ]);
+
+    Livewire::test(CreatePost::class)
+        ->set('title', 'Tacos tonight')
+        ->set('location_name', 'Austin')
+        ->call('createPost')
+        ->assertHasNoErrors()
+        ->assertRedirect(route('feed.nearby'));
+
+    $post = Post::first();
+    expect($post->location_name)->toBe('Austin, TX, USA');
+    expect((float) $post->location_coordinates->latitude)->toBe(30.2672);
+});
+
+it('shows a clear error when typed text cannot be geocoded', function () {
+    config(['services.google.places_api_key' => 'test-key']);
+    Illuminate\Support\Facades\Http::fake([
+        'maps.googleapis.com/*' => Illuminate\Support\Facades\Http::response(['status' => 'ZERO_RESULTS', 'results' => []]),
+    ]);
+
+    Livewire::test(CreatePost::class)
+        ->set('title', 'Tacos tonight')
+        ->set('location_name', 'asdfqwerty')
+        ->call('createPost')
+        ->assertHasErrors(['location_name']);
+
+    expect(Post::count())->toBe(0);
+});

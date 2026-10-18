@@ -38,7 +38,7 @@
                             autofocus
                         ></textarea>
                         <div class="flex justify-between mt-1">
-                            @error('content') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            @error('content') <span data-field-error class="text-red-500 text-sm">{{ $message }}</span> @enderror
                             <span class="text-xs text-gray-500 ml-auto">{{ strlen($content) }}/500</span>
                         </div>
                     </div>
@@ -116,7 +116,7 @@
                                 class="w-full rounded-lg bg-slate-800/50 border border-white/10 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-cyan-500 px-3 py-2 text-sm"
                             >
                         </div>
-                        @error('locationName') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        @error('locationName') <span data-field-error class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
                     @endif
 

@@ -2,12 +2,15 @@
 
 namespace App\Livewire\Posts;
 
+use App\Livewire\Concerns\ResolvesTypedLocation;
 use App\Models\Post;
 use App\Services\PostService;
 use Livewire\Component;
 
 class CreatePost extends Component
 {
+    use ResolvesTypedLocation;
+
     // Form fields
     public $title = '';
 
@@ -89,6 +92,7 @@ class CreatePost extends Component
 
     public function createPost()
     {
+        $this->resolveTypedLocation();
         $this->validate();
 
         try {

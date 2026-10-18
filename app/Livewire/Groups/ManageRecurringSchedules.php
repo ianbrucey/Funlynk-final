@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Groups;
 
+use App\Livewire\Concerns\ResolvesTypedLocation;
 use App\Models\Group;
 use App\Services\RecurringScheduleService;
 use Livewire\Attributes\On;
@@ -10,6 +11,8 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class ManageRecurringSchedules extends Component
 {
+    use ResolvesTypedLocation;
+
     public Group $group;
 
     // Modal states
@@ -227,6 +230,7 @@ class ManageRecurringSchedules extends Component
 
     public function createSchedule(RecurringScheduleService $service): void
     {
+        $this->resolveTypedLocation(false);
         $this->validate();
 
         $locationPoint = null;
@@ -266,6 +270,7 @@ class ManageRecurringSchedules extends Component
 
     public function updateSchedule(RecurringScheduleService $service): void
     {
+        $this->resolveTypedLocation(false);
         $this->validate();
 
         $schedule = $this->group->recurringSchedules()->findOrFail($this->editingScheduleId);

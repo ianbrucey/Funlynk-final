@@ -166,6 +166,8 @@
         <x-mobile-bottom-nav />
     @endauth
 
+    <x-nav-loading-overlay />
+
     <!-- Toast Notifications -->
     <x-toast-notification />
 

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Profile;
 
+use App\Livewire\Concerns\ResolvesTypedLocation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Validate;
@@ -11,6 +12,7 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class EditProfile extends Component
 {
+    use ResolvesTypedLocation;
     use WithFileUploads;
 
     #[Validate('required|string|min:3|max:50|alpha_dash')]
@@ -159,6 +161,7 @@ class EditProfile extends Component
 
     public function save()
     {
+        $this->resolveTypedLocation(false);
         $this->validate();
 
         $userId = Auth::id();

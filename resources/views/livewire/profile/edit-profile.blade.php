@@ -157,6 +157,7 @@
                             <input
                                 type="text"
                                 id="location-autocomplete-input"
+                                wire:model="location_name"
                                 value="{{ $location_name }}"
                                 placeholder="Search for your city..."
                                 class="input input-bordered w-full bg-white text-gray-900 border-white/10 focus:border-cyan-500 focus:outline-none placeholder-gray-400"
@@ -301,7 +302,7 @@
 </div>
 
 <script>
-document.addEventListener('livewire:init', () => {
+(window.Livewire ? (fn) => fn() : (fn) => document.addEventListener('livewire:init', fn))(() => {
     // Load Google Places API
     if (!window.google || !window.google.maps || !window.google.maps.places) {
         const script = document.createElement('script');
@@ -320,6 +321,12 @@ document.addEventListener('livewire:init', () => {
     function initializeAutocomplete() {
         const input = document.getElementById('location-autocomplete-input');
         if (!input) return;
+
+        input.addEventListener('input', () => {
+            const component = Livewire.find(input.closest('[wire\\:id]').getAttribute('wire:id'));
+            component.$wire.$set('latitude', '', false);
+            component.$wire.$set('longitude', '', false);
+        });
 
         const autocomplete = new google.maps.places.Autocomplete(input, {
             types: ['(cities)'],

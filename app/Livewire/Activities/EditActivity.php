@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Activities;
 
+use App\Livewire\Concerns\ResolvesTypedLocation;
 use App\Models\Activity;
 use App\Services\ActivityEditService;
 use App\Services\ActivityService;
@@ -13,6 +14,7 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
 class EditActivity extends Component
 {
     use AuthorizesRequests;
+    use ResolvesTypedLocation;
     use WithFileUploads;
 
     public Activity $activity;
@@ -173,6 +175,7 @@ class EditActivity extends Component
     public function updateActivity()
     {
         $this->authorize('update', $this->activity);
+        $this->resolveTypedLocation();
         $this->validate();
 
         if ($this->payment_type === 'online' && $this->activity->payment_type !== 'online') {
