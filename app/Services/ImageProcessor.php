@@ -46,9 +46,28 @@ class ImageProcessor
         $encoded = $image->encode(new WebpEncoder(quality: self::QUALITY));
 
         $path = trim($directory, '/').'/'.Str::uuid().'.webp';
-        Storage::disk($disk)->put($path, (string) $encoded);
+        Storage::disk($disk)->put($path, (string) $encoded, 'public');
 
         return $path;
+    }
+
+    /**
+     * Turn a stored image value into a browser URL.
+     *
+     * Full URLs (seeded data, social avatars) and root-relative paths are returned as-is.
+     * Anything else is a path on the uploads disk, which is s3.
+     */
+    public static function url(?string $value, string $disk = 's3'): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (Str::startsWith($value, ['http://', 'https://', '/'])) {
+            return $value;
+        }
+
+        return Storage::disk($disk)->url($value);
     }
 
     protected function manager(): ImageManager

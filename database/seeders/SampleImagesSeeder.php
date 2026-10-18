@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Activity;
 use App\Models\Group;
 use App\Models\User;
+use App\Services\ImageProcessor;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
@@ -39,26 +40,42 @@ class SampleImagesSeeder extends Seeder
         $avatarPaths = $this->pool('avatars', self::AVATARS, 200, 200, 'avatar');
         $coverPaths = $this->pool('groups/covers', self::GROUP_COVERS, 800, 300, 'photo');
 
-        $activities = $this->assign(Activity::query()->whereNull('cover_image_url'), $activityPaths, function (Activity $activity, string $path, int $i) use ($activityPaths): void {
+        $activities = $this->assign($this->broken(Activity::query(), 'cover_image_url'), $activityPaths, function (Activity $activity, string $path, int $i) use ($activityPaths): void {
             $second = $activityPaths[($i + 5) % count($activityPaths)];
             $activity->forceFill([
-                'cover_image_url' => Storage::url($path),
+                'cover_image_url' => ImageProcessor::url($path),
                 'images' => $i % 3 === 0 ? [$path, $second] : [$path],
             ])->saveQuietly();
         });
 
-        $users = $this->assign(User::query()->whereNull('profile_image_url'), $avatarPaths, function (User $user, string $path): void {
+        $users = $this->assign($this->broken(User::query(), 'profile_image_url'), $avatarPaths, function (User $user, string $path): void {
             $user->forceFill(['profile_image_url' => $path])->saveQuietly();
         });
 
-        $groups = $this->assign(Group::query()->whereNull('cover_image_url'), $coverPaths, function (Group $group, string $path): void {
+        $groups = $this->assign($this->broken(Group::query(), 'cover_image_url'), $coverPaths, function (Group $group, string $path): void {
             $group->forceFill([
-                'cover_image_url' => Storage::url($path),
-                'avatar_url' => Storage::url($path),
+                'cover_image_url' => ImageProcessor::url($path),
+                'avatar_url' => ImageProcessor::url($path),
             ])->saveQuietly();
         });
 
         $this->command->info("Sample images assigned: {$activities} activities, {$users} users, {$groups} groups.");
+    }
+
+    /**
+     * Rows with no image, a local /storage path, or a fake placeholder URL.
+     *
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    private function broken(Builder $query, string $column): Builder
+    {
+        return $query->where(fn (Builder $q) => $q->whereNull($column)
+            ->orWhere($column, '')
+            ->orWhere($column, 'like', '/storage%')
+            ->orWhere($column, 'like', '%placeholder%'));
     }
 
     /**
@@ -84,14 +101,14 @@ class SampleImagesSeeder extends Seeder
      */
     private function pool(string $directory, int $size, int $width, int $height, string $kind): array
     {
-        $disk = Storage::disk('public');
+        $disk = Storage::disk('s3');
         $paths = [];
 
         for ($i = 1; $i <= $size; $i++) {
             $path = "{$directory}/sample-{$i}.jpg";
 
             if (! $disk->exists($path)) {
-                $disk->put($path, $this->download($kind, $i, $width, $height) ?? $this->placeholder($i, $width, $height));
+                $disk->put($path, $this->download($kind, $i, $width, $height) ?? $this->placeholder($i, $width, $height), 'public');
             }
 
             $paths[] = $path;

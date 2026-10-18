@@ -127,7 +127,7 @@
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 @foreach ($existingImages as $index => $image)
                                     <div class="relative group">
-                                        <img src="{{ Storage::url($image) }}" class="w-full h-24 object-cover rounded-lg border border-white/10">
+                                        <img src="{{ \App\Services\ImageProcessor::url($image) }}" class="w-full h-24 object-cover rounded-lg border border-white/10">
                                         <button 
                                             type="button"
                                             wire:click="removeExistingImage({{ $index }})"

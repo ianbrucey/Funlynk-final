@@ -118,7 +118,7 @@
                         <div class="flex items-center gap-4 min-w-0">
                             <a href="{{ route('profile.view', $activity->host->username) }}" class="flex-shrink-0 group">
                                 @if($activity->host->profile_image_url)
-                                    <img src="{{ Storage::url($activity->host->profile_image_url) }}" class="w-12 h-12 rounded-full object-cover border-2 border-white/10 shadow-lg group-hover:border-cyan-400/50 transition-colors">
+                                    <img src="{{ \App\Services\ImageProcessor::url($activity->host->profile_image_url) }}" class="w-12 h-12 rounded-full object-cover border-2 border-white/10 shadow-lg group-hover:border-cyan-400/50 transition-colors">
                                 @else
                                     <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold text-white shadow-lg group-hover:ring-2 group-hover:ring-cyan-400/50 transition-all">
                                         {{ substr($activity->host->name, 0, 1) }}
@@ -240,7 +240,7 @@
                                      :style="`transform: translateX(-${currentSlide * 100}%)`">
                                     @foreach($activity->images as $image)
                                         <div class="w-full flex-shrink-0 flex items-center justify-center" >
-                                            <img src="{{ Storage::url($image) }}"
+                                            <img src="{{ \App\Services\ImageProcessor::url($image) }}"
                                                  class="max-w-full max-h-full object-contain"
                                                  alt="Activity image">
                                         </div>

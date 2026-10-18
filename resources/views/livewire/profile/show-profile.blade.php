@@ -6,7 +6,7 @@
                 <!-- Avatar -->
                 <div class="flex-shrink-0">
                     @if($user->profile_image_url)
-                        <img src="{{ Storage::url($user->profile_image_url) }}"
+                        <img src="{{ \App\Services\ImageProcessor::url($user->profile_image_url) }}"
                              alt="{{ $user->display_name ?? $user->name }}"
                              class="h-20 w-20 md:h-36 md:w-36 rounded-full object-cover bg-slate-800 ring-2 ring-white/10">
                     @else

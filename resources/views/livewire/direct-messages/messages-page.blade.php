@@ -19,7 +19,7 @@
                             $otherUser = $conversation->participants->where('id', '!=', auth()->id())->first();
                         @endphp
                         <a href="{{ route('profile.view', $otherUser->username) }}" class="flex items-center gap-3 flex-1 min-w-0">
-                            <img src="{{ $otherUser->profile_image_url ? Storage::url($otherUser->profile_image_url) : 'https://ui-avatars.com/api/?name='.urlencode($otherUser->name).'&background=ec4899&color=fff' }}"
+                            <img src="{{ $otherUser->profile_image_url ? \App\Services\ImageProcessor::url($otherUser->profile_image_url) : 'https://ui-avatars.com/api/?name='.urlencode($otherUser->name).'&background=ec4899&color=fff' }}"
                                  alt="{{ $otherUser->name }}"
                                  class="w-10 h-10 rounded-full border-2 border-white/20 object-cover flex-shrink-0">
                             <div class="min-w-0">

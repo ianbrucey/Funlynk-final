@@ -4,7 +4,6 @@ namespace App\Livewire\DirectMessages;
 
 use App\Services\MessageRequestService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -78,7 +77,7 @@ class InboxList extends Component
 
             // Build avatar URL properly
             $avatarUrl = $otherUser->profile_image_url
-                ? Storage::url($otherUser->profile_image_url)
+                ? \App\Services\ImageProcessor::url($otherUser->profile_image_url)
                 : 'https://ui-avatars.com/api/?name='.urlencode($otherUser->name).'&background=ec4899&color=fff';
 
             return [

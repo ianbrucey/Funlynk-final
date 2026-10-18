@@ -40,7 +40,7 @@
                 @forelse ($members as $member)
                     <div class="relative p-4 rounded-2xl bg-slate-800/50 border border-white/10 hover:border-purple-500/50 transition-all group flex items-center gap-4">
                         <div class="flex-shrink-0">
-                            <img src="{{ Storage::url($member->user->profile_image_url) ?? 'https://ui-avatars.com/api/?name=' . urlencode($member->user->name) . '&background=a855f7&color=fff' }}"
+                            <img src="{{ \App\Services\ImageProcessor::url($member->user->profile_image_url) ?? 'https://ui-avatars.com/api/?name=' . urlencode($member->user->name) . '&background=a855f7&color=fff' }}"
                                  alt="{{ $member->user->name }}"
                                  class="w-12 h-12 rounded-xl object-cover">
                         </div>

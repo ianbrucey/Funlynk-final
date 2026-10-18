@@ -60,7 +60,7 @@
                             @if($isGroupPost && $author->avatar_url)
                                 <img src="{{ $author->avatar_url }}" alt="{{ $authorName }}" class="w-10 h-10 rounded-full object-cover">
                             @elseif(!$isGroupPost && $author?->profile_image_url)
-                                <img src="{{ Storage::url($author->profile_image_url) }}" alt="{{ $authorName }}" class="w-10 h-10 rounded-full object-cover">
+                                <img src="{{ \App\Services\ImageProcessor::url($author->profile_image_url) }}" alt="{{ $authorName }}" class="w-10 h-10 rounded-full object-cover">
                             @else
                                 <div class="w-10 h-10 rounded-full bg-gradient-to-br {{ $isGroupPost ? 'from-cyan-500 to-purple-500' : 'from-pink-500 to-purple-500' }} flex items-center justify-center text-white font-bold">
                                     {{ $isGroupPost ? ($author->emoji ?? substr($authorName, 0, 1)) : strtoupper(substr($authorName, 0, 1)) }}
@@ -203,7 +203,7 @@
                                 <div class="flex -space-x-2">
                                     @foreach($attendees as $rsvp)
                                         @if($rsvp->user?->profile_image_url)
-                                            <img src="{{ Storage::url($rsvp->user->profile_image_url) }}"
+                                            <img src="{{ \App\Services\ImageProcessor::url($rsvp->user->profile_image_url) }}"
                                                  alt="{{ $rsvp->user->display_name }}"
                                                  class="w-8 h-8 rounded-full border-2 border-slate-800 object-cover">
                                         @else

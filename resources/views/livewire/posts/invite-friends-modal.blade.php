@@ -77,7 +77,7 @@
                                     <div class="flex items-center gap-3 flex-1">
                                         @if($friend->profile_image_url)
                                             <img
-                                                src="{{ Storage::url($friend->profile_image_url) }}"
+                                                src="{{ \App\Services\ImageProcessor::url($friend->profile_image_url) }}"
                                                 alt="{{ $friend->display_name ?: $friend->username }}"
                                                 class="w-10 h-10 rounded-full object-cover border-2 border-white/10 group-hover:border-purple-500/50 transition"
                                             />

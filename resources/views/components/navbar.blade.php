@@ -149,7 +149,7 @@
                    class="p-3 hover:bg-white/10 rounded-xl transition-all group relative {{ request()->routeIs('profile.*') ? 'bg-white/10' : '' }}"
                    title="Profile">
                     @if(Auth::user()->profile_image_url)
-                        <img src="{{ Storage::url(Auth::user()->profile_image_url) }}" alt="Profile" class="w-8 h-8 rounded-full object-cover border-2 border-purple-500">
+                        <img src="{{ \App\Services\ImageProcessor::url(Auth::user()->profile_image_url) }}" alt="Profile" class="w-8 h-8 rounded-full object-cover border-2 border-purple-500">
                     @else
                         <svg class="w-6 h-6 {{ request()->routeIs('profile.*') ? 'text-purple-400' : 'text-gray-300' }} group-hover:text-purple-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -244,7 +244,7 @@
                     class="p-2 rounded-xl transition-all"
                 >
                     @if(Auth::user() && Auth::user()->profile_image_url)
-                        <img src="{{ Storage::url(Auth::user()->profile_image_url) }}" alt="Profile" class="w-8 h-8 rounded-full object-cover border border-purple-500">
+                        <img src="{{ \App\Services\ImageProcessor::url(Auth::user()->profile_image_url) }}" alt="Profile" class="w-8 h-8 rounded-full object-cover border border-purple-500">
                     @else
                     <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>

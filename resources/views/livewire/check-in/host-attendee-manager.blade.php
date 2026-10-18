@@ -96,7 +96,7 @@
                     <div class="flex items-start justify-between gap-3">
                         <div class="flex items-center gap-3 flex-1 min-w-0">
                             @if($rsvp->user->profile_image_url)
-                                <img src="{{ Storage::url($rsvp->user->profile_image_url) }}"
+                                <img src="{{ \App\Services\ImageProcessor::url($rsvp->user->profile_image_url) }}"
                                      alt="{{ $rsvp->user->name }}"
                                      class="w-10 h-10 rounded-full object-cover flex-shrink-0">
                             @else
@@ -170,7 +170,7 @@
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
                                         @if($rsvp->user->profile_image_url)
-                                            <img src="{{ Storage::url($rsvp->user->profile_image_url) }}"
+                                            <img src="{{ \App\Services\ImageProcessor::url($rsvp->user->profile_image_url) }}"
                                                  alt="{{ $rsvp->user->name }}"
                                                  class="w-10 h-10 rounded-full object-cover">
                                         @else

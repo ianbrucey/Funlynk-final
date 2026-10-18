@@ -20,6 +20,7 @@ class UsersTable
             ->columns([
                 ImageColumn::make('profile_image_url')
                     ->label('Avatar')
+                    ->disk('s3')
                     ->circular()
                     ->defaultImageUrl(fn () => 'https://ui-avatars.com/api/?name=User&color=7F9CF5&background=EBF4FF'),
                 TextColumn::make('display_name')

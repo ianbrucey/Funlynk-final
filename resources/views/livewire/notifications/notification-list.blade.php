@@ -44,7 +44,7 @@
                         <div class="flex items-start gap-3 md:gap-4">
                             {{-- Actor Avatar or Unread Indicator --}}
                             @if(isset($notification->data['actor_avatar']) && $notification->data['actor_avatar'])
-                                <img src="{{ Storage::url($notification->data['actor_avatar']) }}"
+                                <img src="{{ \App\Services\ImageProcessor::url($notification->data['actor_avatar']) }}"
                                      alt="{{ $notification->data['actor_name'] ?? 'User' }}"
                                      class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover flex-shrink-0 border-2 {{ $notification->read_at ? 'border-gray-700' : 'border-pink-500' }}">
                             @else

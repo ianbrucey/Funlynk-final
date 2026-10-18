@@ -132,7 +132,7 @@
                                                 <div class="flex -space-x-2">
                                                     @foreach($attendees as $rsvp)
                                                         @if($rsvp->user?->profile_image_url)
-                                                            <img src="{{ Storage::url($rsvp->user->profile_image_url) }}"
+                                                            <img src="{{ \App\Services\ImageProcessor::url($rsvp->user->profile_image_url) }}"
                                                                  alt="{{ $rsvp->user->display_name }}"
                                                                  class="w-8 h-8 rounded-full border-2 border-slate-800 object-cover">
                                                         @else
