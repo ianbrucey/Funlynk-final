@@ -209,6 +209,7 @@
                     <div class="relative" wire:ignore>
                         <input type="text"
                                id="group-location-input"
+                               wire:model="location_name"
                                value="{{ $location_name }}"
                                placeholder="Search for a city..."
                                class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
@@ -295,6 +296,12 @@
     function initializeGroupAutocomplete() {
         const input = document.getElementById('group-location-input');
         if (!input) return;
+
+            input.addEventListener('input', () => {
+                const component = Livewire.find(input.closest('[wire\\:id]').getAttribute('wire:id'));
+                component.$wire.$set('latitude', '', false);
+                component.$wire.$set('longitude', '', false);
+            });
 
         const autocomplete = new google.maps.places.Autocomplete(input, {
             types: ['(cities)'],

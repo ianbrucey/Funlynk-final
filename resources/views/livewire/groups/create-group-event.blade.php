@@ -111,6 +111,7 @@
                             x-ref="locationInput"
                             type="text"
                             wire:model="locationName"
+                            x-on:input="$wire.latitude = null; $wire.longitude = null"
                             placeholder="Search for a location..."
                             autocomplete="off"
                             class="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 px-0"

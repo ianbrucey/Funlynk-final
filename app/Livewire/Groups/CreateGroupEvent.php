@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Groups;
 
+use App\Livewire\Concerns\ResolvesTypedLocation;
 use App\Models\Group;
 use App\Services\GroupContentService;
 use Livewire\Attributes\On;
@@ -10,6 +11,8 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class CreateGroupEvent extends Component
 {
+    use ResolvesTypedLocation;
+
     public Group $group;
 
     public string $title = '';
@@ -95,6 +98,7 @@ class CreateGroupEvent extends Component
             return;
         }
 
+        $this->resolveTypedLocation();
         $this->validate();
 
         // Build start time from components
