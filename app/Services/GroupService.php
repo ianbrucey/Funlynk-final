@@ -29,7 +29,7 @@ class GroupService
 
             $group = Group::create([
                 'name' => $data['name'],
-                'slug' => str($data['name'])->slug(),
+                'slug' => Group::generateUniqueSlug($data['name']),
                 'description' => $data['description'] ?? null,
                 'avatar_url' => $data['avatar_url'] ?? null,
                 'cover_image_url' => $data['cover_image_url'] ?? null,
@@ -92,7 +92,6 @@ class GroupService
         return DB::transaction(function () use ($group, $data) {
             $group->update([
                 'name' => $data['name'] ?? $group->name,
-                'slug' => isset($data['name']) ? str($data['name'])->slug() : $group->slug,
                 'description' => $data['description'] ?? $group->description,
                 'avatar_url' => $data['avatar_url'] ?? $group->avatar_url,
                 'cover_image_url' => $data['cover_image_url'] ?? $group->cover_image_url,
@@ -167,7 +166,16 @@ class GroupService
 
     public function updateMemberRole(Group $group, User $user, string $role): GroupMember
     {
+        if (! in_array($role, ['admin', 'member'], true)) {
+            throw new \InvalidArgumentException('Invalid role.');
+        }
+
         $member = $group->memberships()->where('user_id', $user->id)->firstOrFail();
+
+        if ($role !== 'admin' && $group->memberships()->where('role', 'admin')->count() === 1 && $group->memberships()->where('user_id', $user->id)->where('role', 'admin')->exists()) {
+            throw new \Exception('Cannot demote the last admin of the group.');
+        }
+
         $member->update(['role' => $role]);
 
         return $member;

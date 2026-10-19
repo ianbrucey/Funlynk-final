@@ -117,17 +117,33 @@ class RecurringScheduleService
      */
     protected function isOccurrenceDate(RecurringSchedule $schedule, Carbon $date): bool
     {
+        $interval = max(1, (int) $schedule->interval);
+        $anchor = Carbon::parse($schedule->created_at ?? now())->startOfDay();
+        $day = $date->copy()->startOfDay();
+
         switch ($schedule->frequency) {
             case 'daily':
-                return true;
+                return (int) $anchor->diffInDays($day, false) % $interval === 0;
 
             case 'weekly':
+                $weeksApart = (int) $anchor->copy()->startOfWeek()->diffInWeeks($day->copy()->startOfWeek(), false);
+                if ($weeksApart % $interval !== 0) {
+                    return false;
+                }
                 $dayName = strtolower($date->format('l'));
 
                 return in_array($dayName, $schedule->days_of_week ?? []);
 
             case 'monthly':
-                return $date->day === $schedule->day_of_month;
+                if (! $schedule->day_of_month) {
+                    return false;
+                }
+                $monthsApart = ($day->year - $anchor->year) * 12 + $day->month - $anchor->month;
+                if ($monthsApart % $interval !== 0) {
+                    return false;
+                }
+
+                return $date->day === min((int) $schedule->day_of_month, $date->daysInMonth);
 
             default:
                 return false;
@@ -138,6 +154,24 @@ class RecurringScheduleService
      * Create a single activity from a schedule for a specific date.
      */
     protected function createActivityFromSchedule(RecurringSchedule $schedule, Carbon $date): Activity
+    {
+        return Activity::create([
+            'group_id' => $schedule->group_id,
+            'host_id' => $schedule->created_by,
+            'recurring_schedule_id' => $schedule->id,
+            'recurrence_date' => $date->toDateString(),
+            'activity_type' => 'group_event',
+            'status' => 'active',
+            'is_public' => false, // Group events are not public by default
+        ] + $this->occurrenceAttributes($schedule, $date));
+    }
+
+    /**
+     * Schedule-driven fields for one occurrence on the given date.
+     *
+     * @return array<string, mixed>
+     */
+    protected function occurrenceAttributes(RecurringSchedule $schedule, Carbon $date): array
     {
         // Combine date with schedule time
         $startTime = $date->copy()->setTimeFromTimeString(
@@ -166,21 +200,14 @@ class RecurringScheduleService
             $locationName = $locationName ?: $schedule->group->location_name;
         }
 
-        return Activity::create([
-            'group_id' => $schedule->group_id,
-            'host_id' => $schedule->created_by,
-            'recurring_schedule_id' => $schedule->id,
-            'recurrence_date' => $date->toDateString(),
+        return [
             'title' => $schedule->title,
             'description' => $schedule->description ?? 'Recurring event: '.$schedule->title,
             'location_name' => $locationName,
             'location_coordinates' => $locationCoordinates,
             'start_time' => $startTime,
             'end_time' => $endTime,
-            'activity_type' => 'group_event',
-            'status' => 'active',
-            'is_public' => false, // Group events are not public by default
-        ]);
+        ];
     }
 
     /**
@@ -188,9 +215,47 @@ class RecurringScheduleService
      */
     public function updateSchedule(RecurringSchedule $schedule, array $data): RecurringSchedule
     {
-        $schedule->update($data);
+        return DB::transaction(function () use ($schedule, $data) {
+            $schedule->fill($data);
+            $patternChanged = $schedule->isDirty(['frequency', 'interval', 'days_of_week', 'day_of_month']);
+            $schedule->save();
 
-        return $schedule->fresh();
+            if ($patternChanged) {
+                // Drop future, untouched occurrences (no RSVPs) and regenerate from today.
+                $schedule->activities()
+                    ->where('start_time', '>', now())
+                    ->doesntHave('rsvps')
+                    ->delete();
+                $schedule->update(['last_generated_until' => null]);
+            }
+
+            if (! $patternChanged && $schedule->wasChanged(['title', 'description', 'location_name', 'location_coordinates', 'start_time', 'end_time', 'duration_minutes'])) {
+                $this->syncFutureOccurrences($schedule);
+            }
+
+            if ($patternChanged || $schedule->wasChanged('is_active')) {
+                $this->generateEventsFromSchedule($schedule->fresh());
+            }
+
+            return $schedule->fresh();
+        });
+    }
+
+    /**
+     * Copy title, description, location and times onto future, uncancelled occurrences.
+     */
+    protected function syncFutureOccurrences(RecurringSchedule $schedule): void
+    {
+        $activities = $schedule->activities()
+            ->where('start_time', '>', now())
+            ->where('status', '!=', 'cancelled')
+            ->get();
+
+        foreach ($activities as $activity) {
+            $activity->update(
+                $this->occurrenceAttributes($schedule, Carbon::parse($activity->getAttribute('recurrence_date')))
+            );
+        }
     }
 
     /**

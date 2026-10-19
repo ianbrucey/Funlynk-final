@@ -124,7 +124,7 @@ class CreateGroup extends Component
             'description.max' => 'The description cannot exceed 500 characters.',
             'privacy.required' => 'Group privacy setting is required.',
             'privacy.in' => 'Invalid privacy setting.',
-            'location_name.required' => 'Location is required. Start typing to search for a city.',
+            'location_name.required' => 'Location is required. Start typing an address, place or city.',
             'latitude.required' => 'Please select a location from the suggestions.',
             'longitude.required' => 'Please select a location from the suggestions.',
             'tags.max' => 'Maximum 10 tags allowed.',

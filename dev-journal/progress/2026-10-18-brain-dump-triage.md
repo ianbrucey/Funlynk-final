@@ -50,6 +50,11 @@ C1 and C2 are one piece of work once C2 is answered. The slow login itself is al
 ## E. Deferred
 
 - **E1 Groups.** Owner wants a dedicated, serious session. Out of scope for this triage.
+- **E1a Group differentiation (shelf, [O], 2026-10-18).** Owner's question: what makes FL groups different from Meetup/Facebook? Idea: groups as an *admin toolkit*, not a CRM.
+  - Fundraising / project requests: admin posts a "what for" request with photos; members donate in-app; the leader must verify the purchase (receipt upload) so members can see where money went. Would go through the payment service layer.
+  - Per-event (and per-group) role and equipment assignment: who brings tables, lights, tent, etc.
+  - Work these into triage after the groups architecture audit.
+
 
 ## How these map to the decided roadmap (`BUILD_PROTOCOL.md` §7)
 

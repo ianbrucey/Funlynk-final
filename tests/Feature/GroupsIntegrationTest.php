@@ -62,7 +62,7 @@ class GroupsIntegrationTest extends TestCase
     public function test_group_timeline_page_is_accessible()
     {
         $user = User::factory()->create(['onboarding_completed_at' => now()]);
-        $group = Group::factory()->create();
+        $group = Group::factory()->create(['privacy' => 'public']);
 
         $this->actingAs($user)
             ->get(route('groups.timeline', $group))

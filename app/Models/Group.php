@@ -27,12 +27,6 @@ class Group extends Model
             }
         });
 
-        static::updating(function ($group) {
-            // Regenerate slug if name changed and slug wasn't manually set
-            if ($group->isDirty('name') && ! $group->isDirty('slug')) {
-                $group->slug = static::generateUniqueSlug($group->name, $group->id);
-            }
-        });
     }
 
     public static function generateUniqueSlug(string $name, ?string $excludeId = null): string
@@ -41,7 +35,7 @@ class Group extends Model
         $originalSlug = $slug;
         $count = 2;
 
-        while (static::where('slug', $slug)
+        while (static::withTrashed()->where('slug', $slug)
             ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
             ->exists()) {
             $slug = "{$originalSlug}-{$count}";
