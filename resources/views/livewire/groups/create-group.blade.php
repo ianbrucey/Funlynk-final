@@ -211,7 +211,7 @@
                                id="group-location-input"
                                wire:model="location_name"
                                value="{{ $location_name }}"
-                               placeholder="Search for a city..."
+                               placeholder="Search for an address, place or city..."
                                class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-2xl focus:border-cyan-500/50 focus:outline-none transition text-white"
                                autocomplete="off" />
                         <button type="button"
@@ -304,7 +304,7 @@
             });
 
         const autocomplete = new google.maps.places.Autocomplete(input, {
-            types: ['(cities)'],
+            types: ['establishment', 'geocode'],
             fields: ['formatted_address', 'geometry', 'name']
         });
 

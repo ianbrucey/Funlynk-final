@@ -33,7 +33,7 @@
         {{-- Next Session Countdown --}}
         <livewire:groups.next-session-countdown :group="$group" :key="'countdown-'.$group->id" />
 
-    <div class="space-y-8" wire:poll.10s="loadMore" wire:init="loadMore" wire:scroll.window="loadMore">
+    <div class="space-y-8" wire:poll.30s>
         @forelse($items as $item)
             <div class="relative p-5 rounded-2xl {{ $item->type === 'post' && $item->is_pinned ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30' : 'bg-slate-800/50 border-white/10' }} border hover:border-{{ $item->type === 'event' ? 'cyan' : ($item->is_pinned ?? false ? 'amber' : 'purple') }}-500/50 transition-all">
                 {{-- Pinned Indicator --}}

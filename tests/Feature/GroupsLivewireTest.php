@@ -266,4 +266,108 @@ class GroupsLivewireTest extends TestCase
             'status' => 'pending',
         ]);
     }
+
+    public function test_groups_with_same_name_get_unique_slugs()
+    {
+        $user = User::factory()->create(['onboarding_completed_at' => now()]);
+        $service = app(GroupService::class);
+
+        $first = $service->createGroup($user, ['name' => 'Run Club', 'privacy' => 'public']);
+        $second = $service->createGroup($user, ['name' => 'Run Club', 'privacy' => 'public']);
+
+        $this->assertSame('run-club', $first->slug);
+        $this->assertSame('run-club-2', $second->slug);
+    }
+
+    public function test_slug_is_not_reused_from_soft_deleted_group()
+    {
+        $user = User::factory()->create(['onboarding_completed_at' => now()]);
+        $service = app(GroupService::class);
+
+        $first = $service->createGroup($user, ['name' => 'Test Group', 'privacy' => 'public']);
+        $first->delete();
+        $second = $service->createGroup($user, ['name' => 'Test Group', 'privacy' => 'public']);
+
+        $this->assertNotSame($first->slug, $second->slug);
+    }
+
+    public function test_renaming_group_keeps_slug()
+    {
+        $user = User::factory()->create(['onboarding_completed_at' => now()]);
+        $service = app(GroupService::class);
+        $group = $service->createGroup($user, ['name' => 'Run Club', 'privacy' => 'public']);
+
+        $updated = $service->updateGroup($group, ['name' => 'Sprint Club']);
+
+        $this->assertSame('run-club', $updated->slug);
+    }
+
+    public function test_cannot_demote_last_admin()
+    {
+        $user = User::factory()->create(['onboarding_completed_at' => now()]);
+        $group = app(GroupService::class)->createGroup($user, ['name' => 'Solo', 'privacy' => 'public']);
+
+        $this->expectExceptionMessage('Cannot demote the last admin');
+        app(GroupService::class)->updateMemberRole($group, $user, 'member');
+    }
+
+    public function test_editing_schedule_details_updates_future_occurrences()
+    {
+        $user = User::factory()->create(['onboarding_completed_at' => now()]);
+        $group = app(GroupService::class)->createGroup($user, ['name' => 'Runners', 'privacy' => 'public']);
+        $service = app(\App\Services\RecurringScheduleService::class);
+
+        $schedule = $service->createSchedule($group, $user, [
+            'title' => 'Morning Run',
+            'location_name' => 'Central Park',
+            'location_coordinates' => new \MatanYadaev\EloquentSpatial\Objects\Point(40.78, -73.97),
+            'frequency' => 'daily',
+            'start_time' => '06:00:00',
+            'duration_minutes' => 60,
+        ]);
+        $this->assertGreaterThan(0, $schedule->activities()->count());
+
+        $service->updateSchedule($schedule, ['title' => 'Sunrise Run', 'start_time' => '07:30:00']);
+
+        $future = $schedule->activities()->where('start_time', '>', now())->get();
+        $this->assertGreaterThan(0, $future->count());
+        foreach ($future as $activity) {
+            $this->assertSame('Sunrise Run', $activity->title);
+            $this->assertSame('07:30:00', $activity->start_time->format('H:i:s'));
+        }
+    }
+
+    public function test_schedule_interval_skips_days()
+    {
+        $user = User::factory()->create(['onboarding_completed_at' => now()]);
+        $group = app(GroupService::class)->createGroup($user, ['name' => 'Walkers', 'privacy' => 'public']);
+
+        $schedule = app(\App\Services\RecurringScheduleService::class)->createSchedule($group, $user, [
+            'title' => 'Walk',
+            'location_name' => 'Park',
+            'location_coordinates' => new \MatanYadaev\EloquentSpatial\Objects\Point(40.78, -73.97),
+            'frequency' => 'daily',
+            'interval' => 3,
+            'start_time' => '06:00:00',
+            'generate_weeks_ahead' => 2,
+        ]);
+
+        $dates = $schedule->activities()->orderBy('recurrence_date')->pluck('recurrence_date')
+            ->map(fn ($d) => \Illuminate\Support\Carbon::parse($d))->values();
+
+        $this->assertGreaterThan(1, $dates->count());
+        for ($i = 1; $i < $dates->count(); $i++) {
+            $this->assertSame(3, (int) $dates[$i - 1]->diffInDays($dates[$i]));
+        }
+    }
+
+    public function test_private_group_timeline_is_forbidden_for_non_members()
+    {
+        $owner = User::factory()->create(['onboarding_completed_at' => now()]);
+        $outsider = User::factory()->create(['onboarding_completed_at' => now()]);
+        $group = app(GroupService::class)->createGroup($owner, ['name' => 'Secret', 'privacy' => 'private']);
+
+        $this->actingAs($outsider)->get(route('groups.timeline', $group))->assertForbidden();
+        $this->actingAs($owner)->get(route('groups.timeline', $group))->assertOk();
+    }
 }

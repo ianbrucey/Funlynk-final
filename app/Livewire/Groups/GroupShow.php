@@ -41,10 +41,10 @@ class GroupShow extends Component
         }
 
         try {
-            $this->group = $group->load(['creator', 'members', 'tags', 'posts', 'activities', 'conversation']);
-            $this->isMember = $this->group->members->contains(auth()->user());
-            $this->isAdmin = $this->group->creator->is(auth()->user()) || $this->group->memberships()->where('user_id', auth()->id())->where('role', 'admin')->exists();
-            $this->membersCount = $this->group->members->count();
+            $this->group = $group->load(['creator', 'tags', 'conversation']);
+            $this->isMember = $this->group->memberships()->where('user_id', auth()->id())->exists();
+            $this->isAdmin = $this->group->creator->is(auth()->user()) || $this->group->isAdmin(auth()->user());
+            $this->membersCount = $this->group->memberships()->count();
             $this->admins = $this->group->memberships()->where('role', 'admin')->with('user')->get()->pluck('user');
             $this->tags = $this->group->tags;
 
@@ -156,31 +156,6 @@ class GroupShow extends Component
             }
         } else {
             session()->flash('error', 'You are not a member or not logged in.');
-        }
-    }
-
-    public function editGroup(): void
-    {
-        if ($this->isAdmin) {
-            session()->flash('success', 'Redirecting to group edit page.');
-            // Example: return redirect()->route('groups.edit', $this->group);
-        } else {
-            session()->flash('error', 'You do not have permission to edit this group.');
-        }
-    }
-
-    public function deleteGroup(): void
-    {
-        if ($this->isAdmin) {
-            try {
-                app(\App\Services\GroupService::class)->deleteGroup($this->group);
-                session()->flash('success', 'Group deleted successfully.');
-                // Example: return redirect()->route('groups.index');
-            } catch (\Exception $e) {
-                session()->flash('error', 'Failed to delete group: '.$e->getMessage());
-            }
-        } else {
-            session()->flash('error', 'You do not have permission to delete this group.');
         }
     }
 

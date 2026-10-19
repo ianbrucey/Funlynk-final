@@ -60,22 +60,30 @@ class GroupContentService
         });
     }
 
-    public function getGroupTimeline(Group $group, int $page = 1, int $perPage = 20): Collection
+    /**
+     * Newest-first merged timeline of posts and events, pinned posts first.
+     * Each source is limited in the database, so the cost is bounded by $limit.
+     */
+    public function getGroupTimeline(Group $group, int $limit = 20): Collection
     {
-        $posts = $group->posts()->with(['user', 'pinnedBy', 'reactions'])->get(); // tags is a JSON column, not a relationship
-        $events = $group->activities()->with(['host', 'tags', 'rsvps.user'])->get(); // Activities use 'host' not 'user'
+        $posts = $group->posts()
+            ->with(['user', 'pinnedBy', 'reactions'])
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('pinned_at')
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
+        $events = $group->activities()
+            ->with(['host', 'tags', 'rsvps.user'])
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
 
-        // Sort: pinned posts first (by pinned_at desc), then all items by created_at desc
-        $timeline = $posts->concat($events)->sortBy([
-            ['is_pinned', 'desc'],      // Pinned items first
-            ['pinned_at', 'desc'],      // Most recently pinned first among pinned
-            ['created_at', 'desc'],     // Then by creation date
-        ]);
-
-        // Manual pagination for merged collection
-        $offset = ($page - 1) * $perPage;
-
-        return $timeline->slice($offset, $perPage)->values();
+        return $posts->concat($events)->sortBy([
+            ['is_pinned', 'desc'],
+            ['pinned_at', 'desc'],
+            ['created_at', 'desc'],
+        ])->take($limit)->values();
     }
 
     public function getGroupPosts(Group $group): Collection

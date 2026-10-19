@@ -10,10 +10,7 @@ class GroupTimeline extends Component
 {
     public Group $group;
 
-    /** @var array<int, \App\Models\Post|\App\Models\Activity> */
-    public array $items = [];
-
-    public int $page = 1;
+    public int $limit = 10;
 
     public bool $hasMore = true;
 
@@ -28,22 +25,19 @@ class GroupTimeline extends Component
 
     public function mount(Group $group): void
     {
+        abort_if(
+            $group->privacy === 'private' && ! $group->memberships()->where('user_id', auth()->id())->exists(),
+            403
+        );
+
         $this->group = $group;
-        $this->items = [];
-        $this->loadMore();
     }
 
     public function loadMore(): void
     {
-        if (! $this->hasMore) {
-            return;
+        if ($this->hasMore) {
+            $this->limit += $this->perPage;
         }
-
-        $newItems = $this->contentService->getGroupTimeline($this->group, $this->page, $this->perPage);
-
-        $this->items = array_merge($this->items, $newItems->all());
-        $this->page++;
-        $this->hasMore = ($newItems->count() === $this->perPage);
     }
 
     public function createPost(): void
@@ -58,20 +52,27 @@ class GroupTimeline extends Component
         $this->dispatch('openCreateGroupEventModal');
     }
 
-    public function likeItem(string $itemId, string $itemType): void
-    {
-        // Placeholder for liking/reacting to an item
-        // In a real app, this would interact with a service
-        session()->flash('message', "Liked {$itemType} {$itemId}!");
-    }
-
     public function deleteItem(string $itemId, string $itemType): void
     {
-        // Placeholder for deleting an item
-        // In a real app, this would interact with a service and check authorization
-        session()->flash('message', "Deleted {$itemType} {$itemId}!");
-        $this->items = array_filter($this->items, fn ($item) => ! ($item->id === $itemId && $item->type === $itemType));
-        $this->items = array_values($this->items); // Re-index array
+        $user = auth()->user();
+        $isAdmin = $this->group->isAdmin($user);
+
+        if ($itemType === 'post') {
+            $item = $this->group->posts()->find($itemId);
+            $ownerId = $item?->getAttribute('user_id');
+        } else {
+            $item = $this->group->activities()->find($itemId);
+            $ownerId = $item?->getAttribute('host_id');
+        }
+
+        if (! $item || ! $user || ($user->id !== $ownerId && ! $isAdmin)) {
+            session()->flash('error', 'You cannot delete this item.');
+
+            return;
+        }
+
+        $item->delete();
+        session()->flash('success', 'Deleted.');
     }
 
     public function pinPost(string $postId): void
@@ -140,17 +141,16 @@ class GroupTimeline extends Component
 
     public function refreshTimeline(): void
     {
-        // Reload timeline from scratch
-        $this->reset(['page', 'hasMore']);
-        $this->items = [];
-        $this->page = 1;
+        $this->limit = $this->perPage;
         $this->hasMore = true;
-        $this->loadMore();
     }
 
     public function render()
     {
-        return view('livewire.groups.group-timeline')
+        $fetched = $this->contentService->getGroupTimeline($this->group, $this->limit + 1);
+        $this->hasMore = $fetched->count() > $this->limit;
+
+        return view('livewire.groups.group-timeline', ['items' => $fetched->take($this->limit)])
             ->layout('layouts.app');
     }
 }
