@@ -134,7 +134,6 @@
                 </div>
             </div>
         </div>
-        </div>
 
         <!-- Content Tabs - Instagram Style -->
         <div class="bg-slate-800/50 rounded-2xl border border-white/5 overflow-hidden">

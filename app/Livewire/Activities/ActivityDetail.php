@@ -31,6 +31,8 @@ class ActivityDetail extends Component
 
     public $group = null;
 
+    public bool $canJoinGroup = false;
+
     public bool $isFollowingHost = false;
 
     // Refund window state
@@ -83,6 +85,10 @@ class ActivityDetail extends Component
         // Check if this is a group event
         $this->isGroupEvent = $this->activity->group_id !== null;
         $this->group = $this->activity->group;
+        $this->canJoinGroup = $this->group !== null
+            && auth()->check()
+            && $this->group->privacy === 'public'
+            && ! $this->group->memberships()->where('user_id', auth()->id())->exists();
 
         // Capture referral code from URL
         if (request()->has('ref')) {

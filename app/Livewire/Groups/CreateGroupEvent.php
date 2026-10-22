@@ -5,13 +5,17 @@ namespace App\Livewire\Groups;
 use App\Livewire\Concerns\ResolvesTypedLocation;
 use App\Models\Group;
 use App\Services\GroupContentService;
+use App\Services\ImageProcessor;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class CreateGroupEvent extends Component
 {
     use ResolvesTypedLocation;
+    use WithFileUploads;
 
     public Group $group;
 
@@ -37,6 +41,8 @@ class CreateGroupEvent extends Component
 
     public ?int $maxAttendees = null;
 
+    public ?TemporaryUploadedFile $coverImage = null;
+
     public bool $showModal = false;
 
     public function mount(Group $group)
@@ -47,12 +53,17 @@ class CreateGroupEvent extends Component
     #[On('openCreateGroupEventModal')]
     public function openModal(): void
     {
-        $this->reset(['title', 'description', 'locationName', 'latitude', 'longitude', 'startDate', 'startTimeHour', 'startTimeMinute', 'startTimePeriod', 'duration', 'maxAttendees']);
+        $this->reset(['title', 'description', 'locationName', 'latitude', 'longitude', 'startDate', 'startTimeHour', 'startTimeMinute', 'startTimePeriod', 'duration', 'maxAttendees', 'coverImage']);
         $this->startTimeHour = '12';
         $this->startTimeMinute = '00';
         $this->startTimePeriod = 'PM';
         $this->duration = '60';
         $this->showModal = true;
+    }
+
+    public function updatedCoverImage(): void
+    {
+        $this->validateOnly('coverImage');
     }
 
     public function setLocationData($name, $lat, $lng): void
@@ -86,6 +97,7 @@ class CreateGroupEvent extends Component
             'startTimePeriod' => ['required', 'in:AM,PM'],
             'duration' => ['required', 'in:30,60,90,120,180,240'],
             'maxAttendees' => ['nullable', 'integer', 'min:1'],
+            'coverImage' => ['nullable', 'image', 'max:2048'],
         ];
     }
 
@@ -122,6 +134,10 @@ class CreateGroupEvent extends Component
             $locationPoint = new Point((float) $this->latitude, (float) $this->longitude, 4326);
         }
 
+        $coverImagePath = $this->coverImage
+            ? app(ImageProcessor::class)->store($this->coverImage, 'activities', 'cover', 's3')
+            : null;
+
         $groupContentService->createGroupEvent(
             $this->group,
             auth()->user(),
@@ -133,6 +149,7 @@ class CreateGroupEvent extends Component
                 'start_time' => $startTime,
                 'end_time' => $endTime,
                 'max_attendees' => $this->maxAttendees,
+                'images' => $coverImagePath ? [$coverImagePath] : [],
                 'tags' => [],
             ]
         );

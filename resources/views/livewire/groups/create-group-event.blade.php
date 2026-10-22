@@ -188,6 +188,23 @@
                     </div>
                     @error('maxAttendees') <span data-field-error class="text-red-500 text-sm">{{ $message }}</span> @enderror
 
+                    {{-- Cover image (optional) --}}
+                    <div class="p-3 rounded-xl bg-slate-800/30 border border-white/5">
+                        <label class="block text-sm text-gray-300 mb-2">Cover image (optional)</label>
+                        <input
+                            type="file"
+                            wire:model="coverImage"
+                            accept="image/*"
+                            class="w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-pink-500 file:to-purple-500 file:text-white"
+                        >
+                        <p class="text-xs text-gray-400 mt-1">Max 2MB.</p>
+                        <div wire:loading wire:target="coverImage" class="text-xs text-cyan-400 mt-2">Uploading...</div>
+                        @error('coverImage') <span data-field-error class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        @if ($coverImage && $coverImage->isPreviewable() && ! $errors->has('coverImage'))
+                            <img src="{{ $coverImage->temporaryUrl() }}" alt="Cover preview" class="mt-3 w-full h-40 object-cover rounded-xl border border-cyan-500/30">
+                        @endif
+                    </div>
+
                     {{-- Action buttons --}}
                     <div class="flex justify-end gap-3 pt-2">
                         <button type="button" @click="open = false" class="px-5 py-2 text-gray-400 hover:text-white transition text-sm">

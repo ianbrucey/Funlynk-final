@@ -161,7 +161,7 @@ class RecurringScheduleService
             'recurring_schedule_id' => $schedule->id,
             'recurrence_date' => $date->toDateString(),
             'activity_type' => 'group_event',
-            'status' => 'active',
+            'status' => 'published',
             'is_public' => false, // Group events are not public by default
         ] + $this->occurrenceAttributes($schedule, $date));
     }
