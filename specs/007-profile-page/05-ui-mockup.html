@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>007 — Profile page — UI mockup (FunLink)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; color: #e5e7eb; min-height: 100vh;
+    background: radial-gradient(ellipse at 20% 10%, #1e1b4b 0%, #0b0620 55%, #050310 100%); }
+  .stars { position: fixed; inset: 0; pointer-events: none; opacity: .5;
+    background-image: radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 70% 10%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 40% 70%, #a5f3fc, transparent), radial-gradient(1px 1px at 90% 60%, #fff, transparent),
+      radial-gradient(1px 1px at 10% 85%, #f0abfc, transparent); }
+  .page { position: relative; max-width: 1180px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.4rem; } h2 { font-size: 1.05rem; margin: 28px 0 10px; color: #a5f3fc; }
+  .hint { color: #9ca3af; font-size: .85rem; margin: 4px 0 12px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .controls button { padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: .8rem; color: #e5e7eb;
+    background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.12); }
+  .controls button.on { border-color: #22d3ee; color: #67e8f9; background: rgba(34,211,238,.12); }
+  .state-label { display: inline-block; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em;
+    background: rgba(34,211,238,.15); color: #67e8f9; border: 1px solid rgba(34,211,238,.3); padding: 3px 10px; border-radius: 999px; margin-bottom: 10px; }
+  .proposal { border: 1px dashed rgba(232,121,249,.5); background: rgba(232,121,249,.06); border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: .85rem; color: #f5d0fe; }
+  .frame { margin: 0 auto 24px; background: rgba(5,3,16,.55); border: 1px solid rgba(255,255,255,.12); border-radius: 28px; padding: 14px 12px 20px; overflow: hidden; position: relative; }
+  .frame.phone { width: 390px; max-width: 100%; }
+  .frame.desktop { width: 100%; border-radius: 16px; padding: 24px; }
+  .glass { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; backdrop-filter: blur(12px); position: relative; }
+  .glass::before { content: ""; position: absolute; top: 0; left: 25%; right: 25%; height: 2px; background: linear-gradient(90deg, transparent, #22d3ee, #e879f9, transparent); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border-radius: 12px; font-weight: 600; font-size: .85rem; cursor: pointer; border: 1px solid rgba(255,255,255,.12); color: #fff; background: rgba(30,41,59,.5); transition: transform .15s; }
+  .btn:hover { border-color: rgba(34,211,238,.5); }
+  .btn.primary { border: none; background: linear-gradient(90deg, #ec4899, #a855f7); }
+  .btn.primary:hover { transform: scale(1.05); }
+  .btn.danger { border-color: rgba(248,113,113,.5); color: #fca5a5; }
+  .head { padding: 18px; margin-bottom: 14px; }
+  .head-top { display: flex; gap: 14px; align-items: center; }
+  .avatar { width: 76px; height: 76px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 1.8rem; font-weight: 700;
+    background: linear-gradient(135deg, #ec4899, #8b5cf6); box-shadow: 0 0 0 2px rgba(255,255,255,.12); }
+  .desktop .avatar { width: 120px; height: 120px; font-size: 3rem; }
+  .uname { font-size: 1.15rem; font-weight: 700; } .dname { font-size: .9rem; font-weight: 600; margin-top: 10px; }
+  .bio { font-size: .85rem; color: #d1d5db; margin-top: 4px; line-height: 1.4; } .loc { font-size: .8rem; color: #9ca3af; margin-top: 4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { font-size: .72rem; padding: 3px 10px; border-radius: 999px; background: rgba(168,85,247,.12); color: #d8b4fe; border: 1px solid rgba(168,85,247,.25); }
+  .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .actions .btn { flex: 1; }
+  .desktop .actions .btn { flex: none; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.1); }
+  .stats b { display: block; font-size: 1.05rem; } .stats span { font-size: .72rem; color: #9ca3af; }
+  .tabs { display: flex; gap: 4px; padding: 4px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; }
+  .tab { flex: 1 0 auto; min-height: 48px; padding: 6px 12px; border-radius: 12px; background: transparent; border: 0; color: #9ca3af; cursor: pointer; text-align: center; font-size: .78rem; line-height: 1.15; }
+  .tab b { display: block; font-size: .95rem; color: #e5e7eb; }
+  .tab.on { background: rgba(34,211,238,.12); color: #67e8f9; box-shadow: inset 0 0 0 1px rgba(34,211,238,.4); }
+  .tab.on b { color: #fff; }
+  .sub { display: flex; gap: 6px; margin: 0 2px 10px; flex-wrap: wrap; }
+  .pill { min-height: 36px; padding: 0 12px; border-radius: 999px; font-size: .78rem; cursor: pointer; color: #cbd5e1; background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.1); }
+  .pill.on { background: linear-gradient(90deg, #ec4899, #a855f7); border-color: transparent; color: #fff; }
+  .sec { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: #9ca3af; margin: 14px 4px 8px; }
+  .list { display: grid; gap: 8px; } .desktop .list { grid-template-columns: 1fr 1fr; }
+  .row { display: flex; gap: 12px; padding: 10px; min-height: 76px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); cursor: pointer; transition: transform .15s, border-color .15s; }
+  .row:hover { transform: translateY(-1px); border-color: rgba(34,211,238,.4); }
+  .thumb { width: 60px; height: 60px; border-radius: 10px; flex: none; display: grid; place-items: center; font-size: 1.4rem; }
+  .row .body { flex: 1; min-width: 0; } .row h4 { font-size: .9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .meta { font-size: .75rem; color: #9ca3af; margin-top: 3px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge { font-size: .65rem; font-weight: 700; letter-spacing: .04em; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; border: 1px solid; }
+  .b-live { color: #86efac; border-color: rgba(34,197,94,.4); background: rgba(34,197,94,.12); }
+  .b-exp { color: #9ca3af; border-color: rgba(156,163,175,.3); background: rgba(156,163,175,.1); }
+  .b-conv { color: #67e8f9; border-color: rgba(34,211,238,.4); background: rgba(34,211,238,.12); }
+  .b-up { color: #d8b4fe; border-color: rgba(168,85,247,.4); background: rgba(168,85,247,.12); }
+  .b-group { color: #67e8f9; border-color: rgba(34,211,238,.3); background: rgba(34,211,238,.1); }
+  .b-paid { color: #fcd34d; border-color: rgba(252,211,77,.3); background: rgba(252,211,77,.1); }
+  .rm { align-self: center; min-width: 44px; min-height: 44px; border-radius: 12px; background: none; border: 0; color: #9ca3af; cursor: pointer; font-size: 1.1rem; }
+  .empty, .locked { text-align: center; padding: 40px 16px; } .empty .ico, .locked .ico { font-size: 2.2rem; }
+  .empty h3, .locked h3 { font-size: .95rem; color: #cbd5e1; margin-top: 10px; } .empty p, .locked p { font-size: .8rem; color: #9ca3af; margin: 6px 0 14px; }
+  .skel { height: 76px; border-radius: 14px; background: rgba(255,255,255,.08); animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .4; } }
+  .modal-bg { position: absolute; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: flex-end; justify-content: center; z-index: 5; }
+  .modal-bg.open { display: flex; } .desktop .modal-bg { align-items: center; }
+  .modal { width: 100%; max-width: 380px; margin: 12px; padding: 18px; background: #14102b; border: 1px solid rgba(255,255,255,.15); border-radius: 18px; }
+  .modal p { font-size: .85rem; color: #cbd5e1; margin: 6px 0 14px; } .modal .btn { width: 100%; margin-top: 8px; }
+  .toast { position: absolute; left: 12px; right: 12px; bottom: 12px; padding: 12px; border-radius: 12px; background: rgba(34,197,94,.18); border: 1px solid rgba(34,197,94,.4); color: #bbf7d0; font-size: .82rem; display: none; z-index: 6; }
+  .toast.show { display: block; }
+  .nav { position: sticky; bottom: 0; display: flex; justify-content: space-around; margin: 14px -12px -20px; padding: 10px 0; background: rgba(5,3,16,.85); border-top: 1px solid rgba(255,255,255,.1); font-size: .7rem; color: #9ca3af; }
+  .desktop .nav { display: none; }
+  .settings { padding: 16px; margin-top: 8px; } .settings label { font-size: .85rem; font-weight: 600; } .settings select { width: 100%; min-height: 44px; margin-top: 8px; padding: 0 12px; border-radius: 12px; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.12); color: #fff; }
+  .settings select:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,.25); }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="page">
+  <h1>Profile page — mockup</h1>
+  <p class="hint">Spec <strong>007 (placeholder number)</strong> · Status: DRAFT · Synthetic data only · 390px phone first, then desktop. Everything below is interactive.</p>
+
+  <div class="proposal"><strong>What this proposes</strong> (all [P], nothing decided):
+    (1) Tabs show a label <em>and</em> a count at 390px, replacing icon-only tabs.
+    (2) One row design for all four tabs (thumbnail, title, meta line, status badge) instead of three styles.
+    (3) Status badges: Live / Expired / Converted for posts; Upcoming / Past, Group, Paid for events.
+    (4) Events and Going split into Upcoming and Past sections.
+    (5) The Saved tab keeps its Active / Converted / Expired filters, restyled as the same pills.
+    (6) Stats row shows posts / followers / following at every width. The numbers are not links yet (no follower list page exists).
+    (7) Tab name <strong>"Saved"</strong> stays; helper text explains it means posts you tapped "I'm down" on. <em>Open: rename to "I'm down"?</em>
+  </div>
+
+  <h2>Viewer mode</h2>
+  <p class="hint">Server-side rules already built (PR #18). The mockup only shows what each viewer sees.</p>
+  <div class="controls" id="modes">
+    <button data-mode="owner" class="on">Owner (my profile)</button>
+    <button data-mode="visitor">Visitor (public profile)</button>
+    <button data-mode="followers">Locked: followers only</button>
+    <button data-mode="private">Locked: private</button>
+  </div>
+  <div class="controls" id="states">
+    <button data-state="normal" class="on">Normal</button>
+    <button data-state="loading">Loading (skeleton)</button>
+    <button data-state="empty">Empty tab</button>
+  </div>
+
+  <h2>Layout · 390px phone</h2>
+  <div class="frame phone" id="phone"></div>
+
+  <h2>Layout · desktop</h2>
+  <div class="frame desktop" id="desktop"></div>
+
+  <h2>Edit Profile · visibility setting</h2>
+  <div class="frame phone"><div class="glass settings">
+    <label for="vis">Who can see my posts, events and saved list</label>
+    <select id="vis"><option>Everyone</option><option>Followers only</option><option>Only me</option></select>
+    <p class="hint" style="margin-top:8px">Your name, bio and photo stay visible. Posts in private groups are never shown to others.</p>
+    <button class="btn primary" style="width:100%;margin-top:10px">Save</button>
+  </div></div>
+</div>
+<script>
+var S = { mode: 'owner', state: 'normal', tab: 'posts', saved: 'active', following: false };
+var G = ['linear-gradient(135deg,#ec4899,#8b5cf6)', 'linear-gradient(135deg,#06b6d4,#8b5cf6)', 'linear-gradient(135deg,#f59e0b,#ec4899)', 'linear-gradient(135deg,#10b981,#06b6d4)'];
+function mk(n, t, m, b, e, x) { return { t: t, m: m, b: b, e: e, g: G[n % 4], x: x || '' }; }
+var D = {
+  posts: [mk(0,'Sunset skate at the pier','2h ago · Long Beach · 14 reactions',['Live','b-live'],'🛹'), mk(1,'Anyone up for tacos tonight?','5h ago · Downtown · 9 reactions',['Live','b-live'],'🌮'),
+    mk(2,'Board game night, 2 seats left','1d ago · Belmont Shore · 22 reactions',['Converted','b-conv'],'🎲'), mk(3,'Morning run crew','2d ago · Marina · 6 reactions',['Expired','b-exp'],'🏃'),
+    mk(0,'Pickup volleyball','3d ago · Alamitos Beach · 11 reactions',['Expired','b-exp'],'🏐'), mk(1,'Sketch and coffee','4d ago · 4th Street · 8 reactions',['Expired','b-exp'],'☕'),
+    mk(2,'Trivia team needs one more','5d ago · East Village · 12 reactions',['Converted','b-conv'],'🧠'), mk(3,'Beach cleanup Saturday','6d ago · Junipero · 17 reactions',['Expired','b-exp'],'🌊')],
+  hosted: [{ s: 'Upcoming', i: [mk(0,'Thursday Skate at 6','Thu, Oct 23 · Junipero Beach · 12 going',['Upcoming','b-up'],'🛹','Group'), mk(1,'Open mic night','Sat, Oct 25 · The Loft · 31 going',['Upcoming','b-up'],'🎤','Paid'),
+      mk(2,'Sunday brunch club','Sun, Oct 26 · Cafe Luna · 8 going',['Upcoming','b-up'],'🥞'), mk(3,'Trail hike, easy','Sat, Nov 1 · Signal Hill · 15 going',['Upcoming','b-up'],'🥾','Group')] },
+    { s: 'Past', i: [mk(0,'Open skate Wednesday','Wed, Oct 15 · Junipero Beach · 18 went',['Past','b-exp'],'🛹','Group'), mk(1,'Pottery intro','Sat, Oct 11 · Clay Studio · 10 went',['Past','b-exp'],'🏺','Paid'), mk(2,'Karaoke Friday','Fri, Oct 3 · Neon Room · 26 went',['Past','b-exp'],'🎶')] }],
+  attending: [{ s: 'Upcoming', i: [mk(1,'Rooftop movie night','Fri, Oct 24 · Pine Ave Roof · 40 going',['Upcoming','b-up'],'🎬'), mk(2,'Salsa social','Sat, Oct 25 · Studio 9 · 52 going',['Upcoming','b-up'],'💃','Paid'), mk(3,'Run club 5K','Sun, Oct 26 · Marina · 33 going',['Upcoming','b-up'],'🏃','Group')] },
+    { s: 'Past', i: [mk(0,'Farmers market meetup','Sun, Oct 12 · Promenade · 20 went',['Past','b-exp'],'🥕'), mk(1,'Intro to climbing','Sat, Oct 4 · Gravity Gym · 14 went',['Past','b-exp'],'🧗','Paid'), mk(2,'Harbor kayak','Sun, Sep 28 · Rainbow Harbor · 12 went',['Past','b-exp'],'🛶')] }],
+  saved: { active: [mk(0,'Chess in the park','3h ago · Bixby Park · 7 reactions',['Live','b-live'],'♟️'), mk(1,'Open water swim','6h ago · Alamitos Bay · 5 reactions',['Live','b-live'],'🏊'), mk(2,'Thrift crawl','1d ago · Retro Row · 19 reactions',['Live','b-live'],'🧥')],
+    converted: [mk(3,'Karaoke night','Became an event · Fri, Oct 24 · 26 going',['Converted','b-conv'],'🎤')], expired: [mk(0,'Taco Tuesday','Expired 3d ago',['Expired','b-exp'],'🌮'), mk(1,'Dog park hangout','Expired 6d ago',['Expired','b-exp'],'🐕')] }
+};
+var TABS = [['posts','Posts',8], ['hosted','Events',7], ['attending','Going',6], ['saved','Saved',6]];
+function badge(b) { return '<span class="badge ' + b[1] + '">' + b[0] + '</span>'; }
+function row(it, rm) {
+  var x = it.x ? ' <span class="badge ' + (it.x === 'Group' ? 'b-group' : 'b-paid') + '">' + it.x + '</span>' : '';
+  return '<div class="row"><div class="thumb" style="background:' + it.g + '">' + it.e + '</div><div class="body"><h4>' + it.t + '</h4><div class="meta">' + it.m + '</div><div class="meta">' + badge(it.b) + x + '</div></div>' +
+    (rm ? '<button class="rm" aria-label="Remove from saved" data-rm="1">✕</button>' : '') + '</div>';
+}
+function tabBody() {
+  if (S.state === 'loading') return '<div class="list"><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>';
+  var own = S.mode === 'owner', t = S.tab, html = '';
+  if (S.state === 'empty') {
+    var msg = { posts: ['No posts yet', 'posts'], hosted: ['No events yet', 'events'], attending: ['Not going to anything yet', 'events'], saved: ['Nothing saved yet', 'saved posts'] }[t];
+    return '<div class="empty"><div class="ico">💫</div><h3>' + msg[0] + '</h3><p>' + (own ? 'Discover what is happening near you.' : 'Nothing to show here yet.') + '</p>' + (own ? '<button class="btn primary">Discover nearby</button>' : '') + '</div>';
+  }
+  if (t === 'posts') return '<div class="list">' + D.posts.map(function (i) { return row(i); }).join('') + '</div>';
+  if (t === 'saved') {
+    var f = ['active', 'converted', 'expired'].map(function (k) { return '<button class="pill ' + (S.saved === k ? 'on' : '') + '" data-saved="' + k + '">' + { active: 'Active', converted: 'Converted to events', expired: 'Expired' }[k] + '</button>'; }).join('');
+    return '<p class="hint" style="margin:0 4px 8px">Posts you tapped "I\'m down" on.</p><div class="sub">' + f + '</div><div class="list">' + D.saved[S.saved].map(function (i) { return row(i, own); }).join('') + '</div>';
+  }
+  D[t].forEach(function (g) { html += '<div class="sec">' + g.s + '</div><div class="list">' + g.i.map(function (i) { return row(i); }).join('') + '</div>'; });
+  return html;
+}
+function frame(id) {
+  var own = S.mode === 'owner', locked = S.mode === 'followers' || S.mode === 'private', lockedMsg = S.mode === 'followers' ? 'This profile is only visible to followers' : 'This profile is private';
+  var acts = own ? '<button class="btn" data-go="edit">Edit profile</button>' :
+    (S.following ? '<button class="btn" data-unfollow="1">Following</button>' : '<button class="btn primary" data-follow="1">Follow</button>') + '<button class="btn">Message</button>';
+  var tabs = TABS.map(function (t) { return '<button class="tab ' + (S.tab === t[0] ? 'on' : '') + '" data-tab="' + t[0] + '"><b>' + t[2] + '</b>' + t[1] + '</button>'; }).join('');
+  var html = '<div class="glass head"><div class="head-top"><div class="avatar">M</div><div style="min-width:0"><div class="uname">maya.moves</div>' +
+    '<div class="loc">📍 Long Beach, CA</div></div></div>' +
+    '<div class="dname">Maya Okafor</div><div class="bio">Skater, trivia captain, taco critic. Organizing weekly beach skate sessions.</div>' +
+    '<div class="chips"><span class="chip">skating</span><span class="chip">trivia</span><span class="chip">tacos</span><span class="chip">hiking</span></div>' +
+    '<div class="actions">' + acts + '</div>' +
+    '<div class="stats"><div><b>' + (locked ? '–' : 8) + '</b><span>posts</span></div><div><b>' + (S.following ? 241 : 240) + '</b><span>followers</span></div><div><b>118</b><span>following</span></div></div></div>';
+  if (locked) {
+    html += '<div class="glass locked"><div class="ico">🔒</div><h3>' + lockedMsg + '</h3>' + (S.mode === 'followers' ? '<p>Follow maya.moves to see their posts and events.</p><button class="btn primary" data-follow="1">Follow</button>' : '<p>Their posts and events are not shared.</p>') + '</div>';
+  } else {
+    html += '<div class="glass tabs">' + tabs + '</div><div class="glass" style="padding:12px">' + tabBody() + '</div>';
+  }
+  html += '<div class="nav"><span>Feed</span><span>Map</span><span>+</span><span>Chat</span><span style="color:#67e8f9">Profile</span></div>' +
+    '<div class="modal-bg" data-modal="rm"><div class="modal"><b>Remove from Saved?</b><p>You can tap "I\'m down" again later if the post is still live.</p><button class="btn danger" data-confirm="rm">Remove</button><button class="btn" data-cancel="1">Cancel</button></div></div>' +
+    '<div class="modal-bg" data-modal="unf"><div class="modal"><b>Unfollow maya.moves?</b><p>You will stop seeing their activity in your feed.</p><button class="btn danger" data-confirm="unf">Unfollow</button><button class="btn" data-cancel="1">Cancel</button></div></div>' +
+    '<div class="toast" data-toast="1"></div>';
+  document.getElementById(id).innerHTML = html;
+}
+function toast(el, msg) { var t = el.querySelector('[data-toast]'); t.textContent = msg; t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 1800); }
+function draw() { frame('phone'); frame('desktop'); }
+['phone', 'desktop'].forEach(function (id) {
+  var el = document.getElementById(id);
+  el.addEventListener('click', function (e) {
+    var t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.tab) { S.tab = t.dataset.tab; draw(); }
+    else if (t.dataset.saved) { S.saved = t.dataset.saved; draw(); }
+    else if (t.dataset.follow) { S.following = true; if (S.mode === 'followers') { S.mode = 'visitor'; syncModes(); } draw(); toast(document.getElementById(id), 'Following maya.moves'); }
+    else if (t.dataset.unfollow) { el.querySelector('[data-modal="unf"]').classList.add('open'); }
+    else if (t.dataset.rm) { el.querySelector('[data-modal="rm"]').classList.add('open'); }
+    else if (t.dataset.cancel) { el.querySelectorAll('.modal-bg').forEach(function (m) { m.classList.remove('open'); }); }
+    else if (t.dataset.confirm === 'unf') { S.following = false; draw(); toast(document.getElementById(id), 'Unfollowed'); }
+    else if (t.dataset.confirm === 'rm') { el.querySelectorAll('.modal-bg').forEach(function (m) { m.classList.remove('open'); }); toast(el, 'Removed from Saved'); }
+  });
+});
+function syncModes() { document.querySelectorAll('#modes button').forEach(function (b) { b.classList.toggle('on', b.dataset.mode === S.mode); }); }
+document.getElementById('modes').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; S.mode = b.dataset.mode; S.following = false; syncModes(); draw(); });
+document.getElementById('states').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return; S.state = b.dataset.state;
+  document.querySelectorAll('#states button').forEach(function (x) { x.classList.toggle('on', x === b); }); draw();
+});
+draw();
+</script>
+</body>
+</html>

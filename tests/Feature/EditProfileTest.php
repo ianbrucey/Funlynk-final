@@ -319,3 +319,27 @@ test('user can change profile visibility and invalid values are rejected', funct
         ->set('privacy_level', 'everyone-ish')->call('save')->assertHasErrors(['privacy_level']);
     expect($user->fresh()->privacy_level)->toBe('followers');
 });
+
+test('events tab lists upcoming before past with section headings and badges', function () {
+    $owner = User::factory()->create();
+    $base = ['host_id' => $owner->id, 'status' => 'published'];
+    Activity::factory()->create($base + ['title' => 'Old Skate Jam', 'start_time' => now()->subDays(3)]);
+    Activity::factory()->create($base + ['title' => 'Later Hike', 'start_time' => now()->addDays(5)]);
+    Activity::factory()->create($base + ['title' => 'Soon Brunch', 'start_time' => now()->addDays(1), 'payment_type' => 'online', 'price_cents' => 500]);
+
+    Livewire::actingAs(profileViewer())->test('profile.show-profile', ['username' => $owner->username])
+        ->call('switchTab', 'hosted')
+        ->assertSeeInOrder(['Upcoming', 'Soon Brunch', 'Later Hike', 'Past', 'Old Skate Jam'])
+        ->assertSee('Paid');
+});
+
+test('profile tabs show labels with counts and posts show status badges', function () {
+    $owner = User::factory()->create();
+    Post::factory()->create(['user_id' => $owner->id, 'title' => 'Live One', 'status' => 'active', 'expires_at' => now()->addDay()]);
+    Post::factory()->create(['user_id' => $owner->id, 'title' => 'Gone One', 'status' => 'expired', 'expires_at' => now()->subDay()]);
+    Post::factory()->create(['user_id' => $owner->id, 'title' => 'Became Event', 'status' => 'converted', 'expires_at' => now()->addDay()]);
+
+    Livewire::actingAs(profileViewer())->test('profile.show-profile', ['username' => $owner->username])
+        ->assertSee('Posts')->assertSee('Events')->assertSee('Going')->assertSee('Saved')
+        ->assertSee('Live')->assertSee('Expired')->assertSee('Converted');
+});
