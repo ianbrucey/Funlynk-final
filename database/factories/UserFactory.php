@@ -46,7 +46,7 @@ class UserFactory extends Factory
             'activity_count' => fake()->numberBetween(0, 50),
             'is_verified' => fake()->boolean(),
             'is_active' => true,
-            'privacy_level' => fake()->randomElement(['public', 'friends', 'private']),
+            'privacy_level' => 'public',
             'notification_preference' => 'all',
             'email_on_post_converted' => true,
             'email_on_event_invitation' => true,

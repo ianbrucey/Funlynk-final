@@ -28,6 +28,8 @@ class InterestedTab extends Component
 
     public function removeInterest(string $postId)
     {
+        abort_unless(auth()->id() === $this->user->id, 403);
+
         // Call PostService to remove reaction
         app(PostService::class)->toggleReaction($postId, 'im_down');
 
@@ -40,7 +42,11 @@ class InterestedTab extends Component
 
     public function render()
     {
-        $posts = $this->user->getInterestedPosts($this->filter);
+        $viewer = auth()->user();
+        $isOwner = $viewer !== null && $viewer->id === $this->user->id;
+        abort_unless($this->user->allowsProfileContentFor($viewer), 403);
+
+        $posts = $this->user->getInterestedPosts($this->filter, publicOnly: ! $isOwner);
 
         return view('livewire.profile.interested-tab', [
             'posts' => $posts,

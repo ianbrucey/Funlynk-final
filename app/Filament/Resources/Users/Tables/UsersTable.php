@@ -92,7 +92,7 @@ class UsersTable
                     ->label('Privacy Level')
                     ->options([
                         'public' => 'Public',
-                        'friends' => 'Friends Only',
+                        'followers' => 'Followers Only',
                         'private' => 'Private',
                     ]),
             ])

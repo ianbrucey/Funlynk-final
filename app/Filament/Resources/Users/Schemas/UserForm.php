@@ -130,7 +130,7 @@ class UserForm
                             ->label('Privacy Level')
                             ->options([
                                 'public' => 'Public',
-                                'friends' => 'Friends Only',
+                                'followers' => 'Followers Only',
                                 'private' => 'Private',
                             ])
                             ->default('public')
