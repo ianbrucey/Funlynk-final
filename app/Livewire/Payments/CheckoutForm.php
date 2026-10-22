@@ -5,6 +5,7 @@ namespace App\Livewire\Payments;
 use App\Models\Activity;
 use App\Services\PaymentService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
 class CheckoutForm extends Component
@@ -25,6 +26,8 @@ class CheckoutForm extends Component
         if (! Auth::check()) {
             return redirect()->route('login');
         }
+
+        Gate::authorize('view', $activity);
 
         // Check if activity requires online payment
         if ($activity->payment_type !== 'online') {

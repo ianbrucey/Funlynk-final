@@ -37,7 +37,12 @@
             <p class="font-semibold text-white leading-tight truncate">
                 {{ $event['author_name'] }}
             </p>
-            <p class="text-xs" style="color: #8a93b2;">Hosting</p>
+            <p class="text-xs truncate" style="color: #8a93b2;">
+                Hosting
+                @if(!empty($event['group_name']))
+                    · in <a href="{{ $event['group_url'] }}" class="text-cyan-400 hover:underline" onclick="event.stopPropagation()">{{ $event['group_name'] }}</a>
+                @endif
+            </p>
         </div>
 
         {{-- Price Badge --}}

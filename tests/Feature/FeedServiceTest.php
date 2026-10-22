@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Activity;
+use App\Models\Group;
 use App\Models\Post;
 use App\Models\User;
 use App\Services\FeedService;
@@ -46,6 +47,34 @@ describe('FeedService', function () {
         expect($types)->toContain('post')->toContain('event');
         expect($ids)->toContain($nearPost->id)->toContain($nearEvent->id);
         expect($ids)->not->toContain($farPost->id);
+    });
+
+    it('shows public-group events in discovery but never private-group events', function () {
+        $user = User::factory()->create([
+            'location_coordinates' => new Point(37.7749, -122.4194, 4326),
+        ]);
+        $make = fn (Group $group) => Activity::factory()->create([
+            'group_id' => $group->id,
+            'location_coordinates' => new Point(37.7751, -122.4196, 4326),
+            'status' => 'published',
+            'start_time' => now()->addDay(),
+        ]);
+
+        $publicEvent = $make(Group::factory()->create(['privacy' => 'public']));
+        $privateEvent = $make(Group::factory()->create(['privacy' => 'private']));
+
+        $feed = app(FeedService::class)->getNearbyFeed($user, eventRadiusKm: 25, contentType: 'all', timeFilter: 'all');
+        $items = collect($feed['items']);
+
+        expect($items->pluck('id'))->toContain($publicEvent->id)->not->toContain($privateEvent->id);
+        expect($items->firstWhere('id', $publicEvent->id)['group_name'])->toBe($publicEvent->group->name);
+
+        $forYou = app(FeedService::class)->getForYouFeed($user)->pluck('data.id');
+        expect($forYou)->toContain($publicEvent->id)->not->toContain($privateEvent->id);
+
+        $publicEvent->group->update(['privacy' => 'private']);
+        $after = collect(app(FeedService::class)->getNearbyFeed($user, eventRadiusKm: 25, contentType: 'all', timeFilter: 'all')['items']);
+        expect($after->pluck('id'))->not->toContain($publicEvent->id);
     });
 
     it('merges cleanly when events match but no posts do (and vice versa)', function () {

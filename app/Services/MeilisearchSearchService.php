@@ -70,7 +70,7 @@ class MeilisearchSearchService implements SearchServiceInterface
      */
     protected function searchActivities(string $query, User $user, ?int $radius): Collection
     {
-        $search = Activity::search($query);
+        $search = Activity::search($query)->query(fn ($builder) => $builder->discoverable());
 
         // Build filter array
         $filters = ['status = published'];

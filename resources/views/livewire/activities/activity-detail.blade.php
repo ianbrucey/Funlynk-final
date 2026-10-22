@@ -96,6 +96,11 @@
                                 <span class="font-semibold text-cyan-400">{{ $group->name }}</span>
                             </span>
                         </a>
+                        @if($canJoinGroup)
+                            <a href="{{ route('groups.show', $group->slug) }}" class="ml-3 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-cyan-500 to-purple-500 text-white">
+                                Join group
+                            </a>
+                        @endif
                     @else
                         <a href="{{ route('feed.nearby') }}" class="inline-flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

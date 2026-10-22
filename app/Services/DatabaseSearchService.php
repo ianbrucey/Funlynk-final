@@ -77,6 +77,7 @@ class DatabaseSearchService implements SearchServiceInterface
     protected function searchActivities(string $query, User $user, ?int $radius): Collection
     {
         $searchQuery = Activity::with(['host', 'tags'])
+            ->discoverable()
             ->where('status', 'published')
             ->where('start_time', '>', now())
             ->where(function ($q) use ($query) {

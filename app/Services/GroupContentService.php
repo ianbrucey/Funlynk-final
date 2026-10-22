@@ -46,7 +46,8 @@ class GroupContentService
                 'start_time' => $data['start_time'],
                 'end_time' => $data['end_time'] ?? null,
                 'max_attendees' => $data['max_attendees'] ?? null,
-                'status' => $data['status'] ?? 'active',
+                'images' => $data['images'] ?? [],
+                'status' => $data['status'] ?? 'published',
                 'is_public' => $data['is_public'] ?? false, // Group events are not public by default
             ]);
 

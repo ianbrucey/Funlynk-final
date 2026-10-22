@@ -6,6 +6,7 @@ use App\Models\Activity;
 use App\Models\Rsvp;
 use App\Services\RsvpService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
 class RsvpButton extends Component
@@ -35,6 +36,10 @@ class RsvpButton extends Component
     {
         if (! Auth::check()) {
             return redirect()->route('login');
+        }
+
+        if (! $this->userRsvp) {
+            Gate::authorize('view', $this->activity);
         }
 
         // If activity requires online payment and user doesn't have RSVP, redirect to checkout

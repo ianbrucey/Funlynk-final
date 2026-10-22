@@ -82,19 +82,19 @@ class ShowProfile extends Component
         }
 
         if (! $this->isFollowing) {
-            Follow::create([
+            $follow = Follow::firstOrCreate([
                 'follower_id' => Auth::id(),
                 'following_id' => $this->user->id,
             ]);
 
-            // Update follower counts
-            $this->user->increment('follower_count');
-            Auth::user()->increment('following_count');
+            if ($follow->wasRecentlyCreated) {
+                $this->user->increment('follower_count');
+                Auth::user()->increment('following_count');
+                $this->followersCount++;
+                $this->dispatch('user-followed', userId: $this->user->id);
+            }
 
             $this->isFollowing = true;
-            $this->followersCount++;
-
-            $this->dispatch('user-followed', userId: $this->user->id);
         }
     }
 
@@ -105,18 +105,18 @@ class ShowProfile extends Component
         }
 
         if ($this->isFollowing) {
-            Follow::where('follower_id', Auth::id())
+            $deleted = Follow::where('follower_id', Auth::id())
                 ->where('following_id', $this->user->id)
                 ->delete();
 
-            // Update follower counts
-            $this->user->decrement('follower_count');
-            Auth::user()->decrement('following_count');
+            if ($deleted > 0) {
+                $this->user->decrement('follower_count');
+                Auth::user()->decrement('following_count');
+                $this->followersCount--;
+                $this->dispatch('user-unfollowed', userId: $this->user->id);
+            }
 
             $this->isFollowing = false;
-            $this->followersCount--;
-
-            $this->dispatch('user-unfollowed', userId: $this->user->id);
         }
     }
 
@@ -145,6 +145,10 @@ class ShowProfile extends Component
 
     public function switchTab($tab)
     {
+        if (! in_array($tab, ['posts', 'hosted', 'attending', 'interested'], true)) {
+            return;
+        }
+
         $this->activeTab = $tab;
         $this->resetPage();
     }

@@ -370,4 +370,104 @@ class GroupsLivewireTest extends TestCase
         $this->actingAs($outsider)->get(route('groups.timeline', $group))->assertForbidden();
         $this->actingAs($owner)->get(route('groups.timeline', $group))->assertOk();
     }
+
+    public function test_new_group_events_and_sessions_are_published_and_discoverable()
+    {
+        $user = User::factory()->create([
+            'onboarding_completed_at' => now(),
+            'location_coordinates' => new \MatanYadaev\EloquentSpatial\Objects\Point(33.7622, -118.1647),
+        ]);
+        $group = app(GroupService::class)->createGroup($user, ['name' => 'Skaters', 'privacy' => 'public']);
+        $point = new \MatanYadaev\EloquentSpatial\Objects\Point(33.7622, -118.1647);
+
+        $event = app(\App\Services\GroupContentService::class)->createGroupEvent($group, $user, [
+            'title' => 'One-off Skate',
+            'description' => 'Casual skate',
+            'location_name' => 'Junipero Beach',
+            'location_coordinates' => $point,
+            'start_time' => now()->addDay(),
+        ]);
+        $schedule = app(\App\Services\RecurringScheduleService::class)->createSchedule($group, $user, [
+            'title' => 'Weekly Skate',
+            'location_name' => 'Junipero Beach',
+            'location_coordinates' => $point,
+            'frequency' => 'daily',
+            'start_time' => '18:00:00',
+            'duration_minutes' => 60,
+        ]);
+
+        $this->assertSame('published', $event->status);
+        $this->assertSame(0, $schedule->activities()->where('status', '!=', 'published')->count());
+
+        $ids = collect(app(\App\Services\FeedService::class)->getNearbyFeed($user, contentType: 'events')['items'])->pluck('id');
+        $this->assertTrue($ids->contains($event->id));
+    }
+
+    public function test_group_event_can_be_created_with_cover_image()
+    {
+        \Illuminate\Support\Facades\Storage::fake('s3');
+        $user = User::factory()->create(['onboarding_completed_at' => now()]);
+        $group = app(GroupService::class)->createGroup($user, ['name' => 'Skaters', 'privacy' => 'public']);
+
+        \Livewire\Livewire::actingAs($user)
+            ->test(\App\Livewire\Groups\CreateGroupEvent::class, ['group' => $group])
+            ->set('title', 'Skate Jam')
+            ->set('locationName', 'Junipero Beach')
+            ->set('latitude', 33.7622)
+            ->set('longitude', -118.1647)
+            ->set('startDate', now()->addDay()->format('Y-m-d'))
+            ->set('coverImage', \Illuminate\Http\UploadedFile::fake()->image('cover.jpg', 1600, 900))
+            ->call('createEvent')
+            ->assertHasNoErrors();
+
+        $event = \App\Models\Activity::where('group_id', $group->id)->firstOrFail();
+        $this->assertCount(1, $event->images);
+        \Illuminate\Support\Facades\Storage::disk('s3')->assertExists($event->images[0]);
+    }
+
+    public function test_group_event_cover_image_must_be_an_image_under_2mb()
+    {
+        \Illuminate\Support\Facades\Storage::fake('s3');
+        $user = User::factory()->create(['onboarding_completed_at' => now()]);
+        $group = app(GroupService::class)->createGroup($user, ['name' => 'Skaters', 'privacy' => 'public']);
+
+        \Livewire\Livewire::actingAs($user)
+            ->test(\App\Livewire\Groups\CreateGroupEvent::class, ['group' => $group])
+            ->set('coverImage', \Illuminate\Http\UploadedFile::fake()->create('notes.pdf', 10, 'application/pdf'))
+            ->assertHasErrors(['coverImage']);
+    }
+
+    public function test_search_excludes_private_group_events_and_includes_public_ones()
+    {
+        $user = User::factory()->create([
+            'onboarding_completed_at' => now(),
+            'location_coordinates' => new \MatanYadaev\EloquentSpatial\Objects\Point(33.7622, -118.1647),
+        ]);
+        $make = fn (string $privacy, string $title) => \App\Models\Activity::factory()->create([
+            'group_id' => Group::factory()->create(['privacy' => $privacy])->id,
+            'title' => $title,
+            'status' => 'published',
+            'start_time' => now()->addDay(),
+        ]);
+        $public = $make('public', 'Zebra public meetup');
+        $private = $make('private', 'Zebra private meetup');
+
+        $ids = app(\App\Services\DatabaseSearchService::class)->search('zebra', $user)->pluck('data.id');
+
+        $this->assertTrue($ids->contains($public->id));
+        $this->assertFalse($ids->contains($private->id));
+        $this->assertTrue($public->shouldBeSearchable());
+        $this->assertFalse($private->shouldBeSearchable());
+    }
+
+    public function test_event_page_offers_join_group_to_non_members_only()
+    {
+        $owner = User::factory()->create(['onboarding_completed_at' => now()]);
+        $outsider = User::factory()->create(['onboarding_completed_at' => now()]);
+        $group = app(GroupService::class)->createGroup($owner, ['name' => 'Skaters', 'privacy' => 'public']);
+        $event = \App\Models\Activity::factory()->create(['group_id' => $group->id, 'status' => 'published', 'start_time' => now()->addDay()]);
+
+        $this->actingAs($outsider)->get(route('events.show', $event))->assertOk()->assertSee('Join group');
+        $this->actingAs($owner)->get(route('events.show', $event))->assertOk()->assertDontSee('Join group');
+    }
 }

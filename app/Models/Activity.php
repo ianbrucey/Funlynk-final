@@ -105,6 +105,9 @@ class Activity extends Model
         return $this->belongsTo(Post::class, 'originated_from_post_id');
     }
 
+    /**
+     * @return BelongsTo<Group, $this>
+     */
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
@@ -251,6 +254,21 @@ class Activity extends Model
     }
 
     // Scopes
+    /**
+     * Events allowed in discovery: standalone events, or events of a public group.
+     * Private-group events never qualify. Checked against the group's current privacy.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Activity>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     */
+    public function scopeDiscoverable($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('group_id')
+                ->orWhereHas('group', fn ($g) => $g->where('privacy', 'public'));
+        });
+    }
+
     public function scopeConvertedFromPost($query)
     {
         return $query->whereNotNull('originated_from_post_id');
@@ -310,6 +328,10 @@ class Activity extends Model
      */
     public function shouldBeSearchable(): bool
     {
-        return $this->status === 'published' && $this->start_time > now();
+        if ($this->status !== 'published' || $this->start_time <= now()) {
+            return false;
+        }
+
+        return $this->group_id === null || $this->group()->where('privacy', 'public')->exists();
     }
 }

@@ -89,6 +89,7 @@ class FeedService
                 ->get();
 
             $events = Activity::query()
+                ->discoverable()
                 ->where('status', 'published')
                 ->where('start_time', '>', now())
                 ->whereDistanceSphere('location_coordinates', $userLocation, '<=', 50000)
@@ -97,6 +98,7 @@ class FeedService
             // Fallback: no spatial filter
             $posts = Post::active()->limit(50)->get();
             $events = Activity::query()
+                ->discoverable()
                 ->where('status', 'published')
                 ->where('start_time', '>', now())
                 ->limit(50)
@@ -262,7 +264,8 @@ class FeedService
         $offset = ($page - 1) * $perPage;
 
         $query = Activity::query()
-            ->with('host')
+            ->discoverable()
+            ->with(['host', 'group'])
             ->where('status', 'published')
             ->where('start_time', '>', now())
             ->whereDistanceSphere('location_coordinates', $userLocation, '<=', $radiusKm * 1000);
@@ -357,7 +360,8 @@ class FeedService
     private function baseEventQuery(string $timeFilter, string $searchQuery): Builder
     {
         $query = Activity::query()
-            ->with('host')
+            ->discoverable()
+            ->with(['host', 'group'])
             ->where('status', 'published')
             ->where('start_time', '>', now());
 
@@ -580,6 +584,8 @@ class FeedService
             'max_attendees' => $event->max_attendees,
             'spots_remaining' => $spotsRemaining,
             'converted_from_post' => $event->originated_from_post_id !== null,
+            'group_name' => $event->group?->name,
+            'group_url' => $event->group ? route('groups.show', $event->group) : null,
         ];
     }
 }

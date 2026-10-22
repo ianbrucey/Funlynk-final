@@ -195,3 +195,36 @@ test('username must be at least 3 characters', function () {
         ->call('save')
         ->assertHasErrors(['username']);
 });
+
+test('follow is idempotent and counters only change once', function () {
+    $viewer = User::factory()->create();
+    $target = User::factory()->create(['follower_count' => 0]);
+
+    Livewire::actingAs($viewer)
+        ->test('profile.show-profile', ['username' => $target->username])
+        ->call('follow')
+        ->call('follow')
+        ->assertSet('isFollowing', true)
+        ->assertSet('followersCount', 1);
+
+    expect($target->fresh()->follower_count)->toBe(1);
+
+    Livewire::actingAs($viewer)
+        ->test('profile.show-profile', ['username' => $target->username])
+        ->call('unfollow')
+        ->assertSet('isFollowing', false)
+        ->assertSet('followersCount', 0);
+
+    expect($target->fresh()->follower_count)->toBe(0);
+});
+
+test('profile ignores unknown tab names', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('profile.show-profile')
+        ->call('switchTab', 'bogus')
+        ->assertSet('activeTab', 'posts')
+        ->call('switchTab', 'hosted')
+        ->assertSet('activeTab', 'hosted');
+});
