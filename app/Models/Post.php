@@ -69,6 +69,20 @@ class Post extends Model
     }
 
     /**
+     * Posts safe to show on someone else's profile: standalone or in a public group.
+     *
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
+    public function scopeVisibleOnProfile(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q) {
+            $q->whereNull('group_id')
+                ->orWhereHas('group', fn ($g) => $g->where('privacy', 'public'));
+        });
+    }
+
+    /**
      * Scope for active (non-expired, non-converted) posts
      */
     public function scopeActive(Builder $query): Builder

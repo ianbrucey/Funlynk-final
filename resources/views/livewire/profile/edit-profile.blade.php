@@ -113,6 +113,18 @@
                     </div>
                 </div>
 
+                <!-- Profile visibility -->
+                <div class="form-control md:col-span-2">
+                    <label class="block text-gray-300 font-medium mb-3" for="privacy_level">Who can see my posts, events and saved list</label>
+                    <select id="privacy_level" wire:model="privacy_level"
+                            class="select select-bordered w-full bg-white text-gray-900 border-white/10 focus:border-cyan-500 focus:outline-none">
+                        <option value="public">Everyone</option>
+                        <option value="followers">Followers only</option>
+                        <option value="private">Only me</option>
+                    </select>
+                    @error('privacy_level') <span class="text-xs text-red-400 mt-1">{{ $message }}</span> @enderror
+                </div>
+
                 <!-- Interests -->
                 <div class="form-control md:col-span-2">
                     <label class="label pb-3"><span class="label-text text-gray-300 font-medium">Interests</span></label>

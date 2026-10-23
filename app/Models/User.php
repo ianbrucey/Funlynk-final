@@ -344,12 +344,16 @@ class User extends Authenticatable implements FilamentHasName
      * @param  string  $filter  Filter by status: 'active', 'converted', 'expired'
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getInterestedPosts(string $filter = 'active')
+    public function getInterestedPosts(string $filter = 'active', bool $publicOnly = false)
     {
         $query = Post::whereHas('reactions', function ($q) {
             $q->where('user_id', $this->id)
                 ->where('reaction_type', 'im_down');
         })->with(['user', 'reactions']);
+
+        if ($publicOnly) {
+            $query->visibleOnProfile();
+        }
 
         // Apply filters
         switch ($filter) {
@@ -376,5 +380,23 @@ class User extends Authenticatable implements FilamentHasName
                 ->where('post_reactions.user_id', $this->id)
                 ->limit(1);
         })->paginate(12);
+    }
+
+    /**
+     * Whether the viewer may see this profile's tab content (posts, events, going, saved).
+     * Owner always; 'public' everyone; 'followers' only followers; 'private' owner only.
+     */
+    public function allowsProfileContentFor(?User $viewer): bool
+    {
+        if ($viewer !== null && $viewer->id === $this->id) {
+            return true;
+        }
+
+        return match ($this->privacy_level) {
+            'followers', 'friends' => $viewer !== null
+                && Follow::where('follower_id', $viewer->id)->where('following_id', $this->id)->exists(),
+            'private' => false,
+            default => true,
+        };
     }
 }

@@ -24,6 +24,9 @@ class EditProfile extends Component
     #[Validate('nullable|string|max:500')]
     public $bio;
 
+    #[Validate('required|in:public,followers,private')]
+    public string $privacy_level = 'public';
+
     public ?bool $usernameAvailable = null;
 
     #[Validate('nullable|array|max:10')]
@@ -61,7 +64,7 @@ class EditProfile extends Component
     {
         // Use DB query to avoid loading the Point object through Eloquent casting
         $userData = \DB::table('users')
-            ->select('username', 'display_name', 'bio', 'interests', 'location_name', 'profile_image_url',
+            ->select('username', 'display_name', 'bio', 'privacy_level', 'interests', 'location_name', 'profile_image_url',
                 \DB::raw('ST_Y(location_coordinates::geometry) as latitude'),
                 \DB::raw('ST_X(location_coordinates::geometry) as longitude'))
             ->where('id', Auth::id())
@@ -71,6 +74,7 @@ class EditProfile extends Component
             $this->username = $userData->username ?? '';
             $this->display_name = $userData->display_name ?? '';
             $this->bio = $userData->bio ?? '';
+            $this->privacy_level = $userData->privacy_level ?? 'public';
             $this->interests = $userData->interests ? json_decode($userData->interests, true) : [];
             $this->location_name = $userData->location_name ?? '';
             $this->current_profile_image_url = $userData->profile_image_url;
@@ -204,6 +208,7 @@ class EditProfile extends Component
         $user->username = $this->username;
         $user->display_name = $this->display_name;
         $user->bio = $this->bio;
+        $user->privacy_level = $this->privacy_level;
         $user->interests = $this->interests; // Cast will handle JSON encoding
         $user->location_name = $this->location_name;
 

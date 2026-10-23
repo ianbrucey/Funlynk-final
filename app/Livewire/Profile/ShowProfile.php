@@ -32,6 +32,8 @@ class ShowProfile extends Component
 
     public int $interestedPostsCount = 0;
 
+    public bool $canViewContent = true;
+
     public function mount($username = null)
     {
         // If no username provided, show current user's profile
@@ -41,25 +43,76 @@ class ShowProfile extends Component
             $this->user = auth()->user();
         }
 
-        $this->loadStats();
         $this->checkFollowStatus();
+        $this->canViewContent = $this->user->allowsProfileContentFor(Auth::user());
+        $this->loadStats();
     }
 
     public function loadStats()
     {
         $this->followersCount = $this->user->followers()->count();
         $this->followingCount = $this->user->following()->count();
-        $this->postsCount = $this->user->posts()->count();
-        $this->hostedActivitiesCount = $this->user->activitiesHosted()->count();
-        $this->attendedActivitiesCount = $this->user->rsvps()
-            ->where('status', 'attending')
-            ->count();
+
+        if (! $this->canViewContent) {
+            return;
+        }
+
+        $this->postsCount = $this->postsQuery()->count();
+        $this->hostedActivitiesCount = $this->hostedQuery()->count();
+        $this->attendedActivitiesCount = $this->attendingQuery()->count();
 
         // Count interested posts (posts with "I'm down" reactions)
-        $this->interestedPostsCount = Post::whereHas('reactions', function ($q) {
+        $interested = Post::whereHas('reactions', function ($q) {
             $q->where('user_id', $this->user->id)
                 ->where('reaction_type', 'im_down');
-        })->count();
+        });
+        $this->interestedPostsCount = ($this->isOwner() ? $interested : $interested->visibleOnProfile())->count();
+    }
+
+    protected function isOwner(): bool
+    {
+        return Auth::id() === $this->user->id;
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Builder<Post>
+     */
+    protected function postsQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = Post::query()->where('user_id', $this->user->id);
+
+        return $this->isOwner() ? $query : $query->visibleOnProfile();
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     */
+    protected function hostedQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = Activity::query()->where('host_id', $this->user->id);
+
+        return $this->isOwner() ? $query : $this->publicActivities($query);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     */
+    protected function attendingQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = Activity::query()->whereHas('rsvps', function ($q) {
+            $q->where('user_id', $this->user->id)->where('status', 'attending');
+        });
+
+        return $this->isOwner() ? $query : $this->publicActivities($query);
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<Activity>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     */
+    protected function publicActivities(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->discoverable()->whereIn('status', ['published', 'active', 'completed']);
     }
 
     public function checkFollowStatus()
@@ -95,6 +148,8 @@ class ShowProfile extends Component
             }
 
             $this->isFollowing = true;
+            $this->canViewContent = $this->user->allowsProfileContentFor(Auth::user());
+            $this->loadStats();
         }
     }
 
@@ -117,6 +172,8 @@ class ShowProfile extends Component
             }
 
             $this->isFollowing = false;
+            $this->canViewContent = $this->user->allowsProfileContentFor(Auth::user());
+            $this->loadStats();
         }
     }
 
@@ -157,22 +214,19 @@ class ShowProfile extends Component
     {
         $data = [];
 
-        switch ($this->activeTab) {
+        switch ($this->canViewContent ? $this->activeTab : null) {
             case 'posts':
-                $data['posts'] = $this->user->posts()
+                $data['posts'] = $this->postsQuery()
                     ->latest()
                     ->paginate(10);
                 break;
             case 'hosted':
-                $data['activities'] = $this->user->activitiesHosted()
+                $data['activities'] = $this->hostedQuery()
                     ->latest()
                     ->paginate(10);
                 break;
             case 'attending':
-                $data['activities'] = Activity::whereHas('rsvps', function ($query) {
-                    $query->where('user_id', $this->user->id)
-                        ->where('status', 'attending');
-                })
+                $data['activities'] = $this->attendingQuery()
                     ->latest()
                     ->paginate(10);
                 break;
