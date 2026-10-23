@@ -432,8 +432,12 @@ class FeedService
 
         $viewerReactedIds = $this->viewerReactedPostIds($user, $posts);
 
+        $followedHostIds = $user
+            ? app(FollowService::class)->followedIds($user, $events->pluck('host_id')->unique()->map(fn ($id) => (string) $id)->values()->all())
+            : [];
+
         $merged = $posts->toBase()->map(fn (Post $p) => $this->mapPostToFeedItem($p, $viewerReactedIds))
-            ->merge($events->toBase()->map(fn (Activity $e) => $this->mapEventToFeedItem($e)))
+            ->merge($events->toBase()->map(fn (Activity $e) => $this->mapEventToFeedItem($e, $followedHostIds, $user?->id)))
             ->sort(fn (array $a, array $b) => $b['created_at'] <=> $a['created_at'] ?: strcmp($b['id'], $a['id']))
             ->values();
 
@@ -558,9 +562,10 @@ class FeedService
     }
 
     /**
+     * @param  array<int, string>  $followedHostIds
      * @return array<string, mixed>
      */
-    private function mapEventToFeedItem(Activity $event): array
+    private function mapEventToFeedItem(Activity $event, array $followedHostIds = [], ?string $viewerId = null): array
     {
         $rsvpCount = (int) ($event->rsvps_count ?? 0);
         $spotsRemaining = $event->max_attendees !== null ? max(0, $event->max_attendees - $rsvpCount) : null;
@@ -584,6 +589,9 @@ class FeedService
             'max_attendees' => $event->max_attendees,
             'spots_remaining' => $spotsRemaining,
             'converted_from_post' => $event->originated_from_post_id !== null,
+            'host_id' => (string) $event->host_id,
+            'is_following' => in_array((string) $event->host_id, $followedHostIds, true),
+            'is_own' => $viewerId !== null && (string) $event->host_id === $viewerId,
             'group_name' => $event->group?->name,
             'group_url' => $event->group ? route('groups.show', $event->group) : null,
         ];

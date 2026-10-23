@@ -1,5 +1,7 @@
 @props(['event'])
 
+@php $showFollow = ! ($event['is_own'] ?? false) && ! empty($event['host_id']); @endphp
+
 <div class="relative rounded-[18px] p-4 h-full flex flex-col group"
      style="background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), #111933; border: 1px solid rgba(255,255,255,0.08); border-left: 3px solid #f0abfc; box-shadow: 0 12px 30px rgba(0,0,0,0.35);">
 
@@ -45,14 +47,18 @@
             </p>
         </div>
 
-        {{-- Price Badge --}}
-        <span class="text-xs font-semibold" style="color: #8a93b2;">
-            @if($event['is_paid'])
-                ${{ number_format($event['price'], 2) }}
-            @else
-                Free
-            @endif
-        </span>
+        @if($showFollow)
+            <x-fl.follow-pill :host-id="$event['host_id']" :name="$event['author_name']" :following="$event['is_following'] ?? false" wire:key="follow-{{ $event['id'] }}" />
+        @else
+            {{-- Price Badge --}}
+            <span class="text-xs font-semibold" style="color: #8a93b2;">
+                @if($event['is_paid'])
+                    ${{ number_format($event['price'], 2) }}
+                @else
+                    Free
+                @endif
+            </span>
+        @endif
     </div>
 
     {{-- Event Image --}}
@@ -86,7 +92,12 @@
                   style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
                 📅 {{ $event['start_time_human'] }}
             </span>
-@if(isset($event['distance_km']))
+@if($showFollow)
+                <span class="py-1 px-2.5 rounded-full" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+                    {{ $event['is_paid'] ? '$'.number_format($event['price'], 2) : 'Free' }}
+                </span>
+            @endif
+            @if(isset($event['distance_km']))
                 <span class="py-1 px-2.5 rounded-full" style="background: rgba(34,211,238,0.12); border: 1px solid rgba(34,211,238,0.3); color: #67e8f9;">
                     {{ number_format($event['distance_km'] * 0.621371, 1) }} mi
                 </span>

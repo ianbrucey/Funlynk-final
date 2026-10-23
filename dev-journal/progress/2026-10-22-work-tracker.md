@@ -27,9 +27,9 @@ recommendation engine's social score is a constant placeholder).
 | #  | Item                                                                                                                      | Decision                                                 | Status  |
 | -- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------- |
 | F1 | Following a host notifies the follower when the host publishes an event                                                   | **[D] 2026-10-22: Option 1 (notify on new event)** | IN PR (specs/008-follow-notifications)   |
-| F2 | Button label names the person: "Follow {host name}", not "Follow"                                                         | [D] 2026-10-22                                           | MOCKUP  |
-| F3 | On first follow, a pop-up explains: "You'll get a notification when {name} publishes an event" (then a short toast after) | [D] 2026-10-22; copy is [P]                              | MOCKUP  |
-| F4 | Follow button on the nearby-feed card, so people need not open the event                                                  | [P] depends on F1 being real                             | MOCKUP  |
+| F2 | Button label names the person: "Follow {host name}", not "Follow"                                                         | [D] 2026-10-22                                           | IN PR (specs/009-follow-button-ux)  |
+| F3 | On first follow, a pop-up explains: "You'll get a notification when {name} publishes an event" (then a short toast after) | [D] 2026-10-22; copy is [P]                              | IN PR (specs/009-follow-button-ux)  |
+| F4 | Follow button on the nearby-feed card, so people need not open the event                                                  | [P] depends on F1 being real                             | IN PR (specs/009-follow-button-ux)  |
 | F5 | Unfollow needs a way to turn notifications off (settings)                                                                 | [O] not raised by owner yet                              | BLOCKED |
 
 Order: F1 first (the pop-up cannot promise what does not exist), then F2+F3+F4 in one mockup.

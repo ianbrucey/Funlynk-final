@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>009 — Follow button UX — UI mockup (FunLink)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; color: #e5e7eb; min-height: 100vh;
+    background: radial-gradient(ellipse at 20% 10%, #1e1b4b 0%, #0b0620 55%, #050310 100%); }
+  .stars { position: fixed; inset: 0; pointer-events: none; opacity: .5;
+    background-image: radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 70% 10%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 40% 70%, #a5f3fc, transparent), radial-gradient(1px 1px at 90% 60%, #fff, transparent); }
+  .page { position: relative; max-width: 1180px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.4rem; } h2 { font-size: 1.05rem; margin: 28px 0 10px; color: #a5f3fc; }
+  .hint { color: #9ca3af; font-size: .85rem; margin: 4px 0 12px; }
+  .proposal { border: 1px dashed rgba(232,121,249,.5); background: rgba(232,121,249,.06); border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: .85rem; color: #f5d0fe; line-height: 1.5; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; }
+  .controls span { font-size: .75rem; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; }
+  .controls button { padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: .8rem; color: #e5e7eb; background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.12); }
+  .controls button.on { border-color: #22d3ee; color: #67e8f9; background: rgba(34,211,238,.12); }
+  .frame { margin: 0 auto 24px; background: rgba(5,3,16,.55); border: 1px solid rgba(255,255,255,.12); border-radius: 28px; padding: 14px 12px 20px; position: relative; overflow: hidden; }
+  .frame.phone { width: 390px; max-width: 100%; }
+  .frame.desktop { width: 100%; border-radius: 16px; padding: 24px; }
+  .grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); } .card { min-width: 0; } .desktop .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .card { position: relative; border-radius: 18px; padding: 16px; background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), #111933; border: 1px solid rgba(255,255,255,.08); border-left: 3px solid #f0abfc; box-shadow: 0 12px 30px rgba(0,0,0,.35); }
+  .tag { position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 999px; font-size: .7rem; font-weight: 700; background: rgba(240,171,252,.95); color: #3b0764; }
+  .hdr { display: flex; align-items: center; gap: 12px; margin-top: 28px; }
+  .av { width: 44px; height: 44px; border-radius: 50%; flex: none; display: grid; place-items: center; font-weight: 700; color: #fff; background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+  .who { flex: 1; min-width: 0; } .who b { display: block; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .who small { font-size: .75rem; color: #8a93b2; }
+  .price { font-size: .75rem; font-weight: 600; color: #8a93b2; }
+  .img { margin: 12px -16px 0; aspect-ratio: 16/9; display: grid; place-items: center; font-size: 2rem; background: rgba(255,255,255,.04); }
+  .title { font-size: 1.1rem; font-weight: 700; margin-top: 12px; } .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; font-size: .8rem; color: #8a93b2; }
+  .chip { padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); }
+  .acts { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 14px; }
+  .btn { min-height: 44px; padding: 0 16px; border-radius: 12px; font-weight: 600; font-size: .85rem; cursor: pointer; color: #fff; border: 1px solid rgba(255,255,255,.12); background: transparent; }
+  .btn.rsvp { border: 0; background: linear-gradient(90deg, #06b6d4, #3b82f6); }
+  .follow { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 999px; cursor: pointer; font-size: .8rem; font-weight: 600; color: #fff; border: 0; background: linear-gradient(90deg, #ec4899, #a855f7); white-space: nowrap; max-width: 150px; }
+  .follow span { overflow: hidden; text-overflow: ellipsis; }
+  .follow.on { background: rgba(168,85,247,.2); border: 1px solid rgba(168,85,247,.5); }
+  .follow:disabled { opacity: .6; cursor: wait; }
+  .followrow { display: flex; margin-top: 10px; } .followrow .follow { width: 100%; justify-content: center; max-width: none; border-radius: 12px; background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.12); }
+  .followrow .follow:not(.on):hover { border-color: rgba(34,211,238,.5); }
+  .followrow .follow.on { background: rgba(168,85,247,.2); border-color: rgba(168,85,247,.5); }
+  .foot { display: flex; justify-content: space-between; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.1); font-size: .8rem; color: #8a93b2; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.65); display: none; align-items: flex-end; justify-content: center; z-index: 50; }
+  .modal-bg.open { display: flex; } @media (min-width: 700px) { .modal-bg { align-items: center; } }
+  .modal { width: 100%; max-width: 400px; margin: 12px; padding: 22px; background: #14102b; border: 1px solid rgba(255,255,255,.15); border-radius: 20px; }
+  .modal h3 { font-size: 1.05rem; } .modal p { font-size: .88rem; color: #cbd5e1; margin: 8px 0 4px; line-height: 1.45; }
+  .modal .btn { width: 100%; margin-top: 10px; } .modal .btn.primary { border: 0; background: linear-gradient(90deg, #ec4899, #a855f7); } .modal .btn.danger { border-color: rgba(248,113,113,.5); color: #fca5a5; }
+  .modal a { color: #67e8f9; font-size: .8rem; display: inline-block; margin-top: 10px; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); max-width: 360px; width: calc(100% - 24px); padding: 12px 14px; border-radius: 12px; font-size: .85rem; display: none; z-index: 60; }
+  .toast.show { display: block; } .toast.ok { background: rgba(34,197,94,.2); border: 1px solid rgba(34,197,94,.45); color: #bbf7d0; } .toast.err { background: rgba(248,113,113,.18); border: 1px solid rgba(248,113,113,.45); color: #fecaca; }
+  .detail { padding: 18px; border-radius: 16px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); }
+  .detail .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .detail h3 { font-size: 1.15rem; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="page">
+  <h1>Follow button UX — mockup</h1>
+  <p class="hint">Spec <strong>009 (placeholder number)</strong> · Status: DRAFT · Tracker items F2, F3, F4 · Synthetic data only · 390px phone first, then desktop. Interactive.</p>
+
+  <div class="proposal"><strong>What this proposes</strong> (all [P] unless noted):
+    (1) <strong>[D 2026-10-22]</strong> The button names the person: "Follow Sam", "Following Sam" (long names truncate).
+    (2) <strong>[D 2026-10-22]</strong> First time you follow anyone, a pop-up says what it does: "You'll get a notification when Sam publishes an event." Later follows show a short toast instead.
+    (3) Follow button on <strong>event</strong> cards in the nearby feed. Two placements to choose from (toggle below): <em>A</em> pill in the card header, price moves into the chip row; <em>B</em> a full-width row under the details.
+    (4) Same button and pop-up on the event page, replacing the small "Follow".
+    (5) Unfollowing asks for confirmation, matching the profile page.
+    (6) Not shown for your own events. Guests tapping it go to login.
+    (7) <strong>Posts do not get a follow button</strong> because following only notifies about events. <em>[O] Add it to post cards later?</em>
+  </div>
+
+  <h2>Controls</h2>
+  <div class="controls" id="c-place"><span>Placement</span><button data-v="A" class="on">A · header pill</button><button data-v="B">B · full-width row</button></div>
+  <div class="controls" id="c-viewer"><span>Viewer</span><button data-v="user" class="on">Logged in</button><button data-v="guest">Guest</button></div>
+  <div class="controls" id="c-first"><span>Pop-up</span><button data-v="first" class="on">First follow ever</button><button data-v="seen">Already seen (toast)</button></div>
+  <div class="controls" id="c-net"><span>Network</span><button data-v="ok" class="on">Works</button><button data-v="fail">Fails</button></div>
+
+  <h2>Nearby feed · 390px phone</h2>
+  <div class="frame phone"><div class="grid" id="phone-feed"></div></div>
+  <h2>Nearby feed · desktop</h2>
+  <div class="frame desktop"><div class="grid" id="desk-feed"></div></div>
+  <h2>Event page header</h2>
+  <div class="frame phone"><div id="phone-detail"></div></div>
+  <div class="frame desktop"><div id="desk-detail"></div></div>
+</div>
+
+<div class="modal-bg" id="m-first"><div class="modal" role="dialog" aria-modal="true"><h3>You're following <span class="nm"></span> 🔔</h3>
+  <p>You'll get a notification when <span class="nm"></span> publishes an event. You can unfollow any time from their profile.</p>
+  <button class="btn primary" data-close>Got it</button><a href="#" onclick="return false">Notification settings</a></div></div>
+<div class="modal-bg" id="m-unf"><div class="modal" role="dialog" aria-modal="true"><h3>Unfollow <span class="nm"></span>?</h3>
+  <p>You'll stop getting notifications about their new events.</p>
+  <button class="btn danger" id="do-unf">Unfollow</button><button class="btn" data-close>Cancel</button></div></div>
+<div class="modal-bg" id="m-login"><div class="modal" role="dialog" aria-modal="true"><h3>Log in to follow</h3>
+  <p>Create a free account to follow hosts and get notified about their events.</p>
+  <button class="btn primary" data-close>Log in</button><button class="btn" data-close>Not now</button></div></div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+var S = { place: 'A', viewer: 'user', first: 'first', net: 'ok', following: { sam: false, ana: true }, seen: false, pending: null, loading: null };
+var E = [
+  { id: 'e1', host: 'sam', name: 'Sam', full: 'Skate Sam', title: 'Thursday Skate at 6', when: 'Oct 23, 6:00 PM', where: 'Junipero Beach', mi: '1.2', price: 'Free', icon: '🛹', group: 'Beach Skaters', going: 12 },
+  { id: 'e2', host: 'ana', name: 'Ana', full: 'Ana Marie Fernandez-Okonkwo', title: 'Open mic night', when: 'Oct 25, 8:00 PM', where: 'The Loft', mi: '2.8', price: '$12.00', icon: '🎤', going: 31 },
+  { id: 'e3', host: 'me', name: 'You', full: 'You', title: 'Sunrise yoga (yours)', when: 'Oct 26, 7:00 AM', where: 'Alamitos Beach', mi: '0.6', price: 'Free', icon: '🧘', going: 8, own: true },
+  { id: 'e4', host: 'lee', name: 'Lee', full: 'Lee', title: 'Board game night', when: 'Oct 27, 7:30 PM', where: 'Dice & Co', mi: '3.4', price: 'Free', icon: '🎲', going: 14 }
+];
+S.following.lee = false;
+function btn(e, cls) {
+  if (e.own) return '';
+  var on = S.following[e.host], busy = S.loading === e.host;
+  var label = busy ? '…' : (on ? '✓ Following ' + e.name : '+ Follow ' + e.name);
+  return '<button class="follow ' + (on ? 'on ' : '') + (cls || '') + '" data-h="' + e.host + '" ' + (busy ? 'disabled' : '') + ' aria-pressed="' + on + '" aria-label="' + (on ? 'Following ' + e.full : 'Follow ' + e.full) + '"><span>' + label + '</span></button>';
+}
+function card(e) {
+  var A = S.place === 'A', priceChip = A ? '<span class="chip">' + e.price + '</span>' : '';
+  return '<div class="card"><span class="tag">EVENT · ' + e.when + '</span><div class="hdr"><div class="av">' + e.name[0] + '</div><div class="who"><b>' + e.full + '</b><small>Hosting' + (e.group ? ' · in <span style="color:#67e8f9">' + e.group + '</span>' : '') + '</small></div>' +
+    (A ? btn(e) : '<span class="price">' + e.price + '</span>') + '</div><div class="img">' + e.icon + '</div><div class="title">' + e.title + '</div>' +
+    '<div class="chips"><span class="chip">📅 ' + e.when + '</span><span class="chip">' + e.mi + ' mi</span><span class="chip">📍 ' + e.where + '</span>' + priceChip + '</div>' +
+    '<div class="acts"><button class="btn rsvp">🎟️ RSVP</button><button class="btn">Invite</button></div>' +
+    (!A && !e.own ? '<div class="followrow">' + btn(e) + '</div>' : '') +
+    '<div class="foot"><span>💬 Group Chat</span><span><b style="color:#67e8f9">' + e.going + '</b> going</span></div></div>';
+}
+function detail(e) {
+  return '<div class="detail"><h3>' + e.title + '</h3><div class="row"><div class="av">' + e.name[0] + '</div><div class="who" style="min-width:140px"><b>' + e.full + '</b><small>Host</small></div>' + btn(e) + '</div></div>';
+}
+function draw() {
+  var f = E.map(card).join('');
+  document.getElementById('phone-feed').innerHTML = f; document.getElementById('desk-feed').innerHTML = f;
+  document.getElementById('phone-detail').innerHTML = detail(E[0]); document.getElementById('desk-detail').innerHTML = detail(E[1]);
+}
+function toast(msg, cls) { var t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast show ' + cls; clearTimeout(t._t); t._t = setTimeout(function () { t.className = 'toast'; }, 2200); }
+function open(id, name) { var m = document.getElementById(id); m.querySelectorAll('.nm').forEach(function (n) { n.textContent = name; }); m.classList.add('open'); }
+function closeAll() { document.querySelectorAll('.modal-bg').forEach(function (m) { m.classList.remove('open'); }); }
+function nameOf(h) { return E.filter(function (e) { return e.host === h; })[0].name; }
+function doFollow(h) {
+  S.loading = h; draw();
+  setTimeout(function () {
+    S.loading = null;
+    if (S.net === 'fail') { draw(); toast("Couldn't follow " + nameOf(h) + '. Try again.', 'err'); return; }
+    S.following[h] = true; draw();
+    if (S.first === 'first' && !S.seen) { S.seen = true; open('m-first', nameOf(h)); } else { toast('Following ' + nameOf(h) + ' · you\u2019ll be notified of their events', 'ok'); }
+  }, 450);
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('.follow');
+  if (b) { var h = b.dataset.h; if (S.viewer === 'guest') { open('m-login', ''); return; } if (S.following[h]) { S.pending = h; open('m-unf', nameOf(h)); } else { doFollow(h); } return; }
+  if (e.target.closest('[data-close]') || e.target.classList.contains('modal-bg')) closeAll();
+  if (e.target.id === 'do-unf') { S.following[S.pending] = false; closeAll(); draw(); toast('Unfollowed ' + nameOf(S.pending), 'ok'); }
+});
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
+[['c-place', 'place'], ['c-viewer', 'viewer'], ['c-first', 'first'], ['c-net', 'net']].forEach(function (p) {
+  document.getElementById(p[0]).addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return; S[p[1]] = b.dataset.v;
+    if (p[1] === 'first') S.seen = false;
+    this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); }); draw();
+  });
+});
+draw();
+</script>
+</body>
+</html>
