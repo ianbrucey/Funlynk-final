@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Events\GroupEventCreated;
 use App\Events\GroupPostCreated;
+use App\Jobs\NotifyFollowersOfNewEvent;
 use App\Models\Activity;
 use App\Models\Group;
 use App\Models\Post;
@@ -56,6 +57,7 @@ class GroupContentService
             }
 
             GroupEventCreated::dispatch($group, $activity, $user);
+            NotifyFollowersOfNewEvent::dispatch($activity->id)->afterCommit();
 
             return $activity;
         });
