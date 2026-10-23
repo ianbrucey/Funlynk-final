@@ -19,7 +19,7 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
 
 function followerOf(User $host, array $attributes = []): User
 {
-    $follower = User::factory()->create(['onboarding_completed_at' => now()] + $attributes);
+    $follower = User::factory()->create($attributes + ['onboarding_completed_at' => now()]);
     Follow::create(['follower_id' => $follower->id, 'following_id' => $host->id]);
 
     return $follower;
@@ -32,7 +32,7 @@ function followNotificationsFor(User $user)
 
 function publishedEventBy(User $host, array $attributes = []): Activity
 {
-    return Activity::factory()->create(['host_id' => $host->id, 'status' => 'published', 'start_time' => now()->addDay(), 'is_public' => true] + $attributes);
+    return Activity::factory()->create($attributes + ['host_id' => $host->id, 'status' => 'published', 'start_time' => now()->addDay(), 'is_public' => true]);
 }
 
 test('follower notified when host publishes event', function () {
@@ -203,7 +203,7 @@ function feedViewer(): User
 
 function nearbyEventBy(User $host, array $attributes = []): Activity
 {
-    return publishedEventBy($host, ['location_coordinates' => new Point(37.7751, -122.4196, 4326)] + $attributes);
+    return publishedEventBy($host, $attributes + ['location_coordinates' => new Point(37.7751, -122.4196, 4326)]);
 }
 
 test('feed event items carry host id, follow state and ownership with one follow lookup', function () {
@@ -293,4 +293,31 @@ test('event page follow button names the host', function () {
     $event = publishedEventBy($host);
 
     $this->actingAs($viewer)->get(route('events.show', $event))->assertOk()->assertSee('+ Follow Skate Sam', false);
+});
+
+test('feed switch shows following content, the url state, and both empty states', function () {
+    $viewer = feedViewer();
+    $host = User::factory()->create(['display_name' => 'Skate Sam']);
+    $stranger = User::factory()->create(['display_name' => 'Rando Ray']);
+    nearbyEventBy($stranger, ['title' => 'Stranger Event']);
+
+    $feed = Livewire::actingAs($viewer)->withoutLazyLoading()->test(NearbyFeed::class)
+        ->call('setFeed', 'following')
+        ->assertSet('feed', 'following')
+        ->assertSee('You are not following anyone yet')
+        ->assertDontSee('Stranger Event');
+
+    Follow::create(['follower_id' => $viewer->id, 'following_id' => $host->id]);
+    $feed->call('setFeed', 'nearby')->call('setFeed', 'following')
+        ->assertSee('Nothing new from people you follow')
+        ->assertSee('within 50 km');
+
+    nearbyEventBy($host, ['title' => 'Followed Event']);
+    $feed->call('setFeed', 'nearby')->call('setFeed', 'following')
+        ->assertSee('Followed Event')->assertDontSee('Stranger Event');
+
+    Livewire::actingAs($viewer)->withoutLazyLoading()->withQueryParams(['feed' => 'following'])->test(NearbyFeed::class)
+        ->assertSet('feed', 'following');
+    Livewire::actingAs($viewer)->withoutLazyLoading()->withQueryParams(['feed' => 'nonsense'])->test(NearbyFeed::class)
+        ->assertSet('feed', 'nearby');
 });

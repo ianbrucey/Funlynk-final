@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Activity;
+use App\Models\Follow;
 use App\Models\Post;
 use App\Models\PostReaction;
 use App\Models\User;
@@ -20,6 +21,8 @@ class FeedService
      * (spec 001, 001-O2).
      */
     public const POST_RADIUS_KM = 10;
+
+    public const FOLLOWING_RADIUS_KM = 50;
 
     public const EVENT_RADIUS_MIN_KM = 10;
 
@@ -71,6 +74,37 @@ class FeedService
         );
 
         return $this->paginateMerged($user, $postQuery, $eventQuery, $cursorData, $perPage);
+    }
+
+    /**
+     * Following feed (spec 010): posts and upcoming events from people the
+     * viewer follows, newest first. Same cursor contract and visibility rules
+     * as the nearby feed; radius is a wider fixed cap (and none without a
+     * saved location).
+     *
+     * @return array{items: list<array<string, mixed>>, nextCursor: ?string, hasMore: bool}
+     */
+    public function getFollowingFeed(
+        User $user,
+        ?string $cursor = null,
+        string $contentType = 'all',
+        string $timeFilter = 'all',
+        string $searchQuery = '',
+        int $perPage = 30
+    ): array {
+        $followed = Follow::query()->where('follower_id', $user->id)->select('following_id');
+
+        $postQuery = $contentType === 'events' ? null : $this->basePostQuery($timeFilter, $searchQuery)->whereIn('user_id', $followed);
+        $eventQuery = $contentType === 'posts' ? null : $this->baseEventQuery($timeFilter, $searchQuery)->whereIn('host_id', $followed);
+
+        $location = $user->location_coordinates;
+        if ($location instanceof Point) {
+            $meters = self::FOLLOWING_RADIUS_KM * 1000;
+            $postQuery = $postQuery ? $this->applySpatialFilter($postQuery, $location, $meters) : null;
+            $eventQuery = $eventQuery ? $this->applySpatialFilter($eventQuery, $location, $meters) : null;
+        }
+
+        return $this->paginateMerged($user, $postQuery, $eventQuery, $this->decodeCursor($cursor), $perPage);
     }
 
     /**
