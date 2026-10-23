@@ -69,6 +69,18 @@ class Post extends Model
     }
 
     /**
+     * Posts allowed in discovery (feeds, map, search): standalone posts only.
+     * Group posts (public or private) stay inside their group [D] 2026-10-23.
+     *
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
+    public function scopeDiscoverable(Builder $query): Builder
+    {
+        return $query->whereNull('group_id');
+    }
+
+    /**
      * Posts safe to show on someone else's profile: standalone or in a public group.
      *
      * @param  Builder<Post>  $query
@@ -301,6 +313,10 @@ class Post extends Model
      */
     public function shouldBeSearchable(): bool
     {
-        return $this->status === 'active' && $this->expires_at > now();
+        if ($this->status !== 'active' || $this->expires_at <= now()) {
+            return false;
+        }
+
+        return $this->group_id === null;
     }
 }

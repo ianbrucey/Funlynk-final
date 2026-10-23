@@ -85,6 +85,7 @@ class FeedService
 
         if ($userLocation instanceof Point) {
             $posts = Post::active()
+                ->discoverable()
                 ->whereDistanceSphere('location_coordinates', $userLocation, '<=', 10000)
                 ->get();
 
@@ -96,7 +97,7 @@ class FeedService
                 ->get();
         } else {
             // Fallback: no spatial filter
-            $posts = Post::active()->limit(50)->get();
+            $posts = Post::active()->discoverable()->limit(50)->get();
             $events = Activity::query()
                 ->discoverable()
                 ->where('status', 'published')
@@ -212,6 +213,7 @@ class FeedService
         $offset = ($page - 1) * $perPage;
 
         $query = Post::query()
+            ->discoverable()
             ->with('user')
             ->where('status', 'active')
             ->whereDistanceSphere('location_coordinates', $userLocation, '<=', $radiusKm * 1000);
@@ -327,6 +329,7 @@ class FeedService
     {
         $query = Post::query()
             ->with(['user', 'group'])
+            ->discoverable()
             ->active();
 
         $query->when($timeFilter !== 'all', function (Builder $q) use ($timeFilter) {
