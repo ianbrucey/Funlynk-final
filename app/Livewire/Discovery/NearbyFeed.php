@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Discovery;
 
+use App\Livewire\Concerns\HandlesHostFollow;
 use App\Services\FeedService;
 use App\Services\PostService;
 use Illuminate\Support\Facades\Log;
@@ -13,6 +14,8 @@ use Livewire\Component;
 #[Lazy]
 class NearbyFeed extends Component
 {
+    use HandlesHostFollow;
+
     #[Url(as: 'q')]
     public string $searchQuery = '';
 
@@ -122,6 +125,15 @@ class NearbyFeed extends Component
 
         $this->perPage = 20; // Subsequent loads: 20 items
         $this->loadItems(true);
+    }
+
+    protected function afterHostFollowChange(string $hostId, bool $following): void
+    {
+        foreach ($this->items as $i => $item) {
+            if (($item['type'] ?? null) === 'event' && ($item['host_id'] ?? null) === $hostId) {
+                $this->items[$i]['is_following'] = $following;
+            }
+        }
     }
 
     protected function loadItems($append = false)

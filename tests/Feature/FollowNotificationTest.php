@@ -2,6 +2,7 @@
 
 use App\Jobs\NotifyFollowersOfNewEvent;
 use App\Livewire\Activities\CreateActivity;
+use App\Livewire\Discovery\NearbyFeed;
 use App\Models\Activity;
 use App\Models\Follow;
 use App\Models\Group;
@@ -11,6 +12,7 @@ use App\Models\User;
 use App\Services\ActivityConversionService;
 use App\Services\GroupContentService;
 use App\Services\RecurringScheduleService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use MatanYadaev\EloquentSpatial\Objects\Point;
@@ -189,4 +191,106 @@ test('unfollow before the job runs means no notification', function () {
     NotifyFollowersOfNewEvent::dispatchSync($event->id);
 
     expect(followNotificationsFor($follower))->toHaveCount(0);
+});
+
+function feedViewer(): User
+{
+    return User::factory()->create([
+        'onboarding_completed_at' => now(),
+        'location_coordinates' => new Point(37.7749, -122.4194, 4326),
+    ]);
+}
+
+function nearbyEventBy(User $host, array $attributes = []): Activity
+{
+    return publishedEventBy($host, ['location_coordinates' => new Point(37.7751, -122.4196, 4326)] + $attributes);
+}
+
+test('feed event items carry host id, follow state and ownership with one follow lookup', function () {
+    $viewer = feedViewer();
+    $followed = User::factory()->create();
+    Follow::create(['follower_id' => $viewer->id, 'following_id' => $followed->id]);
+    $other = User::factory()->create();
+    nearbyEventBy($followed);
+    nearbyEventBy($other);
+    nearbyEventBy($viewer);
+    foreach (range(1, 4) as $i) {
+        nearbyEventBy(User::factory()->create());
+    }
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $items = collect(app(App\Services\FeedService::class)->getNearbyFeed($viewer, eventRadiusKm: 25, contentType: 'events', timeFilter: 'all')['items']);
+    $followQueries = collect(DB::getQueryLog())->filter(fn ($q) => str_contains($q['query'], '"follows"'))->count();
+    DB::disableQueryLog();
+
+    expect($followQueries)->toBe(1);
+    expect($items->firstWhere('host_id', $followed->id)['is_following'])->toBeTrue();
+    expect($items->firstWhere('host_id', $other->id)['is_following'])->toBeFalse();
+    expect($items->firstWhere('host_id', $viewer->id)['is_own'])->toBeTrue();
+});
+
+test('feed cards show a named follow button, hide it on own events and show following state', function () {
+    $viewer = feedViewer();
+    $sam = User::factory()->create(['display_name' => 'Skate Sam']);
+    $ana = User::factory()->create(['display_name' => 'Ana Rivera']);
+    Follow::create(['follower_id' => $viewer->id, 'following_id' => $ana->id]);
+    nearbyEventBy($sam, ['title' => 'Pier Jam']);
+    nearbyEventBy($ana, ['title' => 'Open Mic']);
+    nearbyEventBy($viewer, ['title' => 'My Own Yoga']);
+
+    $html = Livewire::actingAs($viewer)->withoutLazyLoading()->test(NearbyFeed::class)->html();
+
+    expect($html)->toContain('+ Follow Skate Sam')->toContain('✓ Following Ana Rivera');
+    expect(substr_count($html, 'aria-label="Follow '))->toBe(1);
+    expect($html)->not->toContain('Follow '.$viewer->display_name);
+});
+
+test('following from the feed saves once, updates the card and shows the intro only the first time', function () {
+    $viewer = feedViewer();
+    $sam = User::factory()->create(['display_name' => 'Skate Sam']);
+    $lee = User::factory()->create(['display_name' => 'Lee']);
+    $samBefore = $sam->follower_count;
+    $viewerBefore = $viewer->following_count;
+    nearbyEventBy($sam);
+    nearbyEventBy($lee);
+
+    $component = Livewire::actingAs($viewer)->withoutLazyLoading()->test(NearbyFeed::class)
+        ->call('followHost', $sam->id)
+        ->assertDispatched('follow-intro', name: 'Skate Sam')
+        ->call('followHost', $sam->id);
+
+    expect(Follow::where('follower_id', $viewer->id)->where('following_id', $sam->id)->count())->toBe(1);
+    expect($sam->fresh()->follower_count)->toBe($samBefore + 1)->and($viewer->fresh()->following_count)->toBe($viewerBefore + 1);
+    expect($viewer->fresh()->follow_intro_seen_at)->not->toBeNull();
+
+    $component->call('followHost', $lee->id)->assertDispatched('show-toast');
+    expect(collect($component->get('items'))->firstWhere('host_id', $sam->id)['is_following'])->toBeTrue();
+
+    $component->call('unfollowHost', $sam->id);
+    expect(Follow::where('follower_id', $viewer->id)->where('following_id', $sam->id)->exists())->toBeFalse();
+    expect($sam->fresh()->follower_count)->toBe($samBefore);
+    expect(collect($component->get('items'))->firstWhere('host_id', $sam->id)['is_following'])->toBeFalse();
+});
+
+test('following yourself, a missing user, or as a guest does nothing harmful', function () {
+    $viewer = feedViewer();
+
+    Livewire::actingAs($viewer)->withoutLazyLoading()->test(NearbyFeed::class)
+        ->call('followHost', $viewer->id)
+        ->call('followHost', (string) Illuminate\Support\Str::uuid());
+    expect(Follow::count())->toBe(0);
+
+    auth()->logout();
+    $target = User::factory()->create();
+    Livewire::test(App\Livewire\FollowButton::class, ['userId' => $target->id])->call('followHost', $target->id)->assertRedirect(route('login'));
+    expect(Follow::count())->toBe(0);
+});
+
+test('event page follow button names the host', function () {
+    $viewer = User::factory()->create(['onboarding_completed_at' => now()]);
+    $host = User::factory()->create(['display_name' => 'Skate Sam']);
+    $event = publishedEventBy($host);
+
+    $this->actingAs($viewer)->get(route('events.show', $event))->assertOk()->assertSee('+ Follow Skate Sam', false);
 });

@@ -1,4 +1,5 @@
 <div class="min-h-screen">
+    <x-fl.follow-modals />
     <div class="container mx-auto ">
 
         
