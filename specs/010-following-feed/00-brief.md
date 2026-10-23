@@ -1,6 +1,6 @@
 # 010 — Following feed — Strategic brief
 
-**Status:** DRAFT (→ IN REVIEW → APPROVED)
+**Status:** APPROVED 2026-10-23 (owner said "proceed" after the open questions); mockup in `05-ui-mockup.html`
 **Author:** Augment Agent (orchestrator draft)
 **Date:** 2026-10-23
 
@@ -43,8 +43,8 @@ A user can switch the nearby feed to "Following" and see the posts and events of
 |---|---|---|---|
 | C-01 | Following view shows posts and events from followed users only | `test_following_feed_only_includes_followed_authors` | Discovery |
 | C-02 | Content from non-followed users never appears in it | same test | Discovery |
-| C-03 | A followed user's private-group post or private-group event never appears | `test_following_feed_respects_group_privacy` | Authorization |
-| C-04 | Posts made as a group (`posted_as_group`) are not treated as the follower's author | `test_following_feed_excludes_group_authored_posts` | Groups |
+| C-03 | A followed user's private-group event never appears | `test_following_feed_respects_group_privacy` | Authorization |
+| C-04 | Posts that belong to a group (public or private, including posted as the group) never appear | `test_following_feed_excludes_group_posts` | Groups |
 | C-05 | Radius cap is 50 km; beyond it nothing shows; no-location viewers see all followed content | `test_following_feed_radius_and_no_location` | Discovery |
 | C-06 | Expired posts and past or cancelled events never appear | `test_following_feed_excludes_expired_and_past` | Posts, Events |
 | C-07 | Cursor pagination has no duplicates or gaps across pages | `test_following_feed_pages_without_gaps` | Timeline |
@@ -57,8 +57,8 @@ A user can switch the nearby feed to "Following" and see the posts and events of
 - [D] Location queries go through the spatial layer only. No raw coordinates leave the server.
 - [D] Timeline performance budget (Spec 001).
 - [D] 2026-10-22: private-group content never appears in discovery; public-group events do.
-- [O] **Public-group posts:** the 2026-10-22 decision says group posts are not in discovery, but the nearby feed still shows posts of public groups, including `posted_as_group` posts that may be intentional announcements. → **Stop condition:** this spec does not change that; owner decides separately.
-- [O] **Radius for Following:** 50 km cap proposed above. → **Stop condition:** C-05 is not planned until confirmed.
+- [D] 2026-10-23 **Group posts are not in discovery, public or private.** Public-group events are. Done in PR #25 for Nearby, For You, map and search; the Following feed uses the same rule.
+- [D] 2026-10-23 **Radius for Following:** 50 km cap for posts and events (owner said "proceed" on the proposal).
 - [P] Users who follow people but live without a saved location see unbounded followed content.
 
 ## Production impact
@@ -85,6 +85,7 @@ A user can switch the nearby feed to "Following" and see the posts and events of
 ## Non-goals
 
 - Ranking boost for followed authors (Spec 005).
+- Showing public-group posts anywhere in discovery (decided: never).
 - Following groups, or showing posts of groups you joined (separate item).
 - Notifications for posts.
 - Followers / following lists (tracker P1).
@@ -92,8 +93,8 @@ A user can switch the nearby feed to "Following" and see the posts and events of
 ## Approval gate
 
 - [x] Orchestrator verdicts written (claims table complete)
-- [ ] Builder has reviewed and added risks to the pre-mortem
-- [ ] Governing [D]/[P]/[O] items linked; [O] stop conditions stated
+- [x] Builder has reviewed and added risks to the pre-mortem
+- [x] Governing [D]/[P]/[O] items linked; [O] stop conditions stated
 - [x] Production impact + rollback plan stated
 - [x] Security and privacy classification complete
-- [ ] Product owner approved — **approver:** <name> · **date:** <YYYY-MM-DD>
+- [x] Product owner approved — **approver:** product owner · **date:** 2026-10-23 ("proceed")
