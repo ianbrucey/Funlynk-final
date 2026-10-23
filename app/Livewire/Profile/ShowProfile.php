@@ -107,6 +107,22 @@ class ShowProfile extends Component
     }
 
     /**
+     * Upcoming events first (soonest first), then past events (most recent first).
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Activity>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     */
+    protected function upcomingFirst(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        $now = now();
+
+        return $query
+            ->orderByRaw('CASE WHEN start_time >= ? THEN 0 ELSE 1 END', [$now])
+            ->orderByRaw('CASE WHEN start_time >= ? THEN start_time END ASC', [$now])
+            ->orderByDesc('start_time');
+    }
+
+    /**
      * @param  \Illuminate\Database\Eloquent\Builder<Activity>  $query
      * @return \Illuminate\Database\Eloquent\Builder<Activity>
      */
@@ -221,13 +237,11 @@ class ShowProfile extends Component
                     ->paginate(10);
                 break;
             case 'hosted':
-                $data['activities'] = $this->hostedQuery()
-                    ->latest()
+                $data['activities'] = $this->upcomingFirst($this->hostedQuery()->with('group'))
                     ->paginate(10);
                 break;
             case 'attending':
-                $data['activities'] = $this->attendingQuery()
-                    ->latest()
+                $data['activities'] = $this->upcomingFirst($this->attendingQuery()->with('group'))
                     ->paginate(10);
                 break;
             case 'interested':
