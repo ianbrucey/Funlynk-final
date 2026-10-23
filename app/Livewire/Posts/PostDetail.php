@@ -24,6 +24,8 @@ class PostDetail extends Component
 
     public function mount(Post $post)
     {
+        $this->authorize('view', $post);
+
         $this->post = $post->load('user', 'reactions', 'group');
 
         // Check if this is a group post
