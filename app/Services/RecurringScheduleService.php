@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\NotifyFollowersOfNewEvent;
 use App\Models\Activity;
 use App\Models\Group;
 use App\Models\RecurringSchedule;
@@ -38,7 +39,12 @@ class RecurringScheduleService
             ]);
 
             // Generate initial events
-            $this->generateEventsFromSchedule($schedule);
+            $created = $this->generateEventsFromSchedule($schedule);
+
+            $first = $created->sortBy('start_time')->first();
+            if ($first instanceof Activity) {
+                NotifyFollowersOfNewEvent::dispatch($first->id, recurring: true)->afterCommit();
+            }
 
             return $schedule->fresh();
         });

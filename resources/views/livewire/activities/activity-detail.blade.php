@@ -160,7 +160,7 @@
                             @auth
                                 @if(!$isHost)
                                     <div class="scale-90 origin-center">
-                                        <livewire:follow-button :user-id="$activity->host->id" :is-following="$isFollowingHost" />
+                                        <livewire:follow-button :user-id="$activity->host->id" :is-following="$isFollowingHost" :name="$activity->host->display_name ?? $activity->host->username" />
                                     </div>
                                 @endif
                             @endauth

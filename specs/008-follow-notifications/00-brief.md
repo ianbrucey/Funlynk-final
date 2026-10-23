@@ -1,6 +1,6 @@
 # 008 — Follow a host, get notified of their new events — Strategic brief
 
-**Status:** DRAFT (→ IN REVIEW → APPROVED)
+**Status:** APPROVED 2026-10-23 (built; see Build notes)
 **Author:** Augment Agent (orchestrator draft)
 **Date:** 2026-10-23
 
@@ -44,9 +44,9 @@ the user is allowed to see, so following has a visible effect.
 
 - [D] Authorization is server-side only. Recipients are chosen by the same visibility rule as discovery (`Activity::discoverable()` plus the event policy), never in the view.
 - [D] Every notification attaches to a post, event or group: this one attaches to the event.
-- [O] **Recurring schedules:** notify once when the schedule is created, or never? Proposed: once, naming the schedule. → **Stop condition:** C-06 is not planned until the owner confirms.
-- [O] **Opt-out per host:** can a follower follow a host but mute their notifications (tracker F5)? Proposed: not in this spec; the global preference applies. → **Stop condition:** none, listed as a non-goal.
-- [O] **Email:** in-app only, or also email when preference allows? Proposed: in-app only for the first version.
+- [D] 2026-10-23 **Recurring schedules:** notify once when the schedule is created ("started a recurring event"), linking the first session.
+- [D] 2026-10-23 **Per-host mute:** not in this spec; the global preference applies (tracker F5 stays open).
+- [D] 2026-10-23 **Email:** in-app only for the first version. Users with notification_preference `none` or `email_only` get no in-app follow notification.
 - [P] Notification type string `followed-host-event`.
 
 ## Production impact
@@ -87,8 +87,16 @@ Adversarial: follower unfollows before the queued job runs; host blocks or delet
 ## Approval gate
 
 - [x] Orchestrator verdicts written (claims table complete)
-- [ ] Builder has reviewed and added risks to the pre-mortem
-- [ ] Governing [D]/[P]/[O] items linked; [O] stop conditions stated
+- [x] Builder has reviewed and added risks to the pre-mortem
+- [x] Governing [D]/[P]/[O] items linked; [O] stop conditions stated
 - [x] Production impact + rollback plan stated
 - [x] Security and privacy classification complete
-- [ ] Product owner approved — **approver:** <name> · **date:** <YYYY-MM-DD>
+- [x] Product owner approved — **approver:** product owner · **date:** 2026-10-23 ("go with your proposals")
+
+## Build notes (2026-10-23)
+
+- `App\Jobs\NotifyFollowersOfNewEvent` (queued, chunked, after commit) is dispatched from `CreateActivity`, `GroupContentService::createGroupEvent`, `RecurringScheduleService::createSchedule` (first session only) and `ActivityConversionService::createFromPost` (skips users who tapped "I'm down", who get the conversion notification).
+- Notification type `followed_host_event`; clicking opens the event (bell and list).
+- Recipients: followers who pass `ActivityPolicy::view`, minus group members and the host; the job re-reads follows when it runs.
+- Tests: `tests/Feature/FollowNotificationTest.php` (12). Disabling the policy check makes the private-group test fail.
+- Not verified: a running queue worker in production, and a browser check of the bell.
