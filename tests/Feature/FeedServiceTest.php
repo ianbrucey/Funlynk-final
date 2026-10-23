@@ -77,6 +77,29 @@ describe('FeedService', function () {
         expect($after->pluck('id'))->not->toContain($publicEvent->id);
     });
 
+    it('never shows private-group posts in the nearby feed, For You, map or search', function () {
+        $viewer = User::factory()->create(['location_coordinates' => new Point(37.7749, -122.4194, 4326)]);
+        $author = User::factory()->create();
+        $make = fn (?Group $group, string $title) => Post::factory()->create([
+            'user_id' => $author->id, 'group_id' => $group?->id, 'title' => $title, 'status' => 'active',
+            'expires_at' => now()->addDay(), 'location_coordinates' => new Point(37.7750, -122.4195, 4326),
+        ]);
+        $plain = $make(null, 'Zed plain post');
+        $public = $make(Group::factory()->create(['privacy' => 'public']), 'Zed public group post');
+        $private = $make(Group::factory()->create(['privacy' => 'private']), 'Zed private group post');
+
+        $service = app(FeedService::class);
+        $nearby = collect($service->getNearbyFeed($viewer, contentType: 'posts')['items'])->pluck('id');
+        $forYou = $service->getForYouFeed($viewer)->pluck('data.id');
+        $markers = collect($service->getMapData($viewer, radius: 10, contentType: 'posts')['markers'])->pluck('id');
+        $search = app(\App\Services\DatabaseSearchService::class)->search('zed', $viewer)->pluck('data.id');
+
+        foreach ([$nearby, $forYou, $markers, $search] as $ids) {
+            expect($ids)->toContain($plain->id)->toContain($public->id)->not->toContain($private->id);
+        }
+        expect($private->shouldBeSearchable())->toBeFalse()->and($public->shouldBeSearchable())->toBeTrue();
+    });
+
     it('merges cleanly when events match but no posts do (and vice versa)', function () {
         $user = User::factory()->create([
             'location_coordinates' => new Point(37.7749, -122.4194, 4326),
