@@ -2,8 +2,11 @@
 
 namespace App\Policies;
 
+use App\Models\Activity;
 use App\Models\Conversation;
+use App\Models\Post;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 class ConversationPolicy
 {
@@ -13,6 +16,12 @@ class ConversationPolicy
      */
     public function view(User $user, Conversation $conversation): bool
     {
+        $subject = $conversation->conversationable;
+
+        if ($subject instanceof Post || $subject instanceof Activity) {
+            return Gate::forUser($user)->allows('view', $subject);
+        }
+
         $participant = $conversation->participants()
             ->where('user_id', $user->id)
             ->first();
@@ -35,6 +44,21 @@ class ConversationPolicy
      */
     public function sendMessage(User $user, Conversation $conversation): bool
     {
+        $subject = $conversation->conversationable;
+
+        if ($subject instanceof Post) {
+            if (! Gate::forUser($user)->allows('view', $subject)) {
+                return false;
+            }
+
+            return $subject->group_id === null
+                || $subject->group->members()->where('user_id', $user->id)->exists();
+        }
+
+        if ($subject instanceof Activity) {
+            return Gate::forUser($user)->allows('view', $subject);
+        }
+
         $participant = $conversation->participants()
             ->where('user_id', $user->id)
             ->first();

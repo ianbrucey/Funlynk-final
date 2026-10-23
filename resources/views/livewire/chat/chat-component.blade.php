@@ -148,6 +148,7 @@
                     placeholder="Type a message..."
                     class="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition"
                 >
+                @error('newMessage') <p class="mt-1 text-xs text-red-400">{{ $message }}</p> @enderror
             </div>
 
             {{-- Send Button --}}

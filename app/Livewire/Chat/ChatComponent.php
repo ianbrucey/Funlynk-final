@@ -4,10 +4,13 @@ namespace App\Livewire\Chat;
 
 use App\Models\Conversation;
 use App\Services\ChatService;
+use Illuminate\Support\Facades\RateLimiter;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class ChatComponent extends Component
 {
+    #[Locked]
     public $conversationId;
 
     public $conversationable; // Post or Activity model
@@ -31,7 +34,7 @@ class ChatComponent extends Component
         }
 
         return [
-            "echo:conversation.{$this->conversationId},MessageSent" => 'onMessageReceived',
+            "echo-private:conversation.{$this->conversationId},MessageSent" => 'onMessageReceived',
         ];
     }
 
@@ -74,6 +77,8 @@ class ChatComponent extends Component
 
             return;
         }
+
+        $this->authorize('view', $conversation);
 
         // Store conversation for view
         $this->conversation = $conversation;
@@ -120,6 +125,18 @@ class ChatComponent extends Component
         $conversation = Conversation::find($this->conversationId);
 
         if (! $conversation) {
+            return;
+        }
+
+        $this->authorize('sendMessage', $conversation);
+
+        $this->validate(['newMessage' => ['required', 'string', 'max:2000']], [
+            'newMessage.max' => 'Messages can be up to 2000 characters.',
+        ]);
+
+        if (! RateLimiter::attempt('chat-send:'.auth()->id(), 30, fn () => true, 60)) {
+            $this->addError('newMessage', 'You are sending messages too fast. Wait a moment.');
+
             return;
         }
 

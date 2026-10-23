@@ -14,3 +14,9 @@ use Illuminate\Support\Facades\Broadcast;
 */
 
 Broadcast::channel('user.{userId}', \App\Broadcasting\UserChannel::class);
+
+Broadcast::channel('conversation.{conversationId}', function ($user, string $conversationId) {
+    $conversation = \App\Models\Conversation::find($conversationId);
+
+    return $conversation !== null && $user->can('view', $conversation);
+});
