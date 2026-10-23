@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>010 — Following feed — UI mockup (FunLink)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; color: #e5e7eb; min-height: 100vh;
+    background: radial-gradient(ellipse at 20% 10%, #1e1b4b 0%, #0b0620 55%, #050310 100%); }
+  .stars { position: fixed; inset: 0; pointer-events: none; opacity: .5;
+    background-image: radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 70% 10%, #fff, transparent), radial-gradient(1.5px 1.5px at 40% 70%, #a5f3fc, transparent); }
+  .page { position: relative; max-width: 1180px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.4rem; } h2 { font-size: 1.05rem; margin: 28px 0 10px; color: #a5f3fc; }
+  .hint { color: #9ca3af; font-size: .85rem; margin: 4px 0 12px; }
+  .proposal { border: 1px dashed rgba(232,121,249,.5); background: rgba(232,121,249,.06); border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: .85rem; color: #f5d0fe; line-height: 1.5; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; }
+  .controls span { font-size: .75rem; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; }
+  .controls button { padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: .8rem; color: #e5e7eb; background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.12); }
+  .controls button.on { border-color: #22d3ee; color: #67e8f9; background: rgba(34,211,238,.12); }
+  .frame { margin: 0 auto 24px; background: rgba(5,3,16,.55); border: 1px solid rgba(255,255,255,.12); border-radius: 28px; padding: 14px 12px 20px; overflow: hidden; }
+  .frame.phone { width: 390px; max-width: 100%; } .frame.desktop { width: 100%; border-radius: 16px; padding: 24px; }
+  .glass { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 14px; margin-bottom: 14px; position: relative; }
+  .glass::before { content: ""; position: absolute; top: 0; left: 25%; right: 25%; height: 2px; background: linear-gradient(90deg, transparent, #22d3ee, #e879f9, transparent); }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 12px; border-radius: 14px; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.1); }
+  .seg button { min-height: 44px; border-radius: 10px; border: 0; cursor: pointer; font-size: .9rem; font-weight: 600; color: #9ca3af; background: transparent; }
+  .seg button.on { color: #fff; background: linear-gradient(90deg, #ec4899, #a855f7); }
+  .seg small { font-weight: 500; opacity: .8; }
+  .search { display: flex; gap: 8px; } .search div { flex: 1; min-height: 44px; border-radius: 16px; padding: 12px 16px; background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.1); color: #9ca3af; font-size: .9rem; }
+  .gear { width: 48px; border-radius: 12px; border: 1px solid rgba(255,255,255,.15); display: grid; place-items: center; }
+  .chips { display: flex; gap: 8px; margin-top: 12px; } .chip { padding: 6px 16px; border-radius: 999px; font-size: .85rem; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); color: #d1d5db; }
+  .chip.on { background: linear-gradient(90deg, #ec4899, #a855f7); border-color: transparent; color: #fff; }
+  .note { font-size: .78rem; color: #9ca3af; margin: 10px 2px 0; }
+  .grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); } .desktop .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .card { min-width: 0; border-radius: 18px; padding: 16px; background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), #111933; border: 1px solid rgba(255,255,255,.08); }
+  .card.ev { border-left: 3px solid #f0abfc; } .card.po { border-left: 3px solid #22d3ee; }
+  .hd { display: flex; align-items: center; gap: 12px; } .av { width: 44px; height: 44px; border-radius: 50%; flex: none; display: grid; place-items: center; font-weight: 700; background: linear-gradient(135deg, #ec4899, #8b5cf6); }
+  .who b { display: block; font-size: .95rem; } .who small { font-size: .75rem; color: #8a93b2; }
+  .badge { margin-left: auto; font-size: .65rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: rgba(240,171,252,.95); color: #3b0764; } .badge.p { background: rgba(34,211,238,.2); color: #67e8f9; }
+  .ttl { margin-top: 10px; font-weight: 700; font-size: 1.05rem; } .meta { margin-top: 6px; font-size: .8rem; color: #8a93b2; }
+  .empty { text-align: center; padding: 44px 16px; } .empty .ico { font-size: 2.4rem; } .empty h3 { margin-top: 10px; font-size: 1rem; } .empty p { margin: 6px auto 16px; max-width: 300px; font-size: .85rem; color: #9ca3af; line-height: 1.45; }
+  .btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 22px; border-radius: 12px; border: 0; font-weight: 600; font-size: .9rem; color: #fff; cursor: pointer; background: linear-gradient(90deg, #ec4899, #a855f7); }
+  .skel { height: 150px; border-radius: 18px; background: rgba(255,255,255,.08); animation: pulse 1.4s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .4; } }
+  .nav { display: flex; justify-content: space-around; margin: 14px -12px -20px; padding: 10px 0; background: rgba(5,3,16,.85); border-top: 1px solid rgba(255,255,255,.1); font-size: .7rem; color: #9ca3af; } .desktop .nav { display: none; }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="page">
+  <h1>Following feed — mockup</h1>
+  <p class="hint">Spec <strong>010 (placeholder number)</strong> · Status: DRAFT · Synthetic data only · 390px phone first, then desktop. Interactive.</p>
+  <div class="proposal"><strong>What this proposes</strong> (all [P]):
+    (1) A <strong>Nearby | Following</strong> switch at the top of the feed card, URL <code>?feed=following</code>.
+    (2) Following shows posts and upcoming events from people you follow, newest first, same cards, with the same search, filter gear and Posts / Events chips.
+    (3) A one-line note says what you are looking at ("People you follow · within 50 km").
+    (4) Following nobody: explainer plus a "Find people" button. Following people with nothing new: a short message.
+    (5) Group posts never appear here or in Nearby [D 2026-10-23]; public-group events do.
+    (6) Skeleton cards while switching.
+  </div>
+  <h2>Controls</h2>
+  <div class="controls" id="c-who"><span>Viewer</span><button data-v="some" class="on">Follows people</button><button data-v="none">Follows nobody</button><button data-v="quiet">Follows people, nothing new</button></div>
+  <div class="controls" id="c-load"><span>State</span><button data-v="ok" class="on">Loaded</button><button data-v="loading">Loading</button></div>
+  <h2>390px phone</h2><div class="frame phone" id="phone"></div>
+  <h2>Desktop</h2><div class="frame desktop" id="desk"></div>
+</div>
+<script>
+var S = { feed: 'following', who: 'some', load: 'ok', type: 'all' };
+var ITEMS = [
+  { k: 'ev', n: 'Skate Sam', t: 'Thursday Skate at 6', m: 'Oct 23, 6:00 PM · 1.2 mi · Junipero Beach · Free', b: 'EVENT' },
+  { k: 'po', n: 'Ana Rivera', t: 'Anyone up for tacos tonight?', m: '2h ago · 3.1 mi · 9 reactions', b: 'POST' },
+  { k: 'ev', n: 'Ana Rivera', t: 'Open mic night', m: 'Oct 25, 8:00 PM · 2.8 mi · The Loft · $12.00', b: 'EVENT' },
+  { k: 'po', n: 'Lee Park', t: 'Board games, 2 seats left', m: '5h ago · 14 mi · 6 reactions', b: 'POST' },
+  { k: 'ev', n: 'Lee Park', t: 'Trivia night', m: 'Oct 27, 7:30 PM · 22 mi · Dice & Co · Free', b: 'EVENT' },
+  { k: 'po', n: 'Skate Sam', t: 'Morning session at the pier', m: '1d ago · 1.4 mi · 14 reactions', b: 'POST' }
+];
+function card(i) {
+  return '<div class="card ' + i.k + '"><div class="hd"><div class="av">' + i.n[0] + '</div><div class="who"><b>' + i.n + '</b><small>' + (i.k === 'ev' ? 'Hosting' : 'Posted') + '</small></div><span class="badge ' + (i.k === 'po' ? 'p' : '') + '">' + i.b + '</span></div><div class="ttl">' + i.t + '</div><div class="meta">' + i.m + '</div></div>';
+}
+function body() {
+  if (S.load === 'loading') return '<div class="grid"><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>';
+  if (S.feed === 'following' && S.who === 'none') return '<div class="glass empty"><div class="ico">👋</div><h3>You are not following anyone yet</h3><p>Follow hosts to see their posts and events here, and get notified when they publish an event.</p><button class="btn">Find people</button></div>';
+  if (S.feed === 'following' && S.who === 'quiet') return '<div class="glass empty"><div class="ico">🌙</div><h3>Nothing new from people you follow</h3><p>When they post or publish an event, it will show up here.</p><button class="btn">See what is nearby</button></div>';
+  var list = ITEMS.filter(function (i) { return S.type === 'all' || (S.type === 'posts') === (i.k === 'po'); });
+  if (S.feed === 'nearby') list = list.slice().reverse();
+  return '<div class="grid">' + list.map(card).join('') + '</div>';
+}
+function frame(id) {
+  var nearby = S.feed === 'nearby';
+  var note = nearby ? '' : '<p class="note">People you follow · within 50 km of you</p>';
+  var chips = [['all', 'All'], ['posts', 'Posts'], ['events', 'Events']].map(function (c) { return '<button class="chip ' + (S.type === c[0] ? 'on' : '') + '" data-type="' + c[0] + '" style="cursor:pointer">' + c[1] + '</button>'; }).join('');
+  document.getElementById(id).innerHTML = '<div class="glass"><div class="seg" role="tablist"><button role="tab" aria-selected="' + nearby + '" data-feed="nearby" class="' + (nearby ? 'on' : '') + '">Nearby</button><button role="tab" aria-selected="' + !nearby + '" data-feed="following" class="' + (!nearby ? 'on' : '') + '">Following</button></div>' +
+    '<div class="search"><div>👀 search for your thing :)</div><span class="gear">⚙︎</span></div><div class="chips">' + chips + '</div>' + note + '</div>' + body() +
+    '<div class="nav"><span style="color:#67e8f9">Feed</span><span>Map</span><span>+</span><span>Chat</span><span>Profile</span></div>';
+}
+function draw() { frame('phone'); frame('desk'); }
+document.addEventListener('click', function (e) {
+  var f = e.target.closest('[data-feed]'), t = e.target.closest('[data-type]');
+  if (f) { S.feed = f.dataset.feed; S.load = 'loading'; syncLoad(); draw(); setTimeout(function () { S.load = 'ok'; syncLoad(); draw(); }, 500); }
+  if (t) { S.type = t.dataset.type; draw(); }
+});
+function syncLoad() { document.querySelectorAll('#c-load button').forEach(function (b) { b.classList.toggle('on', b.dataset.v === S.load); }); }
+[['c-who', 'who'], ['c-load', 'load']].forEach(function (p) {
+  document.getElementById(p[0]).addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return; S[p[1]] = b.dataset.v;
+    this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); }); draw();
+  });
+});
+draw();
+</script>
+</body>
+</html>
