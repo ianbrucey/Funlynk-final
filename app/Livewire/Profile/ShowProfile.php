@@ -50,8 +50,8 @@ class ShowProfile extends Component
 
     public function loadStats()
     {
-        $this->followersCount = $this->user->followers()->count();
-        $this->followingCount = $this->user->following()->count();
+        $this->followersCount = $this->user->followers()->where('users.is_active', true)->count();
+        $this->followingCount = $this->user->following()->where('users.is_active', true)->count();
 
         if (! $this->canViewContent) {
             return;

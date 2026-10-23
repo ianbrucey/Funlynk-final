@@ -49,8 +49,8 @@
             @endauth
 
             <div class="mt-4 grid grid-cols-2 border-t border-white/10 pt-3 text-center">
-                <div><div class="font-semibold text-white">{{ $followersCount }}</div><div class="text-xs text-gray-400">followers</div></div>
-                <div><div class="font-semibold text-white">{{ $followingCount }}</div><div class="text-xs text-gray-400">following</div></div>
+                <a href="{{ route('profile.followers', $user->username) }}" wire:navigate class="group flex min-h-[44px] flex-col items-center justify-center rounded-xl hover:bg-white/5"><span class="font-semibold text-white group-hover:text-cyan-300">{{ $followersCount }}</span><span class="text-xs text-gray-400">followers</span></a>
+                <a href="{{ route('profile.following', $user->username) }}" wire:navigate class="group flex min-h-[44px] flex-col items-center justify-center rounded-xl hover:bg-white/5"><span class="font-semibold text-white group-hover:text-cyan-300">{{ $followingCount }}</span><span class="text-xs text-gray-400">following</span></a>
             </div>
         </div>
 

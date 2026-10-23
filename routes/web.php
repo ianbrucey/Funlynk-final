@@ -50,6 +50,8 @@ Route::middleware('auth')->group(function () {
         Route::redirect('/dashboard', '/feed/nearby');
         Route::get('/profile', ShowProfile::class)->name('profile.show');
         Route::get('/u/{username}', ShowProfile::class)->name('profile.view');
+        Route::get('/u/{username}/followers', \App\Livewire\Profile\FollowList::class)->defaults('tab', 'followers')->name('profile.followers');
+        Route::get('/u/{username}/following', \App\Livewire\Profile\FollowList::class)->defaults('tab', 'following')->name('profile.following');
 
         // Post Routes
         Route::get('/posts/create', \App\Livewire\Posts\CreatePost::class)->name('posts.create');

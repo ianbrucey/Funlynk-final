@@ -1,6 +1,6 @@
 # 011 — Follower and following lists — Strategic brief
 
-**Status:** DRAFT (→ IN REVIEW → APPROVED)
+**Status:** APPROVED 2026-10-23 (built; see Build notes)
 **Author:** Augment Agent (orchestrator draft)
 **Date:** 2026-10-23
 
@@ -50,7 +50,7 @@ A user can tap the followers or following count on a profile and see who those p
 - [D] Authorization is server-side only: the visibility check runs in the component, never only in the view.
 - [D] 2026-10-23: followers and following lists are wanted (owner yes).
 - [P] The lists obey the existing profile visibility setting rather than having their own switch.
-- [O] **Should a followers-only profile show its follower list to non-followers?** Proposed: no, consistent with the rest of the profile. → **Stop condition:** C-04 is not planned until the owner confirms.
+- [D] 2026-10-23 A followers-only profile hides its lists from non-followers; a private profile hides them from everyone but the owner (owner said "yes yes" to the proposal and to search in the lists).
 
 ## Production impact
 
@@ -81,8 +81,16 @@ A user can tap the followers or following count on a profile and see who those p
 ## Approval gate
 
 - [x] Orchestrator verdicts written (claims table complete)
-- [ ] Builder has reviewed and added risks to the pre-mortem
-- [ ] Governing [D]/[P]/[O] items linked; [O] stop conditions stated
+- [x] Builder has reviewed and added risks to the pre-mortem
+- [x] Governing [D]/[P]/[O] items linked; [O] stop conditions stated
 - [x] Production impact + rollback plan stated
 - [x] Security and privacy classification complete
-- [ ] Product owner approved — **approver:** <name> · **date:** <YYYY-MM-DD>
+- [x] Product owner approved — **approver:** product owner · **date:** 2026-10-23 ("yes yes")
+
+## Build notes (2026-10-23)
+
+- `App\Livewire\Profile\FollowList` with routes `profile.followers` and `profile.following`; header counts on the profile link to them.
+- Visibility check runs before any row is queried; search escapes `%`, `_` and `\`; deactivated users are excluded and the header counts use the same filter.
+- Follow pills reuse `x-fl.follow-pill`, `HandlesHostFollow` and `x-fl.follow-modals` (spec 009).
+- Tests: `tests/Feature/FollowListTest.php` (10). Removing the visibility check, the search escaping and the active filter makes three of them fail.
+- Not verified: a browser check at 390px.
