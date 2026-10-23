@@ -27,6 +27,7 @@ A user can tap the followers or following count on a profile and see who those p
 - Each row: avatar, display name, @handle, location, and a named Follow / Following pill (not on your own row). Tapping the row opens that profile.
 - Newest follow first, 20 per page with "Load more".
 - Visibility follows the same rule as the profile tabs: if you cannot see the profile content you cannot see the lists, and you get the same lock message. The owner always sees their own.
+- A search box under the switch filters the current list by name or @handle (case-insensitive, typing waits briefly before searching). Switching between Followers and Following clears it. [D] 2026-10-23: owner asked for search in the lists.
 - Deactivated accounts are left out, and the header counts use the same filter so the numbers agree.
 
 ## Claims
@@ -42,6 +43,7 @@ A user can tap the followers or following count on a profile and see who those p
 | C-07 | The follow pill on a row follows and unfollows; no pill on your own row | `test_list_follow_pill_and_own_row` | Follows |
 | C-08 | The list uses a constant number of queries however many rows | `test_lists_use_constant_queries` | Performance |
 | C-09 | An unknown username returns 404 | `test_list_unknown_user_is_404` | Profiles |
+| C-10 | Searching filters the current list by name or handle, treats `%` and `_` as plain text, and a locked profile cannot be searched | `test_list_search_filters_and_escapes` | Authorization |
 
 ## Blueprint anchors
 
@@ -73,7 +75,7 @@ A user can tap the followers or following count on a profile and see who those p
 ## Non-goals
 
 - Removing a follower, blocking, or mutual-follow badges.
-- Searching inside a list.
+- Searching across all people (already exists as user search).
 - Notifications.
 
 ## Approval gate
