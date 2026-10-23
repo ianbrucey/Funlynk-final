@@ -69,16 +69,15 @@ class Post extends Model
     }
 
     /**
-     * Posts allowed in discovery (feeds, map, search): standalone posts or posts
-     * of a public group. Private-group posts never qualify. Checked against the
-     * group's current privacy.
+     * Posts allowed in discovery (feeds, map, search): standalone posts only.
+     * Group posts (public or private) stay inside their group [D] 2026-10-23.
      *
      * @param  Builder<Post>  $query
      * @return Builder<Post>
      */
     public function scopeDiscoverable(Builder $query): Builder
     {
-        return $this->scopeVisibleOnProfile($query);
+        return $query->whereNull('group_id');
     }
 
     /**
@@ -318,6 +317,6 @@ class Post extends Model
             return false;
         }
 
-        return $this->group_id === null || $this->group()->where('privacy', 'public')->exists();
+        return $this->group_id === null;
     }
 }

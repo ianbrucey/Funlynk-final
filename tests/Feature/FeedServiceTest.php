@@ -77,7 +77,7 @@ describe('FeedService', function () {
         expect($after->pluck('id'))->not->toContain($publicEvent->id);
     });
 
-    it('never shows private-group posts in the nearby feed, For You, map or search', function () {
+    it('never shows group posts (public or private) in the nearby feed, For You, map or search', function () {
         $viewer = User::factory()->create(['location_coordinates' => new Point(37.7749, -122.4194, 4326)]);
         $author = User::factory()->create();
         $make = fn (?Group $group, string $title) => Post::factory()->create([
@@ -95,9 +95,9 @@ describe('FeedService', function () {
         $search = app(\App\Services\DatabaseSearchService::class)->search('zed', $viewer)->pluck('data.id');
 
         foreach ([$nearby, $forYou, $markers, $search] as $ids) {
-            expect($ids)->toContain($plain->id)->toContain($public->id)->not->toContain($private->id);
+            expect($ids)->toContain($plain->id)->not->toContain($public->id)->not->toContain($private->id);
         }
-        expect($private->shouldBeSearchable())->toBeFalse()->and($public->shouldBeSearchable())->toBeTrue();
+        expect($private->shouldBeSearchable())->toBeFalse()->and($public->shouldBeSearchable())->toBeFalse()->and($plain->shouldBeSearchable())->toBeTrue();
     });
 
     it('merges cleanly when events match but no posts do (and vice versa)', function () {
