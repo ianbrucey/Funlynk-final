@@ -340,6 +340,6 @@ test('profile tabs show labels with counts and posts show status badges', functi
     Post::factory()->create(['user_id' => $owner->id, 'title' => 'Became Event', 'status' => 'converted', 'expires_at' => now()->addDay()]);
 
     Livewire::actingAs(profileViewer())->test('profile.show-profile', ['username' => $owner->username])
-        ->assertSee('Posts')->assertSee('Events')->assertSee('Going')->assertSee('Saved')
+        ->assertSee('Posts')->assertSee('Events')->assertSee('Going')->assertSee('Saved Posts')
         ->assertSee('Live')->assertSee('Expired')->assertSee('Converted');
 });

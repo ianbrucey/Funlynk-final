@@ -48,8 +48,7 @@
                 </div>
             @endauth
 
-            <div class="mt-4 grid grid-cols-3 border-t border-white/10 pt-3 text-center">
-                <div><div class="font-semibold text-white">{{ $canViewContent ? $postsCount : '–' }}</div><div class="text-xs text-gray-400">posts</div></div>
+            <div class="mt-4 grid grid-cols-2 border-t border-white/10 pt-3 text-center">
                 <div><div class="font-semibold text-white">{{ $followersCount }}</div><div class="text-xs text-gray-400">followers</div></div>
                 <div><div class="font-semibold text-white">{{ $followingCount }}</div><div class="text-xs text-gray-400">following</div></div>
             </div>
@@ -64,7 +63,7 @@
                 @endif
             </div>
         @else
-            @php $tabs = ['posts' => ['Posts', $postsCount], 'hosted' => ['Events', $hostedActivitiesCount], 'attending' => ['Going', $attendedActivitiesCount], 'interested' => ['Saved', $interestedPostsCount]]; @endphp
+            @php $tabs = ['posts' => ['Posts', $postsCount], 'hosted' => ['Events', $hostedActivitiesCount], 'attending' => ['Going', $attendedActivitiesCount], 'interested' => ['Saved Posts', $interestedPostsCount]]; @endphp
             <div class="glass-card mb-3 flex gap-1 overflow-x-auto p-1" role="tablist">
                 @foreach($tabs as $key => [$label, $count])
                     <button type="button" role="tab" aria-selected="{{ $activeTab === $key ? 'true' : 'false' }}"
