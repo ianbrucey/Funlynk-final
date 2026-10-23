@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>012 — Chat experience — UI mockup (FunLink)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; color: #e5e7eb; min-height: 100vh;
+    background: radial-gradient(ellipse at 20% 10%, #1e1b4b 0%, #0b0620 55%, #050310 100%); }
+  .page { max-width: 1180px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.4rem; } h2 { font-size: 1.05rem; margin: 26px 0 10px; color: #a5f3fc; }
+  .hint { color: #9ca3af; font-size: .85rem; margin: 4px 0 12px; }
+  .proposal { border: 1px dashed rgba(232,121,249,.5); background: rgba(232,121,249,.06); border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: .85rem; color: #f5d0fe; line-height: 1.5; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; }
+  .controls span { font-size: .75rem; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; }
+  .controls button { padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: .8rem; color: #e5e7eb; background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.12); }
+  .controls button.on { border-color: #22d3ee; color: #67e8f9; background: rgba(34,211,238,.12); }
+  .frame { margin: 0 auto 24px; background: #0b0a1e; border: 1px solid rgba(255,255,255,.12); border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .frame.phone { width: 390px; max-width: 100%; height: 720px; } .frame.desktop { width: 100%; max-width: 760px; height: 640px; border-radius: 16px; }
+  .top { padding: 10px 14px; background: rgba(255,255,255,.05); border-bottom: 1px solid rgba(255,255,255,.1); flex: none; }
+  .top a { color: #9ca3af; font-size: .8rem; display: inline-block; min-height: 28px; }
+  .top b { display: block; font-size: 1rem; } .top small { color: #9ca3af; font-size: .75rem; }
+  .pin { flex: none; display: flex; gap: 8px; align-items: center; padding: 8px 14px; font-size: .8rem; background: rgba(34,211,238,.1); border-bottom: 1px solid rgba(34,211,238,.25); color: #a5f3fc; cursor: pointer; min-height: 44px; }
+  .pin span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .thread { flex: 1; overflow-y: auto; padding: 10px 12px; scroll-behavior: smooth; }
+  .earlier { display: block; margin: 0 auto 10px; min-height: 44px; padding: 0 18px; border-radius: 999px; font-size: .8rem; cursor: pointer; color: #cbd5e1; background: rgba(30,41,59,.6); border: 1px solid rgba(255,255,255,.12); }
+  .day, .newdiv { text-align: center; font-size: .7rem; color: #9ca3af; margin: 14px 0 8px; display: flex; align-items: center; gap: 10px; }
+  .day::before, .day::after, .newdiv::before, .newdiv::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.12); }
+  .newdiv { color: #f0abfc; } .newdiv::before, .newdiv::after { background: rgba(240,171,252,.4); }
+  .msg { display: flex; gap: 8px; margin-top: 2px; } .msg.mine { flex-direction: row-reverse; } .msg.first { margin-top: 10px; }
+  .av { width: 32px; height: 32px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: .8rem; font-weight: 700; background: linear-gradient(135deg, #06b6d4, #8b5cf6); visibility: hidden; } .msg.first .av { visibility: visible; } .msg.mine .av { display: none; }
+  .col { max-width: 82%; display: flex; flex-direction: column; } .mine .col { align-items: flex-end; }
+  .name { font-size: .72rem; color: #9ca3af; margin: 0 4px 2px; }
+  .bubble { padding: 8px 12px; border-radius: 16px; font-size: .9rem; line-height: 1.35; background: rgba(51,65,85,.6); border: 1px solid rgba(255,255,255,.08); word-break: break-word; cursor: pointer; }
+  .mine .bubble { background: linear-gradient(90deg, #ec4899, #a855f7); border: 0; color: #fff; } .bubble.pending { opacity: .55; } .bubble.failed { background: rgba(248,113,113,.2); border: 1px solid rgba(248,113,113,.5); color: #fecaca; }
+  .quote { font-size: .75rem; padding: 5px 9px; margin-bottom: 3px; border-left: 2px solid #22d3ee; background: rgba(255,255,255,.05); border-radius: 8px; color: #9ca3af; cursor: pointer; max-width: 100%; } .quote b { color: #67e8f9; display: block; }
+  .time { font-size: .65rem; color: #6b7280; margin: 2px 4px 0; }
+  .rx { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; } .rx button { min-height: 28px; padding: 0 8px; border-radius: 999px; font-size: .75rem; cursor: pointer; color: #e5e7eb; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); } .rx button.me { border-color: #22d3ee; background: rgba(34,211,238,.15); }
+  .flash { animation: flash 1.2s; } @keyframes flash { 0%,60% { background: rgba(34,211,238,.25); } 100% { background: transparent; } }
+  .composer { flex: none; padding: 8px 10px 10px; background: rgba(255,255,255,.05); border-top: 1px solid rgba(255,255,255,.1); }
+  .replying { display: flex; align-items: center; gap: 8px; font-size: .75rem; color: #9ca3af; padding: 4px 6px 8px; } .replying b { color: #67e8f9; } .replying button { margin-left: auto; min-width: 44px; min-height: 44px; background: none; border: 0; color: #9ca3af; cursor: pointer; font-size: 1rem; }
+  .row { display: flex; gap: 8px; align-items: flex-end; } textarea { flex: 1; resize: none; max-height: 110px; min-height: 44px; padding: 11px 14px; border-radius: 14px; font: inherit; font-size: .9rem; color: #fff; background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.12); }
+  textarea:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,.25); }
+  .send { width: 44px; height: 44px; border-radius: 14px; border: 0; cursor: pointer; color: #fff; font-size: 1.1rem; background: linear-gradient(90deg, #ec4899, #a855f7); } .send:disabled { opacity: .4; }
+  .err { font-size: .75rem; color: #fca5a5; padding: 0 6px 6px; }
+  .ro { text-align: center; font-size: .85rem; color: #cbd5e1; padding: 8px; } .ro button { margin-top: 8px; min-height: 44px; padding: 0 22px; border: 0; border-radius: 12px; color: #fff; font-weight: 600; background: linear-gradient(90deg, #ec4899, #a855f7); }
+  .sheet-bg { position: absolute; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: flex-end; z-index: 5; } .sheet-bg.open { display: flex; }
+  .sheet { width: 100%; padding: 14px; background: #14102b; border-top: 1px solid rgba(255,255,255,.15); border-radius: 18px 18px 0 0; }
+  .sheet .emo { display: flex; gap: 6px; justify-content: space-between; margin-bottom: 8px; } .sheet .emo button { flex: 1; min-height: 48px; font-size: 1.3rem; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); }
+  .sheet .act { display: block; width: 100%; min-height: 44px; text-align: left; padding: 0 12px; border: 0; background: none; color: #e5e7eb; font-size: .9rem; cursor: pointer; border-radius: 10px; } .sheet .act:hover { background: rgba(255,255,255,.06); }
+  .empty { text-align: center; padding: 60px 20px; color: #9ca3af; font-size: .9rem; } .empty .ico { font-size: 2.4rem; }
+  .skel { height: 38px; margin: 8px 0; border-radius: 14px; background: rgba(255,255,255,.08); animation: pulse 1.4s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .4; } }
+  .card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 14px; margin: 12px; }
+  .card h3 { font-size: 1rem; } .card .m { font-size: .8rem; color: #9ca3af; margin: 4px 0 10px; }
+  .pv { padding: 8px 10px; margin-top: 6px; border-radius: 12px; background: rgba(0,0,0,.25); font-size: .82rem; } .pv b { color: #67e8f9; }
+  .btn { display: flex; align-items: center; justify-content: center; min-height: 44px; width: 100%; margin-top: 10px; border-radius: 12px; border: 0; color: #fff; font-weight: 600; cursor: pointer; background: linear-gradient(90deg, #06b6d4, #3b82f6); }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Chat experience — mockup</h1>
+  <p class="hint">Spec <strong>012 (placeholder number)</strong> · Status: APPROVED (delegated) · Synthetic data only · 390px phone first, then desktop. Interactive: tap a bubble for the action sheet, tap a quote or the pin to jump.</p>
+  <div class="proposal"><strong>What this proposes</strong> (all decided under owner delegation, 2026-10-23):
+    (1) The thread fills the screen and scrolls inside it; the composer stays pinned. Enter sends, Shift+Enter adds a line.
+    (2) Your message appears instantly (faded while sending, red with Retry if it fails); no blocking overlay.
+    (3) Consecutive messages from one person group under one name and avatar; day separators; clock times.
+    (4) "Load earlier" at the top; a "New messages" divider where you left off.
+    (5) Tap a bubble: quick reactions (👍 means "I'm in"), Reply (to anyone, including yourself), Pin (host or admin only).
+    (6) A pinned message sits at the top; tapping it jumps to the message.
+    (7) Quotes jump to the original. Members-only sending shows a join bar.
+    (8) The post page shows the last 3 messages and "Open chat" instead of the whole chat.
+    (9) The dead bell button is removed.
+  </div>
+  <h2>Controls</h2>
+  <div class="controls" id="c-role"><span>You are</span><button data-v="member" class="on">Member</button><button data-v="host">Host / admin</button><button data-v="outsider">Can read, not send</button></div>
+  <div class="controls" id="c-state"><span>State</span><button data-v="normal" class="on">Conversation</button><button data-v="empty">Empty</button><button data-v="loading">Loading</button><button data-v="fail">Next send fails</button><button data-v="rate">Rate limited</button></div>
+  <h2>Chat room · 390px phone</h2><div class="frame phone" id="phone"></div>
+  <h2>Chat room · desktop</h2><div class="frame desktop" id="desk"></div>
+  <h2>Post page · preview instead of embedded chat</h2><div class="frame phone" style="height:auto;padding-bottom:6px" id="post"></div>
+</div>
+<script>
+var S = { role: 'member', state: 'normal', earlier: false, pin: 'm4', reply: null, sheet: null, pending: [], rx: {}, sendFail: false, err: '' };
+var T0 = new Date('2026-10-22T17:40:00');
+function at(h, m, d) { var t = new Date(T0); t.setDate(t.getDate() + (d || 0)); t.setHours(h, m); return t; }
+var BASE = [
+  { id: 'm1', u: 'Ana', t: at(18, 2, -1), b: 'Anyone skating Thursday?' }, { id: 'm2', u: 'Sam', t: at(18, 5, -1), b: 'I am in' },
+  { id: 'm3', u: 'Sam', t: at(18, 5, -1), b: 'Pier at 6 works for me' },
+  { id: 'm4', u: 'Sam', t: at(9, 12), b: 'PLAN: Thursday 6pm at Junipero pier. Bring lights.', rx: { '👍': ['Ana', 'Lee'] } },
+  { id: 'm5', u: 'Lee', t: at(9, 20), b: 'Can we move to 6:30? Work ends late.', reply: 'm4' },
+  { id: 'm6', u: 'Ana', t: at(9, 21), b: '6:30 is fine' }, { id: 'm7', u: 'Ana', t: at(9, 21), b: 'bringing the speaker too' },
+  { id: 'm8', u: 'Me', t: at(17, 31), b: 'Count me in. Can I bring a friend?', me: true }, { id: 'm9', u: 'Sam', t: at(17, 33), b: 'Of course, the more the merrier' }
+];
+var OLD = [{ id: 'o1', u: 'Lee', t: at(12, 0, -3), b: 'This group is great' }, { id: 'o2', u: 'Ana', t: at(12, 4, -3), b: 'Welcome everyone' }];
+function msgs() { return (S.earlier ? OLD : []).concat(BASE).concat(S.pending); }
+function find(id) { return msgs().filter(function (m) { return m.id === id; })[0]; }
+function clock(t) { var h = t.getHours() % 12 || 12, m = ('0' + t.getMinutes()).slice(-2); return h + ':' + m + (t.getHours() < 12 ? ' AM' : ' PM'); }
+function dayLabel(t) { var d = Math.round((new Date(T0).setHours(0, 0, 0, 0) - new Date(t).setHours(0, 0, 0, 0)) / 864e5); return d === 0 ? 'Today' : d === 1 ? 'Yesterday' : t.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+function thread() {
+  if (S.state === 'loading') return '<div class="skel"></div><div class="skel" style="width:70%"></div><div class="skel" style="width:85%;margin-left:auto"></div><div class="skel" style="width:60%"></div>';
+  if (S.state === 'empty') return '<div class="empty"><div class="ico">💬</div><p style="margin-top:8px"><b style="color:#e5e7eb">No messages yet</b><br>Say hi and start planning.</p></div>';
+  var out = S.earlier ? '' : '<button class="earlier" data-earlier="1">Load earlier messages</button>', prev = null, newShown = false;
+  msgs().forEach(function (m) {
+    var newDay = !prev || prev.t.toDateString() !== m.t.toDateString();
+    if (newDay) out += '<div class="day">' + dayLabel(m.t) + '</div>';
+    if (!newShown && m.id === 'm8') { out += '<div class="newdiv">New messages</div>'; newShown = true; }
+    var first = newDay || prev.u !== m.u || (m.t - prev.t) > 300000 || (m.id === 'm8');
+    var q = m.reply ? find(m.reply) : null, rx = Object.keys(m.rx || {}).map(function (e) { var who = m.rx[e]; return '<button data-rx="' + m.id + '|' + e + '" class="' + (who.indexOf('Me') > -1 ? 'me' : '') + '">' + e + ' ' + who.length + '</button>'; }).join('');
+    out += '<div class="msg ' + (m.me ? 'mine ' : '') + (first ? 'first' : '') + '" id="' + id + '-' + m.id + '"><div class="av">' + m.u[0] + '</div><div class="col">' + (first && !m.me ? '<div class="name">' + m.u + '</div>' : '') +
+      (q ? '<div class="quote" data-jump="' + q.id + '"><b>' + q.u + '</b>' + q.b.slice(0, 50) + '</div>' : '') +
+      '<div class="bubble ' + (m.pending ? 'pending' : '') + (m.failed ? ' failed' : '') + '" data-msg="' + m.id + '">' + m.b + '</div>' + (rx ? '<div class="rx">' + rx + '</div>' : '') +
+      (m.failed ? '<div class="time" style="color:#fca5a5">Not sent · <a data-retry="' + m.id + '" style="cursor:pointer;text-decoration:underline">Retry</a></div>' : (m.pending ? '<div class="time">Sending…</div>' : '<div class="time">' + clock(m.t) + '</div>')) + '</div></div>';
+    prev = m;
+  });
+  return out;
+}
+var id = '';
+function composer() {
+  if (S.role === 'outsider') return '<div class="composer"><div class="ro">Only members can send messages here.<br><button>Join group to chat</button></div></div>';
+  return '<div class="composer">' + (S.reply ? '<div class="replying">↩ Replying to <b>' + find(S.reply).u + '</b><button data-cancel="1" aria-label="Cancel reply">✕</button></div>' : '') + (S.err ? '<div class="err">' + S.err + '</div>' : '') +
+    '<div class="row"><textarea rows="1" name="message" placeholder="Message the group" aria-label="Message"></textarea><button class="send" data-send="1" aria-label="Send">➤</button></div></div>';
+}
+function sheet() {
+  if (!S.sheet) return ''; var m = find(S.sheet), host = S.role === 'host';
+  return '<div class="sheet-bg open" data-close="1"><div class="sheet"><div class="emo">' + ['👍', '❤️', '😂', '🔥', '🙌'].map(function (e) { return '<button data-react="' + m.id + '|' + e + '">' + e + '</button>'; }).join('') + '</div>' +
+    (S.role !== 'outsider' ? '<button class="act" data-reply="' + m.id + '">↩ Reply</button>' : '') + (host ? '<button class="act" data-pin="' + m.id + '">' + (S.pin === m.id ? '📌 Unpin message' : '📌 Pin message') + '</button>' : '') + '</div></div>';
+}
+function room(fid) {
+  id = fid; var p = S.pin && S.state === 'normal' ? find(S.pin) : null;
+  document.getElementById(fid).innerHTML = '<div class="top"><a>← Back to post</a><b>Thursday skate at 6</b><small>12 people · Junipero Pier</small></div>' + (p ? '<div class="pin" data-jump="' + p.id + '">📌 <span>' + p.b + '</span></div>' : '') +
+    '<div class="thread" id="th-' + fid + '">' + thread() + '</div>' + composer() + sheet();
+  var th = document.getElementById('th-' + fid); if (th && !th.dataset.k) { th.scrollTop = th.scrollHeight; }
+}
+function post() {
+  var last = BASE.slice(-3).map(function (m) { return '<div class="pv"><b>' + m.u + '</b> ' + m.b + '</div>'; }).join(''), p = find('m4');
+  document.getElementById('post').innerHTML = '<div class="card"><h3>Thursday skate at 6</h3><div class="m">Junipero Pier · expires in 2 days</div>' + (p ? '<div class="pin" style="border-radius:10px;margin-bottom:6px">📌 <span>' + p.b + '</span></div>' : '') + '<div class="m" style="margin:8px 0 2px">Chat · 12 people</div>' + last + '<button class="btn">💬 Open chat</button></div>';
+}
+function draw() { room('phone'); room('desk'); post(); }
+function rootOf(el) { return el.closest('.frame').id; }
+function jump(fid, mid) { var el = document.getElementById(fid + '-' + mid); if (!el) return; el.scrollIntoView({ block: 'center' }); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+var seq = 100;
+function send(fid, text) {
+  var m = { id: 'p' + (++seq), u: 'Me', t: new Date(T0.getTime() + seq * 1000), b: text, me: true, pending: true, reply: S.reply };
+  S.pending.push(m); S.reply = null; S.err = ''; draw(); scrollEnd();
+  setTimeout(function () {
+    if (S.state === 'fail') { m.pending = false; m.failed = true; S.state = 'normal'; syncState(); }
+    else if (S.state === 'rate') { S.pending = S.pending.filter(function (x) { return x !== m; }); S.err = 'You are sending messages too fast. Wait a moment.'; }
+    else { m.pending = false; BASE.push(m); S.pending = S.pending.filter(function (x) { return x !== m; }); }
+    draw(); scrollEnd();
+  }, 700);
+}
+function scrollEnd() { ['phone', 'desk'].forEach(function (f) { var th = document.getElementById('th-' + f); if (th) th.scrollTop = th.scrollHeight; }); }
+function react(mid, e) { var m = find(mid); m.rx = m.rx || {}; var w = m.rx[e] = m.rx[e] || [], i = w.indexOf('Me'); if (i > -1) w.splice(i, 1); else w.push('Me'); if (!w.length) delete m.rx[e]; }
+function syncState() { document.querySelectorAll('#c-state button').forEach(function (b) { b.classList.toggle('on', b.dataset.v === S.state); }); }
+document.addEventListener('click', function (e) {
+  var t = e.target, f = t.closest('.frame') ? t.closest('.frame').id : null, d;
+  if ((d = t.closest('[data-earlier]'))) { S.earlier = true; draw(); }
+  else if ((d = t.closest('[data-jump]'))) { jump(f, d.dataset.jump); }
+  else if ((d = t.closest('[data-rx]'))) { var p = d.dataset.rx.split('|'); react(p[0], p[1]); draw(); }
+  else if ((d = t.closest('[data-react]'))) { var q = d.dataset.react.split('|'); react(q[0], q[1]); S.sheet = null; draw(); }
+  else if ((d = t.closest('[data-reply]'))) { S.reply = d.dataset.reply; S.sheet = null; draw(); }
+  else if ((d = t.closest('[data-pin]'))) { S.pin = S.pin === d.dataset.pin ? null : d.dataset.pin; S.sheet = null; draw(); }
+  else if ((d = t.closest('[data-retry]'))) { var m = find(d.dataset.retry); m.failed = false; m.pending = true; draw(); setTimeout(function () { m.pending = false; BASE.push(m); S.pending = S.pending.filter(function (x) { return x !== m; }); draw(); scrollEnd(); }, 600); }
+  else if ((d = t.closest('[data-cancel]'))) { S.reply = null; draw(); }
+  else if ((d = t.closest('[data-msg]'))) { S.sheet = d.dataset.msg; draw(); }
+  else if (t.closest('.sheet-bg') && !t.closest('.sheet')) { S.sheet = null; draw(); }
+  else if ((d = t.closest('[data-send]'))) { var ta = d.closest('.composer').querySelector('textarea'); if (ta.value.trim()) { var v = ta.value.trim(); ta.value = ''; send(f, v); } }
+});
+document.addEventListener('keydown', function (e) {
+  if (e.target.tagName === 'TEXTAREA' && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); e.target.closest('.composer').querySelector('[data-send]').click(); }
+  if (e.key === 'Escape') { S.sheet = null; draw(); }
+});
+document.addEventListener('input', function (e) { if (e.target.tagName === 'TEXTAREA') { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 110) + 'px'; } });
+[['c-role', 'role'], ['c-state', 'state']].forEach(function (c) {
+  document.getElementById(c[0]).addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; S[c[1]] = b.dataset.v; S.err = ''; this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); }); draw(); });
+});
+draw();
+</script>
+</body>
+</html>
