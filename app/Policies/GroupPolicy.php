@@ -111,4 +111,28 @@ class GroupPolicy
     {
         return $group->memberships()->where('user_id', $user->id)->where('role', 'admin')->exists();
     }
+
+    /**
+     * Funds (asks and ledger) follow the group's own visibility (spec 015).
+     */
+    public function viewFunds(?User $user, Group $group): bool
+    {
+        return $this->view($user, $group);
+    }
+
+    /**
+     * Any member can propose an ask (spec 015).
+     */
+    public function proposeAsk(User $user, Group $group): bool
+    {
+        return $group->memberships()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * Admins approve, decline, record, void and close asks (spec 015).
+     */
+    public function manageFunds(User $user, Group $group): bool
+    {
+        return $group->memberships()->where('user_id', $user->id)->where('role', 'admin')->exists();
+    }
 }

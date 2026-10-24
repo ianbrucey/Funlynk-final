@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>015 — Group asks and ledger — UI mockup (FunLynk)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; color: #e5e7eb; min-height: 100vh; background: radial-gradient(ellipse at 20% 10%, #1e1b4b 0%, #0b0620 55%, #050310 100%); }
+  .page { max-width: 1180px; margin: 0 auto; padding: 16px; } h1 { font-size: 1.4rem; } h2 { font-size: 1.05rem; margin: 26px 0 10px; color: #a5f3fc; }
+  .hint { color: #9ca3af; font-size: .85rem; margin: 4px 0 12px; }
+  .proposal { border: 1px dashed rgba(232,121,249,.5); background: rgba(232,121,249,.06); border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: .85rem; color: #f5d0fe; line-height: 1.5; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; } .controls span { font-size: .75rem; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; }
+  .controls button { padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: .8rem; color: #e5e7eb; background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.12); } .controls button.on { border-color: #22d3ee; color: #67e8f9; background: rgba(34,211,238,.12); }
+  .frame { margin: 0 auto 24px; background: rgba(5,3,16,.55); border: 1px solid rgba(255,255,255,.12); border-radius: 28px; padding: 14px 12px 20px; position: relative; overflow: hidden; } .frame.phone { width: 390px; max-width: 100%; } .frame.desktop { width: 100%; max-width: 760px; border-radius: 16px; padding: 24px; }
+  .glass { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 14px; position: relative; margin-bottom: 12px; }
+  .tabs { display: flex; gap: 4px; padding: 4px; margin-bottom: 12px; border-radius: 14px; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.1); overflow-x: auto; } .tabs span { flex: 1 0 auto; text-align: center; min-height: 40px; display: grid; place-items: center; padding: 0 12px; border-radius: 10px; font-size: .8rem; color: #9ca3af; } .tabs span.on { background: linear-gradient(90deg, #ec4899, #a855f7); color: #fff; font-weight: 600; }
+  .note { font-size: .72rem; color: #9ca3af; line-height: 1.4; padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); margin-bottom: 12px; }
+  .ask { display: block; width: 100%; text-align: left; color: inherit; cursor: pointer; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 12px; margin-bottom: 8px; min-height: 64px; } .ask:hover { border-color: rgba(34,211,238,.4); }
+  .ask b { font-size: .95rem; display: block; } .ask small { color: #9ca3af; font-size: .75rem; } .row { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+  .bar { height: 6px; border-radius: 999px; background: rgba(255,255,255,.1); margin: 8px 0 4px; overflow: hidden; } .bar i { display: block; height: 100%; background: linear-gradient(90deg, #22d3ee, #a855f7); }
+  .badge { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 6px; border: 1px solid; white-space: nowrap; }
+  .b-open { color: #86efac; border-color: rgba(34,197,94,.4); background: rgba(34,197,94,.12); } .b-prop { color: #fcd34d; border-color: rgba(252,211,77,.4); background: rgba(252,211,77,.1); } .b-done { color: #67e8f9; border-color: rgba(34,211,238,.4); background: rgba(34,211,238,.12); } .b-off { color: #9ca3af; border-color: rgba(156,163,175,.3); background: rgba(156,163,175,.1); }
+  .btn { min-height: 44px; padding: 0 16px; border-radius: 12px; cursor: pointer; font-size: .85rem; font-weight: 600; color: #fff; border: 1px solid rgba(255,255,255,.14); background: rgba(30,41,59,.6); } .btn:hover { border-color: rgba(34,211,238,.5); }
+  .btn.pri { border: 0; background: linear-gradient(90deg, #ec4899, #a855f7); } .btn.go { border: 0; background: linear-gradient(90deg, #06b6d4, #3b82f6); } .btn.danger { border-color: rgba(248,113,113,.5); color: #fca5a5; } .btn.full { width: 100%; margin-top: 8px; } .btn:disabled { opacity: .5; }
+  .why { font-size: .88rem; line-height: 1.5; color: #d1d5db; margin: 8px 0; } .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center; margin: 10px 0; } .stats b { display: block; font-size: 1rem; } .stats small { font-size: .68rem; color: #9ca3af; }
+  .led { border-top: 1px solid rgba(255,255,255,.08); padding: 10px 2px; } .led.void { opacity: .55; } .led .t { font-size: .88rem; font-weight: 600; } .led .m { font-size: .74rem; color: #9ca3af; margin-top: 2px; } .led s { text-decoration-thickness: 2px; }
+  .imgs { display: flex; gap: 8px; margin-top: 8px; } .img { width: 84px; height: 84px; border-radius: 10px; display: grid; place-items: center; font-size: .65rem; color: #cbd5e1; background: rgba(255,255,255,.07); border: 1px dashed rgba(255,255,255,.2); text-align: center; padding: 4px; }
+  .link { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 12px; margin-top: 8px; border-radius: 12px; background: rgba(34,211,238,.08); border: 1px solid rgba(34,211,238,.3); color: #a5f3fc; font-size: .85rem; text-decoration: none; }
+  .empty { text-align: center; padding: 34px 14px; } .empty .ico { font-size: 2rem; } .empty h4 { margin-top: 8px; font-size: .95rem; } .empty p { font-size: .8rem; color: #9ca3af; margin: 4px 0 12px; }
+  .skel { height: 70px; margin: 8px 0; border-radius: 14px; background: rgba(255,255,255,.08); animation: pulse 1.4s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .4; } }
+  .sheet-bg { position: absolute; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: flex-end; justify-content: center; z-index: 5; overflow-y: auto; } .sheet-bg.open { display: flex; } .desktop .sheet-bg { align-items: center; }
+  .sheet { width: 100%; max-width: 400px; margin: 10px; padding: 16px; background: #14102b; border: 1px solid rgba(255,255,255,.15); border-radius: 18px; } .sheet h4 { font-size: 1rem; } .sheet p { font-size: .8rem; color: #cbd5e1; margin: 6px 0 8px; }
+  .sheet label { display: block; font-size: .75rem; color: #9ca3af; margin-top: 8px; } .sheet input, .sheet textarea, .sheet select { width: 100%; min-height: 44px; margin-top: 4px; padding: 10px 12px; border-radius: 10px; font: inherit; font-size: .9rem; color: #fff; background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.12); }
+  .sheet input:focus, .sheet textarea:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,.25); } .sheet .two { display: flex; gap: 8px; margin-top: 12px; } .sheet .two .btn { flex: 1; } .err { color: #fca5a5; font-size: .75rem; margin-top: 4px; }
+  .toast { position: absolute; left: 12px; right: 12px; bottom: 12px; padding: 11px 12px; border-radius: 12px; font-size: .82rem; display: none; z-index: 8; background: rgba(34,197,94,.2); border: 1px solid rgba(34,197,94,.45); color: #bbf7d0; } .toast.err { background: rgba(248,113,113,.18); border-color: rgba(248,113,113,.45); color: #fecaca; } .toast.show { display: block; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Group asks and ledger — mockup</h1>
+  <p class="hint">Spec <strong>015 (placeholder number)</strong> · Status: DRAFT · Synthetic data only · 390px phone first, then desktop. Interactive.</p>
+  <div class="proposal"><strong>What this proposes</strong> (all [P]):
+    (1) A <strong>Funds</strong> tab on the group page: Open asks, Closed asks, and (for admins and the author) proposals waiting for approval.
+    (2) Any member <strong>proposes an ask</strong>; any admin <strong>approves or declines</strong> (declines need a reason).
+    (3) Each ask shows why, the target, <strong>received / spent / left</strong>, the payment link while open, and a <strong>ledger</strong> of entries with item and receipt photos.
+    (4) Admins <strong>record money received</strong> and <strong>purchases</strong> (amount, item photo and receipt photo are required). Entries can't be edited; they can be <strong>voided with a reason</strong>, and stay visible.
+    (5) Closing needs proof (completed) or a reason (cancelled). Closing note says what happens to leftovers.
+    (6) <strong>"I chipped in"</strong> is self-reported and never counted in totals.
+    (7) Every screen says payments happen outside FunLynk and amounts are recorded by admins.
+  </div>
+  <h2>Controls</h2>
+  <div class="controls" id="c-role"><span>You are</span><button data-v="member" class="on">Member</button><button data-v="admin">Group admin</button><button data-v="visitor">Visitor (public group, not a member)</button></div>
+  <div class="controls" id="c-state"><span>State</span><button data-v="list" class="on">Asks</button><button data-v="empty">No asks yet</button><button data-v="loading">Loading</button></div>
+  <h2>Funds tab · 390px phone</h2><div class="frame phone" id="phone"></div>
+  <h2>Funds tab · desktop</h2><div class="frame desktop" id="desk"></div>
+</div>
+<script>
+var S = { role: 'member', state: 'list', view: 'list', ask: null, sheet: null, toast: null, err: '', chip: {} };
+var ASKS = [
+  { id: 'a1', title: 'New DJ speaker stands', by: 'Sam', status: 'open', target: 240, deadline: 'Nov 15', link: 'venmo.com/u/open-skate-tuesday', why: 'Our current stands wobble and one tipped last week. Two sturdy stands keep the speakers safe for skaters. Quote is from the shop on 4th Street.', chips: 6,
+    entries: [{ k: 'in', amt: 120, who: 'Ana R.', note: 'Venmo', d: 'Oct 21' }, { k: 'in', amt: 80, who: 'Anonymous', note: 'Cash at the door', d: 'Oct 22' }, { k: 'in', amt: 40, who: 'Lee P.', note: 'Venmo', d: 'Oct 23', void: 'Duplicate of the cash entry, sorry' }, { k: 'out', amt: 95, what: 'Speaker stand (1 of 2)', d: 'Oct 24', proof: true }] },
+  { id: 'a2', title: 'Replacement pop-up tent', by: 'Priya', status: 'proposed', target: 180, deadline: '', link: 'cash.app/$openskatetue', why: 'The tent frame cracked at the last windy session.', chips: 0, entries: [] },
+  { id: 'a3', title: 'Rink fan rental', by: 'Sam', status: 'done', target: 300, deadline: 'Oct 10', link: '', why: 'Two big fans for the August heat.', chips: 9, close: 'Completed. $15 left over rolls into the next ask.',
+    entries: [{ k: 'in', amt: 320, who: 'Several members', note: 'Venmo, 11 payments', d: 'Aug 2' }, { k: 'out', amt: 305, what: 'Fan rental + delivery', d: 'Aug 5', proof: true }] }
+];
+function tot(a) { var r = 0, s = 0; a.entries.forEach(function (e) { if (e.void) return; if (e.k === 'in') r += e.amt; else s += e.amt; }); return { r: r, s: s, left: r - s }; }
+function find(id) { return ASKS.filter(function (a) { return a.id === id; })[0]; }
+function money(n) { return '$' + n.toLocaleString(); }
+function badge(a) { return { open: '<span class="badge b-open">Open</span>', proposed: '<span class="badge b-prop">Waiting for approval</span>', done: '<span class="badge b-done">Completed</span>', off: '<span class="badge b-off">Cancelled</span>', declined: '<span class="badge b-off">Declined</span>' }[a.status]; }
+function visible(a) { if (a.status !== 'proposed' && a.status !== 'declined') return true; return S.role === 'admin' || a.by === 'Me'; }
+var NOTE = '<div class="note">Payments happen outside FunLynk. Amounts and receipts are recorded by group admins. FunLynk does not hold or move money.</div>';
+function card(a) { var t = tot(a), pct = Math.min(100, Math.round(100 * t.r / a.target)); return '<button class="ask" data-open="' + a.id + '"><div class="row"><b>' + a.title + '</b>' + badge(a) + '</div><small>Asked by ' + (a.by === 'Me' ? 'you' : a.by) + (a.deadline ? ' · by ' + a.deadline : '') + '</small>' + (a.status === 'open' || a.status === 'done' ? '<div class="bar"><i style="width:' + pct + '%"></i></div><small>' + money(t.r) + ' received of ' + money(a.target) + ' · ' + money(t.s) + ' spent</small>' : '') + '</button>'; }
+function listView() {
+  if (S.state === 'loading') return '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+  var vis = ASKS.filter(visible);
+  if (S.state === 'empty' || !vis.length) return '<div class="empty"><div class="ico">🧾</div><h4>No asks yet</h4><p>' + (S.role === 'visitor' ? 'This group has not asked for money.' : 'Need to raise money for gear? Propose an ask and explain why. Everything is tracked here.') + '</p>' + (S.role === 'member' || S.role === 'admin' ? '<button class="btn pri" data-propose="1">Propose an ask</button>' : '') + '</div>';
+  var groups = [['proposed', 'Waiting for approval'], ['open', 'Open'], ['closed', 'Closed']], out = '';
+  groups.forEach(function (g) { var l = vis.filter(function (a) { return g[0] === 'closed' ? (a.status === 'done' || a.status === 'off' || a.status === 'declined') : a.status === g[0]; }); if (l.length) out += '<div class="hint" style="margin:10px 2px 6px;text-transform:uppercase;letter-spacing:.06em">' + g[1] + '</div>' + l.map(card).join(''); });
+  return out;
+}
+function entry(e, a) {
+  var voided = e.void ? ' void' : '', amt = (e.k === 'in' ? '+' : '−') + money(e.amt), txt = e.k === 'in' ? 'Received from ' + e.who : e.what;
+  var proof = e.proof ? '<div class="imgs"><div class="img">Item photo</div><div class="img">Receipt photo</div></div>' : '';
+  var vb = S.role === 'admin' && !e.void && a.status === 'open' ? '<button class="btn danger" style="min-height:44px;margin-top:6px;font-size:.75rem" data-void="' + a.id + '|' + a.entries.indexOf(e) + '">Void entry</button>' : '';
+  return '<div class="led' + voided + '"><div class="row"><span class="t">' + (e.void ? '<s>' + txt + '</s>' : txt) + '</span><b style="color:' + (e.k === 'in' ? '#86efac' : '#fca5a5') + '">' + (e.void ? '<s>' + amt + '</s>' : amt) + '</b></div><div class="m">' + (e.note || '') + ' · ' + e.d + (e.void ? ' · <span style="color:#fca5a5">Voided: ' + e.void + '</span>' : '') + '</div>' + proof + vb + '</div>';
+}
+function detail() {
+  var a = find(S.ask), t = tot(a), pct = Math.min(100, Math.round(100 * t.r / a.target)), adm = S.role === 'admin', mem = S.role === 'member' || adm;
+  var h = '<button class="btn" data-back="1" style="margin-bottom:10px">← Funds</button><div class="glass"><div class="row"><h3 style="font-size:1.05rem">' + a.title + '</h3>' + badge(a) + '</div><div class="hint" style="margin:2px 0">Asked by ' + (a.by === 'Me' ? 'you' : a.by) + (a.deadline ? ' · needed by ' + a.deadline : '') + '</div><p class="why">' + a.why + '</p>';
+  if (a.status === 'open' || a.status === 'done') h += '<div class="bar"><i style="width:' + pct + '%"></i></div><div class="stats"><div><b>' + money(t.r) + '</b><small>received</small></div><div><b>' + money(t.s) + '</b><small>spent</small></div><div><b>' + money(t.left) + '</b><small>left</small></div></div><div class="hint">Target ' + money(a.target) + ' · last updated ' + (a.entries.length ? a.entries[a.entries.length - 1].d : 'never') + '</div>';
+  if (a.status === 'open') h += '<a class="link">💸 Give: ' + a.link + ' (opens outside FunLynk)</a>' + (mem ? '<button class="btn full ' + (S.chip[a.id] ? '' : 'go') + '" data-chip="' + a.id + '"' + (S.chip[a.id] ? ' disabled' : '') + '>' + (S.chip[a.id] ? '✓ You said you chipped in' : 'I chipped in') + '</button><div class="hint" style="margin-top:6px">' + (a.chips + (S.chip[a.id] ? 1 : 0)) + ' members say they chipped in (self-reported, not counted in the totals).</div>' : '');
+  if (a.status === 'proposed' && adm) h += '<div class="two" style="display:flex;gap:8px;margin-top:10px"><button class="btn pri" style="flex:1" data-approve="' + a.id + '">Approve</button><button class="btn danger" style="flex:1" data-decline="' + a.id + '">Decline</button></div>';
+  if (a.status === 'proposed' && !adm) h += '<div class="note" style="margin-top:10px">An admin needs to approve this before members can see it.</div>';
+  if (a.close) h += '<div class="note" style="margin-top:10px"><b>Closing note:</b> ' + a.close + '</div>';
+  h += '</div>' + NOTE;
+  if (a.status === 'open' || a.status === 'done') { h += '<div class="glass"><div class="row"><h3 style="font-size:.95rem">Ledger</h3>' + (adm && a.status === 'open' ? '<span style="display:flex;gap:6px"><button class="btn" style="min-height:44px;font-size:.75rem" data-rec="in">+ Money in</button><button class="btn" style="min-height:44px;font-size:.75rem" data-rec="out">+ Purchase</button></span>' : '') + '</div>' + (a.entries.length ? a.entries.slice().reverse().map(function (e) { return entry(e, a); }).join('') : '<div class="hint" style="padding:10px 0">Nothing recorded yet.</div>') + '</div>'; if (adm && a.status === 'open') h += '<button class="btn full" data-close="' + a.id + '">Close this ask</button>'; }
+  return h;
+}
+function sheet() {
+  if (!S.sheet) return ''; var t = S.sheet.type, a = S.ask ? find(S.ask) : null, h = '', e = S.err ? '<div class="err">' + S.err + '</div>' : '';
+  if (t === 'propose') h = '<h4>Propose an ask</h4><p>An admin approves it before members see it.</p><label for="p-t">What is it for</label><input id="p-t" name="title" maxlength="80"><label for="p-w">Why (what and why)</label><textarea id="p-w" name="why" rows="3" maxlength="1000"></textarea><label for="p-a">Target amount ($)</label><input id="p-a" name="amount" inputmode="numeric"><label for="p-l">Payment link (Venmo, Cash App, PayPal…)</label><input id="p-l" name="link" placeholder="https://venmo.com/u/..."><label for="p-d">Needed by (optional)</label><input id="p-d" name="deadline" type="date">' + e + '<div class="two"><button class="btn" data-x="1">Cancel</button><button class="btn pri" data-send-prop="1">Send for approval</button></div>';
+  if (t === 'decline') h = '<h4>Decline this ask</h4><p>The author will see your reason.</p><label for="d-r">Reason</label><textarea id="d-r" name="reason" rows="3"></textarea>' + e + '<div class="two"><button class="btn" data-x="1">Cancel</button><button class="btn danger" data-do-decline="1">Decline</button></div>';
+  if (t === 'in') h = '<h4>Record money received</h4><p>Only record money you actually received. Entries cannot be edited, only voided.</p><label for="r-a">Amount ($)</label><input id="r-a" name="amount" inputmode="numeric"><label for="r-w">From (or Anonymous)</label><input id="r-w" name="who"><label for="r-n">Note</label><input id="r-n" name="note" placeholder="Venmo, cash at the door…">' + e + '<div class="two"><button class="btn" data-x="1">Cancel</button><button class="btn pri" data-save-in="1">Record</button></div>';
+  if (t === 'out') h = '<h4>Record a purchase</h4><p>A photo of the item and a photo of the receipt are required. Hide card numbers and addresses on the receipt first.</p><label for="o-a">Amount spent ($)</label><input id="o-a" name="amount" inputmode="numeric"><label for="o-w">What was bought</label><input id="o-w" name="what"><label for="o-i">Photo of the item</label><input id="o-i" name="item" type="file" accept="image/*"><label for="o-r">Photo of the receipt</label><input id="o-r" name="receipt" type="file" accept="image/*">' + e + '<div class="two"><button class="btn" data-x="1">Cancel</button><button class="btn pri" data-save-out="1">Record purchase</button></div>';
+  if (t === 'void') h = '<h4>Void this entry?</h4><p>It stays visible with your reason, struck through, and is removed from the totals.</p><label for="v-r">Reason</label><textarea id="v-r" name="reason" rows="2"></textarea>' + e + '<div class="two"><button class="btn" data-x="1">Keep</button><button class="btn danger" data-do-void="1">Void</button></div>';
+  if (t === 'close') h = '<h4>Close this ask</h4><p>Say what happens to any money left over.</p><label for="c-k">How to close</label><select id="c-k" name="kind"><option value="done">Completed (needs a purchase with receipt)</option><option value="off">Cancelled (needs a reason)</option></select><label for="c-n">Closing note</label><textarea id="c-n" name="note" rows="3"></textarea>' + e + '<div class="two"><button class="btn" data-x="1">Cancel</button><button class="btn pri" data-do-close="1">Close ask</button></div>';
+  return '<div class="sheet-bg open" data-bg="1"><div class="sheet" role="dialog" aria-modal="true">' + h + '</div></div>';
+}
+function frame(id) {
+  var tabsRow = '<div class="tabs"><span>Timeline</span><span>Members</span><span>Chat</span><span class="on">Funds</span></div>';
+  var head = '<div class="hint" style="margin:0 0 8px"><b style="color:#e5e7eb;font-size:1rem">Open Skate Tuesday</b><br>Public group · 48 members</div>';
+  var main = S.view === 'detail' ? detail() : (NOTE + ((S.role === 'member' || S.role === 'admin') && S.state === 'list' ? '<button class="btn pri full" style="margin:0 0 10px" data-propose="1">+ Propose an ask</button>' : '') + (S.role === 'visitor' ? '<div class="note">Join the group to propose or follow asks.</div>' : '') + listView());
+  document.getElementById(id).innerHTML = head + tabsRow + main + sheet() + '<div class="toast ' + (S.toast && S.toast.err ? 'err ' : '') + (S.toast ? 'show' : '') + '" role="status">' + (S.toast ? S.toast.msg : '') + '</div>';
+}
+function draw() {
+  var keep = {};
+  document.querySelectorAll('#phone .sheet input:not([type=file]), #phone .sheet textarea, #phone .sheet select').forEach(function (el) { if (el.id) keep[el.id] = el.value; });
+  frame('phone'); frame('desk');
+  Object.keys(keep).forEach(function (id) { document.querySelectorAll('#' + id).forEach(function (el) { el.value = keep[id]; }); });
+}
+function say(m, err) { S.toast = { msg: m, err: !!err }; S.sheet = null; S.err = ''; draw(); setTimeout(function () { S.toast = null; draw(); }, 1900); }
+function val(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function allowed(l) { return /^https:\/\/(www\.)?(venmo\.com|cash\.app|paypal\.me|paypal\.com|ko-fi\.com|buymeacoffee\.com|gofundme\.com|zeffy\.com)\//i.test(l); }
+document.addEventListener('click', function (e) {
+  var t = e.target, d, a = S.ask ? find(S.ask) : null;
+  if ((d = t.closest('[data-open]'))) { S.view = 'detail'; S.ask = d.dataset.open; draw(); }
+  else if (t.closest('[data-back]')) { S.view = 'list'; draw(); }
+  else if (t.closest('[data-propose]')) { S.sheet = { type: 'propose' }; S.err = ''; draw(); }
+  else if (t.closest('[data-send-prop]')) { var l = val('p-l'), am = parseInt(val('p-a'), 10); if (!val('p-t') || !val('p-w')) { S.err = 'Add a title and explain why.'; draw(); return; } if (!(am >= 1 && am <= 1000000)) { S.err = 'Enter a target between $1 and $1,000,000.'; draw(); return; } if (!allowed(l)) { S.err = 'Use an https link from Venmo, Cash App, PayPal, Ko-fi, Buy Me a Coffee, GoFundMe or Zeffy.'; draw(); return; } ASKS.unshift({ id: 'n' + ASKS.length, title: val('p-t'), by: 'Me', status: 'proposed', target: am, deadline: '', link: l.replace('https://', ''), why: val('p-w'), chips: 0, entries: [] }); S.state = 'list'; syncState(); say('Sent for approval. Admins have been notified.'); }
+  else if ((d = t.closest('[data-approve]'))) { find(d.dataset.approve).status = 'open'; draw(); say('Approved. Members have been notified.'); }
+  else if (t.closest('[data-decline]')) { S.sheet = { type: 'decline' }; S.err = ''; draw(); }
+  else if (t.closest('[data-do-decline]')) { if (!val('d-r')) { S.err = 'Give a reason so the author understands.'; draw(); return; } a.status = 'declined'; say('Declined. The author can see your reason.'); }
+  else if ((d = t.closest('[data-rec]'))) { S.sheet = { type: d.dataset.rec }; S.err = ''; draw(); }
+  else if (t.closest('[data-save-in]')) { var amt = parseInt(val('r-a'), 10); if (!(amt >= 1)) { S.err = 'Enter an amount of at least $1.'; draw(); return; } a.entries.push({ k: 'in', amt: amt, who: val('r-w') || 'Anonymous', note: val('r-n'), d: 'Today' }); say('Money recorded'); }
+  else if (t.closest('[data-save-out]')) { var am2 = parseInt(val('o-a'), 10), it = document.getElementById('o-i'), rc = document.getElementById('o-r'); if (!(am2 >= 1) || !val('o-w')) { S.err = 'Add what was bought and the amount.'; draw(); return; } if (!(it && it.files.length) || !(rc && rc.files.length)) { S.err = 'Add both an item photo and a receipt photo.'; draw(); return; } a.entries.push({ k: 'out', amt: am2, what: val('o-w'), d: 'Today', proof: true }); say('Purchase recorded. Members have been notified.'); }
+  else if ((d = t.closest('[data-void]'))) { S.sheet = { type: 'void', ref: d.dataset.void }; S.err = ''; draw(); }
+  else if (t.closest('[data-do-void]')) { if (!val('v-r')) { S.err = 'A reason is required.'; draw(); return; } var p = S.sheet.ref.split('|'); find(p[0]).entries[+p[1]].void = val('v-r'); say('Entry voided. It stays visible.'); }
+  else if (t.closest('[data-close]')) { S.sheet = { type: 'close' }; S.err = ''; draw(); }
+  else if (t.closest('[data-do-close]')) { var kind = document.getElementById('c-k').value, note = val('c-n'), spent = a.entries.some(function (x) { return x.k === 'out' && x.proof && !x.void; }); if (kind === 'done' && !spent) { S.err = 'To complete, record a purchase with an item photo and receipt first, or cancel with a reason.'; draw(); return; } if (!note) { S.err = 'Say what happens to any money left over.'; draw(); return; } a.status = kind; a.close = (kind === 'done' ? 'Completed. ' : 'Cancelled. ') + note; say('Ask closed'); }
+  else if ((d = t.closest('[data-chip]'))) { S.chip[d.dataset.chip] = true; draw(); say('Thanks! Marked as self-reported.'); }
+  else if (t.closest('[data-x]') || t.classList.contains('sheet-bg')) { S.sheet = null; S.err = ''; draw(); }
+});
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && S.sheet) { S.sheet = null; draw(); } });
+function syncState() { document.querySelectorAll('#c-state button').forEach(function (b) { b.classList.toggle('on', b.dataset.v === S.state); }); }
+[['c-role', 'role'], ['c-state', 'state']].forEach(function (c) { document.getElementById(c[0]).addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; S[c[1]] = b.dataset.v; S.sheet = null; if (c[1] === 'role') S.view = 'list'; this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); }); draw(); }); });
+draw();
+</script>
+</body>
+</html>

@@ -48,7 +48,7 @@ Other things noticed, not changed: `group.{id}` channels (used by the group time
 - Tap a quote to jump to the original; reply to anyone including yourself.
 - One-tap reactions (use the existing backend). A thumbs-up becomes "I'm in".
 
-**Phase 2: plan-making features (the part that sets FunLink apart)**
+**Phase 2: plan-making features (the part that sets FunLynk apart)**
 - **Pinned message** for the host or admin ("Meet at the pier, 6pm").
 - **Plan card:** anyone proposes a time and place as a special message (the `messages.type` column already exists); members tap In / Maybe / Can't. When enough say In, a one-tap **"Make this an event"** reuses the post-to-event conversion.
 - **Quick poll** ("Which night?").

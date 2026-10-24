@@ -221,6 +221,12 @@
                         Group Chat
                     </button>
 
+                    <button @click="switchTab('funds')"
+                            class="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-2 rounded-xl font-medium text-sm sm:text-base transition-all min-h-[44px] flex items-center gap-2 active:scale-95"
+                            :class="activeTab === 'funds' ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white border border-purple-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5'">
+                        Funds
+                    </button>
+
                     @if($isAdmin)
                         <button @click="switchTab('requests')"
                                 class="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-2 rounded-xl font-medium text-sm sm:text-base transition-all min-h-[44px] flex items-center gap-2 relative active:scale-95"
@@ -245,6 +251,10 @@
                     @livewire('groups.group-timeline', ['group' => $group], key('timeline-'.$group->id))
                 </div>
                 
+                <div x-show="activeTab === 'funds'" x-cloak>
+                    @livewire('groups.group-funds', ['group' => $group, 'lazy' => true], key('funds-'.$group->id))
+                </div>
+
                 <div x-show="activeTab === 'members'" x-cloak>
                     @livewire('groups.group-members', ['group' => $group], key('members-'.$group->id))
                 </div>
