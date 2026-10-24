@@ -143,6 +143,7 @@ class PostDetail extends Component
             'chatPreview' => $chatPreview,
             'chatPinned' => $chatPinned,
             'chatCount' => $conversation ? $conversation->participants()->count() : 0,
+            'chatUnread' => $conversation && auth()->check() && app(\App\Services\ChatNotifier::class)->hasUnread($conversation, auth()->user()),
         ])->layout('layouts.app');
     }
 }

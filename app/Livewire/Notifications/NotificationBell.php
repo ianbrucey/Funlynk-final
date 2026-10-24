@@ -123,6 +123,11 @@ class NotificationBell extends Component
                 if (isset($notification->data['post_id'])) {
                     $this->redirect(route('posts.show', $notification->data['post_id']));
                 }
+            } elseif (in_array($notification->type, \App\Services\ChatNotifier::TYPES, true)) {
+                $chatUrl = data_get($notification->data, 'url');
+                if ($chatUrl) {
+                    $this->redirect($chatUrl);
+                }
             } elseif ($notification->type === 'post_converted_to_event') {
                 // Redirect to the event page
                 if (! empty($url)) {

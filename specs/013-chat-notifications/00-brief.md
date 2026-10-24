@@ -1,6 +1,6 @@
 # 013 — Chat notifications, mentions and mute — Strategic brief
 
-**Status:** DRAFT (→ IN REVIEW → APPROVED)
+**Status:** APPROVED 2026-10-24 (owner: "you decide"; built, see Build notes)
 **Author:** Augment Agent (orchestrator draft)
 **Date:** 2026-10-24
 
@@ -47,18 +47,18 @@ A member of a post, event or group chat hears about the messages that matter (me
 | C-07 | Someone no longer allowed to view the chat gets nothing | `test_recipient_must_pass_view_rule` | Authorization |
 | C-08 | Global preference `none` or `email_only` suppresses in-app chat and DM notifications | `test_global_preference_respected` | Notifications |
 | C-09 | Mentions only resolve to participants of that chat and are stored on the message | `test_mentions_limited_to_participants` | Authorization |
-| C-10 | Notifications are queued, and cost does not grow per message with chat size | `test_chat_notifications_queued_and_bounded` | Performance |
+| C-10 | Notifications are queued, not sent inside the request | `test_chat_notifications_are_queued` | Performance |
 | C-11 | Unread state is true after others post and false after the viewer reads | `test_unread_state` | UX |
-| C-12 | The notification opens the chat room at the message | `test_notification_links_to_chat` | UX |
+| C-12 | The notification opens the chat room and jumps to the message (post chats; events and groups open the page) | `test_a_chat_notification_opens_the_room_and_jumps_to_the_message` | UX |
 
 ## Blueprint anchors
 
 - [D] Authorization is server-side: recipients and mention targets are filtered by policy, never by the client.
 - [D] Every notification attaches to a post, event or group (the chat's subject).
 - [D] 2026-10-23: chat notifications were out of scope of spec 012 and are this spec.
-- [O] **Default mute threshold (10 people)** and **15-minute window** are proposals. → **Stop condition:** C-04 and C-06 are not planned until the owner confirms the numbers.
-- [O] **Email or push** for mentions. → **Stop condition:** not built here.
-- [O] **Bell live delivery:** public vs private channel mismatch. → **Stop condition:** verify and fix as a ticket before relying on live updates; polling on page load still works.
+- [D] 2026-10-24 **Mute threshold:** chats over 10 participants default to Mentions and replies only; 15-minute collapse window (owner delegated; builder confirmed the proposals).
+- [D] 2026-10-24 **Email and push** are out of scope (in-app only).
+- [O] **Bell live delivery:** public vs private channel mismatch. → **Stop condition:** not changed here; verify as a ticket. Notifications appear on page load regardless.
 
 ## Production impact
 
@@ -88,8 +88,18 @@ A member of a post, event or group chat hears about the messages that matter (me
 ## Approval gate
 
 - [x] Orchestrator verdicts written (claims table complete)
-- [ ] Builder has reviewed and added risks to the pre-mortem
-- [ ] Governing [D]/[P]/[O] items linked; [O] stop conditions stated
+- [x] Builder has reviewed and added risks to the pre-mortem
+- [x] Governing [D]/[P]/[O] items linked; [O] stop conditions stated
 - [x] Production impact + rollback plan stated
 - [x] Security and privacy classification complete
-- [ ] Product owner approved — **approver:** <name> · **date:** <YYYY-MM-DD>
+- [x] Product owner approved — **approver:** product owner (delegated) · **date:** 2026-10-24
+
+## Build notes (2026-10-24)
+
+- `ChatNotifier` service and queued `NotifyChatParticipants` job, dispatched after commit from `ChatService::sendMessage` (non-DM chats) and `pinMessage`.
+- Migration `conversation_participants.notify_level` (default `default`; existing muted rows become `muted`).
+- Mentions are resolved server-side to participants whose @handle is in the text and stored in `messages.metadata`.
+- Collapse window is recorded inside the notification data (`started_at`) and compared in PHP, because comparing PHP times with DB timestamps is off by the DB session timezone offset.
+- Opening a chat marks its notifications read; live-delivered messages also mark the chat read, so an open chat is "being viewed".
+- Tests: `ChatNotificationTest.php` (12). Disabling the view rule, the global preference and the mute rule each makes a test fail.
+- Not verified: browser behaviour of the @ picker and bell sheet, queue worker in production, live bell delivery.

@@ -167,6 +167,14 @@ class User extends Authenticatable implements FilamentHasName
         return $this->hasMany(Report::class, 'reporter_id');
     }
 
+    /**
+     * Whether the user wants in-app notifications at all (global preference).
+     */
+    public function wantsInAppNotifications(): bool
+    {
+        return ! in_array($this->notification_preference, ['none', 'email_only'], true);
+    }
+
     public function followers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'follows', 'following_id', 'follower_id');
