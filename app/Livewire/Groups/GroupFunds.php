@@ -151,6 +151,11 @@ class GroupFunds extends Component
         $this->run(fn () => $service->chipIn(auth()->user(), $this->findAsk($id)), 'Thanks. Marked as self-reported.', false);
     }
 
+    public function placeholder(): string
+    {
+        return '<div class="glass-card p-6 text-center text-gray-300">Loading funds...</div>';
+    }
+
     public function render(): \Illuminate\Contracts\View\View
     {
         $user = auth()->user();

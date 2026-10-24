@@ -252,9 +252,7 @@
                 </div>
                 
                 <div x-show="activeTab === 'funds'" x-cloak>
-                    @if ($activeTab === 'funds')
-                        @livewire('groups.group-funds', ['group' => $group], key('funds-'.$group->id))
-                    @endif
+                    @livewire('groups.group-funds', ['group' => $group, 'lazy' => true], key('funds-'.$group->id))
                 </div>
 
                 <div x-show="activeTab === 'members'" x-cloak>

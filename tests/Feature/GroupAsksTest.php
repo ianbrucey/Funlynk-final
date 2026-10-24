@@ -287,3 +287,9 @@ test('the funds tab uses a constant number of queries', function () {
 
     expect($count())->toBe($few);
 });
+
+test('the group page always includes the funds component so clicking the tab works', function () {
+    [$group, $admin] = askGroup();
+
+    $this->actingAs($admin)->get(route('groups.show', $group))->assertOk()->assertSeeLivewire(GroupFunds::class);
+});
