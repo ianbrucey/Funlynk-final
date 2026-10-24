@@ -13,6 +13,7 @@ Artisan::command('inspire', function () {
 
 // Schedule refund window expiration check every hour
 Schedule::job(new ExpireRefundWindows)->hourly();
+Schedule::job(new \App\Jobs\SendNeedsCheckReminders)->hourly();
 
 // Send event reminders 30 minutes before events (runs every 10 minutes)
 Schedule::job(new SendEventReminders(30))->everyTenMinutes();

@@ -147,4 +147,21 @@ class ActivityPolicy
         // Can only publish drafts
         return $activity->status === 'draft';
     }
+
+    /**
+     * Who may add, edit, remove and assign items on an event's needs list.
+     */
+    public function manageNeeds(User $user, Activity $activity): bool
+    {
+        return $this->update($user, $activity);
+    }
+
+    /**
+     * Who may claim items: managers, and people going to the event.
+     */
+    public function claimNeeds(User $user, Activity $activity): bool
+    {
+        return $this->update($user, $activity)
+            || \App\Models\Rsvp::query()->where('activity_id', $activity->id)->where('user_id', $user->id)->where('status', 'attending')->exists();
+    }
 }

@@ -459,6 +459,8 @@
                     </div>
                 </div>
 
+                <livewire:events.event-needs :activity="$activity" />
+
                 {{-- Chat Section (only for authenticated users) --}}
                 @auth
                 <div id="discussion" class="relative lg:p-8 glass-card lg:rounded-xl scroll-mt-6">
