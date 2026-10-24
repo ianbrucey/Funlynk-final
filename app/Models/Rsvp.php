@@ -14,6 +14,19 @@ class Rsvp extends Model
     use HasFactory;
     use HasUuids;
 
+    protected static function booted(): void
+    {
+        static::updated(function (Rsvp $rsvp) {
+            if ($rsvp->wasChanged('status') && $rsvp->getOriginal('status') === 'attending' && $rsvp->status !== 'attending') {
+                app(\App\Services\EventNeedService::class)->releaseForUser((string) $rsvp->activity_id, (string) $rsvp->user_id);
+            }
+        });
+
+        static::deleted(function (Rsvp $rsvp) {
+            app(\App\Services\EventNeedService::class)->releaseForUser((string) $rsvp->activity_id, (string) $rsvp->user_id);
+        });
+    }
+
     public $incrementing = false;
 
     protected $keyType = 'string';
