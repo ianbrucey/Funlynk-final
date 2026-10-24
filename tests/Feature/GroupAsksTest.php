@@ -198,7 +198,7 @@ test('asks follow group visibility', function () {
 
     [$public, $padmin, $pmember] = askGroup('public');
     openAsk($public, $pmember, $padmin);
-    Livewire::actingAs($outsider)->test(GroupFunds::class, ['group' => $public])->assertSee('Floor cleaner')->assertDontSee('Propose an ask');
+    Livewire::actingAs($outsider)->test(GroupFunds::class, ['group' => $public])->assertSee('Floor cleaner')->assertDontSee('Propose an ask')->assertSee('Join this group to propose an ask.');
     expect(fn () => app(GroupAskService::class)->propose($outsider, $public, askData()))->toThrow(AuthorizationException::class);
 });
 

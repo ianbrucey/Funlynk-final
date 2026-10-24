@@ -10,6 +10,8 @@
     @if (! $open)
         @if ($isMember)
             <button wire:click="openSheet('propose')" class="btn btn-primary min-h-[44px] w-full sm:w-auto">Propose an ask</button>
+        @else
+            <p class="text-sm text-gray-300">Join this group to propose an ask.</p>
         @endif
 
         @forelse (['proposed' => 'Waiting for approval', 'open' => 'Open', 'closed' => 'Closed'] as $key => $label)
