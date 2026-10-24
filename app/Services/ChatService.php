@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Conversation;
+use App\Models\ConversationParticipant;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -115,11 +116,15 @@ class ChatService
     /**
      * Send a message in a conversation
      */
+    /**
+     * @param  array<int, array{id: string, handle: string}>  $mentions
+     */
     public function sendMessage(
         Conversation $conversation,
         User $user,
         string $body,
-        ?string $replyToMessageId = null
+        ?string $replyToMessageId = null,
+        array $mentions = []
     ): Message {
         // Add user as participant if not already
         $this->addParticipant($conversation, $user);
@@ -131,6 +136,7 @@ class ChatService
             'body' => $body,
             'reply_to_message_id' => $replyToMessageId,
             'type' => 'text',
+            'metadata' => $mentions === [] ? null : ['mentions' => $mentions],
         ]);
 
         // Update conversation's last_message_at
@@ -154,6 +160,11 @@ class ChatService
 
         // Broadcast the message
         broadcast(new \App\Events\MessageSent($message))->toOthers();
+
+        // DMs notify through their own listener; other chats use the chat notifier.
+        if ($conversation->type !== 'private') {
+            \App\Jobs\NotifyChatParticipants::dispatch($message->id)->afterCommit();
+        }
 
         return $message;
     }
@@ -228,19 +239,66 @@ class ChatService
                 ],
             ] : null,
             'reactions' => $reactions,
+            'mentions' => data_get($message->metadata, 'mentions', []),
         ];
     }
 
     /**
      * Pin a message of this conversation (or clear the pin with null).
      */
-    public function pinMessage(Conversation $conversation, ?Message $message): void
+    public function pinMessage(Conversation $conversation, ?Message $message, ?User $actor = null): void
     {
         if ($message !== null && $message->conversation_id !== $conversation->id) {
             throw new \InvalidArgumentException('Message is not part of this conversation.');
         }
 
         $conversation->update(['pinned_message_id' => $message?->id]);
+
+        if ($message !== null && $actor !== null) {
+            \App\Jobs\NotifyChatParticipants::dispatch($message->id, (string) $actor->id)->afterCommit();
+        }
+    }
+
+    /**
+     * Keep only mentions of people in this chat whose @handle is really in the text.
+     *
+     * @param  array<int, mixed>  $ids
+     * @return array<int, array{id: string, handle: string}>
+     */
+    public function resolveMentions(Conversation $conversation, string $body, array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('strval', $ids))));
+        if ($ids === []) {
+            return [];
+        }
+
+        $allowed = ConversationParticipant::query()->where('conversation_id', $conversation->id)->whereIn('user_id', $ids)->pluck('user_id');
+        $resolved = [];
+        foreach (User::query()->whereIn('id', $allowed)->get() as $person) {
+            $handle = $this->mentionHandle($person);
+            if (preg_match('/(^|\s)@'.preg_quote($handle, '/').'(?![\w.])/iu', $body) === 1) {
+                $resolved[] = ['id' => (string) $person->id, 'handle' => $handle];
+            }
+        }
+
+        return $resolved;
+    }
+
+    public function mentionHandle(User $user): string
+    {
+        $name = trim((string) ($user->display_name ?: $user->username));
+
+        return preg_replace('/\s.*/u', '', $name) ?: (string) $user->username;
+    }
+
+    public function setNotifyLevel(Conversation $conversation, User $user, string $level): void
+    {
+        if (! in_array($level, ChatNotifier::LEVELS, true)) {
+            throw new \InvalidArgumentException('Unsupported notification level.');
+        }
+
+        $this->addParticipant($conversation, $user);
+        $conversation->participants()->updateExistingPivot($user->id, ['notify_level' => $level, 'is_muted' => $level === 'muted']);
     }
 
     /**
@@ -250,6 +308,8 @@ class ChatService
     {
         $conversation->participants()
             ->updateExistingPivot($user->id, ['last_read_at' => now()]);
+
+        app(ChatNotifier::class)->markChatNotificationsRead($conversation, $user);
     }
 
     /**
@@ -268,7 +328,7 @@ class ChatService
         $newMuteStatus = ! $participant->pivot->is_muted;
 
         $conversation->participants()
-            ->updateExistingPivot($user->id, ['is_muted' => $newMuteStatus]);
+            ->updateExistingPivot($user->id, ['is_muted' => $newMuteStatus, 'notify_level' => $newMuteStatus ? 'muted' : 'default']);
 
         return $newMuteStatus;
     }

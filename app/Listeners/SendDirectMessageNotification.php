@@ -28,6 +28,14 @@ class SendDirectMessageNotification implements ShouldQueue
         $recipient = $event->recipient;
         $preferences = $recipient->notification_preferences ?? [];
 
+        if (! $recipient->wantsInAppNotifications()) {
+            return;
+        }
+
+        if (app(\App\Services\ChatNotifier::class)->levelFor($event->conversation, $recipient) === 'muted') {
+            return;
+        }
+
         // Check if user wants DM notifications
         if (isset($preferences['direct_messages']) && $preferences['direct_messages'] === false) {
             return;

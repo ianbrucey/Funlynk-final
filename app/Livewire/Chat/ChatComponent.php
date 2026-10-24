@@ -5,6 +5,7 @@ namespace App\Livewire\Chat;
 use App\Events\ConversationUpdated;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Services\ChatNotifier;
 use App\Services\ChatService;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Locked;
@@ -27,6 +28,15 @@ class ChatComponent extends Component
     public $messages = [];
 
     public $replyingTo = null;
+
+    /** @var array<int, string> */
+    public array $mentionIds = [];
+
+    #[Locked]
+    public string $notifyLevel = 'all';
+
+    #[Locked]
+    public ?string $focusId = null;
 
     public bool $showHeader = true;
 
@@ -67,6 +77,8 @@ class ChatComponent extends Component
         $this->conversationId = $conversationId;
         $this->conversationable = $conversationable;
         $this->showHeader = $showHeader;
+
+        $this->focusId = is_string(request()->query('m')) ? request()->query('m') : null;
 
         $this->loadMessages(firstLoad: true);
     }
@@ -119,6 +131,7 @@ class ChatComponent extends Component
 
         if ($viewerId) {
             $this->chatService->markAsRead($conversation, auth()->user());
+            $this->notifyLevel = app(ChatNotifier::class)->levelFor($conversation, auth()->user());
         }
     }
 
@@ -152,7 +165,7 @@ class ChatComponent extends Component
             return;
         }
 
-        $conversation = Conversation::find($this->conversationId);
+        $conversation = Conversation::query()->find((string) $this->conversationId);
 
         if (! $conversation) {
             return;
@@ -174,8 +187,10 @@ class ChatComponent extends Component
             $conversation,
             auth()->user(),
             $this->newMessage,
-            $this->replyingTo['id'] ?? null
+            $this->replyingTo['id'] ?? null,
+            $this->chatService->resolveMentions($conversation, $this->newMessage, $this->mentionIds)
         );
+        $this->mentionIds = [];
 
         $this->messages[] = $this->chatService->messagePayload($message, (string) auth()->id());
         $this->firstUnreadId = null;
@@ -226,7 +241,7 @@ class ChatComponent extends Component
         $this->authorize('pin', $conversation);
 
         $message = $messageId ? Message::query()->where('conversation_id', $conversation->id)->findOrFail($messageId) : null;
-        $this->chatService->pinMessage($conversation, $message);
+        $this->chatService->pinMessage($conversation, $message, auth()->user());
 
         $this->loadMessages();
         broadcast(new ConversationUpdated($conversation->id))->toOthers();
@@ -240,9 +255,23 @@ class ChatComponent extends Component
 
         $event['is_mine'] = false;
         $event['reactions'] = $event['reactions'] ?? [];
+        $event['mentions'] = $event['mentions'] ?? [];
         $this->messages[] = $event;
 
+        if (auth()->check() && $this->conversation) {
+            $this->chatService->markAsRead($this->conversation, auth()->user());
+        }
+
         $this->dispatch('message-received');
+    }
+
+    public function setNotifyLevel(string $level): void
+    {
+        $conversation = Conversation::query()->findOrFail((string) $this->conversationId);
+        $this->authorize('sendMessage', $conversation);
+
+        $this->chatService->setNotifyLevel($conversation, auth()->user(), $level);
+        $this->notifyLevel = $level;
     }
 
     public function cancelReply()
@@ -258,6 +287,13 @@ class ChatComponent extends Component
             'canSend' => $conversation && auth()->check() && auth()->user()->can('sendMessage', $conversation),
             'canPin' => $conversation && auth()->check() && auth()->user()->can('pin', $conversation),
             'reactionChoices' => ChatService::REACTIONS,
+            'mentionable' => $conversation && auth()->check()
+                ? $conversation->participants->where('id', '!=', auth()->id())->map(fn ($p) => [
+                    'id' => (string) $p->id,
+                    'name' => $p->display_name ?? $p->username,
+                    'handle' => $this->chatService->mentionHandle($p),
+                ])->values()->all()
+                : [],
         ]);
     }
 }
