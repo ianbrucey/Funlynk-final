@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>015 — Group asks and ledger — UI mockup (FunLink)</title>
+<title>015 — Group asks and ledger — UI mockup (FunLynk)</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: system-ui, -apple-system, sans-serif; color: #e5e7eb; min-height: 100vh; background: radial-gradient(ellipse at 20% 10%, #1e1b4b 0%, #0b0620 55%, #050310 100%); }
@@ -47,7 +47,7 @@
     (4) Admins <strong>record money received</strong> and <strong>purchases</strong> (amount, item photo and receipt photo are required). Entries can't be edited; they can be <strong>voided with a reason</strong>, and stay visible.
     (5) Closing needs proof (completed) or a reason (cancelled). Closing note says what happens to leftovers.
     (6) <strong>"I chipped in"</strong> is self-reported and never counted in totals.
-    (7) Every screen says payments happen outside FunLink and amounts are recorded by admins.
+    (7) Every screen says payments happen outside FunLynk and amounts are recorded by admins.
   </div>
   <h2>Controls</h2>
   <div class="controls" id="c-role"><span>You are</span><button data-v="member" class="on">Member</button><button data-v="admin">Group admin</button><button data-v="visitor">Visitor (public group, not a member)</button></div>
@@ -69,7 +69,7 @@ function find(id) { return ASKS.filter(function (a) { return a.id === id; })[0];
 function money(n) { return '$' + n.toLocaleString(); }
 function badge(a) { return { open: '<span class="badge b-open">Open</span>', proposed: '<span class="badge b-prop">Waiting for approval</span>', done: '<span class="badge b-done">Completed</span>', off: '<span class="badge b-off">Cancelled</span>', declined: '<span class="badge b-off">Declined</span>' }[a.status]; }
 function visible(a) { if (a.status !== 'proposed' && a.status !== 'declined') return true; return S.role === 'admin' || a.by === 'Me'; }
-var NOTE = '<div class="note">Payments happen outside FunLink. Amounts and receipts are recorded by group admins. FunLink does not hold or move money.</div>';
+var NOTE = '<div class="note">Payments happen outside FunLynk. Amounts and receipts are recorded by group admins. FunLynk does not hold or move money.</div>';
 function card(a) { var t = tot(a), pct = Math.min(100, Math.round(100 * t.r / a.target)); return '<button class="ask" data-open="' + a.id + '"><div class="row"><b>' + a.title + '</b>' + badge(a) + '</div><small>Asked by ' + (a.by === 'Me' ? 'you' : a.by) + (a.deadline ? ' · by ' + a.deadline : '') + '</small>' + (a.status === 'open' || a.status === 'done' ? '<div class="bar"><i style="width:' + pct + '%"></i></div><small>' + money(t.r) + ' received of ' + money(a.target) + ' · ' + money(t.s) + ' spent</small>' : '') + '</button>'; }
 function listView() {
   if (S.state === 'loading') return '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
@@ -89,7 +89,7 @@ function detail() {
   var a = find(S.ask), t = tot(a), pct = Math.min(100, Math.round(100 * t.r / a.target)), adm = S.role === 'admin', mem = S.role === 'member' || adm;
   var h = '<button class="btn" data-back="1" style="margin-bottom:10px">← Funds</button><div class="glass"><div class="row"><h3 style="font-size:1.05rem">' + a.title + '</h3>' + badge(a) + '</div><div class="hint" style="margin:2px 0">Asked by ' + (a.by === 'Me' ? 'you' : a.by) + (a.deadline ? ' · needed by ' + a.deadline : '') + '</div><p class="why">' + a.why + '</p>';
   if (a.status === 'open' || a.status === 'done') h += '<div class="bar"><i style="width:' + pct + '%"></i></div><div class="stats"><div><b>' + money(t.r) + '</b><small>received</small></div><div><b>' + money(t.s) + '</b><small>spent</small></div><div><b>' + money(t.left) + '</b><small>left</small></div></div><div class="hint">Target ' + money(a.target) + ' · last updated ' + (a.entries.length ? a.entries[a.entries.length - 1].d : 'never') + '</div>';
-  if (a.status === 'open') h += '<a class="link">💸 Give: ' + a.link + ' (opens outside FunLink)</a>' + (mem ? '<button class="btn full ' + (S.chip[a.id] ? '' : 'go') + '" data-chip="' + a.id + '"' + (S.chip[a.id] ? ' disabled' : '') + '>' + (S.chip[a.id] ? '✓ You said you chipped in' : 'I chipped in') + '</button><div class="hint" style="margin-top:6px">' + (a.chips + (S.chip[a.id] ? 1 : 0)) + ' members say they chipped in (self-reported, not counted in the totals).</div>' : '');
+  if (a.status === 'open') h += '<a class="link">💸 Give: ' + a.link + ' (opens outside FunLynk)</a>' + (mem ? '<button class="btn full ' + (S.chip[a.id] ? '' : 'go') + '" data-chip="' + a.id + '"' + (S.chip[a.id] ? ' disabled' : '') + '>' + (S.chip[a.id] ? '✓ You said you chipped in' : 'I chipped in') + '</button><div class="hint" style="margin-top:6px">' + (a.chips + (S.chip[a.id] ? 1 : 0)) + ' members say they chipped in (self-reported, not counted in the totals).</div>' : '');
   if (a.status === 'proposed' && adm) h += '<div class="two" style="display:flex;gap:8px;margin-top:10px"><button class="btn pri" style="flex:1" data-approve="' + a.id + '">Approve</button><button class="btn danger" style="flex:1" data-decline="' + a.id + '">Decline</button></div>';
   if (a.status === 'proposed' && !adm) h += '<div class="note" style="margin-top:10px">An admin needs to approve this before members can see it.</div>';
   if (a.close) h += '<div class="note" style="margin-top:10px"><b>Closing note:</b> ' + a.close + '</div>';

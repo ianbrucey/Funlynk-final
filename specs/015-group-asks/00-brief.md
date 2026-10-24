@@ -16,7 +16,7 @@ A group can ask its members for money for a stated purpose, and everyone can see
 
 ## Decisions (owner, 2026-10-24)
 
-- **[D]** Money is **link-out only**: an ask carries a Venmo, Cash App, PayPal (or similar) link. **FunLink never holds or moves money.**
+- **[D]** Money is **link-out only**: an ask carries a Venmo, Cash App, PayPal (or similar) link. **FunLynk never holds or moves money.**
 - **[D]** **Any group admin** approves an ask and posts receipts.
 - **[D]** Event needs list first (built), asks second (this spec).
 
@@ -35,7 +35,7 @@ A group can ask its members for money for a stated purpose, and everyone can see
 - **Ledger.** Admins record **money received** (amount, who or "anonymous", note) and **purchases** (amount, what, a photo of the item, a photo of the receipt). Entries cannot be edited or deleted: an admin can **void** one with a visible reason. Totals are calculated from entries: received, spent, and what is left.
 - **Closing:** an admin closes the ask as **Completed** (needs at least one purchase with a receipt photo and an item photo, or the closing note must explain a leftover balance) or **Cancelled** (a reason is required; any money received must be explained in the note). The closing note says what happens to leftover money.
 - **"I chipped in"**: a member can tap once to say they gave, to show activity; it is clearly labelled self-reported and never counted in the totals.
-- Anyone who can view the group sees asks, the ledger and receipts. The payment link is shown only on open asks. Every page says: payments happen outside FunLink and amounts are recorded by group admins.
+- Anyone who can view the group sees asks, the ledger and receipts. The payment link is shown only on open asks. Every page says: payments happen outside FunLynk and amounts are recorded by group admins.
 - Members are notified in-app when an ask opens and when a purchase with receipt is posted. Admins are notified of new proposals.
 
 ## Claims

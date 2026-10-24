@@ -17,7 +17,7 @@ An organizer can list what an event needs, attendees can claim items, and everyo
 ## Decisions (owner, 2026-10-24)
 
 - **[D]** First piece to build is the **event needs list**. Group asks and the receipts ledger come after it.
-- **[D]** When asks are built, money is **link-out only** (Venmo, Cash App or PayPal link), no money held by FunLink, and **any group admin** approves an ask and posts receipts.
+- **[D]** When asks are built, money is **link-out only** (Venmo, Cash App or PayPal link), no money held by FunLynk, and **any group admin** approves an ask and posts receipts.
 - **[D]** Roles split into two ideas: standing authority roles at group level (later) and per-event responsibilities (this spec).
 
 ## Archaeology (what exists today, read from code)
