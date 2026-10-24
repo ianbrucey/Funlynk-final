@@ -1,6 +1,6 @@
 # 015 — Group asks and the receipts ledger — Strategic brief
 
-**Status:** DRAFT (→ IN REVIEW → APPROVED)
+**Status:** BUILT (owner delegated the open questions on 2026-10-25)
 **Author:** Augment Agent (orchestrator draft)
 **Date:** 2026-10-25
 
@@ -61,9 +61,9 @@ A group can ask its members for money for a stated purpose, and everyone can see
 - [D] Authorization is server-side only; payments through the payment layer only: **this spec moves no money**, so it does not touch that layer.
 - [D] Every record attaches to a group (the ask), so there is no orphaned content.
 - [D] Mobile-first at 390px; 44px targets.
-- [O] **Can an admin approve their own proposal?** The owner said "any admin". Proposed safeguard: if the group has two or more admins, an admin cannot approve their own proposal. → **Stop condition:** C-02 is planned both ways; build the safeguard only if the owner confirms.
-- [O] **Payment link allow-list** (proposed: venmo.com, cash.app, paypal.me, paypal.com, ko-fi.com, buymeacoffee.com, gofundme.com, zeffy.com). → **Stop condition:** unlisted hosts are refused until the owner adds them.
-- [O] **Public visibility of ledger** for public groups is proposed; the owner may want members-only. → **Stop condition:** none; ships as proposed.
+- [D] 2026-10-25 (owner: "you decide") **Can an admin approve their own proposal?** The owner said "any admin". Proposed safeguard: if the group has two or more admins, an admin cannot approve their own proposal. → **Stop condition:** C-02 is planned both ways; build the safeguard only if the owner confirms.
+- [D] 2026-10-25 (owner: "you decide") **Payment link allow-list** (proposed: venmo.com, cash.app, paypal.me, paypal.com, ko-fi.com, buymeacoffee.com, gofundme.com, zeffy.com). → **Stop condition:** unlisted hosts are refused until the owner adds them.
+- [D] 2026-10-25 (owner: "you decide") **Public visibility of ledger** for public groups is proposed; the owner may want members-only. → **Stop condition:** none; ships as proposed.
 
 ## Production impact
 

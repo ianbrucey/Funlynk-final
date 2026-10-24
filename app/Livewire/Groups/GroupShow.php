@@ -5,12 +5,14 @@ namespace App\Livewire\Groups;
 use App\Models\Group;
 use App\Services\GroupChatService;
 use App\Services\GroupService;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class GroupShow extends Component
 {
     public Group $group;
 
+    #[Url(as: 'tab')]
     public string $activeTab = 'timeline';
 
     public bool $isMember = false;
