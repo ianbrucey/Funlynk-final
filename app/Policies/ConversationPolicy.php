@@ -121,4 +121,24 @@ class ConversationPolicy
         // Only pending requests can be declined
         return $participant->pivot->request_status === 'pending';
     }
+
+    /**
+     * Who may pin a message: the post owner, event host or group admin
+     * (whoever may update the thing the chat belongs to), or the group admin
+     * for a group chat. Direct messages have no pin.
+     */
+    public function pin(User $user, Conversation $conversation): bool
+    {
+        $subject = $conversation->conversationable;
+
+        if ($subject instanceof Post || $subject instanceof Activity) {
+            return Gate::forUser($user)->allows('update', $subject);
+        }
+
+        if ($conversation->group_id !== null && $conversation->group !== null) {
+            return Gate::forUser($user)->allows('update', $conversation->group);
+        }
+
+        return false;
+    }
 }

@@ -15,7 +15,7 @@ class ChatService
     public function getOrCreateConversation(Model $conversationable): Conversation
     {
         // Check if conversation already exists
-        $conversation = $conversationable->conversation;
+        $conversation = $conversationable->morphOne(Conversation::class, 'conversationable')->first();
 
         if ($conversation) {
             return $conversation;
@@ -176,18 +176,71 @@ class ChatService
         ]);
     }
 
+    public const REACTIONS = ['👍', '❤️', '😂', '🔥', '🙌'];
+
     /**
-     * Get messages for a conversation
+     * Get messages for a conversation (the latest $limit, oldest first).
      */
     public function getMessages(Conversation $conversation, int $limit = 50)
     {
         return $conversation->messages()
-            ->with(['user', 'replyTo.user', 'reactions.user'])
+            ->with(['user', 'replyTo.user', 'reactions'])
             ->latest()
+            ->orderByDesc('id')
             ->limit($limit)
             ->get()
             ->reverse()
             ->values();
+    }
+
+    /**
+     * Plain-array shape of a message for the chat UI and broadcasts.
+     *
+     * @return array<string, mixed>
+     */
+    public function messagePayload(Message $message, ?string $viewerId): array
+    {
+        $message->loadMissing(['user', 'replyTo.user', 'reactions']);
+
+        $reactions = [];
+        foreach ($message->reactions->groupBy('reaction') as $emoji => $rows) {
+            $reactions[$emoji] = [
+                'count' => $rows->count(),
+                'mine' => $viewerId !== null && $rows->contains('user_id', $viewerId),
+            ];
+        }
+
+        return [
+            'id' => $message->id,
+            'user_id' => $message->user_id,
+            'user' => [
+                'display_name' => $message->user->display_name ?? $message->user->username,
+                'profile_image_url' => $message->user->profile_image_url,
+            ],
+            'body' => $message->body,
+            'created_at' => $message->created_at->toISOString(),
+            'is_mine' => $viewerId !== null && $message->user_id === $viewerId,
+            'reply_to' => $message->replyTo ? [
+                'id' => $message->replyTo->id,
+                'body' => $message->replyTo->body,
+                'user' => [
+                    'display_name' => $message->replyTo->user->display_name ?? $message->replyTo->user->username,
+                ],
+            ] : null,
+            'reactions' => $reactions,
+        ];
+    }
+
+    /**
+     * Pin a message of this conversation (or clear the pin with null).
+     */
+    public function pinMessage(Conversation $conversation, ?Message $message): void
+    {
+        if ($message !== null && $message->conversation_id !== $conversation->id) {
+            throw new \InvalidArgumentException('Message is not part of this conversation.');
+        }
+
+        $conversation->update(['pinned_message_id' => $message?->id]);
     }
 
     /**
@@ -225,6 +278,10 @@ class ChatService
      */
     public function reactToMessage(Message $message, User $user, string $reaction): void
     {
+        if (! in_array($reaction, self::REACTIONS, true)) {
+            throw new \InvalidArgumentException('Unsupported reaction.');
+        }
+
         // Check if user already reacted with this emoji
         $existingReaction = $message->reactions()
             ->where('user_id', $user->id)

@@ -22,21 +22,33 @@ class Message extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Conversation, $this>
+     */
     public function conversation(): BelongsTo
     {
         return $this->belongsTo(Conversation::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return BelongsTo<Message, $this>
+     */
     public function replyTo(): BelongsTo
     {
         return $this->belongsTo(Message::class, 'reply_to_message_id');
     }
 
+    /**
+     * @return HasMany<MessageReaction, $this>
+     */
     public function reactions(): HasMany
     {
         return $this->hasMany(MessageReaction::class);

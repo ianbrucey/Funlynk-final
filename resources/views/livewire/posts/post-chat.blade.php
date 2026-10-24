@@ -1,4 +1,4 @@
-<div class="min-h-screen flex flex-col">
+<div class="flex flex-col">
     {{-- Compact Post Header --}}
     <div class="bg-slate-900/50 border-b border-white/10">
         <div class="px-4 py-4">
@@ -67,10 +67,10 @@
         </div>
     </div>
 
-    {{-- Full-Height Chat --}}
-    <div class="flex-1 py-6">
-        <div class="h-full">
-            <livewire:chat.chat-component :conversationable="$post" />
+    {{-- Full-Height Chat: fills the screen between the top bar and the bottom nav --}}
+    <div class="px-2 pb-2 md:px-4">
+        <div class="h-[calc(100dvh-17rem)] min-h-[320px] md:h-[calc(100dvh-16rem)]">
+            <livewire:chat.chat-component :conversationable="$post" :showHeader="false" />
         </div>
     </div>
 </div>
