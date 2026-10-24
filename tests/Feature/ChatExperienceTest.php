@@ -52,15 +52,16 @@ test('consecutive messages group and a day separator appears when the day change
     $user = roomUser();
     $other = roomUser(['display_name' => 'Pat Poster']);
     [$post, $conversation] = roomFor($user);
-    say($conversation, $other, 'older day', now()->subDays(2)->toDateTimeString());
-    say($conversation, $other, 'm1', now()->subMinutes(30)->toDateTimeString());
-    say($conversation, $other, 'm2', now()->subMinutes(29)->toDateTimeString());
-    say($conversation, $user, 'mine', now()->subMinutes(10)->toDateTimeString());
+    $noon = now()->startOfDay()->addHours(12);
+    say($conversation, $other, 'older day', $noon->copy()->subDays(2)->toDateTimeString());
+    say($conversation, $other, 'm1', $noon->copy()->subMinutes(30)->toDateTimeString());
+    say($conversation, $other, 'm2', $noon->copy()->subMinutes(29)->toDateTimeString());
+    say($conversation, $user, 'mine', $noon->copy()->subMinutes(10)->toDateTimeString());
 
     $html = Livewire::actingAs($user)->test(ChatComponent::class, ['conversationable' => $post])->html();
 
     expect(substr_count($html, 'text-gray-400">Pat Poster</div>'))->toBe(2);
-    expect($html)->toContain('Today')->toContain('M j' === '' ? '' : now()->subDays(2)->format('M j'));
+    expect($html)->toContain('Today')->toContain($noon->copy()->subDays(2)->format('M j'));
 });
 
 test('load earlier pages without duplicates', function () {
