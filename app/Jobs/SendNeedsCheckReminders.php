@@ -36,11 +36,12 @@ class SendNeedsCheckReminders implements ShouldQueue
             ->get();
 
         foreach ($claims->groupBy(fn (EventNeedClaim $c) => $c->user_id.'|'.$c->need->activity_id) as $group) {
+            $group = $group->sortBy(fn (EventNeedClaim $c) => sprintf('%05d', $c->need->sort_order).$c->need->name)->values();
             $first = $group->first();
             $user = $first->user;
             $activity = $first->need->activity;
 
-            if (! in_array($user->notification_preference, ['none', 'email_only'], true) && $needs->isAttending($activity, $user)) {
+            if ($user->wantsInAppNotifications() && $needs->isAttending($activity, $user)) {
                 $names = $group->map(fn (EventNeedClaim $c) => $c->need->name)->values();
                 $label = $names->count() > 1 ? $names->first().' and '.($names->count() - 1).' more' : $names->first();
 

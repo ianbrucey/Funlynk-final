@@ -5,21 +5,33 @@
 @endphp
 <div class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-lg"
      x-data="{
-        draft: '', pending: [], sheet: null, sending: false,
+        draft: '', pending: [], sheet: null, sending: false, notifySheet: false, ids: [], people: @js($mentionable), pick: { open: false, hits: [], hi: 0 },
         thread() { return this.$refs.thread; },
         toEnd() { this.$nextTick(() => { const t = this.thread(); if (t) t.scrollTop = t.scrollHeight; }); },
         jump(id) { const el = document.getElementById('msg-{{ $uid }}-' + id); if (!el) return; el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.classList.add('bg-cyan-400/20'); setTimeout(() => el.classList.remove('bg-cyan-400/20'), 1200); },
         grow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 110) + 'px'; },
+        scan(el) {
+            const m = el.value.slice(0, el.selectionStart).match(/(^|\s)@([\w.]*)$/);
+            if (!m) { this.pick.open = false; return; }
+            const q = m[2].toLowerCase();
+            this.pick.hits = this.people.filter(p => p.name.toLowerCase().includes(q) || p.handle.toLowerCase().startsWith(q)).slice(0, 5);
+            this.pick.hi = 0; this.pick.open = this.pick.hits.length > 0;
+        },
+        choose(p) {
+            const el = this.$refs.box, pos = el.selectionStart, before = el.value.slice(0, pos).replace(/@([\w.]*)$/, '@' + p.handle + ' ');
+            this.draft = before + el.value.slice(pos); if (!this.ids.includes(p.id)) this.ids.push(p.id); this.pick.open = false;
+            this.$nextTick(() => { el.focus(); el.setSelectionRange(before.length, before.length); this.grow(el); });
+        },
         async send() {
             const text = this.draft.trim(); if (!text || this.sending) return;
             this.sending = true; this.pending.push({ text, failed: false }); this.draft = ''; this.$nextTick(() => this.grow(this.$refs.box)); this.toEnd();
-            $wire.newMessage = text;
+            $wire.newMessage = text; $wire.mentionIds = this.ids; this.ids = [];
             try { await $wire.sendMessage(); } catch (e) { $wire.newMessage = ''; this.pending.at(-1).failed = true; this.sending = false; return; }
             if ($wire.newMessage !== '') { this.draft = text; $wire.newMessage = ''; this.pending.pop(); } else { this.pending.pop(); }
             this.sending = false; this.toEnd();
         },
      }"
-     x-init="toEnd()"
+     x-init="toEnd(); @if($focusId) setTimeout(() => jump('{{ $focusId }}'), 80); @endif"
      x-on:message-received.window="toEnd()"
      x-on:keydown.escape.window="sheet = null">
 
@@ -38,6 +50,14 @@
                 <h3 class="truncate text-base font-semibold text-white">{{ $subject?->title ?? 'Group Chat' }}</h3>
                 <p class="text-xs text-gray-400">{{ $conversation ? $conversation->participants->count() : 0 }} {{ \Illuminate\Support\Str::plural('person', $conversation ? $conversation->participants->count() : 0) }} in this chat</p>
             @endif
+        </div>
+    @endif
+
+    @if($canSend)
+        <div class="flex flex-none items-center justify-between gap-2 border-b border-white/10 px-4 py-1">
+            <span class="text-xs text-gray-400">{{ ['all' => 'All messages', 'mentions' => 'Mentions and replies only', 'muted' => 'Muted'][$notifyLevel] ?? '' }}</span>
+            <button type="button" x-on:click="notifySheet = true" aria-label="Notification settings: {{ $notifyLevel }}"
+                    class="min-h-[44px] min-w-[44px] rounded-xl border text-base {{ $notifyLevel === 'muted' ? 'border-red-400/50 text-red-300' : ($notifyLevel === 'mentions' ? 'border-cyan-400 text-white' : 'border-white/15 text-white') }}">{{ $notifyLevel === 'muted' ? '🔕' : '🔔' }}</button>
         </div>
     @endif
 
@@ -62,6 +82,10 @@
                 $newDay = ! $prev || $prev['at']->toDateString() !== $at->toDateString();
                 $first = $newDay || $prev['user_id'] !== $message['user_id'] || $at->diffInMinutes($prev['at']) > 5 || $firstUnreadId === $message['id'];
                 $name = $message['user']['display_name'];
+                $bodyHtml = e($message['body']);
+                foreach ($message['mentions'] ?? [] as $mention) {
+                    $bodyHtml = preg_replace('/(^|\s)@'.preg_quote(e($mention['handle']), '/').'(?![\w.])/iu', '$1<span class="font-semibold '.($message['is_mine'] ? 'underline' : 'text-cyan-300').'">@'.e($mention['handle']).'</span>', $bodyHtml);
+                }
                 $dayLabel = $at->isToday() ? 'Today' : ($at->isYesterday() ? 'Yesterday' : $at->format('M j'));
             @endphp
             @if($newDay)
@@ -82,7 +106,7 @@
                         </button>
                     @endif
                     <button type="button" x-on:click="sheet = '{{ $message['id'] }}'" aria-label="Message options"
-                            class="break-words rounded-2xl px-3 py-2 text-left text-sm leading-snug {{ $message['is_mine'] ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' : 'border border-white/10 bg-slate-700/60 text-gray-100' }}">{{ $message['body'] }}</button>
+                            class="break-words rounded-2xl px-3 py-2 text-left text-sm leading-snug {{ $message['is_mine'] ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' : 'border border-white/10 bg-slate-700/60 text-gray-100' }}">{!! $bodyHtml !!}</button>
                     @if(! empty($message['reactions']))
                         <div class="mt-1 flex flex-wrap gap-1">
                             @foreach($message['reactions'] as $emoji => $info)
@@ -115,8 +139,15 @@
                     <button type="button" wire:click="cancelReply" aria-label="Cancel reply" class="min-h-[44px] min-w-[44px] text-gray-400 hover:text-white">✕</button></div>
             @endif
             @error('newMessage')<p class="px-1.5 pb-1 text-xs text-red-300">{{ $message }}</p>@enderror
-            <div class="flex items-end gap-2">
-                <textarea x-ref="box" x-model="draft" x-on:input="grow($el)" x-on:keydown.enter="if (! $event.shiftKey) { $event.preventDefault(); send(); }" rows="1" maxlength="2000"
+            <div class="relative flex items-end gap-2">
+                <div x-show="pick.open" x-cloak class="absolute inset-x-0 bottom-14 z-10 overflow-hidden rounded-2xl border border-white/15 bg-[#14102b]" role="listbox">
+                    <template x-for="(p, i) in pick.hits" :key="p.id">
+                        <button type="button" role="option" x-on:click="choose(p)" class="flex min-h-[48px] w-full items-center gap-3 px-3 text-left text-sm text-gray-100" :class="i === pick.hi ? 'bg-cyan-400/15' : ''">
+                            <span class="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 text-xs font-bold" x-text="p.name[0]"></span><span x-text="p.name"></span>
+                        </button>
+                    </template>
+                </div>
+                <textarea x-ref="box" x-model="draft" x-on:input="grow($el); scan($el)" x-on:keydown.arrow-down="if (pick.open) { $event.preventDefault(); pick.hi = (pick.hi + 1) % pick.hits.length; }" x-on:keydown.arrow-up="if (pick.open) { $event.preventDefault(); pick.hi = (pick.hi + pick.hits.length - 1) % pick.hits.length; }" x-on:keydown.escape="pick.open = false" x-on:keydown.enter="if (pick.open) { $event.preventDefault(); choose(pick.hits[pick.hi]); } else if (! $event.shiftKey) { $event.preventDefault(); send(); }" rows="1" maxlength="2000"
                           name="message" aria-label="Message" placeholder="Message the group"
                           class="min-h-[44px] max-h-[110px] flex-1 resize-none rounded-2xl border border-white/10 bg-black/35 px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/25"></textarea>
                 <button type="button" x-on:click="send()" x-bind:disabled="! draft.trim()" aria-label="Send"
@@ -133,6 +164,22 @@
             @else
                 You can read this chat but not send messages.
             @endif
+        </div>
+    @endif
+
+    @if($canSend)
+        <div x-show="notifySheet" x-cloak class="fixed inset-0 z-50 flex items-end justify-center bg-black/55 md:items-center md:p-4" x-on:click.self="notifySheet = false" role="dialog" aria-modal="true">
+            <div class="w-full max-w-md rounded-t-2xl border border-white/15 bg-[#14102b] p-4 md:rounded-2xl">
+                <h3 class="text-sm font-semibold text-white">Notifications for this chat</h3>
+                <p class="mb-2 mt-1 text-xs text-gray-400">{{ ($conversation?->participants->count() ?? 0) > \App\Services\ChatNotifier::LARGE_CHAT_THRESHOLD ? 'This chat is large, so it starts on Mentions and replies only.' : 'You can change this any time.' }}</p>
+                @foreach(['all' => ['All messages', 'A summary at most every 15 minutes'], 'mentions' => ['Mentions and replies only', 'Plus when a plan is pinned'], 'muted' => ['Muted', 'No notifications from this chat']] as $level => [$label, $hint])
+                    <button type="button" wire:key="lvl-{{ $level }}" x-on:click="$wire.setNotifyLevel('{{ $level }}'); notifySheet = false"
+                            class="mt-1.5 flex min-h-[56px] w-full items-center gap-3 rounded-xl border px-3 text-left {{ $notifyLevel === $level ? 'border-cyan-400 bg-cyan-400/10' : 'border-white/10 bg-white/5' }}">
+                        <span class="flex-1"><span class="block text-sm text-white">{{ $label }}</span><span class="block text-xs text-gray-400">{{ $hint }}</span></span>
+                        @if($notifyLevel === $level)<span class="text-cyan-300">✓</span>@endif
+                    </button>
+                @endforeach
+            </div>
         </div>
     @endif
 

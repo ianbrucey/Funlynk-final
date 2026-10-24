@@ -1,9 +1,9 @@
-@props(['messages', 'pinned' => null, 'count' => 0, 'href'])
+@props(['messages', 'pinned' => null, 'count' => 0, 'href', 'unread' => false])
 
 <div {{ $attributes->class(['relative glass-card p-5 lg:p-6 lg:rounded-xl']) }}>
     <div class="top-accent"></div>
     <div class="flex items-center justify-between gap-3">
-        <h2 class="text-xl font-bold text-white">Chat</h2>
+        <h2 class="flex items-center gap-2 text-xl font-bold text-white">Chat @if($unread)<span class="h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" role="img" aria-label="Unread messages"></span>@endif</h2>
         <span class="text-xs text-gray-400">{{ $count }} {{ \Illuminate\Support\Str::plural('person', $count) }}</span>
     </div>
 

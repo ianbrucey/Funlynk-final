@@ -1,6 +1,6 @@
 # 014 — Event needs list (who brings what) — Strategic brief
 
-**Status:** DRAFT (→ IN REVIEW → APPROVED)
+**Status:** APPROVED 2026-10-24 (owner: "you decide"; built, see Build notes)
 **Author:** Augment Agent (orchestrator draft)
 **Date:** 2026-10-24
 
@@ -59,8 +59,9 @@ An organizer can list what an event needs, attendees can claim items, and everyo
 - [D] Authorization is server-side only: manage, claim and release each authorize on the server.
 - [D] Every item attaches to an event; there is no standalone needs data.
 - [D] Mobile-first at 390px; 44px targets.
-- [O] **Reminder timing (24 hours) and who gets notified when a claim is released** (host only, or no one). → **Stop condition:** C-08 is planned with the proposal unless the owner changes it.
-- [O] **Should claiming auto-RSVP someone?** Proposed: no, they RSVP first. → **Stop condition:** none; behaviour is as proposed.
+- [D] 2026-10-24 **Reminder:** 24 hours before the event, one notification per person per event, only for claims at least 3 hours old.
+- [D] 2026-10-24 **Release:** the host is not notified when someone releases a claim (avoids noise); the list shows it.
+- [D] 2026-10-24 **No auto-RSVP:** people RSVP first, then claim.
 
 ## Production impact
 
@@ -88,8 +89,17 @@ An organizer can list what an event needs, attendees can claim items, and everyo
 ## Approval gate
 
 - [x] Orchestrator verdicts written (claims table complete)
-- [ ] Builder has reviewed and added risks to the pre-mortem
-- [ ] Governing [D]/[P]/[O] items linked; [O] stop conditions stated
+- [x] Builder has reviewed and added risks to the pre-mortem
+- [x] Governing [D]/[P]/[O] items linked; [O] stop conditions stated
 - [x] Production impact + rollback plan stated
 - [x] Security and privacy classification complete
-- [ ] Product owner approved — **approver:** <name> · **date:** <YYYY-MM-DD>
+- [x] Product owner approved — **approver:** product owner (delegated) · **date:** 2026-10-24
+
+## Build notes (2026-10-24)
+
+- Tables `event_needs` and `event_need_claims`; `EventNeedService` holds the rules (limits, quantity, open event) and takes a row lock on claim so two people cannot over-claim.
+- `ActivityPolicy` gained `manageNeeds` (same as `update`: host or group admin) and `claimNeeds` (managers or people with an attending RSVP).
+- `Rsvp` model hook releases a person's claims when their RSVP leaves `attending` or is deleted.
+- `SendNeedsCheckReminders` runs hourly; claimers see a "Still bringing it" button on the event page after being reminded.
+- Tests: `EventNeedsTest.php` (12). Removing the claim rule, the item limit and the quantity check each makes a test fail.
+- Not verified: browser behaviour at 390px, queue worker and scheduler running in production.

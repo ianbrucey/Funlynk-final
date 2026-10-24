@@ -77,6 +77,7 @@ test('only people going can claim', function () {
     needsAs($going, $event)->call('claim', $need->id, 1);
     expect(EventNeedClaim::where('user_id', $going->id)->count())->toBe(1);
 
+    auth()->logout();
     $guestView = Livewire::test(EventNeeds::class, ['activity' => $event]);
     $guestView->assertSee('RSVP to claim')->call('claim', $need->id, 1)->assertStatus(401);
 });
@@ -120,7 +121,7 @@ test('release reopens the item and statuses follow claims', function () {
     needsAs($a, $event)->call('release', $need->id);
     expect($need->fresh()->load('claims')->status())->toBe('partial');
     expect(EventNeedClaim::where('user_id', $a->id)->exists())->toBeFalse();
-    needsAs($a, $event)->call('release', $need->id)->assertStatus(404);
+    expect(fn () => needsAs($a, $event)->call('release', $need->id))->toThrow(Illuminate\Database\Eloquent\ModelNotFoundException::class);
 });
 
 test('a manager can assign someone going and mark things brought', function () {
@@ -166,7 +167,7 @@ test('the day-before check notifies each claimer once', function () {
     [$a, $quiet, $notGoing] = [needsUser(), needsUser(['notification_preference' => 'none']), needsUser()];
     $soon = needsEvent($host, ['start_time' => now()->addHours(20), 'title' => 'Tomorrow Jam']);
     $later = needsEvent($host, ['start_time' => now()->addDays(3)]);
-    $one = needItem($soon, 'Tables');
+    $one = needItem($soon, 'Tables', 2);
     $two = needItem($soon, 'Chairs');
     $far = needItem($later, 'Lights');
     foreach ([$a, $quiet] as $u) {

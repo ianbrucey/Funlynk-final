@@ -38,7 +38,7 @@ class Conversation extends Model
     {
         return $this->belongsToMany(User::class, 'conversation_participants')
             ->using(ConversationParticipant::class)
-            ->withPivot(['id', 'role', 'is_muted', 'last_read_at', 'request_status'])
+            ->withPivot(['id', 'role', 'is_muted', 'last_read_at', 'request_status', 'notify_level'])
             ->withTimestamps();
     }
 
