@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Chat;
 
+use App\Events\ConversationUpdated;
 use App\Models\Conversation;
+use App\Models\Message;
 use App\Services\ChatService;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Locked;
@@ -10,6 +12,8 @@ use Livewire\Component;
 
 class ChatComponent extends Component
 {
+    private const PAGE_SIZE = 50;
+
     #[Locked]
     public $conversationId;
 
@@ -19,11 +23,25 @@ class ChatComponent extends Component
 
     public $newMessage = '';
 
+    /** @var array<int, array<string, mixed>> */
     public $messages = [];
 
     public $replyingTo = null;
 
     public bool $showHeader = true;
+
+    public int $limit = self::PAGE_SIZE;
+
+    public bool $hasEarlier = false;
+
+    #[Locked]
+    public ?string $firstUnreadId = null;
+
+    #[Locked]
+    public ?string $pinnedMessageId = null;
+
+    /** @var array<string, mixed>|null */
+    public ?array $pinned = null;
 
     protected ChatService $chatService;
 
@@ -35,6 +53,7 @@ class ChatComponent extends Component
 
         return [
             "echo-private:conversation.{$this->conversationId},MessageSent" => 'onMessageReceived',
+            "echo-private:conversation.{$this->conversationId},ConversationUpdated" => 'refreshThread',
         ];
     }
 
@@ -49,18 +68,16 @@ class ChatComponent extends Component
         $this->conversationable = $conversationable;
         $this->showHeader = $showHeader;
 
-        $this->loadMessages();
+        $this->loadMessages(firstLoad: true);
     }
 
-    protected function loadMessages()
+    protected function loadMessages(bool $firstLoad = false)
     {
-        // If conversationable is provided, get or create conversation
         if ($this->conversationable) {
             $conversation = $this->chatService->getOrCreateConversation($this->conversationable);
             $this->conversationId = $conversation->id;
         }
 
-        // If no conversation ID, show empty state
         if (! $this->conversationId) {
             $this->messages = [];
             $this->conversation = null;
@@ -68,8 +85,7 @@ class ChatComponent extends Component
             return;
         }
 
-        // Load messages from database
-        $conversation = Conversation::with(['participants'])->find($this->conversationId);
+        $conversation = Conversation::query()->with(['participants'])->find((string) $this->conversationId);
 
         if (! $conversation) {
             $this->messages = [];
@@ -80,36 +96,50 @@ class ChatComponent extends Component
 
         $this->authorize('view', $conversation);
 
-        // Store conversation for view
         $this->conversation = $conversation;
+        $viewerId = auth()->id() !== null ? (string) auth()->id() : null;
 
-        $dbMessages = $this->chatService->getMessages($conversation);
+        $rows = $this->chatService->getMessages($conversation, $this->limit + 1);
+        $this->hasEarlier = $rows->count() > $this->limit;
+        $rows = $this->hasEarlier ? $rows->slice(1)->values() : $rows;
 
-        // Transform to array format for view
-        $this->messages = $dbMessages->map(function ($message) {
-            return [
-                'id' => $message->id,
-                'user' => [
-                    'display_name' => $message->user->display_name ?? $message->user->username,
-                    'profile_image_url' => $message->user->profile_image_url,
-                ],
-                'body' => $message->body,
-                'created_at' => $message->created_at,
-                'is_mine' => $message->user_id === auth()->id(),
-                'reply_to' => $message->replyTo ? [
-                    'id' => $message->replyTo->id,
-                    'body' => $message->replyTo->body,
-                    'user' => [
-                        'display_name' => $message->replyTo->user->display_name ?? $message->replyTo->user->username,
-                    ],
-                ] : null,
-            ];
-        })->toArray();
+        if ($firstLoad && $viewerId) {
+            $this->firstUnreadId = $this->findFirstUnreadId($conversation, $rows, $viewerId);
+        }
 
-        // Mark as read
-        if (auth()->check()) {
+        $this->messages = $rows->map(fn (Message $m) => $this->chatService->messagePayload($m, $viewerId))->all();
+
+        $this->pinnedMessageId = $conversation->pinned_message_id;
+        $pinnedMessage = $this->pinnedMessageId ? Message::with('user')->find($this->pinnedMessageId) : null;
+        $this->pinned = $pinnedMessage ? [
+            'id' => $pinnedMessage->id,
+            'body' => $pinnedMessage->body,
+            'user' => $pinnedMessage->user->display_name ?? $pinnedMessage->user->username,
+        ] : null;
+
+        if ($viewerId) {
             $this->chatService->markAsRead($conversation, auth()->user());
         }
+    }
+
+    /**
+     * First message from someone else sent after the viewer last read the chat.
+     */
+    /**
+     * @param  \Illuminate\Support\Collection<int, Message>  $rows
+     */
+    protected function findFirstUnreadId(Conversation $conversation, $rows, string $viewerId): ?string
+    {
+        $lastRead = \App\Models\ConversationParticipant::query()
+            ->where('conversation_id', $conversation->id)
+            ->where('user_id', $viewerId)
+            ->value('last_read_at');
+
+        if ($lastRead === null) {
+            return null;
+        }
+
+        return $rows->first(fn (Message $m) => $m->user_id !== $viewerId && $m->created_at->gt($lastRead))?->id;
     }
 
     public function sendMessage()
@@ -140,20 +170,30 @@ class ChatComponent extends Component
             return;
         }
 
-        // Send message via service
-        $this->chatService->sendMessage(
+        $message = $this->chatService->sendMessage(
             $conversation,
             auth()->user(),
             $this->newMessage,
             $this->replyingTo['id'] ?? null
         );
 
-        // Reload messages
-        $this->loadMessages();
+        $this->messages[] = $this->chatService->messagePayload($message, (string) auth()->id());
+        $this->firstUnreadId = null;
 
-        // Clear input
         $this->newMessage = '';
         $this->replyingTo = null;
+        $this->dispatch('message-sent');
+    }
+
+    public function loadEarlier(): void
+    {
+        $this->limit += self::PAGE_SIZE;
+        $this->loadMessages();
+    }
+
+    public function refreshThread(): void
+    {
+        $this->loadMessages();
     }
 
     public function replyTo($messageId)
@@ -168,19 +208,40 @@ class ChatComponent extends Component
         }
     }
 
+    public function reactToMessage(string $messageId, string $emoji): void
+    {
+        $conversation = Conversation::query()->findOrFail((string) $this->conversationId);
+        $this->authorize('view', $conversation);
+
+        $message = Message::query()->where('conversation_id', $conversation->id)->findOrFail($messageId);
+        $this->chatService->reactToMessage($message, auth()->user(), $emoji);
+
+        $this->loadMessages();
+        broadcast(new ConversationUpdated($conversation->id))->toOthers();
+    }
+
+    public function pinMessage(?string $messageId): void
+    {
+        $conversation = Conversation::query()->findOrFail((string) $this->conversationId);
+        $this->authorize('pin', $conversation);
+
+        $message = $messageId ? Message::query()->where('conversation_id', $conversation->id)->findOrFail($messageId) : null;
+        $this->chatService->pinMessage($conversation, $message);
+
+        $this->loadMessages();
+        broadcast(new ConversationUpdated($conversation->id))->toOthers();
+    }
+
     public function onMessageReceived($event)
     {
-        // Add the new message to the array
-        $this->messages[] = [
-            'id' => $event['id'],
-            'user' => $event['user'],
-            'body' => $event['body'],
-            'created_at' => \Carbon\Carbon::parse($event['created_at']),
-            'is_mine' => false, // Broadcast is toOthers(), so never mine
-            'reply_to' => $event['reply_to'] ?? null,
-        ];
+        if (collect($this->messages)->contains('id', $event['id'])) {
+            return;
+        }
 
-        // Dispatch browser event to scroll to bottom
+        $event['is_mine'] = false;
+        $event['reactions'] = $event['reactions'] ?? [];
+        $this->messages[] = $event;
+
         $this->dispatch('message-received');
     }
 
@@ -191,6 +252,12 @@ class ChatComponent extends Component
 
     public function render()
     {
-        return view('livewire.chat.chat-component');
+        $conversation = $this->conversation;
+
+        return view('livewire.chat.chat-component', [
+            'canSend' => $conversation && auth()->check() && auth()->user()->can('sendMessage', $conversation),
+            'canPin' => $conversation && auth()->check() && auth()->user()->can('pin', $conversation),
+            'reactionChoices' => ChatService::REACTIONS,
+        ]);
     }
 }

@@ -160,13 +160,7 @@
                 @endif
 
                 {{-- Chat Section --}}
-                <div class="relative p-6 lg:p-8 glass-card lg:rounded-xl">
-                    <div class="top-accent"></div>
-                    <h2 class="text-2xl font-bold mb-6 text-white">Discussion</h2>
-                    <div class="h-[600px]">
-                        <livewire:chat.chat-component :conversationable="$post" />
-                    </div>
-                </div>
+                <x-fl.chat-preview :messages="$chatPreview" :pinned="$chatPinned" :count="$chatCount" :href="route('posts.chat', $post)" />
 
             </div>
 

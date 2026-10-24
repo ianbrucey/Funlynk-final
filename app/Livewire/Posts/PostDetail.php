@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Posts;
 
+use App\Models\Message;
 use App\Models\Post;
 use App\Services\PostService;
 use Illuminate\Support\Facades\Log;
@@ -132,7 +133,16 @@ class PostDetail extends Component
 
     public function render()
     {
-        return view('livewire.posts.post-detail')
-            ->layout('layouts.app');
+        $conversation = $this->post->conversation;
+        $chatPreview = $conversation
+            ? $conversation->messages()->with('user')->latest()->orderByDesc('id')->limit(3)->get()->reverse()->values()
+            : collect();
+        $chatPinned = $conversation?->pinned_message_id ? Message::with('user')->find($conversation->pinned_message_id) : null;
+
+        return view('livewire.posts.post-detail', [
+            'chatPreview' => $chatPreview,
+            'chatPinned' => $chatPinned,
+            'chatCount' => $conversation ? $conversation->participants()->count() : 0,
+        ])->layout('layouts.app');
     }
 }

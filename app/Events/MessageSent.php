@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\Message;
+use App\Services\ChatService;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -25,24 +26,11 @@ class MessageSent implements ShouldBroadcastNow
         return new PrivateChannel('conversation.'.$this->message->conversation_id);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function broadcastWith(): array
     {
-        return [
-            'id' => $this->message->id,
-            'user' => [
-                'display_name' => $this->message->user->display_name ?? $this->message->user->username,
-                'profile_image_url' => $this->message->user->profile_image_url,
-            ],
-            'body' => $this->message->body,
-            'created_at' => $this->message->created_at->toISOString(),
-            'is_mine' => $this->message->user_id === auth()->id(),
-            'reply_to' => $this->message->replyTo ? [
-                'id' => $this->message->replyTo->id,
-                'body' => $this->message->replyTo->body,
-                'user' => [
-                    'display_name' => $this->message->replyTo->user->display_name ?? $this->message->replyTo->user->username,
-                ],
-            ] : null,
-        ];
+        return app(ChatService::class)->messagePayload($this->message, null);
     }
 }

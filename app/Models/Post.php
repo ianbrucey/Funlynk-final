@@ -153,6 +153,9 @@ class Post extends Model
         return $this->hasOne(PostConversion::class, 'post_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\MorphOne<Conversation, $this>
+     */
     public function conversation(): \Illuminate\Database\Eloquent\Relations\MorphOne
     {
         return $this->morphOne(Conversation::class, 'conversationable');
