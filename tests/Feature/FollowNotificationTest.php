@@ -230,7 +230,7 @@ test('feed event items carry host id, follow state and ownership with one follow
     expect($items->firstWhere('host_id', $viewer->id)['is_own'])->toBeTrue();
 });
 
-test('feed cards show a named follow button, hide it on own events and show following state', function () {
+test('feed cards show an icon-only follow button named for screen readers, hide it on own events and show following state', function () {
     $viewer = feedViewer();
     $sam = User::factory()->create(['display_name' => 'Skate Sam']);
     $ana = User::factory()->create(['display_name' => 'Ana Rivera']);
@@ -241,9 +241,22 @@ test('feed cards show a named follow button, hide it on own events and show foll
 
     $html = Livewire::actingAs($viewer)->withoutLazyLoading()->test(NearbyFeed::class)->html();
 
-    expect($html)->toContain('+ Follow Skate Sam')->toContain('✓ Following Ana Rivera');
+    expect($html)->toContain('aria-label="Follow Skate Sam"')->toContain('aria-label="Following Ana Rivera"');
+    expect($html)->not->toContain('+ Follow Skate Sam')->not->toContain('✓ Following Ana Rivera');
     expect(substr_count($html, 'aria-label="Follow '))->toBe(1);
     expect($html)->not->toContain('Follow '.$viewer->display_name);
+});
+
+test('feed cards link the host avatar and name to their profile', function () {
+    $viewer = feedViewer();
+    $sam = User::factory()->create(['display_name' => 'Skate Sam']);
+    nearbyEventBy($sam, ['title' => 'Pier Jam']);
+
+    $feed = collect(app(App\Services\FeedService::class)->getNearbyFeed($viewer, eventRadiusKm: 25, contentType: 'events', timeFilter: 'all')['items']);
+    expect($feed->firstWhere('host_id', $sam->id)['author_url'])->toBe(route('profile.view', $sam->username));
+
+    $html = Livewire::actingAs($viewer)->withoutLazyLoading()->test(NearbyFeed::class)->html();
+    expect(substr_count($html, 'href="'.route('profile.view', $sam->username).'"'))->toBe(2);
 });
 
 test('following from the feed saves once, updates the card and shows the intro only the first time', function () {
