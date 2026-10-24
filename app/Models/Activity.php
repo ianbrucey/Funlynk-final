@@ -106,6 +106,14 @@ class Activity extends Model
     }
 
     /**
+     * @return HasMany<EventNeed, $this>
+     */
+    public function needs(): HasMany
+    {
+        return $this->hasMany(EventNeed::class)->orderBy('sort_order');
+    }
+
+    /**
      * @return BelongsTo<Group, $this>
      */
     public function group(): BelongsTo
