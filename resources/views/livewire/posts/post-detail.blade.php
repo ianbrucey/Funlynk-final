@@ -160,7 +160,7 @@
                 @endif
 
                 {{-- Chat Section --}}
-                <x-fl.chat-preview :messages="$chatPreview" :pinned="$chatPinned" :count="$chatCount" :href="route('posts.chat', $post)" />
+                <x-fl.chat-preview :messages="$chatPreview" :pinned="$chatPinned" :count="$chatCount" :unread="$chatUnread" :href="route('posts.chat', $post)" />
 
             </div>
 
