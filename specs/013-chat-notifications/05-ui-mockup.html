@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>013 — Chat notifications — UI mockup (FunLink)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; color: #e5e7eb; min-height: 100vh; background: radial-gradient(ellipse at 20% 10%, #1e1b4b 0%, #0b0620 55%, #050310 100%); }
+  .page { max-width: 1180px; margin: 0 auto; padding: 16px; } h1 { font-size: 1.4rem; } h2 { font-size: 1.05rem; margin: 26px 0 10px; color: #a5f3fc; }
+  .hint { color: #9ca3af; font-size: .85rem; margin: 4px 0 12px; }
+  .proposal { border: 1px dashed rgba(232,121,249,.5); background: rgba(232,121,249,.06); border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: .85rem; color: #f5d0fe; line-height: 1.5; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; } .controls span { font-size: .75rem; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; }
+  .controls button { padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: .8rem; color: #e5e7eb; background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.12); }
+  .controls button.on { border-color: #22d3ee; color: #67e8f9; background: rgba(34,211,238,.12); }
+  .frame { margin: 0 auto 24px; background: #0b0a1e; border: 1px solid rgba(255,255,255,.12); border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+  .frame.phone { width: 390px; max-width: 100%; height: 640px; } .frame.desktop { width: 100%; max-width: 760px; height: 560px; border-radius: 16px; }
+  .top { padding: 10px 14px; background: rgba(255,255,255,.05); border-bottom: 1px solid rgba(255,255,255,.1); display: flex; align-items: center; gap: 10px; flex: none; }
+  .top div { flex: 1; min-width: 0; } .top b { display: block; font-size: 1rem; } .top small { color: #9ca3af; font-size: .75rem; }
+  .bell { min-width: 44px; min-height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: rgba(30,41,59,.5); color: #fff; font-size: 1.1rem; cursor: pointer; }
+  .bell.mentions { border-color: #22d3ee; } .bell.muted { border-color: rgba(248,113,113,.5); color: #fca5a5; }
+  .thread { flex: 1; overflow-y: auto; padding: 12px; } .m { margin: 8px 0; max-width: 82%; } .m b { font-size: .72rem; color: #9ca3af; display: block; margin-bottom: 2px; }
+  .m i { font-style: normal; display: inline-block; padding: 8px 12px; border-radius: 16px; background: rgba(51,65,85,.6); border: 1px solid rgba(255,255,255,.08); font-size: .9rem; } .m .at { color: #67e8f9; font-weight: 600; }
+  .comp { flex: none; padding: 8px 10px 10px; border-top: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); position: relative; }
+  .comp textarea { width: 100%; resize: none; min-height: 44px; padding: 11px 14px; border-radius: 14px; font: inherit; font-size: .9rem; color: #fff; background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.12); } .comp textarea:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,.25); }
+  .picker { position: absolute; left: 10px; right: 10px; bottom: 62px; border-radius: 14px; background: #14102b; border: 1px solid rgba(255,255,255,.15); overflow: hidden; z-index: 4; }
+  .picker button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 0 12px; border: 0; background: none; color: #e5e7eb; font-size: .9rem; cursor: pointer; text-align: left; } .picker button:hover, .picker button.hi { background: rgba(34,211,238,.12); }
+  .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: .75rem; font-weight: 700; background: linear-gradient(135deg, #06b6d4, #8b5cf6); }
+  .sheet-bg { position: absolute; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: flex-end; z-index: 6; } .sheet-bg.open { display: flex; }
+  .sheet { width: 100%; padding: 14px; background: #14102b; border-radius: 18px 18px 0 0; border-top: 1px solid rgba(255,255,255,.15); } .sheet h3 { font-size: .95rem; margin-bottom: 4px; } .sheet p { font-size: .78rem; color: #9ca3af; margin-bottom: 10px; }
+  .opt { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; padding: 8px 12px; margin-top: 6px; border-radius: 12px; cursor: pointer; text-align: left; color: #e5e7eb; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); }
+  .opt.on { border-color: #22d3ee; background: rgba(34,211,238,.12); } .opt small { display: block; color: #9ca3af; font-size: .72rem; } .opt .ck { margin-left: auto; color: #67e8f9; }
+  .list { padding: 10px; overflow-y: auto; flex: 1; } .n { display: flex; gap: 10px; align-items: center; min-height: 64px; padding: 10px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); margin-bottom: 8px; cursor: pointer; }
+  .n.unread { border-color: rgba(34,211,238,.4); } .n .ic { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(168,85,247,.2); font-size: 1.1rem; flex: none; } .n b { display: block; font-size: .88rem; } .n small { color: #9ca3af; font-size: .75rem; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #22d3ee; flex: none; box-shadow: 0 0 8px #22d3ee; }
+  .card { margin: 12px; padding: 14px; border-radius: 16px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); display: flex; align-items: center; gap: 10px; } .card b { display: block; } .card small { color: #9ca3af; font-size: .78rem; }
+  .toast { position: absolute; left: 12px; right: 12px; bottom: 76px; padding: 10px 12px; border-radius: 12px; font-size: .82rem; display: none; z-index: 8; background: rgba(34,197,94,.2); border: 1px solid rgba(34,197,94,.45); color: #bbf7d0; } .toast.show { display: block; }
+  .empty { text-align: center; padding: 50px 20px; color: #9ca3af; font-size: .88rem; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Chat notifications, mentions and mute — mockup</h1>
+  <p class="hint">Spec <strong>013 (placeholder number)</strong> · Status: DRAFT · Synthetic data only · 390px phone first, then desktop. Interactive.</p>
+  <div class="proposal"><strong>What this proposes</strong> (all [P]):
+    (1) A <strong>bell in the room header</strong> opens a sheet with three levels: All messages, Mentions and replies only, Muted. The current level shows on the bell. Default is Mentions only for chats over 10 people, otherwise All.
+    (2) <strong>@mention picker</strong>: type @ and pick from people in this chat. Mentions are highlighted in messages.
+    (3) <strong>Notification list</strong> shows three kinds: mention, reply, and a collapsed "5 new messages" per chat (max one per 15 minutes). A pinned-plan notification too.
+    (4) <strong>Unread dot</strong> on the chat card until you open it.
+    (5) Nothing for your own messages, a chat you are viewing, or a muted chat.
+  </div>
+  <h2>Controls</h2>
+  <div class="controls" id="c-size"><span>Chat size</span><button data-v="small" class="on">8 people</button><button data-v="big">24 people</button></div>
+  <h2>Room: header bell and mute sheet · 390px</h2><div class="frame phone" id="room"></div>
+  <h2>Room: @mention picker · 390px</h2><div class="frame phone" id="mention"></div>
+  <h2>Notifications and unread dot · 390px</h2><div class="frame phone" id="notes"></div>
+  <h2>Room · desktop</h2><div class="frame desktop" id="desk"></div>
+</div>
+<script>
+var S = { size: 'small', level: null, sheet: false, mention: false, hi: 0, read: false, notesOpen: false };
+var PEOPLE = ['Ana Rivera', 'Lee Park', 'Sam Ortiz', 'Priya Nair'];
+function level() { return S.level || (S.size === 'big' ? 'mentions' : 'all'); }
+function icon() { return { all: '🔔', mentions: '🔔@', muted: '🔕' }[level()]; }
+function head(title) { return '<div class="top"><div><b>' + title + '</b><small>' + (S.size === 'big' ? 24 : 8) + ' people · ' + ({ all: 'All messages', mentions: 'Mentions and replies', muted: 'Muted' }[level()]) + '</small></div><button class="bell ' + (level() === 'all' ? '' : level()) + '" data-bell="1" aria-label="Notification settings: ' + level() + '">' + icon() + '</button></div>'; }
+function thread() {
+  return '<div class="thread"><div class="m"><b>Sam</b><i>PLAN: Thursday 6pm at the pier</i></div><div class="m"><b>Lee</b><i><span class="at">@Ana</span> can you bring the speaker?</i></div><div class="m"><b>Ana</b><i>Yes!</i></div></div>';
+}
+function sheet() {
+  var opts = [['all', 'All messages', 'A summary at most every 15 minutes'], ['mentions', 'Mentions and replies only', 'Plus when a plan is pinned'], ['muted', 'Muted', 'No notifications from this chat']];
+  return '<div class="sheet-bg ' + (S.sheet ? 'open' : '') + '" data-close="1"><div class="sheet"><h3>Notifications for this chat</h3><p>' + (S.size === 'big' ? 'This chat is large, so we start you on Mentions and replies only.' : 'You can change this any time.') + '</p>' +
+    opts.map(function (o) { return '<button class="opt ' + (level() === o[0] ? 'on' : '') + '" data-level="' + o[0] + '"><div><b>' + o[1] + '</b><small>' + o[2] + '</small></div>' + (level() === o[0] ? '<span class="ck">✓</span>' : '') + '</button>'; }).join('') + '</div></div><div class="toast" id="toast-room" role="status"></div>';
+}
+function composer(txt, picker) {
+  return '<div class="comp">' + (picker ? '<div class="picker" role="listbox">' + PEOPLE.map(function (p, i) { return '<button role="option" class="' + (i === S.hi ? 'hi' : '') + '" data-pick="' + p + '"><span class="av">' + p[0] + '</span>' + p + '</button>'; }).join('') + '</div>' : '') + '<textarea rows="1" name="message" aria-label="Message" placeholder="Message the group">' + txt + '</textarea></div>';
+}
+function notes() {
+  var rows = [['@', 'Lee mentioned you', 'in Thursday skate · "@You can you bring the speaker?"', 1], ['↩', 'Sam replied to you', 'in Thursday skate · "Count on it"', 1], ['📌', 'Plan pinned in Thursday skate', 'PLAN: Thursday 6pm at the pier', 1], ['💬', '5 new messages in Board game night', 'Latest from Dana · 2:40 PM', 0]];
+  return '<div class="top"><div><b>Notifications</b><small>3 unread</small></div></div><div class="list">' + rows.map(function (r) { return '<div class="n ' + (r[3] ? 'unread' : '') + '"><span class="ic">' + r[0] + '</span><div style="flex:1;min-width:0"><b>' + r[1] + '</b><small>' + r[2] + '</small></div>' + (r[3] ? '<span class="dot"></span>' : '') + '</div>'; }).join('') + '</div>' +
+    '<div class="card"><div style="flex:1"><b>Thursday skate at 6</b><small>Chat · last message 2 min ago</small></div>' + (S.read ? '' : '<span class="dot" aria-label="Unread messages"></span>') + '<button class="bell" data-read="1" aria-label="Open chat">💬</button></div>';
+}
+function draw() {
+  document.getElementById('room').innerHTML = head('Thursday skate at 6') + thread() + composer('', false) + sheet();
+  document.getElementById('mention').innerHTML = head('Thursday skate at 6') + thread() + composer('Count me in @a', S.mention) ;
+  document.getElementById('notes').innerHTML = notes();
+  document.getElementById('desk').innerHTML = head('Thursday skate at 6') + thread() + composer('', false);
+}
+function toast(m) { var t = document.getElementById('toast-room'); if (!t) return; t.textContent = m; t.className = 'toast show'; setTimeout(function () { t.className = 'toast'; }, 1800); }
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-bell]'), l = e.target.closest('[data-level]'), p = e.target.closest('[data-pick]'), r = e.target.closest('[data-read]');
+  if (b) { S.sheet = true; draw(); }
+  else if (l) { S.level = l.dataset.level; S.sheet = false; draw(); toast({ all: 'Notifying you about all messages', mentions: 'Only mentions and replies', muted: 'Chat muted' }[S.level]); }
+  else if (r) { S.read = true; draw(); }
+  else if (p) { document.querySelector('#mention textarea').value = 'Count me in @' + p.dataset.pick.split(' ')[0] + ' '; S.mention = false; draw(); document.querySelector('#mention textarea').value = 'Count me in @' + p.dataset.pick.split(' ')[0] + ' '; }
+  else if (e.target.classList.contains('sheet-bg')) { S.sheet = false; draw(); }
+});
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { S.sheet = false; S.mention = false; draw(); } });
+document.getElementById('c-size').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; S.size = b.dataset.v; S.level = null; this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); }); draw(); });
+S.mention = true; draw();
+</script>
+</body>
+</html>
