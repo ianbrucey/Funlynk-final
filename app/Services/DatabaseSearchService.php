@@ -43,6 +43,7 @@ class DatabaseSearchService implements SearchServiceInterface
     protected function searchPosts(string $query, User $user, ?int $radius): Collection
     {
         $searchQuery = Post::with(['user', 'reactions'])
+            ->discoverable()
             ->where('status', 'active')
             ->where('expires_at', '>', now());
 

@@ -128,7 +128,7 @@ class NotificationBell extends Component
                 if ($chatUrl) {
                     $this->redirect($chatUrl);
                 }
-            } elseif ($notification->type === 'post_converted_to_event') {
+            } elseif ($notification->type === 'post_converted_to_event' || $notification->type === 'followed_host_event') {
                 // Redirect to the event page
                 if (! empty($url)) {
                     $this->redirect($url);

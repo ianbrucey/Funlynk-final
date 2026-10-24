@@ -41,7 +41,7 @@ class MeilisearchSearchService implements SearchServiceInterface
      */
     protected function searchPosts(string $query, User $user, ?int $radius): Collection
     {
-        $search = Post::search($query);
+        $search = Post::search($query)->query(fn ($builder) => $builder->discoverable());
 
         // Build filter array
         $filters = ['status = active'];

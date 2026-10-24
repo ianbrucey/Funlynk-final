@@ -170,6 +170,8 @@ class CreateActivity extends Component
                 $activity->tags()->sync($tagIds);
             }
 
+            \App\Jobs\NotifyFollowersOfNewEvent::dispatch($activity->id)->afterCommit();
+
             session()->flash('success', 'Activity created successfully!');
 
             return redirect()->route('events.show', $activity->id);

@@ -60,6 +60,11 @@ class NotificationList extends Component
                 if ($chatUrl) {
                     $this->redirect($chatUrl);
                 }
+            } elseif ($notification->type === 'followed_host_event') {
+                $activityId = data_get($notification->data, 'activity_id');
+                if ($activityId) {
+                    $this->redirect(route('events.show', $activityId));
+                }
             }
         }
     }

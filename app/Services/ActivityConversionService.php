@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\PostConvertedToEvent;
+use App\Jobs\NotifyFollowersOfNewEvent;
 use App\Models\Activity;
 use App\Models\Post;
 use App\Models\PostConversion;
@@ -76,6 +77,9 @@ class ActivityConversionService
 
             // Dispatch event for notifications
             event(new PostConvertedToEvent($post, $activity, $conversion));
+
+            $interestedIds = $post->reactions()->where('reaction_type', 'im_down')->pluck('user_id')->map(fn ($id) => (string) $id)->values()->all();
+            NotifyFollowersOfNewEvent::dispatch($activity->id, excludeUserIds: $interestedIds)->afterCommit();
 
             return $activity;
         });

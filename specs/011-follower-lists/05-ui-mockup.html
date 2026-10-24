@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>011 — Follower lists — UI mockup (FunLink)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; color: #e5e7eb; min-height: 100vh;
+    background: radial-gradient(ellipse at 20% 10%, #1e1b4b 0%, #0b0620 55%, #050310 100%); }
+  .stars { position: fixed; inset: 0; pointer-events: none; opacity: .5;
+    background-image: radial-gradient(1px 1px at 20% 30%, #fff, transparent), radial-gradient(1px 1px at 70% 10%, #fff, transparent), radial-gradient(1.5px 1.5px at 40% 70%, #a5f3fc, transparent); }
+  .page { position: relative; max-width: 1180px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.4rem; } h2 { font-size: 1.05rem; margin: 28px 0 10px; color: #a5f3fc; }
+  .hint { color: #9ca3af; font-size: .85rem; margin: 4px 0 12px; }
+  .proposal { border: 1px dashed rgba(232,121,249,.5); background: rgba(232,121,249,.06); border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: .85rem; color: #f5d0fe; line-height: 1.5; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; }
+  .controls span { font-size: .75rem; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; }
+  .controls button { padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: .8rem; color: #e5e7eb; background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.12); }
+  .controls button.on { border-color: #22d3ee; color: #67e8f9; background: rgba(34,211,238,.12); }
+  .frame { margin: 0 auto 24px; background: rgba(5,3,16,.55); border: 1px solid rgba(255,255,255,.12); border-radius: 28px; padding: 14px 12px 20px; overflow: hidden; position: relative; }
+  .frame.phone { width: 390px; max-width: 100%; } .frame.desktop { width: 100%; max-width: 720px; border-radius: 16px; padding: 24px; }
+  .glass { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 14px; margin-bottom: 12px; position: relative; }
+  .glass::before { content: ""; position: absolute; top: 0; left: 25%; right: 25%; height: 2px; background: linear-gradient(90deg, transparent, #22d3ee, #e879f9, transparent); }
+  .back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: #9ca3af; font-size: .85rem; cursor: pointer; }
+  .ttl { font-size: 1.1rem; font-weight: 700; } .ttl small { display: block; font-size: .78rem; font-weight: 400; color: #9ca3af; margin-top: 2px; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-top: 12px; border-radius: 14px; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.1); }
+  .seg button { min-height: 44px; border-radius: 10px; border: 0; cursor: pointer; font-size: .88rem; font-weight: 600; color: #9ca3af; background: transparent; }
+  .seg button b { color: #e5e7eb; } .seg button.on { color: #fff; background: linear-gradient(90deg, #ec4899, #a855f7); } .seg button.on b { color: #fff; }
+  .row { display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 10px 6px; border-radius: 14px; }
+  .row + .row { border-top: 1px solid rgba(255,255,255,.07); }
+  .row:hover { background: rgba(255,255,255,.04); }
+  .av { width: 48px; height: 48px; border-radius: 50%; flex: none; display: grid; place-items: center; font-weight: 700; background: linear-gradient(135deg, #ec4899, #8b5cf6); }
+  .who { flex: 1; min-width: 0; cursor: pointer; } .who b { display: block; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who small { display: block; font-size: .78rem; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pill { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 0; cursor: pointer; font-size: .8rem; font-weight: 600; color: #fff; background: linear-gradient(90deg, #ec4899, #a855f7); white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+  .pill.on { background: rgba(168,85,247,.2); border: 1px solid rgba(168,85,247,.5); }
+  .q { width: 100%; min-height: 44px; margin-top: 10px; padding: 0 14px; border-radius: 12px; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.12); color: #fff; font-size: .9rem; }
+  .q:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,.25); }
+  .more { width: 100%; min-height: 44px; margin-top: 8px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: .85rem; color: #fff; background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.12); }
+  .empty { text-align: center; padding: 40px 16px; } .empty .ico { font-size: 2.2rem; } .empty h3 { margin-top: 10px; font-size: .95rem; color: #cbd5e1; } .empty p { margin: 6px auto 14px; max-width: 280px; font-size: .82rem; color: #9ca3af; line-height: 1.45; }
+  .btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 22px; border-radius: 12px; border: 0; font-weight: 600; font-size: .88rem; color: #fff; cursor: pointer; background: linear-gradient(90deg, #ec4899, #a855f7); }
+  .skel { height: 56px; margin: 10px 6px; border-radius: 14px; background: rgba(255,255,255,.08); animation: pulse 1.4s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .4; } }
+  .stat { display: flex; gap: 22px; font-size: .85rem; color: #9ca3af; } .stat a { color: #9ca3af; text-decoration: none; cursor: pointer; } .stat b { color: #fff; } .stat a:hover b { color: #67e8f9; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); padding: 12px 14px; border-radius: 12px; font-size: .85rem; display: none; z-index: 60; background: rgba(34,197,94,.2); border: 1px solid rgba(34,197,94,.45); color: #bbf7d0; } .toast.show { display: block; }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="page">
+  <h1>Follower and following lists — mockup</h1>
+  <p class="hint">Spec <strong>011 (placeholder number)</strong> · Status: DRAFT · Tracker item P1 · Synthetic data only · 390px phone first, then desktop. Interactive.</p>
+  <div class="proposal"><strong>What this proposes</strong> (all [P]):
+    (1) The followers and following counts in the profile header become links (shown as the first block).
+    (2) One list page with a Followers | Following switch, each side showing its count. Routes <code>/u/{username}/followers</code> and <code>/following</code>.
+    (3) Each row: avatar, name, @handle, location, and a named Follow / Following pill (none on your own row). Tapping the name opens the profile.
+    (4) Newest first, 20 per page with "Load more".
+    (5) Locked profiles show the same lock message as the profile tabs, with no rows.
+    (6) Empty states differ for the owner and for visitors.
+    (7) <strong>Search box</strong> under the switch filters the list you are on by name or @handle; no match shows a clear-search state. Switching tabs clears it.
+  </div>
+  <h2>Controls</h2>
+  <div class="controls" id="c-view"><span>Viewer</span><button data-v="owner" class="on">Owner (my lists)</button><button data-v="visitor">Visitor</button><button data-v="locked">Locked profile</button></div>
+  <div class="controls" id="c-data"><span>Data</span><button data-v="full" class="on">Many rows</button><button data-v="empty">Empty</button><button data-v="loading">Loading</button></div>
+  <h2>Profile header (entry point)</h2><div class="frame phone"><div class="glass"><div class="ttl">maya.moves<small>Long Beach, CA</small></div>
+    <div class="stat" style="margin-top:12px"><a data-go="followers"><b>240</b> followers</a><a data-go="following"><b>118</b> following</a></div></div></div>
+  <h2>390px phone</h2><div class="frame phone" id="phone"></div>
+  <h2>Desktop</h2><div class="frame desktop" id="desk"></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+var S = { view: 'owner', data: 'full', tab: 'followers', shown: 8, follow: {}, q: '' };
+var NAMES = ['Ana Rivera', 'Lee Park', 'Skate Sam', 'Priya Nair', 'Tomás Ruiz', 'Jo Kim', 'Dana Whitfield', 'Mo Ibrahim', 'Eve Laurent', 'Kai Tanaka', 'Rosa Diaz', 'Ben Okafor'];
+var PLACES = ['Long Beach, CA', 'Signal Hill, CA', 'San Pedro, CA', 'Lakewood, CA', 'Seal Beach, CA'];
+function people(tab) {
+  return NAMES.map(function (n, i) { return { id: tab + i, name: n, handle: n.toLowerCase().replace(/[^a-z]+/g, '.'), place: PLACES[i % 5], me: S.view === 'visitor' && i === 3, followed: tab === 'following' ? true : i % 3 === 0 }; });
+}
+function isOn(p) { return p.id in S.follow ? S.follow[p.id] : p.followed; }
+function row(p) {
+  var pill = p.me ? '' : '<button class="pill ' + (isOn(p) ? 'on' : '') + '" data-id="' + p.id + '" aria-pressed="' + isOn(p) + '">' + (isOn(p) ? '✓ Following ' : '+ Follow ') + p.name.split(' ')[0] + '</button>';
+  return '<div class="row"><div class="av">' + p.name[0] + '</div><div class="who"><b>' + p.name + '</b><small>@' + p.handle + ' · ' + p.place + '</small></div>' + pill + '</div>';
+}
+function body() {
+  if (S.view === 'locked') return '<div class="glass empty"><div class="ico">🔒</div><h3>This profile is only visible to followers</h3><p>Follow maya.moves to see who follows them and who they follow.</p><button class="btn">Follow maya.moves</button></div>';
+  if (S.data === 'loading') return '<div class="glass"><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>';
+  if (S.data === 'empty') {
+    var f = S.tab === 'followers', own = S.view === 'owner';
+    return '<div class="glass empty"><div class="ico">' + (f ? '🌱' : '🧭') + '</div><h3>' + (f ? (own ? 'Nobody follows you yet' : 'No followers yet') : (own ? 'You are not following anyone yet' : 'Not following anyone yet')) + '</h3><p>' + (own ? (f ? 'Host an event or post something and people will find you.' : 'Follow hosts to get notified when they publish events.') : 'Check back later.') + '</p>' + (own && !f ? '<button class="btn">Find people</button>' : '') + '</div>';
+  }
+  var all = people(S.tab).filter(function (p) { var q = S.q.trim().toLowerCase(); return !q || p.name.toLowerCase().indexOf(q) > -1 || p.handle.indexOf(q) > -1; }), list = all.slice(0, S.shown);
+  if (!all.length) return '<div class="glass empty"><div class="ico">🔍</div><h3>No one matches "' + S.q.replace(/</g, '&lt;') + '"</h3><p>Try a different name or handle.</p><button class="btn" data-clear="1">Clear search</button></div>';
+  return '<div class="glass" style="padding:6px 8px">' + list.map(row).join('') + '</div>' + (S.shown < all.length ? '<button class="more" data-more="1">Load more</button>' : '');
+}
+function frame(id) {
+  var c = S.view === 'locked' ? ['–', '–'] : [240, 118];
+  document.getElementById(id).innerHTML = '<div class="glass"><span class="back">← maya.moves</span><div class="ttl">maya.moves<small>Long Beach, CA</small></div>' +
+    '<div class="seg" role="tablist"><button role="tab" aria-selected="' + (S.tab === 'followers') + '" data-tab="followers" class="' + (S.tab === 'followers' ? 'on' : '') + '"><b>' + c[0] + '</b> Followers</button><button role="tab" aria-selected="' + (S.tab === 'following') + '" data-tab="following" class="' + (S.tab === 'following' ? 'on' : '') + '"><b>' + c[1] + '</b> Following</button></div>' + (S.view === 'locked' ? '' : '<input class="q" id="q-' + id + '" type="search" placeholder="Search ' + (S.tab === 'followers' ? 'followers' : 'following') + ' by name or @handle" value="' + S.q.replace(/"/g, '&quot;') + '" aria-label="Search this list">') + '</div>' + body();
+}
+function draw() {
+  var a = document.activeElement, keep = a && a.classList && a.classList.contains('q') ? a.id : null;
+  frame('phone'); frame('desk');
+  var el = keep && document.getElementById(keep); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+}
+document.addEventListener('input', function (e) { if (e.target.classList.contains('q')) { S.q = e.target.value; S.shown = 8; draw(); } });
+function toast(m) { var t = document.getElementById('toast'); t.textContent = m; t.className = 'toast show'; setTimeout(function () { t.className = 'toast'; }, 1800); }
+document.addEventListener('click', function (e) {
+  if (e.target.closest('[data-clear]')) { S.q = ''; draw(); return; }
+  var t = e.target.closest('[data-tab]'), g = e.target.closest('[data-go]'), m = e.target.closest('[data-more]'), p = e.target.closest('.pill');
+  if (t) { S.tab = t.dataset.tab; S.q = ''; S.shown = 8; S.data = S.data === 'loading' ? 'loading' : S.data; draw(); }
+  if (g) { S.tab = g.dataset.go; S.shown = 8; draw(); window.scrollTo(0, document.getElementById('phone').offsetTop - 60); }
+  if (m) { S.shown += 4; draw(); }
+  if (p) { var id = p.dataset.id; var cur = id in S.follow ? S.follow[id] : (id.indexOf('following') === 0 || +id.replace(/\D/g, '') % 3 === 0 && id.indexOf('followers') === 0); S.follow[id] = !cur; draw(); toast(!cur ? 'Following · you will be notified of their events' : 'Unfollowed'); }
+});
+[['c-view', 'view'], ['c-data', 'data']].forEach(function (c) {
+  document.getElementById(c[0]).addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return; S[c[1]] = b.dataset.v;
+    this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); }); draw();
+  });
+});
+draw();
+</script>
+</body>
+</html>

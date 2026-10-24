@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Discovery;
 
+use App\Livewire\Concerns\HandlesHostFollow;
 use App\Services\FeedService;
 use App\Services\PostService;
 use Illuminate\Support\Facades\Log;
@@ -13,8 +14,15 @@ use Livewire\Component;
 #[Lazy]
 class NearbyFeed extends Component
 {
+    use HandlesHostFollow;
+
     #[Url(as: 'q')]
     public string $searchQuery = '';
+
+    #[Url(as: 'feed')]
+    public string $feed = 'nearby'; // nearby, following
+
+    public bool $followsAnyone = true;
 
     public int $eventRadiusKm = 50; // km, 10-50, clamped server-side; posts are a fixed 10km
 
@@ -37,6 +45,7 @@ class NearbyFeed extends Component
     {
         // Get query from URL if present
         $this->searchQuery = request()->query('q', '');
+        $this->feed = $this->feed === 'following' ? 'following' : 'nearby';
 
         // Load initial items
         $this->loadItems();
@@ -84,6 +93,12 @@ class NearbyFeed extends Component
         return $this->timeFilter !== 'all' || $this->eventRadiusMiles !== 31;
     }
 
+    public function setFeed(string $feed): void
+    {
+        $this->feed = $feed === 'following' ? 'following' : 'nearby';
+        $this->resetFeed();
+    }
+
     public function updatedContentType()
     {
         $this->resetFeed();
@@ -124,24 +139,48 @@ class NearbyFeed extends Component
         $this->loadItems(true);
     }
 
+    protected function afterHostFollowChange(string $hostId, bool $following): void
+    {
+        foreach ($this->items as $i => $item) {
+            if (($item['type'] ?? null) === 'event' && ($item['host_id'] ?? null) === $hostId) {
+                $this->items[$i]['is_following'] = $following;
+            }
+        }
+    }
+
     protected function loadItems($append = false)
     {
         /** @var \App\Models\User $user */
         $user = auth()->user();
 
-        $result = app(FeedService::class)->getNearbyFeed(
-            user: $user,
-            cursor: $this->cursor,
-            contentType: (string) $this->contentType,
-            timeFilter: (string) $this->timeFilter,
-            searchQuery: $this->searchQuery,
-            eventRadiusKm: (int) $this->eventRadiusKm,
-            perPage: $this->perPage,
-        );
+        $feed = app(FeedService::class);
+
+        $result = $this->feed === 'following'
+            ? $feed->getFollowingFeed(
+                user: $user,
+                cursor: $this->cursor,
+                contentType: (string) $this->contentType,
+                timeFilter: (string) $this->timeFilter,
+                searchQuery: $this->searchQuery,
+                perPage: $this->perPage,
+            )
+            : $feed->getNearbyFeed(
+                user: $user,
+                cursor: $this->cursor,
+                contentType: (string) $this->contentType,
+                timeFilter: (string) $this->timeFilter,
+                searchQuery: $this->searchQuery,
+                eventRadiusKm: (int) $this->eventRadiusKm,
+                perPage: $this->perPage,
+            );
 
         // Items are plain FeedItem arrays — never Eloquent models — so no
         // extra hydration/DB access happens on append or re-render.
         $this->items = $append ? array_merge($this->items, $result['items']) : $result['items'];
+
+        $this->followsAnyone = $this->feed !== 'following'
+            || $result['items'] !== []
+            || \App\Models\Follow::where('follower_id', $user->id)->exists();
 
         $this->cursor = $result['nextCursor'];
         $this->hasMore = $result['hasMore'];

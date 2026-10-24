@@ -77,6 +77,142 @@ describe('FeedService', function () {
         expect($after->pluck('id'))->not->toContain($publicEvent->id);
     });
 
+    it('never shows group posts (public or private) in the nearby feed, For You, map or search', function () {
+        $viewer = User::factory()->create(['location_coordinates' => new Point(37.7749, -122.4194, 4326)]);
+        $author = User::factory()->create();
+        $make = fn (?Group $group, string $title) => Post::factory()->create([
+            'user_id' => $author->id, 'group_id' => $group?->id, 'title' => $title, 'status' => 'active',
+            'expires_at' => now()->addDay(), 'location_coordinates' => new Point(37.7750, -122.4195, 4326),
+        ]);
+        $plain = $make(null, 'Zed plain post');
+        $public = $make(Group::factory()->create(['privacy' => 'public']), 'Zed public group post');
+        $private = $make(Group::factory()->create(['privacy' => 'private']), 'Zed private group post');
+
+        $service = app(FeedService::class);
+        $nearby = collect($service->getNearbyFeed($viewer, contentType: 'posts')['items'])->pluck('id');
+        $forYou = $service->getForYouFeed($viewer)->pluck('data.id');
+        $markers = collect($service->getMapData($viewer, radius: 10, contentType: 'posts')['markers'])->pluck('id');
+        $search = app(\App\Services\DatabaseSearchService::class)->search('zed', $viewer)->pluck('data.id');
+
+        foreach ([$nearby, $forYou, $markers, $search] as $ids) {
+            expect($ids)->toContain($plain->id)->not->toContain($public->id)->not->toContain($private->id);
+        }
+        expect($private->shouldBeSearchable())->toBeFalse()->and($public->shouldBeSearchable())->toBeFalse()->and($plain->shouldBeSearchable())->toBeTrue();
+    });
+
+    describe('following feed (spec 010)', function () {
+        function followingFixture(array $viewerAttrs = []): array
+        {
+            $viewer = User::factory()->create($viewerAttrs + ['onboarding_completed_at' => now(), 'location_coordinates' => new Point(37.7749, -122.4194, 4326)]);
+            $followed = User::factory()->create();
+            \App\Models\Follow::create(['follower_id' => $viewer->id, 'following_id' => $followed->id]);
+
+            return [$viewer, $followed, User::factory()->create()];
+        }
+
+        function followingPost(User $author, array $attrs = []): Post
+        {
+            return Post::factory()->create($attrs + ['user_id' => $author->id, 'status' => 'active', 'expires_at' => now()->addDay(), 'location_coordinates' => new Point(37.7750, -122.4195, 4326)]);
+        }
+
+        function followingEvent(User $host, array $attrs = []): Activity
+        {
+            return Activity::factory()->create($attrs + ['host_id' => $host->id, 'status' => 'published', 'is_public' => true, 'start_time' => now()->addDay(), 'location_coordinates' => new Point(37.7751, -122.4196, 4326)]);
+        }
+
+        function followingIds(User $viewer, array $args = []): \Illuminate\Support\Collection
+        {
+            return collect(app(FeedService::class)->getFollowingFeed($viewer, ...$args)['items'])->pluck('id');
+        }
+
+        it('only includes posts and events from followed authors', function () {
+            [$viewer, $followed, $stranger] = followingFixture();
+            $post = followingPost($followed);
+            $event = followingEvent($followed);
+            $strangerPost = followingPost($stranger);
+            $strangerEvent = followingEvent($stranger);
+
+            $ids = followingIds($viewer);
+
+            expect($ids)->toContain($post->id)->toContain($event->id)->not->toContain($strangerPost->id)->not->toContain($strangerEvent->id);
+        });
+
+        it('respects group privacy', function () {
+            [$viewer, $followed] = followingFixture();
+            $public = Group::factory()->create(['privacy' => 'public']);
+            $private = Group::factory()->create(['privacy' => 'private']);
+            $groupPost = followingPost($followed, ['group_id' => $public->id]);
+            $asGroup = followingPost($followed, ['group_id' => $public->id, 'posted_as_group' => true]);
+            $publicEvent = followingEvent($followed, ['group_id' => $public->id, 'is_public' => false]);
+            $privateEvent = followingEvent($followed, ['group_id' => $private->id, 'is_public' => false]);
+
+            $ids = followingIds($viewer);
+
+            expect($ids)->toContain($publicEvent->id)->not->toContain($privateEvent->id)->not->toContain($groupPost->id)->not->toContain($asGroup->id);
+        });
+
+        it('applies a 50 km radius, and none without a saved location', function () {
+            [$viewer, $followed] = followingFixture();
+            $near = followingPost($followed, ['location_coordinates' => new Point(37.9449, -122.4194, 4326)]);
+            $far = followingPost($followed, ['location_coordinates' => new Point(38.4949, -122.4194, 4326)]);
+
+            expect(followingIds($viewer))->toContain($near->id)->not->toContain($far->id);
+
+            [$noLocation, $followedToo] = followingFixture(['location_coordinates' => null]);
+            $farToo = followingPost($followedToo, ['location_coordinates' => new Point(48.85, 2.35, 4326)]);
+
+            expect(followingIds($noLocation))->toContain($farToo->id);
+        });
+
+        it('excludes expired posts and past or cancelled events', function () {
+            [$viewer, $followed] = followingFixture();
+            $expired = followingPost($followed, ['status' => 'expired', 'expires_at' => now()->subDay()]);
+            $past = followingEvent($followed, ['start_time' => now()->subDay()]);
+            $cancelled = followingEvent($followed, ['status' => 'cancelled']);
+            $live = followingPost($followed);
+
+            expect(followingIds($viewer))->toContain($live->id)->not->toContain($expired->id)->not->toContain($past->id)->not->toContain($cancelled->id);
+        });
+
+        it('supports content type, and pages without gaps or duplicates', function () {
+            [$viewer, $followed] = followingFixture();
+            $created = collect(range(1, 4))->map(fn () => followingPost($followed))->merge(collect(range(1, 3))->map(fn () => followingEvent($followed)));
+            $service = app(FeedService::class);
+
+            $seen = collect();
+            $cursor = null;
+            do {
+                $page = $service->getFollowingFeed($viewer, cursor: $cursor, perPage: 3);
+                $seen = $seen->merge(collect($page['items'])->pluck('id'));
+                $cursor = $page['nextCursor'];
+            } while ($page['hasMore']);
+
+            expect($seen)->toHaveCount(7)->and($seen->unique())->toHaveCount(7);
+            expect(collect($service->getFollowingFeed($viewer, contentType: 'events')['items'])->pluck('type')->unique()->all())->toBe(['event']);
+        });
+
+        it('uses a constant number of queries however many authors are followed', function () {
+            $count = function (int $authors) {
+                [$viewer] = followingFixture();
+                foreach (range(1, $authors) as $i) {
+                    $author = User::factory()->create();
+                    \App\Models\Follow::create(['follower_id' => $viewer->id, 'following_id' => $author->id]);
+                    followingPost($author);
+                    followingEvent($author);
+                }
+                \Illuminate\Support\Facades\DB::flushQueryLog();
+                \Illuminate\Support\Facades\DB::enableQueryLog();
+                app(FeedService::class)->getFollowingFeed($viewer);
+                $n = count(\Illuminate\Support\Facades\DB::getQueryLog());
+                \Illuminate\Support\Facades\DB::disableQueryLog();
+
+                return $n;
+            };
+
+            expect($count(10))->toBe($count(2));
+        });
+    });
+
     it('merges cleanly when events match but no posts do (and vice versa)', function () {
         $user = User::factory()->create([
             'location_coordinates' => new Point(37.7749, -122.4194, 4326),

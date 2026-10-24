@@ -1,4 +1,5 @@
 <div class="min-h-screen">
+    <x-fl.follow-modals />
     <div class="container mx-auto ">
 
         
@@ -10,6 +11,17 @@
 
 
             <div class="relative p-4 glass-card lg:rounded-xl">
+
+                {{-- Nearby | Following switch (spec 010) --}}
+                <div class="grid grid-cols-2 gap-1 p-1 mb-3 rounded-2xl bg-black/30 border border-white/10" role="tablist">
+                    @foreach(['nearby' => 'Nearby', 'following' => 'Following'] as $value => $label)
+                        <button type="button" role="tab" aria-selected="{{ $feed === $value ? 'true' : 'false' }}"
+                                wire:click="setFeed('{{ $value }}')" wire:key="feed-{{ $value }}"
+                                class="min-h-[44px] rounded-xl text-sm font-semibold transition {{ $feed === $value ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white' : 'text-gray-400 hover:text-gray-200' }}">
+                            {{ $label }}
+                        </button>
+                    @endforeach
+                </div>
 
                 <div x-data="{ open: false }">
                     {{-- Search row: one line, filters behind the gear --}}
@@ -53,6 +65,10 @@
                             </button>
                         @endforeach
                     </div>
+
+                    @if($feed === 'following')
+                        <p class="mt-3 text-xs text-gray-400">People you follow · within {{ \App\Services\FeedService::FOLLOWING_RADIUS_KM }} km of you</p>
+                    @endif
 
                     @if($searchQuery)
                         <p class="mt-3 text-sm text-gray-400">
@@ -117,6 +133,20 @@
                                 wire:click="clearSearch"
                                 class="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
                                 Clear Search
+                            </button>
+                        @elseif($feed === 'following' && ! $followsAnyone)
+                            <h3 class="text-xl font-bold mb-2 text-white">You are not following anyone yet</h3>
+                            <p class="text-gray-400 mb-6 max-w-sm mx-auto">Follow hosts to see their posts and events here, and get notified when they publish an event.</p>
+                            <a href="{{ route('search.users') }}" wire:navigate
+                               class="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
+                                Find people
+                            </a>
+                        @elseif($feed === 'following')
+                            <h3 class="text-xl font-bold mb-2 text-white">Nothing new from people you follow</h3>
+                            <p class="text-gray-400 mb-6">When they post or publish an event, it will show up here.</p>
+                            <button type="button" wire:click="setFeed('nearby')"
+                               class="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl font-semibold hover:scale-105 transition-all">
+                                See what is nearby
                             </button>
                         @else
                             <h3 class="text-xl font-bold mb-2 text-white">Nothing nearby yet</h3>
