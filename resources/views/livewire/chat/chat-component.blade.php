@@ -5,10 +5,12 @@
 @endphp
 <div class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900/50 backdrop-blur-lg"
      x-data="{
-        draft: '', pending: [], sheet: null, sending: false, notifySheet: false, ids: [], people: @js($mentionable), pick: { open: false, hits: [], hi: 0 },
+        draft: '', pending: [], sheet: null, sending: false, notifySheet: false, searchOpen: false, ids: [], people: @js($mentionable), pick: { open: false, hits: [], hi: 0 },
         thread() { return this.$refs.thread; },
         toEnd() { this.$nextTick(() => { const t = this.thread(); if (t) t.scrollTop = t.scrollHeight; }); },
-        jump(id) { const el = document.getElementById('msg-{{ $uid }}-' + id); if (!el) return; el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.classList.add('bg-cyan-400/20'); setTimeout(() => el.classList.remove('bg-cyan-400/20'), 1200); },
+        jump(id, retried = false) { const el = document.getElementById('msg-{{ $uid }}-' + id); if (!el) { if (! retried) $wire.jumpTo(id).then(ok => { if (ok) this.$nextTick(() => setTimeout(() => this.jump(id, true), 60)); }); return; } el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.classList.add('bg-cyan-400/20'); setTimeout(() => el.classList.remove('bg-cyan-400/20'), 1200); },
+        async openHit(id) { const ok = await $wire.jumpTo(id); if (! ok) return; this.searchOpen = false; this.$nextTick(() => setTimeout(() => this.jump(id), 60)); },
+        closeSearch() { this.searchOpen = false; $wire.clearSearch(); },
         grow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 110) + 'px'; },
         scan(el) {
             const m = el.value.slice(0, el.selectionStart).match(/(^|\s)@([\w.]*)$/);
@@ -33,7 +35,7 @@
      }"
      x-init="toEnd(); @if($focusId) setTimeout(() => jump('{{ $focusId }}'), 80); @endif"
      x-on:message-received.window="toEnd()"
-     x-on:keydown.escape.window="sheet = null">
+     x-on:keydown.escape.window="sheet = null; if (searchOpen) closeSearch()">
 
     @if($showHeader)
         <div class="flex-none border-b border-white/10 bg-gradient-to-r from-slate-800/50 to-slate-900/50 px-4 py-3">
@@ -53,11 +55,23 @@
         </div>
     @endif
 
-    @if($canSend)
+    @if($conversation)
         <div class="flex flex-none items-center justify-between gap-2 border-b border-white/10 px-4 py-1">
-            <span class="text-xs text-gray-400">{{ ['all' => 'All messages', 'mentions' => 'Mentions and replies only', 'muted' => 'Muted'][$notifyLevel] ?? '' }}</span>
-            <button type="button" x-on:click="notifySheet = true" aria-label="Notification settings: {{ $notifyLevel }}"
-                    class="min-h-[44px] min-w-[44px] rounded-xl border text-base {{ $notifyLevel === 'muted' ? 'border-red-400/50 text-red-300' : ($notifyLevel === 'mentions' ? 'border-cyan-400 text-white' : 'border-white/15 text-white') }}">{{ $notifyLevel === 'muted' ? '🔕' : '🔔' }}</button>
+            <span class="text-xs text-gray-400">@if($canSend){{ ['all' => 'All messages', 'mentions' => 'Mentions and replies only', 'muted' => 'Muted'][$notifyLevel] ?? '' }}@endif</span>
+            <div class="flex items-center gap-2">
+                <button type="button" x-on:click="searchOpen = true; $nextTick(() => $refs.search.focus())" aria-label="Search this chat"
+                        class="min-h-[44px] min-w-[44px] rounded-xl border border-white/15 text-base text-white">🔍</button>
+                @if($canSend)
+                    <button type="button" x-on:click="notifySheet = true" aria-label="Notification settings: {{ $notifyLevel }}"
+                            class="min-h-[44px] min-w-[44px] rounded-xl border text-base {{ $notifyLevel === 'muted' ? 'border-red-400/50 text-red-300' : ($notifyLevel === 'mentions' ? 'border-cyan-400 text-white' : 'border-white/15 text-white') }}">{{ $notifyLevel === 'muted' ? '🔕' : '🔔' }}</button>
+                @endif
+            </div>
+        </div>
+
+        <div x-show="searchOpen" x-cloak class="flex flex-none gap-2 border-b border-white/10 bg-slate-950/70 px-3 py-2">
+            <input x-ref="search" type="search" name="chat-search" id="chat-search-{{ $uid }}" wire:model.live.debounce.300ms="searchQuery" maxlength="100" placeholder="Search this chat" aria-label="Search messages"
+                   class="min-h-[44px] flex-1 rounded-xl border border-white/20 bg-white/5 px-3 text-sm text-white focus:border-cyan-400 focus:outline-none">
+            <button type="button" x-on:click="closeSearch()" aria-label="Close search" class="min-h-[44px] min-w-[44px] rounded-xl border border-white/15 text-white">✕</button>
         </div>
     @endif
 
@@ -67,7 +81,31 @@
         </button>
     @endif
 
-    <div x-ref="thread" class="min-h-0 flex-1 overflow-y-auto px-3 py-3" role="log" aria-live="polite">
+    <div x-show="searchOpen" x-cloak class="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+        @if(mb_strlen(trim($searchQuery)) < \App\Services\ChatService::SEARCH_MIN_LENGTH)
+            <div class="px-4 py-10 text-center text-sm text-gray-400"><div class="mb-1 text-3xl" aria-hidden="true">🔍</div>Type at least 2 characters to search this chat.</div>
+        @else
+            <div wire:loading wire:target="searchQuery" class="space-y-2">
+                @foreach(range(1, 3) as $i)<div class="h-14 animate-pulse rounded-2xl bg-white/10"></div>@endforeach
+            </div>
+            <div wire:loading.remove wire:target="searchQuery">
+                @forelse($searchResults as $hit)
+                    <button type="button" wire:key="hit-{{ $hit['id'] }}" x-on:click="openHit('{{ $hit['id'] }}')"
+                            class="mb-2 block min-h-[56px] w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-left text-sm leading-snug text-gray-100 hover:border-cyan-400/50">
+                        <span class="flex justify-between text-xs text-gray-400"><span>{{ $hit['user'] }}</span><span>{{ $hit['date'] }}</span></span>
+                        <span class="break-words">{{ $hit['snippet']['before'] }}<mark class="rounded bg-yellow-300/40 px-0.5 text-white">{{ $hit['snippet']['match'] }}</mark>{{ $hit['snippet']['after'] }}</span>
+                    </button>
+                @empty
+                    <div class="px-4 py-10 text-center text-sm text-gray-400"><div class="mb-1 text-3xl" aria-hidden="true">🫥</div>No messages match "{{ $searchQuery }}".</div>
+                @endforelse
+                @if($searchHasMore)
+                    <button type="button" wire:click="showMoreResults" class="min-h-[44px] w-full rounded-xl border border-white/15 bg-slate-800/60 text-sm text-white">Show more</button>
+                @endif
+            </div>
+        @endif
+    </div>
+
+    <div x-ref="thread" x-show="! searchOpen" class="min-h-0 flex-1 overflow-y-auto px-3 py-3" role="log" aria-live="polite">
         @if($hasEarlier)
             <button type="button" wire:click="loadEarlier" wire:loading.attr="disabled" wire:target="loadEarlier"
                     class="mx-auto mb-3 block min-h-[44px] rounded-full border border-white/10 bg-slate-800/60 px-5 text-xs text-slate-300 hover:border-cyan-400/40">
@@ -130,6 +168,13 @@
             </div></div>
         </template>
     </div>
+
+    @if($anchorId)
+        <div class="flex flex-none justify-center border-t border-white/10 px-3 py-2" x-show="! searchOpen">
+            <button type="button" x-on:click="$wire.backToLatest().then(() => toEnd())" wire:loading.attr="disabled" wire:target="backToLatest"
+                    class="min-h-[44px] rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-5 text-sm font-semibold text-white">↓ Back to latest</button>
+        </div>
+    @endif
 
     @if($canSend)
         <div class="flex-none border-t border-white/10 bg-slate-900/60 px-2.5 pb-2.5 pt-2">

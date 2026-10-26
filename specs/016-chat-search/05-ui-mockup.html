@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>016 — Chat search — UI mockup (FunLynk)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; color: #e5e7eb; min-height: 100vh; background: radial-gradient(ellipse at 20% 10%, #1e1b4b 0%, #0b0620 55%, #050310 100%); }
+  .page { max-width: 1180px; margin: 0 auto; padding: 16px; } h1 { font-size: 1.4rem; } h2 { font-size: 1.05rem; margin: 26px 0 10px; color: #a5f3fc; }
+  .hint { color: #9ca3af; font-size: .85rem; margin: 4px 0 12px; }
+  .proposal { border: 1px dashed rgba(232,121,249,.5); background: rgba(232,121,249,.06); border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: .85rem; color: #f5d0fe; line-height: 1.5; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; } .controls span { font-size: .75rem; color: #9ca3af; text-transform: uppercase; }
+  .controls button { padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: .8rem; color: #e5e7eb; background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.12); } .controls button.on { border-color: #22d3ee; color: #67e8f9; }
+  .frame { margin: 0 auto 24px; background: rgba(5,3,16,.55); border: 1px solid rgba(255,255,255,.12); border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; height: 640px; } .frame.phone { width: 390px; } .frame.desktop { width: 100%; max-width: 760px; border-radius: 18px; }
+  .hd { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.1); background: rgba(30,41,59,.5); } .hd h3 { flex: 1; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .hd small { color: #9ca3af; font-size: .72rem; display: block; font-weight: 400; }
+  .ib { min-width: 44px; min-height: 44px; border-radius: 12px; cursor: pointer; font-size: 1.05rem; color: #e5e7eb; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.14); }
+  .sb { display: flex; gap: 8px; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.1); background: rgba(14,10,35,.9); } .sb input { flex: 1; min-height: 44px; padding: 0 12px; border-radius: 12px; color: #fff; font-size: .9rem; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.18); } .sb input:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,.25); }
+  .body { flex: 1; overflow-y: auto; padding: 10px 12px; } .msg { padding: 8px 10px; margin: 6px 0; border-radius: 14px; background: rgba(255,255,255,.06); max-width: 85%; font-size: .88rem; line-height: 1.4; } .msg small { display: block; color: #9ca3af; font-size: .7rem; margin-bottom: 2px; } .msg.hit { outline: 2px solid #22d3ee; background: rgba(34,211,238,.14); animation: glow 1.6s ease-out; } @keyframes glow { from { box-shadow: 0 0 0 6px rgba(34,211,238,.4); } to { box-shadow: 0 0 0 0 transparent; } }
+  .day { text-align: center; font-size: .7rem; color: #9ca3af; margin: 10px 0; }
+  .res { display: block; width: 100%; text-align: left; color: inherit; cursor: pointer; min-height: 56px; padding: 10px 12px; margin-bottom: 8px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); font-size: .86rem; line-height: 1.4; } .res:hover { border-color: rgba(34,211,238,.5); } .res small { display: flex; justify-content: space-between; color: #9ca3af; font-size: .72rem; margin-bottom: 2px; } mark { background: rgba(250,204,21,.35); color: #fff; border-radius: 3px; padding: 0 2px; }
+  .state { text-align: center; padding: 40px 14px; color: #9ca3af; font-size: .85rem; } .state b { display: block; font-size: 1.8rem; margin-bottom: 6px; }
+  .skel { height: 56px; margin: 8px 0; border-radius: 14px; background: rgba(255,255,255,.08); animation: pulse 1.4s ease-in-out infinite; } @keyframes pulse { 50% { opacity: .4; } }
+  .btn { min-height: 44px; padding: 0 16px; border-radius: 12px; cursor: pointer; font-size: .85rem; font-weight: 600; color: #fff; border: 1px solid rgba(255,255,255,.14); background: rgba(30,41,59,.6); } .btn.go { border: 0; background: linear-gradient(90deg, #06b6d4, #3b82f6); } .wide { width: 100%; }
+  .latest { position: sticky; bottom: 4px; display: block; margin: 8px auto 0; } .count { font-size: .74rem; color: #9ca3af; margin: 2px 2px 8px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>016 — Chat search and jump to message</h1>
+  <p class="hint">Synthetic data only. Use the controls to change role-free states. Click a result to see the jump.</p>
+  <div class="proposal"><strong>Proposed [P]:</strong>
+    (1) A search icon in the chat header opens a bar; 2+ characters lists matches in this chat only, newest first, 20 at a time.
+    (2) Tapping a result jumps to that message, loading the surrounding messages if it is old, and highlights it. A "Back to latest" button returns.
+    (3) The same jump serves notification links, pins and reply quotes. (4) Text only; deleted and system messages never appear.
+  </div>
+  <div class="controls" id="c-state"><span>State</span>
+    <button data-v="chat" class="on">Chat</button><button data-v="empty">Search: nothing typed</button><button data-v="results">Search: results</button><button data-v="none">Search: no matches</button><button data-v="loading">Loading</button><button data-v="jumped">After jump (old message)</button>
+  </div>
+  <h2>Chat · 390px phone</h2><div class="frame phone" id="phone"></div>
+  <h2>Chat · desktop</h2><div class="frame desktop" id="desk"></div>
+</div>
+<script>
+(function () {
+  var state = 'chat', q = 'skate';
+  var results = [
+    ['Dana', 'Mar 14', 'Bringing the <mark>skate</mark> wax for Thursday'],
+    ['Lee', 'Mar 9', 'Anyone have a spare <mark>skate</mark> key?'],
+    ['Priya', 'Feb 27', 'New <mark>skate</mark> night time works for me'],
+    ['Sam', 'Feb 2', 'Rink says <mark>skate</mark> rentals are $5']
+  ];
+  function msgs(hit) {
+    return '<div class="day">Today</div><div class="msg"><small>Priya · 9:02 AM</small>Who is coming Thursday?</div><div class="msg"><small>Dana · 9:05 AM</small>Me! Bringing snacks.</div><div class="msg"><small>You · 9:07 AM</small>Count me in.</div>';
+  }
+  function oldWindow() {
+    return '<button class="btn wide" style="margin-bottom:6px">Load earlier messages</button><div class="day">Mar 14</div><div class="msg"><small>Lee · 6:40 PM</small>Is the rink open late?</div><div class="msg hit"><small>Dana · 6:44 PM</small>Bringing the skate wax for Thursday</div><div class="msg"><small>Priya · 6:50 PM</small>Perfect, thanks.</div><button class="btn go latest" data-latest="1">↓ Back to latest</button>';
+  }
+  function head(searching) {
+    return '<div class="hd"><h3>Thursday skate<small>12 people</small></h3><button class="ib" data-search="1" aria-label="Search this chat">🔍</button></div>' +
+      (searching ? '<div class="sb"><input placeholder="Search this chat" value="' + (state === 'empty' ? '' : (state === 'none' ? 'xyzzy' : q)) + '" aria-label="Search messages"><button class="ib" data-close="1" aria-label="Close search">✕</button></div>' : '');
+  }
+  function body() {
+    if (state === 'chat') return '<div class="body">' + msgs() + '</div>';
+    if (state === 'jumped') return '<div class="body">' + oldWindow() + '</div>';
+    if (state === 'empty') return '<div class="body"><div class="state"><b>🔍</b>Type at least 2 characters to search this chat.</div></div>';
+    if (state === 'none') return '<div class="body"><div class="state"><b>🫥</b>No messages match "xyzzy".</div></div>';
+    if (state === 'loading') return '<div class="body"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>';
+    return '<div class="body"><p class="count">4 results</p>' + results.map(function (r, i) { return '<button class="res" data-jump="' + i + '"><small><span>' + r[0] + '</span><span>' + r[1] + '</span></small>' + r[2] + '</button>'; }).join('') + '<button class="btn wide">Show more</button></div>';
+  }
+  function draw() {
+    var searching = ['empty', 'results', 'none', 'loading'].indexOf(state) > -1;
+    ['phone', 'desk'].forEach(function (id) { document.getElementById(id).innerHTML = head(searching) + body(); });
+    document.querySelectorAll('#c-state button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-v') === state); });
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('button'); if (!t) return;
+    if (t.hasAttribute('data-v')) state = t.getAttribute('data-v');
+    else if (t.hasAttribute('data-search')) state = 'empty';
+    else if (t.hasAttribute('data-close') || t.hasAttribute('data-latest')) state = 'chat';
+    else if (t.hasAttribute('data-jump')) state = 'jumped';
+    else return;
+    draw();
+  });
+  draw();
+})();
+</script>
+</body>
+</html>

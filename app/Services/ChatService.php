@@ -204,6 +204,107 @@ class ChatService
             ->values();
     }
 
+    public const SEARCH_MIN_LENGTH = 2;
+
+    public const SEARCH_PAGE_SIZE = 20;
+
+    /**
+     * Search text messages in one conversation, newest first. Deleted and system
+     * messages are excluded. LIKE wildcards in the term are treated as plain text.
+     *
+     * @return array{results: array<int, array<string, mixed>>, hasMore: bool}
+     */
+    public function searchMessages(Conversation $conversation, string $term, int $page = 1): array
+    {
+        $term = mb_substr(trim($term), 0, 100);
+
+        if (mb_strlen($term) < self::SEARCH_MIN_LENGTH) {
+            return ['results' => [], 'hasMore' => false];
+        }
+
+        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $term);
+        $page = max(1, $page);
+
+        /** @var \Illuminate\Support\Collection<int, Message> $rows */
+        $rows = $conversation->messages()
+            ->with('user:id,display_name,username')
+            ->where('type', 'text')
+            ->where('body', 'ILIKE', '%'.$escaped.'%')
+            ->latest()
+            ->orderByDesc('id')
+            ->offset(($page - 1) * self::SEARCH_PAGE_SIZE)
+            ->limit(self::SEARCH_PAGE_SIZE + 1)
+            ->get();
+
+        $results = [];
+        foreach ($rows->take(self::SEARCH_PAGE_SIZE) as $message) {
+            $results[] = [
+                'id' => $message->id,
+                'user' => $message->user->display_name ?? $message->user->username ?? 'Someone',
+                'date' => $message->created_at->format('M j, Y'),
+                'snippet' => $this->snippet((string) $message->body, $term),
+            ];
+        }
+
+        return ['results' => $results, 'hasMore' => $rows->count() > self::SEARCH_PAGE_SIZE];
+    }
+
+    /**
+     * Split a body around the first match so the view can highlight it with escaped output.
+     *
+     * @return array{before: string, match: string, after: string}
+     */
+    public function snippet(string $body, string $term): array
+    {
+        $pos = mb_stripos($body, $term);
+
+        if ($pos === false) {
+            return ['before' => mb_substr($body, 0, 120), 'match' => '', 'after' => ''];
+        }
+
+        $start = max(0, $pos - 40);
+        $length = mb_strlen($term);
+
+        return [
+            'before' => ($start > 0 ? '…' : '').mb_substr($body, $start, $pos - $start),
+            'match' => mb_substr($body, $pos, $length),
+            'after' => mb_substr($body, $pos + $length, 80).(mb_strlen($body) > $pos + $length + 80 ? '…' : ''),
+        ];
+    }
+
+    /**
+     * A window of messages around $target (oldest first): up to $each before and after it.
+     *
+     * @return array{rows: \Illuminate\Support\Collection<int, Message>, hasEarlier: bool, hasLater: bool}
+     */
+    public function getMessagesAround(Conversation $conversation, Message $target, int $each = 25): array
+    {
+        $with = ['user', 'replyTo.user', 'reactions'];
+
+        /** @var \Illuminate\Support\Collection<int, Message> $before */
+        $before = $conversation->messages()->with($with)
+            ->where(fn ($q) => $q->where('created_at', '<', $target->created_at)
+                ->orWhere(fn ($q) => $q->where('created_at', $target->created_at)->where('id', '<', $target->id)))
+            ->latest()->orderByDesc('id')->limit($each + 1)->get()->reverse()->values();
+
+        /** @var \Illuminate\Support\Collection<int, Message> $after */
+        $after = $conversation->messages()->with($with)
+            ->where(fn ($q) => $q->where('created_at', '>', $target->created_at)
+                ->orWhere(fn ($q) => $q->where('created_at', $target->created_at)->where('id', '>', $target->id)))
+            ->oldest()->orderBy('id')->limit($each + 1)->get();
+
+        $hasEarlier = $before->count() > $each;
+        $hasLater = $after->count() > $each;
+
+        /** @var \Illuminate\Support\Collection<int, Message> $rows */
+        $rows = ($hasEarlier ? $before->slice(1) : $before)
+            ->push($target->loadMissing($with))
+            ->merge($hasLater ? $after->take($each) : $after)
+            ->values();
+
+        return ['rows' => $rows, 'hasEarlier' => $hasEarlier, 'hasLater' => $hasLater];
+    }
+
     /**
      * The next page of messages older than $oldest (oldest first), fetching one
      * extra row so the caller can tell whether even older messages exist.
