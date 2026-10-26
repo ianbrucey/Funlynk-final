@@ -1,6 +1,6 @@
 # 016 — Chat search and jump to message — Strategic brief
 
-**Status:** DRAFT (→ IN REVIEW → APPROVED)
+**Status:** BUILT (owner took the proposed defaults on 2026-10-26)
 **Author:** Augment Agent (orchestrator draft)
 **Date:** 2026-10-26
 
@@ -49,9 +49,9 @@ In a long chat, anyone in it can find an old message by words and jump straight 
 - [D] Authorization is server-side only: every search and jump re-checks `view` on the conversation.
 - [D] Mobile-first at 390px; 44px targets.
 - [D] Messages attach to a conversation; nothing here creates orphaned content.
-- [P] Postgres `ILIKE` rather than Meilisearch (see Engine). → **Stop condition:** if the owner wants fuzzy or typo-tolerant search, this becomes a separate decision about indexing private content.
-- [O] **Should results include the sender's name as a search term** (for example "from Dana")? Default: no, message text only.
-- [O] **Should direct messages be searchable?** Default: yes, same rule (participants only).
+- [D] 2026-10-26 (owner: "go with your proposals") Postgres `ILIKE` rather than Meilisearch (see Engine). → **Stop condition:** if the owner wants fuzzy or typo-tolerant search, this becomes a separate decision about indexing private content.
+- [D] 2026-10-26 (owner: "go with your proposals") **Should results include the sender's name as a search term** (for example "from Dana")? Default: no, message text only.
+- [D] 2026-10-26 (owner: "go with your proposals") **Should direct messages be searchable?** Default: yes, same rule (participants only).
 
 ## Production impact
 

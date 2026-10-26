@@ -47,6 +47,22 @@ class ChatComponent extends Component
     #[Locked]
     public ?string $firstUnreadId = null;
 
+    /** Set while showing an older window of messages around a search hit or jump target. */
+    #[Locked]
+    public ?string $anchorId = null;
+
+    public string $searchQuery = '';
+
+    /** @var array<int, array<string, mixed>> */
+    #[Locked]
+    public array $searchResults = [];
+
+    #[Locked]
+    public int $searchPage = 1;
+
+    #[Locked]
+    public bool $searchHasMore = false;
+
     #[Locked]
     public ?string $pinnedMessageId = null;
 
@@ -81,6 +97,10 @@ class ChatComponent extends Component
         $this->focusId = is_string(request()->query('m')) ? request()->query('m') : null;
 
         $this->loadMessages(firstLoad: true);
+
+        if ($this->focusId && $this->conversation) {
+            $this->jumpTo($this->focusId);
+        }
     }
 
     protected function loadMessages(bool $firstLoad = false)
@@ -111,9 +131,19 @@ class ChatComponent extends Component
         $this->conversation = $conversation;
         $viewerId = auth()->id() !== null ? (string) auth()->id() : null;
 
-        $rows = $this->chatService->getMessages($conversation, $this->limit + 1);
-        $this->hasEarlier = $rows->count() > $this->limit;
-        $rows = $this->hasEarlier ? $rows->slice(1)->values() : $rows;
+        /** @var Message|null $anchor */
+        $anchor = $this->anchorId ? $conversation->messages()->whereKey($this->anchorId)->first() : null;
+
+        if ($anchor) {
+            $window = $this->chatService->getMessagesAround($conversation, $anchor);
+            $rows = $window['rows'];
+            $this->hasEarlier = $window['hasEarlier'];
+        } else {
+            $this->anchorId = null;
+            $rows = $this->chatService->getMessages($conversation, $this->limit + 1);
+            $this->hasEarlier = $rows->count() > $this->limit;
+            $rows = $this->hasEarlier ? $rows->slice(1)->values() : $rows;
+        }
 
         if ($firstLoad && $viewerId) {
             $this->firstUnreadId = $this->findFirstUnreadId($conversation, $rows, $viewerId);
@@ -129,7 +159,7 @@ class ChatComponent extends Component
             'user' => $pinnedMessage->user->display_name ?? $pinnedMessage->user->username,
         ] : null;
 
-        if ($viewerId) {
+        if ($viewerId && ! $this->anchorId) {
             $this->chatService->markAsRead($conversation, auth()->user());
             $this->notifyLevel = app(ChatNotifier::class)->levelFor($conversation, auth()->user());
         }
@@ -172,6 +202,7 @@ class ChatComponent extends Component
         }
 
         $this->authorize('sendMessage', $conversation);
+        $this->anchorId = null;
 
         $this->validate(['newMessage' => ['required', 'string', 'max:2000']], [
             'newMessage.max' => 'Messages can be up to 2000 characters.',
@@ -203,6 +234,66 @@ class ChatComponent extends Component
     public function loadEarlier(): void
     {
         $this->limit += self::PAGE_SIZE;
+        $this->loadMessages();
+    }
+
+    public function updatedSearchQuery(): void
+    {
+        $this->searchPage = 1;
+        $this->runSearch(append: false);
+    }
+
+    public function showMoreResults(): void
+    {
+        $this->searchPage++;
+        $this->runSearch(append: true);
+    }
+
+    private function runSearch(bool $append): void
+    {
+        $conversation = Conversation::query()->findOrFail((string) $this->conversationId);
+        $this->authorize('view', $conversation);
+
+        $found = $this->chatService->searchMessages($conversation, $this->searchQuery, $this->searchPage);
+        $this->searchResults = $append ? array_merge($this->searchResults, $found['results']) : $found['results'];
+        $this->searchHasMore = $found['hasMore'];
+    }
+
+    public function clearSearch(): void
+    {
+        $this->reset(['searchQuery', 'searchResults', 'searchHasMore']);
+        $this->searchPage = 1;
+    }
+
+    /**
+     * Make sure a message is on screen: show the window around it when it is outside the loaded one.
+     */
+    public function jumpTo(string $messageId): bool
+    {
+        $conversation = Conversation::query()->findOrFail((string) $this->conversationId);
+        $this->authorize('view', $conversation);
+
+        if (collect($this->messages)->contains('id', $messageId)) {
+            return true;
+        }
+
+        /** @var Message|null $target */
+        $target = $conversation->messages()->whereKey($messageId)->first();
+
+        if (! $target) {
+            return false;
+        }
+
+        $this->anchorId = $target->id;
+        $this->loadMessages();
+
+        return true;
+    }
+
+    public function backToLatest(): void
+    {
+        $this->anchorId = null;
+        $this->limit = self::PAGE_SIZE;
         $this->loadMessages();
     }
 
@@ -249,6 +340,10 @@ class ChatComponent extends Component
 
     public function onMessageReceived($event)
     {
+        if ($this->anchorId) {
+            return;
+        }
+
         if (collect($this->messages)->contains('id', $event['id'])) {
             return;
         }

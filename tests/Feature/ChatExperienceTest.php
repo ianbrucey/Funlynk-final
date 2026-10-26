@@ -202,3 +202,161 @@ test('a reader who cannot send sees a message instead of the composer', function
     Livewire::actingAs($outsider)->test(ChatComponent::class, ['conversationable' => $post])
         ->assertSee('Only members of Skate Crew can send messages here.')->assertDontSeeHtml('aria-label="Send"');
 });
+
+function searchRoom(): array
+{
+    $user = roomUser();
+    [$post, $conversation] = roomFor($user);
+
+    return [$user, $post, $conversation];
+}
+
+test('search is scoped to the conversation, newest first, and matches case-insensitively', function () {
+    [$user, $post, $conversation] = searchRoom();
+    [, $otherConversation] = roomFor($user);
+    say($conversation, $user, 'Bringing SKATE wax', now()->subDays(3)->toDateTimeString());
+    say($conversation, $user, 'skate key anyone?', now()->subDays(1)->toDateTimeString());
+    say($conversation, $user, 'nothing relevant');
+    say($otherConversation, $user, 'skate in the other chat');
+
+    $component = Livewire::actingAs($user)->test(ChatComponent::class, ['conversationable' => $post])->set('searchQuery', 'Skate');
+    $hits = collect($component->get('searchResults'));
+
+    expect($hits->map(fn ($h) => $h['snippet']['before'].$h['snippet']['match'].$h['snippet']['after'])->all())->toBe(['skate key anyone?', 'Bringing SKATE wax']);
+    expect($hits->first()['snippet']['match'])->toBe('skate');
+});
+
+test('a person who cannot view the conversation cannot search or jump', function () {
+    $a = roomUser();
+    $b = roomUser();
+    $outsider = roomUser();
+    $dm = app(ChatService::class)->createDirectMessageConversation($a, $b);
+    $message = say($dm, $a, 'private plans');
+
+    Livewire::actingAs($outsider)->test(ChatComponent::class, ['conversationId' => $dm->id])->assertForbidden();
+    Livewire::actingAs($b)->test(ChatComponent::class, ['conversationId' => $dm->id])->set('searchQuery', 'plans')->assertCount('searchResults', 1);
+    expect($message->conversation_id)->toBe($dm->id);
+});
+
+test('search treats wildcards as plain text and ignores very short queries', function () {
+    [$user, $post, $conversation] = searchRoom();
+    say($conversation, $user, '100% sure about this');
+    say($conversation, $user, 'a_b is a name');
+    say($conversation, $user, 'plain words here');
+    $component = Livewire::actingAs($user)->test(ChatComponent::class, ['conversationable' => $post]);
+
+    expect($component->set('searchQuery', '%')->get('searchResults'))->toBe([]);
+    expect($component->set('searchQuery', '0% s')->get('searchResults'))->toHaveCount(1);
+    expect($component->set('searchQuery', 'a_')->get('searchResults'))->toHaveCount(1);
+    expect($component->set('searchQuery', '__')->get('searchResults'))->toBe([]);
+    expect($component->set('searchQuery', 'a\\')->get('searchResults'))->toBe([]);
+    expect($component->set('searchQuery', 'pl')->get('searchResults'))->toHaveCount(1);
+});
+
+test('search never returns deleted or system messages', function () {
+    [$user, $post, $conversation] = searchRoom();
+    $gone = say($conversation, $user, 'secret skate plan');
+    say($conversation, $user, 'kept skate plan');
+    $gone->delete();
+    $system = say($conversation, $user, 'system skate notice');
+    $system->forceFill(['type' => 'system'])->save();
+
+    $hits = Livewire::actingAs($user)->test(ChatComponent::class, ['conversationable' => $post])->set('searchQuery', 'skate')->get('searchResults');
+
+    expect($hits)->toHaveCount(1)->and($hits[0]['snippet']['before'])->toBe('kept ');
+});
+
+test('search results page twenty at a time without duplicates', function () {
+    [$user, $post, $conversation] = searchRoom();
+    foreach (range(1, 45) as $i) {
+        say($conversation, $user, "hit number {$i}", now()->subMinutes(100 - $i)->toDateTimeString());
+    }
+
+    $component = Livewire::actingAs($user)->test(ChatComponent::class, ['conversationable' => $post])->set('searchQuery', 'hit number');
+    expect($component->get('searchResults'))->toHaveCount(20)->and($component->get('searchHasMore'))->toBeTrue();
+
+    $component->call('showMoreResults')->call('showMoreResults');
+    $ids = collect($component->get('searchResults'))->pluck('id');
+    expect($ids)->toHaveCount(45)->and($ids->unique())->toHaveCount(45)->and($component->get('searchHasMore'))->toBeFalse();
+});
+
+test('a search request runs the same number of queries however many messages match', function () {
+    [$user, $post, $conversation] = searchRoom();
+    $component = Livewire::actingAs($user)->test(ChatComponent::class, ['conversationable' => $post]);
+    $count = function (string $term) use ($component) {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $component->set('searchQuery', $term);
+        $n = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        return $n;
+    };
+
+    foreach (range(1, 3) as $i) {
+        say($conversation, $user, "few {$i}");
+        say($conversation, $user, "many {$i}");
+    }
+    foreach (range(4, 40) as $i) {
+        say($conversation, $user, "many {$i}");
+    }
+
+    expect($count('many'))->toBe($count('few') + 0);
+});
+
+test('jumping to an old message loads the window around it, and back to latest restores the newest', function () {
+    [$user, $post, $conversation] = searchRoom();
+    $ids = [];
+    foreach (range(1, 160) as $i) {
+        $ids[$i] = say($conversation, $user, sprintf('msg %03d', $i), now()->subMinutes(300 - $i)->toDateTimeString())->id;
+    }
+
+    $component = Livewire::actingAs($user)->test(ChatComponent::class, ['conversationable' => $post]);
+    expect(collect($component->get('messages'))->pluck('id'))->not->toContain($ids[20]);
+
+    $component->call('jumpTo', $ids[20]);
+    $bodies = collect($component->get('messages'))->pluck('body');
+    expect($bodies)->toContain('msg 020')->and($bodies->first())->toBe('msg 001')->and($bodies->last())->toBe('msg 045');
+    expect($component->get('anchorId'))->toBe($ids[20]);
+
+    $component->call('backToLatest');
+    $bodies = collect($component->get('messages'))->pluck('body');
+    expect($component->get('anchorId'))->toBeNull()->and($bodies->last())->toBe('msg 160')->and($bodies)->toHaveCount(50);
+});
+
+test('a jump target from another conversation is refused', function () {
+    [$user, $post, $conversation] = searchRoom();
+    [, $other] = roomFor($user);
+    say($conversation, $user, 'mine');
+    $foreign = say($other, $user, 'elsewhere');
+
+    $component = Livewire::actingAs($user)->test(ChatComponent::class, ['conversationable' => $post]);
+    $component->call('jumpTo', $foreign->id);
+
+    expect($component->get('anchorId'))->toBeNull();
+    expect(collect($component->get('messages'))->pluck('body')->all())->toBe(['mine']);
+});
+
+test('an old message link opens the window around it, and sending returns to the latest', function () {
+    [$user, $post, $conversation] = searchRoom();
+    $target = null;
+    foreach (range(1, 120) as $i) {
+        $m = say($conversation, $user, sprintf('msg %03d', $i), now()->subMinutes(300 - $i)->toDateTimeString());
+        $target = $i === 10 ? $m : $target;
+    }
+
+    $component = Livewire::actingAs($user)->withQueryParams(['m' => $target->id])->test(ChatComponent::class, ['conversationable' => $post]);
+    expect(collect($component->get('messages'))->pluck('body'))->toContain('msg 010')->and($component->get('anchorId'))->toBe($target->id);
+
+    $component->set('newMessage', 'back in the present')->call('sendMessage');
+    expect($component->get('anchorId'))->toBeNull()->and(collect($component->get('messages'))->last()['body'])->toBe('back in the present');
+});
+
+test('search results escape html in message text', function () {
+    [$user, $post, $conversation] = searchRoom();
+    say($conversation, $user, 'look <script>alert(1)</script> here');
+
+    $html = Livewire::actingAs($user)->test(ChatComponent::class, ['conversationable' => $post])->set('searchQuery', 'script')->html();
+
+    expect($html)->not->toContain('<script>alert(1)</script>')->toContain('&lt;');
+});
