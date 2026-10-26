@@ -202,8 +202,24 @@ class ChatComponent extends Component
 
     public function loadEarlier(): void
     {
-        $this->limit += self::PAGE_SIZE;
-        $this->loadMessages();
+        $conversation = $this->conversation;
+        $oldest = $this->messages !== [] ? Message::query()->whereKey($this->messages[0]['id'])->first() : null;
+
+        if (! $conversation || ! $oldest) {
+            return;
+        }
+
+        $this->authorize('view', $conversation);
+
+        $rows = $this->chatService->getMessagesBefore($conversation, $oldest, self::PAGE_SIZE);
+        $this->hasEarlier = $rows->count() > self::PAGE_SIZE;
+        $rows = $this->hasEarlier ? $rows->slice(1)->values() : $rows;
+
+        $viewerId = auth()->id() !== null ? (string) auth()->id() : null;
+        $older = $rows->map(fn (Message $m) => $this->chatService->messagePayload($m, $viewerId))->all();
+
+        $this->messages = array_merge($older, $this->messages);
+        $this->limit = max($this->limit, count($this->messages));
     }
 
     public function refreshThread(): void
