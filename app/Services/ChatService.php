@@ -205,6 +205,29 @@ class ChatService
     }
 
     /**
+     * The next page of messages older than $oldest (oldest first), fetching one
+     * extra row so the caller can tell whether even older messages exist.
+     *
+     * @return \Illuminate\Support\Collection<int, Message>
+     */
+    public function getMessagesBefore(Conversation $conversation, Message $oldest, int $limit = 50): \Illuminate\Support\Collection
+    {
+        /** @var \Illuminate\Support\Collection<int, Message> $rows */
+        $rows = $conversation->messages()
+            ->with(['user', 'replyTo.user', 'reactions'])
+            ->where(fn ($q) => $q->where('created_at', '<', $oldest->created_at)
+                ->orWhere(fn ($q) => $q->where('created_at', $oldest->created_at)->where('id', '<', $oldest->id)))
+            ->latest()
+            ->orderByDesc('id')
+            ->limit($limit + 1)
+            ->get()
+            ->reverse()
+            ->values();
+
+        return $rows;
+    }
+
+    /**
      * Plain-array shape of a message for the chat UI and broadcasts.
      *
      * @return array<string, mixed>
