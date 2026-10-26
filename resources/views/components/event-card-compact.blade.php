@@ -21,24 +21,26 @@
     {{-- Card Header --}}
     <div class="flex items-center gap-3 mt-7">
         {{-- Avatar --}}
-        @if($event['author_image_url'])
-            <img
-                src="{{ \App\Services\ImageProcessor::url($event['author_image_url']) }}"
-                alt="{{ $event['author_name'] }}"
-                class="w-11 h-11 rounded-full object-cover"
-            >
-        @else
-            <div class="w-11 h-11 rounded-full grid place-items-center font-bold text-white"
-                 style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">
-                {{ strtoupper(substr($event['author_name'], 0, 1)) }}
-            </div>
-        @endif
+        <a @if(!empty($event['author_url'])) href="{{ $event['author_url'] }}" @endif class="block shrink-0 transition hover:opacity-80" onclick="event.stopPropagation()">
+            @if($event['author_image_url'])
+                <img
+                    src="{{ \App\Services\ImageProcessor::url($event['author_image_url']) }}"
+                    alt="{{ $event['author_name'] }}"
+                    class="w-11 h-11 rounded-full object-cover"
+                >
+            @else
+                <div class="w-11 h-11 rounded-full grid place-items-center font-bold text-white"
+                     style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">
+                    {{ strtoupper(substr($event['author_name'], 0, 1)) }}
+                </div>
+            @endif
+        </a>
 
         {{-- Host & Role --}}
         <div class="flex-1 min-w-0">
-            <p class="font-semibold text-white leading-tight truncate">
+            <a @if(!empty($event['author_url'])) href="{{ $event['author_url'] }}" @endif class="block font-semibold text-white leading-tight truncate hover:text-cyan-400 transition" onclick="event.stopPropagation()">
                 {{ $event['author_name'] }}
-            </p>
+            </a>
             <p class="text-xs truncate" style="color: #8a93b2;">
                 Hosting
                 @if(!empty($event['group_name']))
@@ -48,7 +50,7 @@
         </div>
 
         @if($showFollow)
-            <x-fl.follow-pill :host-id="$event['host_id']" :name="$event['author_name']" :following="$event['is_following'] ?? false" wire:key="follow-{{ $event['id'] }}" />
+            <x-fl.follow-pill :host-id="$event['host_id']" :name="$event['author_name']" :following="$event['is_following'] ?? false" variant="icon" wire:key="follow-{{ $event['id'] }}" />
         @else
             {{-- Price Badge --}}
             <span class="text-xs font-semibold" style="color: #8a93b2;">

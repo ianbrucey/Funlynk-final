@@ -7,6 +7,8 @@ use App\Models\Message;
 use App\Models\Post;
 use App\Models\User;
 use App\Services\ChatService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 
 function roomUser(array $attributes = []): User
@@ -359,4 +361,34 @@ test('search results escape html in message text', function () {
     $html = Livewire::actingAs($user)->test(ChatComponent::class, ['conversationable' => $post])->set('searchQuery', 'script')->html();
 
     expect($html)->not->toContain('<script>alert(1)</script>')->toContain('&lt;');
+});
+
+test('load earlier fetches only the next older page, in order, across several pages', function () {
+    $user = roomUser();
+    [$post, $conversation] = roomFor($user);
+    foreach (range(1, 130) as $i) {
+        say($conversation, $user, sprintf('msg %03d', $i), now()->subMinutes(200 - $i)->toDateTimeString());
+    }
+
+    $component = Livewire::actingAs($user)->test(ChatComponent::class, ['conversationable' => $post]);
+    $component->call('loadEarlier');
+    expect($component->get('messages'))->toHaveCount(100)->and($component->get('hasEarlier'))->toBeTrue();
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $component->call('loadEarlier');
+    $messageQueries = collect(DB::getQueryLog())->filter(fn ($q) => str_contains($q['query'], 'from "messages"') && str_contains($q['query'], 'limit 51'))->count();
+    DB::disableQueryLog();
+
+    $bodies = collect($component->get('messages'))->pluck('body');
+    expect($bodies)->toHaveCount(130)->and($bodies->first())->toBe('msg 001')->and($bodies->last())->toBe('msg 130');
+    expect($bodies->unique())->toHaveCount(130)->and($component->get('hasEarlier'))->toBeFalse();
+    expect($messageQueries)->toBe(1);
+
+    $component->call('refreshThread');
+    expect($component->get('messages'))->toHaveCount(130);
+});
+
+test('the messages table has the conversation time index', function () {
+    expect(collect(Schema::getIndexes('messages'))->pluck('name'))->toContain('messages_conversation_time_index');
 });
