@@ -627,6 +627,7 @@ class FeedService
             'spots_remaining' => $spotsRemaining,
             'converted_from_post' => $event->originated_from_post_id !== null,
             'host_id' => (string) $event->host_id,
+            'author_url' => $event->host->username ? route('profile.view', $event->host->username) : null,
             'is_following' => in_array((string) $event->host_id, $followedHostIds, true),
             'is_own' => $viewerId !== null && (string) $event->host_id === $viewerId,
             'group_name' => $event->group?->name,
