@@ -160,4 +160,4 @@ Route::get('/e/{activity:slug}', \App\Livewire\PublicEventView::class)
 // MUST be last to avoid catching specific routes like /events/create
 Route::get('/events/{activity}', \App\Livewire\Activities\ActivityDetail::class)
     ->name('events.show')
-    ->middleware(['web', 'capture.intent', 'throttle:60,1']);
+    ->middleware(['web', 'capture.intent', 'events.canonical', 'throttle:60,1']);

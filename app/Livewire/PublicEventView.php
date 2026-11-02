@@ -35,6 +35,14 @@ class PublicEventView extends Component
     ) {
         $this->activity = $activity;
 
+        // Non-public activities have no public page: answer 404 to
+        // anyone who could not view the activity in the app either,
+        // so private events are not world-readable by slug.
+        if (! $this->activity->is_public
+            && ! (auth()->check() && auth()->user()->can('view', $this->activity))) {
+            abort(404);
+        }
+
         // Capture referral code from URL
         if (request()->has('ref')) {
             $this->referralCode = request('ref');

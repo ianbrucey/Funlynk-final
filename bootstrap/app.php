@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'onboarding.complete' => \App\Http\Middleware\EnsureOnboardingComplete::class,
             'capture.intent' => \App\Http\Middleware\CaptureIntendedAction::class,
+            'events.canonical' => \App\Http\Middleware\RedirectGuestsToPublicEvent::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

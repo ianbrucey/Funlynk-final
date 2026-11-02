@@ -7,6 +7,8 @@
 
     <title>{{ $title ?? strtoupper( config('app.name', 'FunLynk') ) }}</title>
 
+    @stack('meta')
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/fl-logo-icon-only.png') }}">
 

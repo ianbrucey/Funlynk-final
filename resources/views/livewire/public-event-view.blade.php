@@ -1,5 +1,7 @@
 <div>
-    <x-social-meta :activity="$activity" />
+    @pushOnce('meta')
+        <x-social-meta :activity="$activity" />
+    @endPushOnce
 
     {{-- Hero Section with Cover Image --}}
     <div class="relative h-[60vh] min-h-[400px] overflow-hidden">

@@ -1,3 +1,8 @@
+@pushOnce('meta')
+    <meta name="description" content="{{ Str::limit($activity->description, 160) }}">
+    <link rel="canonical" href="{{ route('events.public', $activity->slug) }}">
+@endPushOnce
+
 <div class="min-h-screen">
     <div class="container mx-auto lg:px-6 lg:py-12">
 
