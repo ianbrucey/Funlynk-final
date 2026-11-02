@@ -74,8 +74,16 @@ class ActivityDetail extends Component
     ) {
         $this->activity = $activity->load(['host', 'tags', 'group']);
 
-        // Check authorization - only restrict non-public activities for authenticated users
-        if (! $this->activity->is_public && auth()->check()) {
+        if (! $this->activity->is_public) {
+            // Non-public activities must not leak to guests by URL:
+            // answer 404 (as if the event did not exist). Signed-in
+            // users still go through the view policy. (On the HTTP
+            // route the events.canonical middleware answers guests
+            // first; this is the same guard for direct mounts.)
+            if (! auth()->check()) {
+                abort(404);
+            }
+
             $this->authorize('view', $this->activity);
         }
 
@@ -279,7 +287,7 @@ class ActivityDetail extends Component
 
     public function copyPublicLink()
     {
-        $publicUrl = route('events.show', $this->activity);
+        $publicUrl = route('events.public', $this->activity->slug);
         $this->dispatch('copy-to-clipboard', url: $publicUrl);
         session()->flash('success', 'Public link copied to clipboard!');
     }
@@ -293,6 +301,8 @@ class ActivityDetail extends Component
         ];
 
         return view('livewire.activities.activity-detail', $data)
-            ->layout('layouts.app');
+            ->layout('layouts.app', [
+                'title' => $this->activity->title.' - '.config('app.name'),
+            ]);
     }
 }

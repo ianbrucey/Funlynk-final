@@ -9,6 +9,7 @@
 <meta property="og:title" content="{{ $activity->title }}">
 <meta property="og:description" content="{{ Str::limit($activity->description, 200) }}">
 <meta property="og:url" content="{{ route('events.public', $activity->slug) }}">
+<link rel="canonical" href="{{ route('events.public', $activity->slug) }}">
 <meta property="og:site_name" content="{{ config('app.name') }}">
 
 @if($activity->cover_image_url)
@@ -17,14 +18,18 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="{{ $activity->title }}">
 @else
-<meta property="og:image" content="{{ asset('images/default-event-cover.jpg') }}">
+<meta property="og:image" content="{{ asset('images/fl-logo-main.png') }}">
 @endif
 
 {{-- Event-specific Open Graph tags --}}
 <meta property="event:start_time" content="{{ $activity->start_time->toIso8601String() }}">
-<meta property="event:end_time" content="{{ $activity->end_time?->toIso8601String() }}">
+@if($activity->end_time)
+<meta property="event:end_time" content="{{ $activity->end_time->toIso8601String() }}">
+@endif
+@if($activity->location_coordinates)
 <meta property="event:location:latitude" content="{{ $activity->location_coordinates->latitude }}">
 <meta property="event:location:longitude" content="{{ $activity->location_coordinates->longitude }}">
+@endif
 
 {{-- Twitter Card Meta Tags --}}
 <meta name="twitter:card" content="summary_large_image">
@@ -33,7 +38,7 @@
 @if($activity->cover_image_url)
 <meta name="twitter:image" content="{{ $activity->cover_image_url }}">
 @else
-<meta name="twitter:image" content="{{ asset('images/default-event-cover.jpg') }}">
+<meta name="twitter:image" content="{{ asset('images/fl-logo-main.png') }}">
 @endif
 <meta name="twitter:image:alt" content="{{ $activity->title }}">
 
@@ -49,11 +54,6 @@ $schemaData = [
     'location' => [
         '@type' => 'Place',
         'name' => $activity->location_name,
-        'geo' => [
-            '@type' => 'GeoCoordinates',
-            'latitude' => $activity->location_coordinates->latitude,
-            'longitude' => $activity->location_coordinates->longitude,
-        ],
     ],
     'organizer' => [
         '@type' => 'Person',
@@ -72,11 +72,19 @@ if ($activity->location_address) {
     $schemaData['location']['address'] = $activity->location_address;
 }
 
-if ($activity->price > 0) {
+if ($activity->location_coordinates) {
+    $schemaData['location']['geo'] = [
+        '@type' => 'GeoCoordinates',
+        'latitude' => $activity->location_coordinates->latitude,
+        'longitude' => $activity->location_coordinates->longitude,
+    ];
+}
+
+if (($activity->price_cents ?? 0) > 0) {
     $schemaData['offers'] = [
         '@type' => 'Offer',
-        'price' => $activity->price,
-        'priceCurrency' => 'USD',
+        'price' => number_format($activity->price_cents / 100, 2, '.', ''),
+        'priceCurrency' => $activity->currency ?: 'USD',
         'availability' => 'https://schema.org/InStock',
         'url' => route('events.public', $activity->slug),
     ];

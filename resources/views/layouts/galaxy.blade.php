@@ -8,6 +8,7 @@
         <meta name="user-id" content="{{ auth()->id() }}">
         @endauth
         <title>{{ $title ?? config('app.name') }}</title>
+        @stack('meta')
 
         <!-- Favicon -->
         <link rel="icon" type="image/png" href="{{ asset('images/fl-logo-icon-only.png') }}">
