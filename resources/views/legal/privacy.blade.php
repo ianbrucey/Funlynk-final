@@ -94,6 +94,18 @@
                     <p class="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
                         <strong>We do not sell, rent, or trade your personal information to third parties for marketing purposes.</strong>
                     </p>
+                                    <h3 class="text-xl font-semibold text-white mb-3 mt-4">4.4 FunLynk's Official Social Media Accounts</h3>
+                    <p>
+                        FunLynk operates official accounts on Facebook, Instagram, and TikTok. To publish to
+                        <strong>our own</strong> accounts, we use an internal publishing tool (the "FunLynk Poster") that connects to
+                        Meta's and TikTok's APIs using authorization tokens issued for FunLynk's own accounts.
+                    </p>
+                    <p class="mt-4">
+                        This tool does not access, post to, or collect information from your personal social media
+                        accounts, and it is separate from social login. If you interact with our official accounts on
+                        those platforms, that activity happens on the platform itself and is governed by the platform's
+                        privacy policy.
+                    </p>
                 </section>
 
                 <!-- Data Security -->
