@@ -32,9 +32,24 @@
                     </ul>
                 </section>
 
+                <!-- Official Social Media Accounts -->
+                <section>
+                    <h2 class="text-2xl font-bold text-white mb-4">3. Official Social Media Accounts</h2>
+                    <p>
+                        FunLynk operates official accounts on Facebook, Instagram, and TikTok. We publish announcements,
+                        event highlights, and community content to those accounts using our own internal publishing tools
+                        together with the platforms' official APIs, under the accounts and permissions we control.
+                    </p>
+                    <p class="mt-4">
+                        Content on our official social media accounts is FunLynk content. When you interact with those
+                        accounts — for example by following, liking, commenting, or sending a message — your interaction
+                        also takes place on that platform and is subject to the platform's own terms and policies.
+                    </p>
+                </section>
+
                 <!-- User Responsibilities -->
                 <section>
-                    <h2 class="text-2xl font-bold text-white mb-4">3. User Responsibilities</h2>
+                    <h2 class="text-2xl font-bold text-white mb-4">4. User Responsibilities</h2>
                     <p>As a user of FunLynk, you agree to:</p>
                     <ul class="list-disc pl-6 space-y-2">
                         <li>Provide accurate and truthful information</li>
@@ -47,7 +62,7 @@
 
                 <!-- Liability Disclaimer -->
                 <section>
-                    <h2 class="text-2xl font-bold text-white mb-4">4. Limitation of Liability</h2>
+                    <h2 class="text-2xl font-bold text-white mb-4">5. Limitation of Liability</h2>
                     <p class="font-semibold text-yellow-400 mb-3">IMPORTANT: Please read this section carefully.</p>
                     <p>
                         FunLynk is a platform that facilitates connections between users. We are not responsible for:
@@ -68,15 +83,15 @@
 
                 <!-- Payment Terms -->
                 <section>
-                    <h2 class="text-2xl font-bold text-white mb-4">5. Payment and Refund Policy</h2>
+                    <h2 class="text-2xl font-bold text-white mb-4">6. Payment and Refund Policy</h2>
                     
-                    <h3 class="text-xl font-semibold text-white mb-3">5.1 Payment Processing</h3>
+                    <h3 class="text-xl font-semibold text-white mb-3">6.1 Payment Processing</h3>
                     <p>
                         All payments are processed securely through Stripe. By making a purchase, you agree to Stripe's terms of service. 
                         FunLynk does not store your payment information.
                     </p>
 
-                    <h3 class="text-xl font-semibold text-white mb-3 mt-4">5.2 Event Host Responsibilities</h3>
+                    <h3 class="text-xl font-semibold text-white mb-3 mt-4">6.2 Event Host Responsibilities</h3>
                     <p>Event hosts who charge for tickets agree to:</p>
                     <ul class="list-disc pl-6 space-y-2">
                         <li>Deliver the event as described</li>
@@ -85,7 +100,7 @@
                         <li>Comply with all applicable laws and regulations</li>
                     </ul>
 
-                    <h3 class="text-xl font-semibold text-white mb-3 mt-4">5.3 Refund Policy</h3>
+                    <h3 class="text-xl font-semibold text-white mb-3 mt-4">6.3 Refund Policy</h3>
                     <p>Refunds are handled on a case-by-case basis:</p>
                     <ul class="list-disc pl-6 space-y-2">
                         <li><strong>Event cancellation by host:</strong> Full refund automatically issued</li>
@@ -94,7 +109,7 @@
                         <li><strong>Disputes:</strong> Contact support at support@funlynk.com within 48 hours of the issue</li>
                     </ul>
 
-                    <h3 class="text-xl font-semibold text-white mb-3 mt-4">5.4 Platform Fees</h3>
+                    <h3 class="text-xl font-semibold text-white mb-3 mt-4">6.4 Platform Fees</h3>
                     <p>
                         FunLynk charges a service fee on paid events. This fee covers payment processing, platform maintenance, and customer support.
                         Fees are clearly displayed before purchase and are non-refundable.
@@ -103,7 +118,7 @@
 
                 <!-- Dispute Resolution -->
                 <section>
-                    <h2 class="text-2xl font-bold text-white mb-4">6. Dispute Resolution</h2>
+                    <h2 class="text-2xl font-bold text-white mb-4">7. Dispute Resolution</h2>
                     <p>
                         If you have a dispute with another user or event host:
                     </p>
@@ -120,7 +135,7 @@
 
                 <!-- Prohibited Activities -->
                 <section>
-                    <h2 class="text-2xl font-bold text-white mb-4">7. Prohibited Activities</h2>
+                    <h2 class="text-2xl font-bold text-white mb-4">8. Prohibited Activities</h2>
                     <p>You may not use FunLynk to:</p>
                     <ul class="list-disc pl-6 space-y-2">
                         <li>Violate any laws or regulations</li>
@@ -135,7 +150,7 @@
 
                 <!-- Intellectual Property -->
                 <section>
-                    <h2 class="text-2xl font-bold text-white mb-4">8. Intellectual Property</h2>
+                    <h2 class="text-2xl font-bold text-white mb-4">9. Intellectual Property</h2>
                     <p>
                         All content on FunLynk, including text, graphics, logos, and software, is the property of FunLynk or its licensors.
                         You may not copy, modify, or distribute our content without permission.
@@ -148,7 +163,7 @@
 
                 <!-- Account Termination -->
                 <section>
-                    <h2 class="text-2xl font-bold text-white mb-4">9. Account Termination</h2>
+                    <h2 class="text-2xl font-bold text-white mb-4">10. Account Termination</h2>
                     <p>
                         We reserve the right to suspend or terminate your account at any time for violations of these Terms, fraudulent activity,
                         or any other reason at our discretion. You may also delete your account at any time through your profile settings.
@@ -157,7 +172,7 @@
 
                 <!-- Changes to Terms -->
                 <section>
-                    <h2 class="text-2xl font-bold text-white mb-4">10. Changes to Terms</h2>
+                    <h2 class="text-2xl font-bold text-white mb-4">11. Changes to Terms</h2>
                     <p>
                         We may update these Terms from time to time. We will notify you of significant changes via email or platform notification.
                         Your continued use of FunLynk after changes constitutes acceptance of the new Terms.
@@ -166,7 +181,7 @@
 
                 <!-- Contact -->
                 <section>
-                    <h2 class="text-2xl font-bold text-white mb-4">11. Contact Us</h2>
+                    <h2 class="text-2xl font-bold text-white mb-4">12. Contact Us</h2>
                     <p>
                         If you have questions about these Terms, please contact us at:
                     </p>
@@ -178,7 +193,7 @@
 
                 <!-- Governing Law -->
                 <section>
-                    <h2 class="text-2xl font-bold text-white mb-4">12. Governing Law</h2>
+                    <h2 class="text-2xl font-bold text-white mb-4">13. Governing Law</h2>
                     <p>
                         These Terms are governed by the laws of the United States. Any disputes will be resolved in the courts of [Your State/Jurisdiction].
                     </p>

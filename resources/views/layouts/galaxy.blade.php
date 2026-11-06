@@ -133,6 +133,15 @@
             {{ $slot }}
         </div>
 
+        <!-- Footer -->
+        <footer class="relative z-10 container mx-auto px-6 py-8 text-center">
+            <div class="flex justify-center gap-6 text-sm">
+                <a href="{{ route('terms') }}" class="text-gray-400 hover:text-cyan-400 transition">Terms of Service</a>
+                <a href="{{ route('privacy') }}" class="text-gray-400 hover:text-cyan-400 transition">Privacy Policy</a>
+            </div>
+            <p class="text-gray-600 text-sm mt-3">Copyright \u00a9 {{ date('Y') }} FunLynk \u2014 All rights reserved</p>
+        </footer>
+
         <!-- Global Modals -->
         <livewire:posts.invite-friends-modal />
         <livewire:modals.convert-post-modal />
