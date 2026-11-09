@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Activity;
+use App\Models\ActivityInterest;
 use App\Models\Follow;
 use App\Models\Post;
 use App\Models\PostReaction;
@@ -123,19 +124,21 @@ class FeedService
                 ->whereDistanceSphere('location_coordinates', $userLocation, '<=', 10000)
                 ->get();
 
-            $events = Activity::query()
+            $eventsQuery = Activity::query()
                 ->discoverable()
-                ->where('status', 'published')
-                ->where('start_time', '>', now())
+                ->where('status', 'published');
+            $this->applyEventVisibility($eventsQuery);
+            $events = $eventsQuery
                 ->whereDistanceSphere('location_coordinates', $userLocation, '<=', 50000)
                 ->get();
         } else {
             // Fallback: no spatial filter
             $posts = Post::active()->discoverable()->limit(50)->get();
-            $events = Activity::query()
+            $eventsQuery = Activity::query()
                 ->discoverable()
-                ->where('status', 'published')
-                ->where('start_time', '>', now())
+                ->where('status', 'published');
+            $this->applyEventVisibility($eventsQuery);
+            $events = $eventsQuery
                 ->limit(50)
                 ->get();
         }
@@ -303,8 +306,9 @@ class FeedService
             ->discoverable()
             ->with(['host', 'group'])
             ->where('status', 'published')
-            ->where('start_time', '>', now())
             ->whereDistanceSphere('location_coordinates', $userLocation, '<=', $radiusKm * 1000);
+
+        $this->applyEventVisibility($query);
 
         $query->when($timeFilter !== 'all', function ($q) use ($timeFilter) {
             $now = now();
@@ -399,8 +403,9 @@ class FeedService
         $query = Activity::query()
             ->discoverable()
             ->with(['host', 'group'])
-            ->where('status', 'published')
-            ->where('start_time', '>', now());
+            ->where('status', 'published');
+
+        $this->applyEventVisibility($query);
 
         $query->when($timeFilter !== 'all', function (Builder $q) use ($timeFilter) {
             $now = now();
@@ -422,6 +427,37 @@ class FeedService
         }
 
         return $query;
+    }
+
+    /**
+     * Spec 019 visibility clock for the event query. Hosted events keep
+     * the long-standing rule (upcoming only). External listings join
+     * when the feature is enabled and stay visible until they end, or
+     * until they start when they have no end time (C-09).
+     *
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    private function applyEventVisibility(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q) {
+            $q->where(function (Builder $hosted) {
+                $hosted->where('kind', Activity::KIND_HOSTED)->where('start_time', '>', now());
+            });
+
+            if (config('listings.enabled', true)) {
+                $q->orWhere(function (Builder $listing) {
+                    $listing->where('kind', Activity::KIND_EXTERNAL)->where(function (Builder $w) {
+                        $w->where('end_time', '>', now())
+                            ->orWhere(function (Builder $w2) {
+                                $w2->whereNull('end_time')->where('start_time', '>', now());
+                            });
+                    });
+                });
+            }
+        });
     }
 
     /**
@@ -464,28 +500,114 @@ class FeedService
             : collect();
 
         $events = $eventQuery
-            ? $this->applyCursor($eventQuery, $cursorData)->withCount('rsvps')->orderByDesc('created_at')->orderByDesc('id')->limit($fetchLimit)->get()
+            ? $this->applyCursor($eventQuery, $cursorData)->withCount(['rsvps', 'interestedUsers'])->orderByDesc('created_at')->orderByDesc('id')->limit($fetchLimit)->get()
             : collect();
 
+        $postsTruncated = $posts->count() === $fetchLimit;
+        $eventsTruncated = $events->count() === $fetchLimit;
+
+        // Spec 019 (C-12): a recurring listing series shows only its
+        // next upcoming occurrence.
+        $events = $this->collapseRecurringListings($events);
+
         $viewerReactedIds = $this->viewerReactedPostIds($user, $posts);
+        $viewerInterestedIds = $this->viewerInterestedActivityIds($user, $events);
 
         $followedHostIds = $user
-            ? app(FollowService::class)->followedIds($user, $events->pluck('host_id')->unique()->map(fn ($id) => (string) $id)->values()->all())
+            ? app(FollowService::class)->followedIds($user, $events->pluck('host_id')->filter(fn ($id) => $id !== null)->unique()->map(fn ($id) => (string) $id)->values()->all())
             : [];
 
         $merged = $posts->toBase()->map(fn (Post $p) => $this->mapPostToFeedItem($p, $viewerReactedIds))
-            ->merge($events->toBase()->map(fn (Activity $e) => $this->mapEventToFeedItem($e, $followedHostIds, $user?->id)))
+            ->merge($events->toBase()->map(fn (Activity $e) => $this->mapEventToFeedItem($e, $followedHostIds, $user?->id, $viewerInterestedIds)))
             ->sort(fn (array $a, array $b) => $b['created_at'] <=> $a['created_at'] ?: strcmp($b['id'], $a['id']))
             ->values();
 
         $poolSize = $merged->count();
-        $page = $merged->take(min($perPage, self::ITEM_CAP))->values();
+        $page = $this->buildFeedPage($merged, $perPage);
 
         return [
             'items' => array_values($page->all()),
             'nextCursor' => $page->isNotEmpty() ? $this->encodeCursor($page->last()) : null,
-            'hasMore' => $poolSize > $page->count(),
+            'hasMore' => $page->count() < min($perPage, self::ITEM_CAP)
+                ? ($postsTruncated || $eventsTruncated)
+                : $poolSize > $page->count(),
         ];
+    }
+
+    /**
+     * Build one feed page from the merged pool, applying the spec 019
+     * per-page listing cap (config listings.feed_cap per 10 items,
+     * C-04). Non-listing items backfill so a page still fills.
+     *
+     * @param  Collection<int, array<string, mixed>>  $pool
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function buildFeedPage(Collection $pool, int $perPage): Collection
+    {
+        $limit = min($perPage, self::ITEM_CAP);
+        $maxListings = intdiv($limit * max(0, (int) config('listings.feed_cap', 2)), 10);
+        $listings = 0;
+        $page = collect();
+
+        foreach ($pool as $item) {
+            if ($page->count() >= $limit) {
+                break;
+            }
+
+            if (($item['is_listing'] ?? false) === true) {
+                if ($listings >= $maxListings) {
+                    continue;
+                }
+                $listings++;
+            }
+
+            $page->push($item);
+        }
+
+        return $page->values();
+    }
+
+    /**
+     * Collapse each recurring listing series to its next upcoming
+     * occurrence (earliest start time in the fetched set). Hosted
+     * events and one-off listings pass through untouched.
+     *
+     * @param  Collection<int, Activity>  $events
+     * @return Collection<int, Activity>
+     */
+    private function collapseRecurringListings(Collection $events): Collection
+    {
+        $singles = $events->filter(
+            fn (Activity $e) => ! $e->isListing() || $e->recurring_schedule_id === null
+        );
+
+        $nextPerSeries = $events
+            ->filter(fn (Activity $e) => $e->isListing() && $e->recurring_schedule_id !== null)
+            ->groupBy(fn (Activity $e) => (string) $e->recurring_schedule_id)
+            ->map(fn (Collection $group) => $group
+                ->sortBy(fn (Activity $e) => $e->start_time === null ? PHP_INT_MAX : Carbon::parse($e->start_time)->timestamp)
+                ->first());
+
+        return $singles->concat($nextPerSeries->values())->values();
+    }
+
+    /**
+     * One query for the viewer's interest state across the page's
+     * events, never one per card (C-13).
+     *
+     * @param  Collection<int, Activity>  $events
+     * @return Collection<int, string>
+     */
+    private function viewerInterestedActivityIds(?User $user, Collection $events): Collection
+    {
+        if (! $user || $events->isEmpty()) {
+            return collect();
+        }
+
+        return ActivityInterest::query()
+            ->where('user_id', $user->id)
+            ->whereIn('activity_id', $events->pluck('id'))
+            ->pluck('activity_id');
     }
 
     /**
@@ -600,24 +722,27 @@ class FeedService
 
     /**
      * @param  array<int, string>  $followedHostIds
+     * @param  Collection<int, string>  $viewerInterestedIds
      * @return array<string, mixed>
      */
-    private function mapEventToFeedItem(Activity $event, array $followedHostIds = [], ?string $viewerId = null): array
+    private function mapEventToFeedItem(Activity $event, array $followedHostIds = [], ?string $viewerId = null, ?Collection $viewerInterestedIds = null): array
     {
         $rsvpCount = (int) ($event->rsvps_count ?? 0);
         $spotsRemaining = $event->max_attendees !== null ? max(0, $event->max_attendees - $rsvpCount) : null;
+        /** @var ?User $host Listings have no host (spec 019). */
+        $host = $event->host;
 
         return [
             'type' => 'event',
             'id' => $event->id,
             'title' => $event->title,
-            'author_name' => $event->host->display_name ?? $event->host->username ?? 'Unknown Host',
-            'author_image_url' => $event->host->profile_image_url,
+            'author_name' => $host === null ? 'Unknown Host' : ($host->display_name ?? $host->username ?? 'Unknown Host'),
+            'author_image_url' => $host?->profile_image_url,
             'location_name' => $event->location_name,
             'distance_km' => isset($event->distance_km) ? round((float) $event->distance_km, 1) : null,
             'created_at' => $event->created_at->toIso8601String(),
             'created_at_human' => $event->created_at->diffForHumans(syntax: CarbonInterface::DIFF_ABSOLUTE).' ago',
-            'images' => $event->images ?? [],
+            'images' => $event->isListing() ? [] : ($event->images ?? []),
             'start_time' => optional($event->start_time)->toIso8601String(),
             'start_time_human' => optional($event->start_time)->format('M j, g:i A'),
             'start_time_strip' => optional($event->start_time)->format('D, M j · g:i A'),
@@ -627,10 +752,15 @@ class FeedService
             'max_attendees' => $event->max_attendees,
             'spots_remaining' => $spotsRemaining,
             'converted_from_post' => $event->originated_from_post_id !== null,
-            'host_id' => (string) $event->host_id,
-            'author_url' => $event->host->username ? route('profile.view', $event->host->username) : null,
+            'host_id' => (string) ($event->host_id ?? ''),
+            'author_url' => $host?->username ? route('profile.view', $host->username) : null,
             'is_following' => in_array((string) $event->host_id, $followedHostIds, true),
-            'is_own' => $viewerId !== null && (string) $event->host_id === $viewerId,
+            'is_own' => $viewerId !== null && ($event->host_id ?? '') !== '' && (string) $event->host_id === $viewerId,
+            'is_listing' => $event->isListing(),
+            'source_name' => $event->source_name,
+            'source_url' => $event->source_url,
+            'interest_count' => (int) ($event->interested_users_count ?? 0),
+            'viewer_interested' => $viewerInterestedIds !== null && $viewerInterestedIds->contains($event->id),
             'group_name' => $event->group?->name,
             'group_url' => $event->group ? route('groups.show', $event->group) : null,
             'group_cover_url' => $event->group?->cover_image_url,

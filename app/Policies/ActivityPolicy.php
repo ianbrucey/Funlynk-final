@@ -9,6 +9,25 @@ use App\Models\User;
 class ActivityPolicy
 {
     /**
+     * Spec 019: listings are curated by FunLynk. Approval, unpublishing
+     * and editing are admin-only, using the app's email allowlist
+     * pattern (same mechanism as the Horizon and Poster gates).
+     */
+    public function isListingsAdmin(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        $allowlist = array_map(
+            fn (mixed $email): string => strtolower(trim((string) $email)),
+            (array) config('listings.admin_emails', [])
+        );
+
+        return in_array(strtolower($user->email), $allowlist, true);
+    }
+
+    /**
      * Determine whether the user can view any models.
      */
     public function viewAny(?User $user): bool
@@ -22,6 +41,13 @@ class ActivityPolicy
      */
     public function view(?User $user, Activity $activity): bool
     {
+        // Spec 019: unpublished listings, and all listings while the
+        // listings feature is switched off, are admin-only.
+        if ($activity->isListing()
+            && ($activity->status !== 'published' || ! config('listings.enabled', true))) {
+            return $this->isListingsAdmin($user);
+        }
+
         if ($activity->group_id) {
             // If it's a group activity, apply GroupPolicy view logic
             return app(GroupPolicy::class)->view($user, $activity->group);
@@ -56,6 +82,11 @@ class ActivityPolicy
      */
     public function update(User $user, Activity $activity): bool
     {
+        // Spec 019: only an admin can edit a listing; nobody hosts one.
+        if ($activity->isListing()) {
+            return $this->isListingsAdmin($user);
+        }
+
         if ($activity->group_id) {
             // If it's a group activity, check if user is creator or group admin
             return $user->id === $activity->user_id || app(GroupPolicy::class)->update($user, $activity->group);
@@ -153,6 +184,11 @@ class ActivityPolicy
      */
     public function manageNeeds(User $user, Activity $activity): bool
     {
+        // Spec 019: listings have no needs list.
+        if ($activity->isListing()) {
+            return false;
+        }
+
         return $this->update($user, $activity);
     }
 
@@ -161,7 +197,66 @@ class ActivityPolicy
      */
     public function claimNeeds(User $user, Activity $activity): bool
     {
+        // Spec 019: listings have no needs list.
+        if ($activity->isListing()) {
+            return false;
+        }
+
         return $this->update($user, $activity)
             || \App\Models\Rsvp::query()->where('activity_id', $activity->id)->where('user_id', $user->id)->where('status', 'attending')->exists();
+    }
+
+    // ---- Spec 019: external listings ----
+
+    /**
+     * Only an admin can approve a listing; approval records who and when.
+     */
+    public function approveListing(User $user, Activity $activity): bool
+    {
+        return $activity->isListing() && $this->isListingsAdmin($user);
+    }
+
+    /**
+     * Only an admin can unpublish (take down) a listing.
+     */
+    public function unpublishListing(User $user, Activity $activity): bool
+    {
+        return $activity->isListing() && $this->isListingsAdmin($user);
+    }
+
+    /**
+     * Hosted-only action: listings never accept RSVPs (C-11).
+     */
+    public function rsvp(User $user, Activity $activity): bool
+    {
+        return ! $activity->isListing();
+    }
+
+    /**
+     * Hosted-only action: FunLynk never sells tickets for a listing (C-11).
+     */
+    public function checkout(User $user, Activity $activity): bool
+    {
+        return ! $activity->isListing();
+    }
+
+    /**
+     * Hosted-only action: listings have no event chat in v1 (C-11, [O-07]).
+     */
+    public function chat(User $user, Activity $activity): bool
+    {
+        return ! $activity->isListing();
+    }
+
+    /**
+     * The only attendance action a listing accepts: interest, and only
+     * while the listing is published, switched on and current (C-14).
+     */
+    public function expressInterest(User $user, Activity $activity): bool
+    {
+        return $activity->isListing()
+            && config('listings.enabled', true)
+            && $activity->status === 'published'
+            && $activity->isCurrentListing();
     }
 }

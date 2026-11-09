@@ -1,12 +1,19 @@
 @props(['event'])
 
-@php $showFollow = ! ($event['is_own'] ?? false) && ! empty($event['host_id']); @endphp
+@php
+    $isListing = $event['is_listing'] ?? false;
+    $showFollow = ! $isListing && ! ($event['is_own'] ?? false) && ! empty($event['host_id']);
+@endphp
 
 <div class="relative rounded-[18px] p-4 h-full flex flex-col group"
      style="background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), #111933; border: 1px solid rgba(255,255,255,0.08); border-left: 3px solid #f0abfc; box-shadow: 0 12px 30px rgba(0,0,0,0.35);">
 
     {{-- Type Badge --}}
-    <span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full text-[0.7rem] font-bold" style="background: rgba(240,171,252,0.95); color: #3b0764;">EVENT · {{ $event['start_time_human'] }}</span>
+    @if($isListing)
+        <span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full text-[0.7rem] font-bold" style="background: rgba(232,161,58,0.95); color: #451a03;">AROUND TOWN · {{ $event['start_time_human'] }}</span>
+    @else
+        <span class="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full text-[0.7rem] font-bold" style="background: rgba(240,171,252,0.95); color: #3b0764;">EVENT · {{ $event['start_time_human'] }}</span>
+    @endif
 
     {{-- Converted Badge --}}
     @if($event['converted_from_post'])
@@ -19,6 +26,21 @@
     @endif
 
     {{-- Card Header --}}
+    @if($isListing)
+    <div class="flex items-center gap-3 mt-7">
+        <div class="w-11 h-11 rounded-full grid place-items-center font-bold text-white shrink-0"
+             style="background: linear-gradient(135deg, #e8a13a, #b45309);">
+            {{ strtoupper(substr($event['source_name'] ?? 'Around town', 0, 1)) }}
+        </div>
+        <div class="flex-1 min-w-0">
+            <p class="font-semibold text-white leading-tight truncate">{{ $event['source_name'] ?? 'Around town' }}</p>
+            <p class="text-xs truncate" style="color: #8a93b2;">Listed by FunLynk</p>
+        </div>
+        @if(($event['price'] ?? null) !== null)
+            <span class="text-xs font-semibold" style="color: #8a93b2;">${{ number_format($event['price'], 2) }}</span>
+        @endif
+    </div>
+    @else
     <div class="flex items-center gap-3 mt-7">
         {{-- Avatar --}}
         <a @if(!empty($event['author_url'])) href="{{ $event['author_url'] }}" @endif class="block shrink-0 transition hover:opacity-80" onclick="event.stopPropagation()">
@@ -62,6 +84,7 @@
             </span>
         @endif
     </div>
+    @endif
 
     {{-- Event Image: own image, then group cover, then group avatar, then placeholder --}}
     @php
@@ -132,6 +155,20 @@
     </div>
 
     {{-- Card Actions --}}
+    @if($isListing)
+    <div class="grid gap-2.5 mt-3.5" style="grid-template-columns: 1fr auto;">
+        <a href="{{ $event['source_url'] }}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()"
+           class="py-3 rounded-xl font-semibold text-center transition-all hover:scale-[1.02]"
+           style="background: linear-gradient(90deg, #06b6d4, #3b82f6); color: white;">
+            Details ↗
+        </a>
+        <livewire:listings.interest-toggle
+            :activity-id="$event['id']"
+            :interested="$event['viewer_interested'] ?? false"
+            :count="$event['interest_count'] ?? 0"
+            :key="'interest-'.$event['id']" />
+    </div>
+    @else
     <div class="grid gap-2.5 mt-3.5" style="grid-template-columns: 1fr auto;">
         <button
             onclick="event.stopPropagation(); window.location.href='{{ route('events.show', $event['id']) }}'"
@@ -146,8 +183,15 @@
             Invite
         </button>
     </div>
+    @endif
 
     {{-- Footer --}}
+    @if($isListing)
+    <div class="flex justify-between items-center mt-3 pt-3 text-[0.8rem] border-t border-white/10" style="color: #8a93b2;">
+        <span>Source: {{ $event['source_name'] ?? 'Organizer' }}</span>
+        <span><span class="font-semibold" style="color: #e8a13a;">{{ $event['interest_count'] ?? 0 }}</span> interested</span>
+    </div>
+    @else
     <div class="flex justify-between items-center mt-3 pt-3 text-[0.8rem] border-t border-white/10" style="color: #8a93b2;">
         <a href="{{ route('events.show', $event['id']) }}" class="flex items-center gap-1.5 hover:text-cyan-400 transition">
             💬 Group Chat
@@ -160,4 +204,5 @@
             @endif
         </span>
     </div>
+    @endif
 </div>

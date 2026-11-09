@@ -74,6 +74,16 @@ class ActivityDetail extends Component
     ) {
         $this->activity = $activity->load(['host', 'tags', 'group']);
 
+        // Spec 019: an unpublished listing, or any listing while the
+        // feature is switched off, does not exist outside admin (404).
+        if ($this->activity->isListing()) {
+            $canReview = auth()->check() && auth()->user()->can('listings-admin');
+
+            if ((! config('listings.enabled', true) || $this->activity->status !== 'published') && ! $canReview) {
+                abort(404);
+            }
+        }
+
         if (! $this->activity->is_public) {
             // Non-public activities must not leak to guests by URL:
             // answer 404 (as if the event did not exist). Signed-in
@@ -294,6 +304,22 @@ class ActivityDetail extends Component
 
     public function render()
     {
+        // Spec 019: listings get their own detail surface: source link,
+        // interest, and the interested list. No tickets, needs or chat.
+        if ($this->activity->isListing()) {
+            $interestService = app(\App\Services\ListingInterestService::class);
+            $viewer = auth()->user();
+
+            return view('livewire.activities.listing-detail', [
+                'activity' => $this->activity,
+                'interestedUsers' => $interestService->visibleInterestedUsers($this->activity, $viewer),
+                'interestCount' => $interestService->count($this->activity),
+                'viewerInterested' => $viewer !== null && $interestService->isInterested($viewer, $this->activity),
+            ])->layout('layouts.app', [
+                'title' => $this->activity->title.' - '.config('app.name'),
+            ]);
+        }
+
         $data = [
             'interestedCount' => $this->activity->interested_count ?? 0,
             'shareCount' => $this->activity->share_count ?? 0,

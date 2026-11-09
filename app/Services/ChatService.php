@@ -15,6 +15,11 @@ class ChatService
      */
     public function getOrCreateConversation(Model $conversationable): Conversation
     {
+        // Spec 019 (C-11, [O-07]): listings have no event chat in v1.
+        if ($conversationable instanceof \App\Models\Activity && $conversationable->isListing()) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('Chat is not available for listings.');
+        }
+
         // Check if conversation already exists
         $conversation = $conversationable->morphOne(Conversation::class, 'conversationable')->first();
 

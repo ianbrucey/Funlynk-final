@@ -21,6 +21,10 @@ class Activity extends Model
 
     public $incrementing = false;
 
+    public const KIND_HOSTED = 'hosted';
+
+    public const KIND_EXTERNAL = 'external';
+
     protected $keyType = 'string';
 
     protected $guarded = [];
@@ -58,6 +62,7 @@ class Activity extends Model
             'current_attendees' => 'integer',
             'images' => 'array',
             'edit_locked_at' => 'datetime',
+            'approved_at' => 'datetime',
             'original_values' => 'array',
         ];
     }
@@ -93,6 +98,60 @@ class Activity extends Model
     public function host(): BelongsTo
     {
         return $this->belongsTo(User::class, 'host_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Interest rows for this listing (spec 019).
+     *
+     * @return HasMany<ActivityInterest, $this>
+     */
+    public function listingInterests(): HasMany
+    {
+        return $this->hasMany(ActivityInterest::class);
+    }
+
+    /**
+     * Users who marked "I am interested" on this listing (spec 019).
+     *
+     * @return BelongsToMany<User, $this>
+     */
+    public function interestedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'activity_interests')
+            ->withTimestamps();
+    }
+
+    /**
+     * Spec 019: an external listing is curated content with no host.
+     */
+    public function isListing(): bool
+    {
+        return $this->kind === self::KIND_EXTERNAL;
+    }
+
+    /**
+     * Listing visibility clock (spec 019): a listing is current until
+     * it ends, or until it starts when it has no end time.
+     */
+    public function isCurrentListing(): bool
+    {
+        if (! $this->isListing()) {
+            return false;
+        }
+
+        if ($this->end_time !== null) {
+            return \Illuminate\Support\Carbon::parse($this->end_time)->isFuture();
+        }
+
+        return $this->start_time !== null && \Illuminate\Support\Carbon::parse($this->start_time)->isFuture();
     }
 
     public function conversation(): \Illuminate\Database\Eloquent\Relations\MorphOne
@@ -282,6 +341,50 @@ class Activity extends Model
         return $query->whereNotNull('originated_from_post_id');
     }
 
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<Activity>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     */
+    public function scopeHosted($query)
+    {
+        return $query->where('kind', self::KIND_HOSTED);
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<Activity>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     */
+    public function scopeListings($query)
+    {
+        return $query->where('kind', self::KIND_EXTERNAL);
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<Activity>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     */
+    public function scopePublishedListings($query)
+    {
+        return $query->listings()->where('status', 'published');
+    }
+
+    /**
+     * Listings that may be shown right now: published and not yet
+     * ended (or not yet started, when there is no end time).
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Activity>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     */
+    public function scopeCurrentListings($query)
+    {
+        return $query->publishedListings()->where(function ($q) {
+            $q->where('end_time', '>', now())
+                ->orWhere(function ($q2) {
+                    $q2->whereNull('end_time')->where('start_time', '>', now());
+                });
+        });
+    }
+
     // Accessor for latitude (for map view)
     public function getLatitudeAttribute(): ?float
     {
@@ -336,6 +439,10 @@ class Activity extends Model
      */
     public function shouldBeSearchable(): bool
     {
+        if ($this->isListing() && ! config('listings.enabled', true)) {
+            return false;
+        }
+
         if ($this->status !== 'published' || $this->start_time <= now()) {
             return false;
         }
