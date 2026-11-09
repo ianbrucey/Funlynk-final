@@ -39,4 +39,19 @@ class ActivityFactory extends Factory
             'conversion_date' => null,
         ];
     }
+
+    /**
+     * Spec 019: an external listing has no host, carries its source
+     * attribution, and (by default here) is published.
+     */
+    public function listing(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'kind' => 'external',
+            'host_id' => null,
+            'source_name' => fake()->company(),
+            'source_url' => 'https://example.com/'.fake()->slug(),
+            'status' => 'published',
+        ]);
+    }
 }

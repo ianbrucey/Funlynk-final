@@ -509,7 +509,7 @@ class FeedService
         $viewerInterestedIds = $this->viewerInterestedActivityIds($user, $events);
 
         $followedHostIds = $user
-            ? app(FollowService::class)->followedIds($user, $events->pluck('host_id')->unique()->map(fn ($id) => (string) $id)->values()->all())
+            ? app(FollowService::class)->followedIds($user, $events->pluck('host_id')->filter(fn ($id) => $id !== null)->unique()->map(fn ($id) => (string) $id)->values()->all())
             : [];
 
         $merged = $posts->toBase()->map(fn (Post $p) => $this->mapPostToFeedItem($p, $viewerReactedIds))
