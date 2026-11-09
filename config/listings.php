@@ -26,7 +26,7 @@ return [
     */
     'admin_emails' => array_values(array_filter(array_map(
         'trim',
-        explode(',', (string) env('LISTINGS_ADMIN_EMAILS', 'ian@yopmail.com,brucey@yopmail.com'))
+        explode(',', (string) env('LISTINGS_ADMIN_EMAILS', implode(',', (array) config('admin.emails', []))))
     ))),
 
 ];

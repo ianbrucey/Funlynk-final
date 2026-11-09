@@ -3,7 +3,9 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName as FilamentHasName;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -17,7 +19,7 @@ use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 /**
  * @property \MatanYadaev\EloquentSpatial\Objects\Point|null $location_coordinates
  */
-class User extends Authenticatable implements FilamentHasName
+class User extends Authenticatable implements FilamentHasName, FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
@@ -262,6 +264,15 @@ class User extends Authenticatable implements FilamentHasName
         $groupId = $group instanceof Group ? $group->id : $group;
 
         return $this->groups()->where('groups.id', $groupId)->exists();
+    }
+
+    /**
+     * The Filament admin panel is for admin accounts only (the shared
+     * email allowlist in config/admin.php).
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return in_array($this->email, (array) config('admin.emails', []), true);
     }
 
     public function getFilamentName(): string
