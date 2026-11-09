@@ -35,6 +35,19 @@ class PublicEventView extends Component
     ) {
         $this->activity = $activity;
 
+        // Spec 019: listings are reviewed on the canonical detail page.
+        // An unpublished listing (or listings switched off) 404s here
+        // for everyone but admins, same as everywhere else.
+        if ($activity->isListing()) {
+            $canReview = auth()->check() && auth()->user()->can('listings-admin');
+
+            if ((! config('listings.enabled', true) || $activity->status !== 'published') && ! $canReview) {
+                abort(404);
+            }
+
+            return redirect()->route('events.show', $activity->id);
+        }
+
         // Non-public activities have no public page: answer 404 to
         // anyone who could not view the activity in the app either,
         // so private events are not world-readable by slug.
