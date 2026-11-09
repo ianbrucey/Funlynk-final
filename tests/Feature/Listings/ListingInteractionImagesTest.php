@@ -223,10 +223,14 @@ class ListingInteractionImagesTest extends TestCase
             ->assertOk()
             ->assertSeeText('Sign in to see the chat');
 
-        // A signed-in non-Going user is told how to join.
+        // A signed-in non-Going user is shown how to join: the plain
+        // explainer and the Join the chat button (020 fix: the old
+        // "Mark Going to join the chat" instruction text is gone).
         $this->actingAs($reader)->get(route('events.show', $listing))
             ->assertOk()
-            ->assertSeeText('Mark Going to join the chat');
+            ->assertSeeText('People who are going can chat here.')
+            ->assertSeeText('Join the chat')
+            ->assertDontSeeText('Mark Going to join the chat');
     }
 
     public function test_listing_chat_lifecycle(): void

@@ -101,9 +101,6 @@
             <h2 class="text-sm font-semibold text-white">Chat</h2>
             @auth
                 <p class="mt-2 text-sm" style="color: #c6cbe0;">Chat with others going to this event. FunLynk does not run this event; the organizer's page is linked below.</p>
-                @if(! $viewerInterested)
-                    <p class="mt-2 text-sm" style="color: #f3d9ae;">Mark Going to join the chat.</p>
-                @endif
                 @if(! $activity->isCurrentListing())
                     <p class="mt-2 text-sm" style="color: #8a93b2;">This event has ended.</p>
                 @endif

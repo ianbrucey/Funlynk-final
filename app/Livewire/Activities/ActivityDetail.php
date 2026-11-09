@@ -13,6 +13,7 @@ use App\Services\RefundWindowService;
 use App\Services\SocialShareService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cookie;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class ActivityDetail extends Component
@@ -300,6 +301,19 @@ class ActivityDetail extends Component
         $publicUrl = route('events.public', $this->activity->slug);
         $this->dispatch('copy-to-clipboard', url: $publicUrl);
         session()->flash('success', 'Public link copied to clipboard!');
+    }
+
+    /**
+     * Spec 020 fix: Going changed somewhere on the page (the toggle
+     * or the listing chat's Join button). Re-render only: render()
+     * recomputes the who's-going list, the interest count and the
+     * chat section state from the interest service, so the page
+     * catches up without a manual reload.
+     */
+    #[On('going-changed')]
+    public function onGoingChanged(): void
+    {
+        // Intentionally empty: the re-render is the update.
     }
 
     public function render()
