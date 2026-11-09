@@ -64,3 +64,27 @@ the failure mode the brief's pre-mortem predicted, one layer deeper.
 Claiming, ticketing/RSVP/chat for listings, source images, and
 auto-publishing remain out of v1. Nothing was merged to main and
 nothing was pushed; the branch is ready for owner review.
+
+## Post-ship fix, 2026-11-09: Filament activity Edit 500
+
+- **Symptom**: `/admin/activities/{id}/edit` 500'd for every activity
+  in production.
+- **Root cause 1**: `ActivityForm` imported
+  `Filament\Forms\Components\Section`, which does not exist in
+  Filament v4 (Section lives in `Filament\Schemas\Components`).
+- **Root cause 2** (behind the first): the coordinates field is a
+  TextInput, but the model casts `location_coordinates` to a spatial
+  `Point`. The form received a GeoJSON-shaped array, and a typed
+  "lat, lng" string on save threw `Expected Point, string given`
+  from the spatial cast. The field now presents state as "lat, lng"
+  text (`formatStateUsing`) and converts back to a `Point` on save
+  (`dehydrateStateUsing`).
+- **Also**: the activities table gained a "View on site" record
+  action (published records only, opens `events.show` in a new tab).
+- **Regression coverage**: `tests/Feature/Admin/FilamentActivityEditTest.php`
+  renders the edit page for a listing and for a hosted activity, and
+  round-trips both a title edit (coordinates preserved) and a
+  coordinates edit (saved back as a Point).
+- Verified: full suite 436 passed / 2 skipped, Pint PASS,
+  PHPStan level 7 clean, real-DB counts unchanged (activities 18,
+  users 1) under the safe test protocol.

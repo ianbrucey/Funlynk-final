@@ -92,6 +92,12 @@ class ActivitiesTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('viewOnSite')
+                    ->label('View on site')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->url(fn (Activity $record): string => route('events.show', $record))
+                    ->openUrlInNewTab()
+                    ->visible(fn (Activity $record): bool => $record->status === 'published'),
                 // Spec 019: approval is an explicit, attributable act.
                 Action::make('approveListing')
                     ->label('Approve listing')
