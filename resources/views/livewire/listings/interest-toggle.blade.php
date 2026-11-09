@@ -7,7 +7,7 @@
         style="{{ $interested
             ? 'background: rgba(232,161,58,0.22); border: 1px solid rgba(232,161,58,0.65); color: #fcd9a0;'
             : 'background: transparent; border: 1px solid rgba(255,255,255,0.14); color: #eef1ff;' }}">
-    <span>{{ $interested ? '✓ Interested' : "I'm interested" }}</span>
+    <span>{{ $interested ? "✓ You're going" : 'Going' }}</span>
     @if($count > 0)
         <span class="rounded-full px-1.5 py-0.5 text-[0.7rem] font-bold"
               style="background: rgba(255,255,255,0.12);">{{ $count }}</span>

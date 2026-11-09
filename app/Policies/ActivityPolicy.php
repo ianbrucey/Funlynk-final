@@ -241,11 +241,42 @@ class ActivityPolicy
     }
 
     /**
-     * Hosted-only action: listings have no event chat in v1 (C-11, [O-07]).
+     * Chat gate. Hosted activities: unchanged from 019 (chat allowed).
+     *
+     * Spec 020: posting in a listing chat requires the user to be
+     * signed in, the listing feature on, a published and current
+     * listing, and a Going mark (an activity_interests row) on this
+     * listing or on any row of its recurring series, so a regular
+     * keeps access when the occurrence rolls over. Reading a listing
+     * chat is governed by ConversationPolicy::view (sign-in plus the
+     * listing view rule), not by this gate.
      */
     public function chat(User $user, Activity $activity): bool
     {
-        return ! $activity->isListing();
+        if (! $activity->isListing()) {
+            return true;
+        }
+
+        if (! config('listings.enabled', true)) {
+            return false;
+        }
+
+        $series = $activity->recurring_schedule_id !== null
+            ? Activity::query()->where('recurring_schedule_id', $activity->recurring_schedule_id)->get()
+            : collect([$activity]);
+
+        $publishedCurrent = $series->contains(
+            fn (Activity $row) => $row->status === 'published' && $row->isCurrentListing()
+        );
+
+        if (! $publishedCurrent) {
+            return false;
+        }
+
+        return \App\Models\ActivityInterest::query()
+            ->where('user_id', $user->id)
+            ->whereIn('activity_id', $series->pluck('id'))
+            ->exists();
     }
 
     /**

@@ -742,7 +742,7 @@ class FeedService
             'distance_km' => isset($event->distance_km) ? round((float) $event->distance_km, 1) : null,
             'created_at' => $event->created_at->toIso8601String(),
             'created_at_human' => $event->created_at->diffForHumans(syntax: CarbonInterface::DIFF_ABSOLUTE).' ago',
-            'images' => $event->isListing() ? [] : ($event->images ?? []),
+            'images' => $event->images ?? [],
             'start_time' => optional($event->start_time)->toIso8601String(),
             'start_time_human' => optional($event->start_time)->format('M j, g:i A'),
             'start_time_strip' => optional($event->start_time)->format('D, M j · g:i A'),

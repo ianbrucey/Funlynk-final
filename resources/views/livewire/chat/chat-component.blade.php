@@ -241,6 +241,9 @@
             @if($canPin)
                 <button type="button" x-on:click="$wire.pinMessage(sheet === '{{ $pinnedMessageId }}' ? null : sheet); sheet = null" class="flex min-h-[44px] w-full items-center rounded-xl px-3 text-left text-sm text-gray-100 hover:bg-white/5">📌 Pin or unpin message</button>
             @endif
+            @if($isListingChat ?? false)
+                <button type="button" x-on:click="$wire.reportMessage(sheet); sheet = null" class="flex min-h-[44px] w-full items-center rounded-xl px-3 text-left text-sm text-gray-100 hover:bg-white/5">🚩 Report message</button>
+            @endif
             <button type="button" x-on:click="sheet = null" class="mt-1 flex min-h-[44px] w-full items-center rounded-xl px-3 text-left text-sm text-gray-400 hover:bg-white/5">Close</button>
         </div>
     </div>

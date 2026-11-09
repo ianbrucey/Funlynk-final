@@ -56,6 +56,13 @@ class ConversationPolicy
         }
 
         if ($subject instanceof Activity) {
+            // Spec 020: a listing chat posts only for users marked
+            // Going on a published, current listing (ActivityPolicy::chat).
+            // Hosted activities keep the 019 rule (view is enough).
+            if ($subject->isListing()) {
+                return Gate::forUser($user)->allows('chat', $subject);
+            }
+
             return Gate::forUser($user)->allows('view', $subject);
         }
 

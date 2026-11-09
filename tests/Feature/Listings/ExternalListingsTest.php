@@ -125,12 +125,14 @@ class ExternalListingsTest extends TestCase
         $html = Blade::render('<x-event-card-compact :event="$event" />', ['event' => $item]);
 
         $this->assertStringContainsString('AROUND TOWN', $html);
-        $this->assertStringContainsString('Details', $html);
+        // Spec 020 [O-20-8]: the source link is a small text link now.
+        $this->assertStringContainsString('at '.$listing->source_name, $html);
         $this->assertStringContainsString($listing->source_url, $html);
         $this->assertStringContainsString('target="_blank"', $html);
         $this->assertStringContainsString('rel="noopener noreferrer"', $html);
         $this->assertStringContainsString('aria-pressed', $html);
-        $this->assertStringContainsString('I&#039;m interested', $html);
+        // Spec 020 [O-20-1]: interest is relabelled Going.
+        $this->assertStringContainsString('Going', $html);
         $this->assertStringContainsString('Listed by FunLynk', $html);
 
         $this->assertStringNotContainsString('RSVP', $html);
@@ -300,6 +302,8 @@ class ExternalListingsTest extends TestCase
 
         $this->assertFalse($user->can('rsvp', $listing));
         $this->assertFalse($user->can('checkout', $listing));
+        // Spec 020: chat is no longer refused outright; this user has
+        // no Going mark, so posting is refused (see C-20-04/C-20-08).
         $this->assertFalse($user->can('chat', $listing));
         $this->assertFalse($user->can('manageNeeds', $listing));
         $this->assertFalse($user->can('claimNeeds', $listing));
@@ -311,9 +315,13 @@ class ExternalListingsTest extends TestCase
             $this->addToAssertionCount(1);
         }
 
+        // Spec 020: a published listing DOES get a conversation now;
+        // the refusal moved to posting without a Going mark (C-20-04).
+        $conversation = app(ChatService::class)->getOrCreateConversation($listing);
+        $this->assertNotNull($conversation->id);
         try {
-            app(ChatService::class)->getOrCreateConversation($listing);
-            $this->fail('Chat on a listing should be refused.');
+            app(ChatService::class)->sendMessage($conversation, $user, 'hello');
+            $this->fail('Posting in a listing chat without Going should be refused.');
         } catch (AuthorizationException) {
             $this->addToAssertionCount(1);
         }
