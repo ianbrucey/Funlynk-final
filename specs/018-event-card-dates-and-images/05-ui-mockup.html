@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>018 — Event card dates and fallback images — UI mockup (FunLynk)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; color: #e5e7eb; min-height: 100vh; background: radial-gradient(ellipse at 20% 10%, #1e1b4b 0%, #0b0620 55%, #050310 100%); }
+  .page { max-width: 1180px; margin: 0 auto; padding: 16px; } h1 { font-size: 1.4rem; } h2 { font-size: 1.05rem; margin: 26px 0 10px; color: #a5f3fc; }
+  .hint { color: #9ca3af; font-size: .85rem; margin: 4px 0 12px; }
+  .proposal { border: 1px dashed rgba(232,121,249,.5); background: rgba(232,121,249,.06); border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: .85rem; color: #f5d0fe; line-height: 1.55; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; } .controls span { font-size: .75rem; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; }
+  .controls button { padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: .8rem; color: #e5e7eb; background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.12); } .controls button.on { border-color: #22d3ee; color: #67e8f9; background: rgba(34,211,238,.12); }
+  .frame { margin: 0 auto 24px; background: rgba(5,3,16,.55); border: 1px solid rgba(255,255,255,.12); border-radius: 28px; padding: 14px 12px 20px; } .frame.phone { width: 390px; max-width: 100%; } .frame.desktop { width: 100%; max-width: 860px; border-radius: 16px; padding: 24px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; align-items: start; }
+  .card { position: relative; border-radius: 18px; padding: 16px; margin-bottom: 14px; background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)), #111933; border: 1px solid rgba(255,255,255,.08); border-left: 3px solid #f0abfc; box-shadow: 0 12px 30px rgba(0,0,0,.35); } .desktop .card { margin-bottom: 0; }
+  .pill { position: absolute; top: 12px; left: 12px; z-index: 2; padding: 4px 10px; border-radius: 999px; font-size: .7rem; font-weight: 700; background: rgba(240,171,252,.95); color: #3b0764; } .pill.purple { background: #6d3fc0; color: #f5f5f5; border: 1px solid rgba(255,255,255,.18); }
+  .head { display: flex; align-items: center; gap: 12px; margin-top: 28px; } .av { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; background: linear-gradient(135deg, #06b6d4, #3b82f6); } .head b { display: block; font-size: .95rem; color: #fff; } .head small { color: #8a93b2; font-size: .75rem; } .head small u { color: #22d3ee; text-decoration: none; }
+  .media { position: relative; margin: 12px -16px 0; aspect-ratio: 16/9; overflow: hidden; display: grid; place-items: center; background: rgba(255,255,255,.03); }
+  .m-own { background: linear-gradient(135deg, #0ea5e9, #6366f1 60%, #d946ef); } .m-cover { background: linear-gradient(120deg, #f59e0b, #ef4444 50%, #7c3aed); }
+  .m-avatar { background: linear-gradient(135deg, #06b6d4, #3b82f6); filter: none; overflow: hidden; } .m-avatar .blur { position: absolute; inset: -20px; background: linear-gradient(135deg, #06b6d4, #3b82f6); filter: blur(24px) brightness(.6); } .m-avatar .big { position: relative; width: 38%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font-size: 2.4rem; font-weight: 800; color: #fff; background: linear-gradient(135deg, #06b6d4, #3b82f6); border: 3px solid rgba(255,255,255,.35); box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+  .tag { position: absolute; top: 8px; right: 8px; font-size: .6rem; padding: 2px 7px; border-radius: 6px; background: rgba(0,0,0,.55); color: #fde68a; border: 1px dashed rgba(253,230,138,.5); z-index: 1; }
+  .strip { position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 14px 10px; background: linear-gradient(to top, rgba(0,0,0,.88), rgba(0,0,0,0)); color: #f5f5f5; font-weight: 700; font-size: .95rem; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  h3 { font-size: 1.1rem; color: #fff; margin: 12px 0 6px; } .meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: .85rem; color: #8a93b2; } .meta span { padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); }
+  .actions { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 14px; } .actions .rsvp { padding: 12px; border-radius: 12px; text-align: center; font-weight: 600; color: #fff; background: linear-gradient(90deg, #06b6d4, #3b82f6); } .actions .inv { padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,.08); color: #eef1ff; }
+  table { border-collapse: collapse; font-size: .8rem; margin-top: 8px; } td, th { border: 1px solid rgba(255,255,255,.12); padding: 6px 10px; text-align: left; } th { color: #a5f3fc; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Event card: telling recurring events apart + fallback images — mockup</h1>
+  <p class="hint">Spec <strong>018 (placeholder number)</strong> · Status: DRAFT · Synthetic data only · 390px phone first, then desktop. Use the buttons to compare.</p>
+  <div class="proposal"><strong>What this proposes</strong> (all [P]):<br>
+    <strong>1. Date treatment</strong> — pick one: <em>B1</em> a medium-dark purple date pill with white-smoke text, or <em>B2</em> a black-to-transparent strip along the bottom of the card image with the date and time over it. <em>B1+B2</em> shows both. "Current" is today's pink pill.<br>
+    <strong>2. Fallback image</strong> for events with no image of their own: the group's cover image, then the group's avatar, then today's 📅 placeholder. Events with no group keep the placeholder.<br>
+    <strong>Date wording:</strong> the card currently shows "Nov 12, 7:00 PM" with no weekday. Both options here add the weekday ("Thu, Nov 12 · 7:00 PM"), which helps weekly events.<br>
+    <strong>Open question:</strong> the avatar is a small square picture, so a 16:9 stretch would look bad. The mockup shows it centered over a blurred copy of itself. Tell me if you would rather skip the avatar step.</div>
+  <h2>Controls</h2>
+  <div class="controls" id="c-date"><span>Date style</span><button data-v="current">Current</button><button data-v="pill" class="on">B1 · Purple pill</button><button data-v="strip">B2 · Bottom strip</button><button data-v="both">B1 + B2</button></div>
+  <div class="controls" id="c-img"><span>Event's own image</span><button data-v="own">Has image</button><button data-v="cover" class="on">None → group cover</button><button data-v="avatar">None → group avatar</button><button data-v="none">None → nothing (today)</button></div>
+  <h2>Timeline · 390px phone</h2><div class="frame phone" id="phone"></div>
+  <h2>Timeline · desktop</h2><div class="frame desktop" id="desk"></div>
+  <h2>Fallback order (decided by the first one that exists)</h2>
+  <table><tr><th>#</th><th>Source</th><th>Shown as</th></tr><tr><td>1</td><td>Event's own image</td><td>Full-width 16:9, as today</td></tr><tr><td>2</td><td>Group cover image</td><td>Full-width 16:9, same as an event image</td></tr><tr><td>3</td><td>Group avatar</td><td>Centered circle over a blurred copy (proposal)</td></tr><tr><td>4</td><td>Nothing</td><td>Today's 📅 on a dark tile</td></tr></table>
+</div>
+<script>
+var S = { date: 'pill', img: 'cover' };
+var EV = [{ d: 'Thu, Nov 5', t: 'Thursday Trail Run' }, { d: 'Thu, Nov 12', t: 'Thursday Trail Run' }, { d: 'Thu, Nov 19', t: 'Thursday Trail Run' }];
+function media(e, i) {
+  var strip = (S.date === 'strip' || S.date === 'both') ? '<div class="strip">' + e.d + ' · 7:00 PM</div>' : '';
+  if (S.img === 'own') return '<div class="media m-own"><span class="tag">own image</span>' + strip + '</div>';
+  if (S.img === 'cover') return '<div class="media m-cover"><span class="tag">group cover</span>' + strip + '</div>';
+  if (S.img === 'avatar') return '<div class="media m-avatar"><div class="blur"></div><span class="tag">group avatar</span><div class="big">T</div>' + strip + '</div>';
+  return '<div class="media"><span style="font-size:2rem;opacity:.4">📅</span>' + strip + '</div>';
+}
+function card(e, i) {
+  var purple = (S.date === 'pill' || S.date === 'both');
+  return '<div class="card"><span class="pill' + (purple ? ' purple' : '') + '">EVENT · ' + (purple ? e.d + ' · 7:00 PM' : e.d.replace('Thu, ', '') + ', 7:00 PM') + '</span>' +
+    '<div class="head"><div class="av">T</div><div><b>Maya R.</b><small>Hosting · in <u>Thursday Trail Crew</u></small></div></div>' +
+    media(e, i) + '<h3>' + e.t + '</h3><div class="meta"><span>📅 ' + e.d.replace('Thu, ', '') + ', 7:00 PM</span><span>Free</span><span>1.8 mi</span></div>' +
+    '<div class="actions"><div class="rsvp">🎟️ RSVP</div><div class="inv">Invite</div></div></div>';
+}
+function render() {
+  var html = EV.map(card).join('');
+  document.getElementById('phone').innerHTML = html;
+  document.getElementById('desk').innerHTML = html;
+  ['c-date', 'c-img'].forEach(function (id) { document.querySelectorAll('#' + id + ' button').forEach(function (b) { b.classList.toggle('on', b.dataset.v === S[id === 'c-date' ? 'date' : 'img']); }); });
+}
+document.querySelectorAll('#c-date button').forEach(function (b) { b.onclick = function () { S.date = b.dataset.v; render(); }; });
+document.querySelectorAll('#c-img button').forEach(function (b) { b.onclick = function () { S.img = b.dataset.v; render(); }; });
+render();
+</script>
+</body>
+</html>

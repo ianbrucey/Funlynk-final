@@ -63,26 +63,48 @@
         @endif
     </div>
 
-    {{-- Event Image --}}
-    @if(!empty($event['images']))
-        <div class="relative mt-3 -mx-4 overflow-hidden aspect-video">
-            <img src="{{ \App\Services\ImageProcessor::url($event['images'][0]) }}"
-                 class="w-full h-full object-cover cursor-pointer"
-                 alt="{{ $event['title'] }}"
-                 onclick="window.location.href='{{ route('events.show', $event['id']) }}'">
-            @if(count($event['images']) > 1)
-                <div class="absolute bottom-2 right-2 px-2 py-1 rounded-full text-xs text-white"
-                     style="background: rgba(15,23,42,0.8); backdrop-filter: blur(4px);">
-                    +{{ count($event['images']) - 1 }}
-                </div>
-            @endif
-        </div>
-    @else
-        <div class="relative mt-3 -mx-4 aspect-video flex items-center justify-center"
-             style="background: rgba(255,255,255,0.03);">
-            <span class="text-3xl opacity-40">📅</span>
-        </div>
-    @endif
+    {{-- Event Image: own image, then group cover, then group avatar, then placeholder --}}
+    @php
+        $heroImage = ! empty($event['images']) ? $event['images'][0] : ($event['group_cover_url'] ?? null);
+        $heroAvatar = $heroImage ? null : ($event['group_avatar_url'] ?? null);
+        $dateStrip = $event['start_time_strip'] ?? $event['start_time_human'];
+    @endphp
+    <div class="relative mt-3 -mx-4 overflow-hidden aspect-video cursor-pointer"
+         @if($heroImage || $heroAvatar) @else style="background: rgba(255,255,255,0.03);" @endif
+         onclick="window.location.href='{{ route('events.show', $event['id']) }}'">
+        @if($heroImage)
+            <img src="{{ \App\Services\ImageProcessor::url($heroImage) }}"
+                 class="w-full h-full object-cover"
+                 alt="{{ $event['title'] }}">
+        @elseif($heroAvatar)
+            <img src="{{ \App\Services\ImageProcessor::url($heroAvatar) }}" alt="" aria-hidden="true"
+                 class="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl brightness-50">
+            <div class="absolute inset-0 grid place-items-center">
+                <img src="{{ \App\Services\ImageProcessor::url($heroAvatar) }}"
+                     class="w-[38%] aspect-square rounded-full object-cover shadow-xl"
+                     style="border: 3px solid rgba(255,255,255,0.35);"
+                     alt="{{ $event['group_name'] ?? $event['title'] }}">
+            </div>
+        @else
+            <div class="w-full h-full flex items-center justify-center">
+                <span class="text-3xl opacity-40">📅</span>
+            </div>
+        @endif
+
+        @if(! empty($event['images']) && count($event['images']) > 1)
+            <div class="absolute top-2 right-2 px-2 py-1 rounded-full text-xs text-white"
+                 style="background: rgba(15,23,42,0.8); backdrop-filter: blur(4px);">
+                +{{ count($event['images']) - 1 }}
+            </div>
+        @endif
+
+        @if($dateStrip)
+            <div class="absolute inset-x-0 bottom-0 px-3.5 pt-7 pb-2.5 text-[0.95rem] font-bold pointer-events-none"
+                 style="background: linear-gradient(to top, rgba(0,0,0,0.88), rgba(0,0,0,0)); color: #f5f5f5; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">
+                {{ $dateStrip }}
+            </div>
+        @endif
+    </div>
 
     {{-- Card Body --}}
     <div class="mt-3 flex-1 cursor-pointer" onclick="window.location.href='{{ route('events.show', $event['id']) }}'">
@@ -90,11 +112,7 @@
 
         {{-- Meta Row --}}
         <div class="flex flex-wrap items-center gap-2 text-[0.85rem]" style="color: #8a93b2;">
-            <span class="py-1 px-2.5 rounded-full"
-                  style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
-                📅 {{ $event['start_time_human'] }}
-            </span>
-@if($showFollow)
+            @if($showFollow)
                 <span class="py-1 px-2.5 rounded-full" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
                     {{ $event['is_paid'] ? '$'.number_format($event['price'], 2) : 'Free' }}
                 </span>

@@ -620,6 +620,7 @@ class FeedService
             'images' => $event->images ?? [],
             'start_time' => optional($event->start_time)->toIso8601String(),
             'start_time_human' => optional($event->start_time)->format('M j, g:i A'),
+            'start_time_strip' => optional($event->start_time)->format('D, M j · g:i A'),
             'is_paid' => $event->is_paid,
             'price' => $event->is_paid ? round(($event->price_cents ?? 0) / 100, 2) : null,
             'rsvp_count' => $rsvpCount,
@@ -632,6 +633,8 @@ class FeedService
             'is_own' => $viewerId !== null && (string) $event->host_id === $viewerId,
             'group_name' => $event->group?->name,
             'group_url' => $event->group ? route('groups.show', $event->group) : null,
+            'group_cover_url' => $event->group?->cover_image_url,
+            'group_avatar_url' => $event->group?->avatar_url,
         ];
     }
 }
