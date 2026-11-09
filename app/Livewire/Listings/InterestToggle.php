@@ -28,7 +28,7 @@ class InterestToggle extends Component
         $this->count = $count;
     }
 
-    public function toggle(ListingInterestService $service)
+    public function toggle(ListingInterestService $service): mixed
     {
         if (! auth()->check()) {
             return redirect()->route('login');
@@ -51,7 +51,7 @@ class InterestToggle extends Component
         return null;
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\View
     {
         return view('livewire.listings.interest-toggle');
     }

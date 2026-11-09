@@ -148,10 +148,10 @@ class Activity extends Model
         }
 
         if ($this->end_time !== null) {
-            return $this->end_time->isFuture();
+            return \Illuminate\Support\Carbon::parse($this->end_time)->isFuture();
         }
 
-        return $this->start_time !== null && $this->start_time->isFuture();
+        return $this->start_time !== null && \Illuminate\Support\Carbon::parse($this->start_time)->isFuture();
     }
 
     public function conversation(): \Illuminate\Database\Eloquent\Relations\MorphOne
@@ -341,16 +341,28 @@ class Activity extends Model
         return $query->whereNotNull('originated_from_post_id');
     }
 
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<Activity>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     */
     public function scopeHosted($query)
     {
         return $query->where('kind', self::KIND_HOSTED);
     }
 
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<Activity>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     */
     public function scopeListings($query)
     {
         return $query->where('kind', self::KIND_EXTERNAL);
     }
 
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<Activity>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Activity>
+     */
     public function scopePublishedListings($query)
     {
         return $query->listings()->where('status', 'published');
@@ -359,6 +371,9 @@ class Activity extends Model
     /**
      * Listings that may be shown right now: published and not yet
      * ended (or not yet started, when there is no end time).
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Activity>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Activity>
      */
     public function scopeCurrentListings($query)
     {

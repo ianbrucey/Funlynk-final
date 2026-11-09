@@ -129,6 +129,7 @@ class ActivitiesTable
                         ->color('success')
                         ->visible(fn (): bool => auth()->user()?->can('listings-admin') === true)
                         ->action(function (Collection $records): void {
+                            /** @var Activity $record */
                             foreach ($records as $record) {
                                 if ($record->isListing()
                                     && $record->status !== 'published'
@@ -149,6 +150,7 @@ class ActivitiesTable
                         ->requiresConfirmation()
                         ->visible(fn (): bool => auth()->user()?->can('listings-admin') === true)
                         ->action(function (Collection $records): void {
+                            /** @var Activity $record */
                             foreach ($records as $record) {
                                 if ($record->isListing()
                                     && $record->status === 'published'

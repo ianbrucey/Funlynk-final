@@ -434,17 +434,22 @@ class FeedService
      * the long-standing rule (upcoming only). External listings join
      * when the feature is enabled and stay visible until they end, or
      * until they start when they have no end time (C-09).
+     *
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
      */
     private function applyEventVisibility(Builder $query): Builder
     {
         return $query->where(function (Builder $q) {
             $q->where(function (Builder $hosted) {
-                $hosted->hosted()->where('start_time', '>', now());
+                $hosted->where('kind', Activity::KIND_HOSTED)->where('start_time', '>', now());
             });
 
             if (config('listings.enabled', true)) {
                 $q->orWhere(function (Builder $listing) {
-                    $listing->listings()->where(function (Builder $w) {
+                    $listing->where('kind', Activity::KIND_EXTERNAL)->where(function (Builder $w) {
                         $w->where('end_time', '>', now())
                             ->orWhere(function (Builder $w2) {
                                 $w2->whereNull('end_time')->where('start_time', '>', now());
@@ -580,7 +585,7 @@ class FeedService
             ->filter(fn (Activity $e) => $e->isListing() && $e->recurring_schedule_id !== null)
             ->groupBy(fn (Activity $e) => (string) $e->recurring_schedule_id)
             ->map(fn (Collection $group) => $group
-                ->sortBy(fn (Activity $e) => $e->start_time?->timestamp ?? PHP_INT_MAX)
+                ->sortBy(fn (Activity $e) => $e->start_time === null ? PHP_INT_MAX : Carbon::parse($e->start_time)->timestamp)
                 ->first());
 
         return $singles->concat($nextPerSeries->values())->values();
@@ -724,13 +729,14 @@ class FeedService
     {
         $rsvpCount = (int) ($event->rsvps_count ?? 0);
         $spotsRemaining = $event->max_attendees !== null ? max(0, $event->max_attendees - $rsvpCount) : null;
+        /** @var ?User $host Listings have no host (spec 019). */
         $host = $event->host;
 
         return [
             'type' => 'event',
             'id' => $event->id,
             'title' => $event->title,
-            'author_name' => $host?->display_name ?? $host?->username ?? 'Unknown Host',
+            'author_name' => $host === null ? 'Unknown Host' : ($host->display_name ?? $host->username ?? 'Unknown Host'),
             'author_image_url' => $host?->profile_image_url,
             'location_name' => $event->location_name,
             'distance_km' => isset($event->distance_km) ? round((float) $event->distance_km, 1) : null,
@@ -749,7 +755,7 @@ class FeedService
             'host_id' => (string) ($event->host_id ?? ''),
             'author_url' => $host?->username ? route('profile.view', $host->username) : null,
             'is_following' => in_array((string) $event->host_id, $followedHostIds, true),
-            'is_own' => $viewerId !== null && $event->host_id !== null && (string) $event->host_id === $viewerId,
+            'is_own' => $viewerId !== null && ($event->host_id ?? '') !== '' && (string) $event->host_id === $viewerId,
             'is_listing' => $event->isListing(),
             'source_name' => $event->source_name,
             'source_url' => $event->source_url,
