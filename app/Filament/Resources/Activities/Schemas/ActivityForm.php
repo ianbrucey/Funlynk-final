@@ -4,10 +4,10 @@ namespace App\Filament\Resources\Activities\Schemas;
 
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class ActivityForm
@@ -89,6 +89,40 @@ class ActivityForm
                             ->label('Coordinates (Latitude, Longitude)')
                             ->placeholder('40.7829, -73.9654')
                             ->helperText('Format: latitude, longitude (e.g., 40.7829, -73.9654)')
+                            // The model casts this attribute to a spatial
+                            // Point; the form works in "lat, lng" text.
+                            ->formatStateUsing(function ($state): ?string {
+                                if ($state instanceof \MatanYadaev\EloquentSpatial\Objects\Point) {
+                                    return $state->latitude.', '.$state->longitude;
+                                }
+                                if (is_array($state)) {
+                                    if (isset($state['latitude'], $state['longitude'])) {
+                                        return $state['latitude'].', '.$state['longitude'];
+                                    }
+                                    // GeoJSON shape: coordinates are [longitude, latitude]
+                                    $coords = $state['coordinates'] ?? (array_is_list($state) ? $state : null);
+                                    if (is_array($coords) && count($coords) === 2) {
+                                        return $coords[1].', '.$coords[0];
+                                    }
+
+                                    return null;
+                                }
+
+                                return $state === null ? null : (string) $state;
+                            })
+                            ->dehydrateStateUsing(function ($state) {
+                                if ($state instanceof \MatanYadaev\EloquentSpatial\Objects\Point) {
+                                    return $state;
+                                }
+                                if (is_string($state)) {
+                                    $parts = array_map('trim', explode(',', $state));
+                                    if (count($parts) === 2 && is_numeric($parts[0]) && is_numeric($parts[1])) {
+                                        return new \MatanYadaev\EloquentSpatial\Objects\Point((float) $parts[0], (float) $parts[1]);
+                                    }
+                                }
+
+                                return $state;
+                            })
                             ->required(),
                     ])
                     ->columns(2),
