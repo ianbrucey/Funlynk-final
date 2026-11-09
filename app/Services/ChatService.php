@@ -180,7 +180,7 @@ class ChatService
         $subject = $conversation->conversationable;
         if ($subject instanceof \App\Models\Activity && $subject->isListing()
             && ! $user->can('chat', $subject)) {
-            throw new \Illuminate\Auth\Access\AuthorizationException('Mark Going to join the chat.');
+            throw new \Illuminate\Auth\Access\AuthorizationException('Join the chat to post a message.');
         }
 
         // Add user as participant if not already

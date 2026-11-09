@@ -203,7 +203,22 @@
         </div>
     @else
         <div class="flex-none border-t border-white/10 px-4 py-3 text-center text-sm text-slate-300">
-            @if($conversation && $conversation->group_id === null && $subject instanceof \App\Models\Post && $subject->group_id)
+            @if($isListingChat ?? false)
+                {{-- Spec 020 fix: a listing chat explains itself in plain
+                     words and offers the Join the chat button, which marks
+                     the user Going and unlocks the composer in one tap. --}}
+                @if($listingEnded ?? false)
+                    This event has ended.
+                @elseif($canJoinChat ?? false)
+                    <p>People who are going can chat here.</p>
+                    <button type="button" wire:click="joinChat" wire:loading.attr="disabled" wire:target="joinChat"
+                            class="mt-2 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 px-5 font-semibold text-white">
+                        Join the chat
+                    </button>
+                @else
+                    You can read this chat but not send messages.
+                @endif
+            @elseif($conversation && $conversation->group_id === null && $subject instanceof \App\Models\Post && $subject->group_id)
                 Only members of {{ $subject->group?->name ?? 'this group' }} can send messages here.
                 @if($subject->group) <a href="{{ route('groups.show', $subject->group->slug) }}" wire:navigate class="mt-2 flex min-h-[44px] items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 font-semibold text-white">Go to group</a> @endif
             @else

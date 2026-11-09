@@ -100,3 +100,77 @@ of a live listing chat session and of the detail page with a real
 stored photo needs the owner's own use: there is no production
 admin session available to the builder, and no listing has a stored
 image until the backfill content step lands.
+
+## Fix 2026-11-09: the listing chat join path (branch fix/020-chat-join-cta)
+
+Live-use report from the owner, signed in on a published listing: the
+page said "Mark Going to join the chat." and he could not chat at all.
+
+**Root cause.** The design (02-interaction-design.md) assumed "the
+toggle already live-updates" the chat. It did not. The Going toggle
+(`InterestToggle`) and the chat (`ChatComponent`) are separate
+Livewire components; the toggle dispatched nothing, the chat had no
+listener, and the parent page never re-rendered, so the chat's
+`canSend` flag stayed at its page-load value (false) and the composer
+never appeared until a manual page reload. The policy and service
+gates themselves were correct and series-aware (verified: the Going
+check in `ActivityPolicy::chat` spans the series, and the series
+conversation resolver was already consistent with it); the failure
+was purely that nothing on the page reacted to the Going change.
+
+**What changed.**
+- `ChatComponent::joinChat()`: the not-Going state of a listing chat
+  now shows the plain line "People who are going can chat here." and
+  a **Join the chat** button (new view vars `canJoinChat` /
+  `listingEnded`). One tap marks Going on the viewed occurrence via
+  `ListingInterestService` (the same row the page toggle uses) and
+  the same response re-renders with the composer unlocked. The ended
+  state reads "This event has ended." and Join is a no-op there.
+- A `going-changed` event now ties the page together:
+  `InterestToggle` dispatches it after every toggle; `ChatComponent`
+  listens (`onGoingChanged`, series-filtered) and reloads;
+  `ActivityDetail` listens and re-renders (who's-going list, count);
+  `InterestToggle` also listens and resyncs when the chat's Join
+  button did the marking. Un-marking Going re-locks the chat the
+  same way. The O-20-2 rule is unchanged: posting still requires
+  the Going mark, enforced exactly where it was.
+- Copy: "Mark Going to join the chat." is removed from the listing
+  detail page, and the `ChatService` backstop exception now reads
+  "Join the chat to post a message." This supersedes the CTA wording
+  in 02-interaction-design.md. One C-20-04 assertion was updated to
+  the new copy; the claim's substance (non-Going users are shown how
+  to join; posting still requires Going) is unchanged.
+
+**Tests.** New `tests/Feature/Listings/ListingChatJoinFlowTest.php`
+(5 tests, all failed on the pre-fix code): Join button marks Going
+and unlocks posting with no reload or remount; the toggle's event
+unlocks an already-mounted chat; a recurring series where the
+conversation hangs on the second occurrence and the user joins from
+the first; the ended listing (ended state, Join no-op); the detail
+page copy for guests and signed-in users. Full suite: **456 passed /
+2 skipped / 0 failed** (451 baseline + 5 new); all claim tests
+C-20-01..15 pass; Pint PASS; PHPStan level 7 clean. Real-DB counts
+under the safe test protocol, before and after: **activities 18,
+users 1, unchanged.**
+
+**Not verified here:** the live tap-through in a production admin
+session (tap Join the chat, post) still needs the owner's own use;
+the component-level path is proved by the tests above.
+
+**Addendum to the fix (same branch, 2026-11-09).** Two more items
+rode along: (1) `ListingImageService` no longer relabels every
+`ImageProcessor::store()` failure as "image could not be decoded".
+Only Intervention's `DecoderException` keeps the decode wording;
+any other throwable (storage, S3 configuration, encode) surfaces as
+`image store failed (<class>: <message>)` in the import and backfill
+output, which both print the exception message. This mislabel hid a
+missing S3 region behind six bogus decode failures in the production
+backfill run earlier today. Covered by
+`tests/Feature/Listings/ListingImageServiceTest.php` (storage failure
+surfaces its real message; genuine decode failure still reads as a
+decode failure). No claim test asserted the old blanket text, so no
+claim test changed for this. (2) The images backfill run file for
+the existing listings, `storage/listings/images-backfill-run-2026-11-09.json`
+(6 rows), is committed with this branch so it deploys to Laravel
+Cloud with the merge, the same pattern as the 019 import batch; the
+owner runs it from the Laravel Cloud console.

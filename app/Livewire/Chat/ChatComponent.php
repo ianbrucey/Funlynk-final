@@ -3,12 +3,16 @@
 namespace App\Livewire\Chat;
 
 use App\Events\ConversationUpdated;
+use App\Models\Activity;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Services\ChatNotifier;
 use App\Services\ChatService;
+use App\Services\ListingInterestService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class ChatComponent extends Component
@@ -318,6 +322,115 @@ class ChatComponent extends Component
         $this->loadMessages();
     }
 
+    /**
+     * Spec 020 fix: the listing this chat belongs to, if any. The
+     * viewed page's activity wins (it is the occurrence the user is
+     * looking at); the conversation's own subject is the fallback
+     * for embeds that have no viewed activity (the messages page).
+     */
+    private function listingSubject(): ?Activity
+    {
+        if ($this->conversationable instanceof Activity && $this->conversationable->isListing()) {
+            return $this->conversationable;
+        }
+
+        $subject = $this->conversation?->conversationable;
+
+        return $subject instanceof Activity && $subject->isListing() ? $subject : null;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function listingSeriesIds(Activity $listing): array
+    {
+        if ($listing->recurring_schedule_id === null) {
+            return [(string) $listing->id];
+        }
+
+        return Activity::query()
+            ->where('recurring_schedule_id', $listing->recurring_schedule_id)
+            ->pluck('id')
+            ->map(fn ($id) => (string) $id)
+            ->all();
+    }
+
+    /**
+     * The same "is there a live occurrence" test ActivityPolicy::chat
+     * applies: some row of the series is published and current.
+     */
+    private function listingSeriesIsLive(Activity $listing): bool
+    {
+        $series = $listing->recurring_schedule_id !== null
+            ? Activity::query()->where('recurring_schedule_id', $listing->recurring_schedule_id)->get()
+            : collect([$listing]);
+
+        return $series->contains(
+            fn (Activity $row) => $row->status === 'published' && $row->isCurrentListing()
+        );
+    }
+
+    /**
+     * Spec 020 fix: "Join the chat" on a listing chat. One tap marks
+     * the user Going on the viewed occurrence (the same row the
+     * page's Going toggle uses) and the re-render that follows
+     * unlocks the composer, because canSend is recomputed from the
+     * policy on every render. No page reload. The O-20-2 rule itself
+     * is unchanged: posting still requires the Going mark.
+     */
+    public function joinChat(): void
+    {
+        if (! auth()->check()) {
+            return;
+        }
+
+        $subject = $this->listingSubject();
+
+        if ($subject === null) {
+            return;
+        }
+
+        $service = app(ListingInterestService::class);
+        $user = auth()->user();
+
+        if (! $service->isInterested($user, $subject)) {
+            try {
+                $service->toggle($user, $subject);
+            } catch (AuthorizationException) {
+                // Ended, unpublished or switched off: nothing to join.
+                return;
+            }
+        }
+
+        $this->dispatch('going-changed', activityId: $subject->id);
+        $this->loadMessages();
+    }
+
+    /**
+     * Spec 020 fix: the page's Going toggle is a separate component;
+     * it announces Going changes with this event. When one lands for
+     * this chat's listing (any occurrence of the series), reload so
+     * the composer state catches up without a page reload. Before
+     * this listener existed, toggling Going left the chat stuck in
+     * its page-load state until the user manually reloaded.
+     */
+    #[On('going-changed')]
+    public function onGoingChanged(?string $activityId = null): void
+    {
+        $subject = $this->listingSubject();
+
+        if ($subject === null) {
+            return;
+        }
+
+        if ($activityId !== null && $activityId !== ''
+            && ! in_array($activityId, $this->listingSeriesIds($subject), true)) {
+            return;
+        }
+
+        $this->loadMessages();
+    }
+
     public function replyTo($messageId)
     {
         $message = collect($this->messages)->firstWhere('id', $messageId);
@@ -421,11 +534,19 @@ class ChatComponent extends Component
     public function render()
     {
         $conversation = $this->conversation;
+        $canSend = $conversation && auth()->check() && auth()->user()->can('sendMessage', $conversation);
+        $listing = $this->listingSubject();
+        $listingEnded = $listing !== null && ! $this->listingSeriesIsLive($listing);
 
         return view('livewire.chat.chat-component', [
-            'canSend' => $conversation && auth()->check() && auth()->user()->can('sendMessage', $conversation),
+            'canSend' => $canSend,
             'canPin' => $conversation && auth()->check() && auth()->user()->can('pin', $conversation),
             'isListingChat' => $conversation && $conversation->conversationable instanceof \App\Models\Activity && $conversation->conversationable->isListing(),
+            // Spec 020 fix: the listing chat's not-Going state shows a
+            // Join the chat button while the listing is live, and the
+            // ended state once it is over.
+            'listingEnded' => $listingEnded,
+            'canJoinChat' => $listing !== null && auth()->check() && ! $canSend && ! $listingEnded,
             'reactionChoices' => ChatService::REACTIONS,
             'mentionable' => $conversation && auth()->check()
                 ? $conversation->participants->where('id', '!=', auth()->id())->map(fn ($p) => [

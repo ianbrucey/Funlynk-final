@@ -15,7 +15,10 @@ use Illuminate\Support\Facades\Http;
  *
  * Every failure mode (non-https, unreachable, wrong content type, over
  * the size cap, undecodable bytes) throws ListingImageException with a
- * plain reason. Callers catch it and continue: an image failure never
+ * plain reason. Storage-layer failures from the processor surface
+ * their underlying exception class and message instead of a generic
+ * reason: mislabeling them once hid an S3 configuration error.
+ * Callers catch it and continue: an image failure never
  * fails a listing import.
  */
 class ListingImageService
@@ -61,8 +64,17 @@ class ListingImageService
 
         try {
             return $this->processor->store($bytes, 'activities', 'cover', 's3');
-        } catch (\Throwable) {
+        } catch (\Intervention\Image\Exceptions\DecoderException) {
+            // The bytes are not a decodable image. This is the only
+            // failure that may call itself a decode failure.
             throw new ListingImageException('image could not be decoded');
+        } catch (\Throwable $e) {
+            // Anything else (a storage or S3 configuration error, an
+            // encode failure) surfaces as itself, class and message.
+            // Blanketing these as "could not be decoded" once hid a
+            // missing S3 region behind six bogus decode failures in a
+            // production backfill run (2026-11-09).
+            throw new ListingImageException('image store failed ('.$e::class.': '.$e->getMessage().')');
         }
     }
 }
