@@ -174,3 +174,53 @@ the existing listings, `storage/listings/images-backfill-run-2026-11-09.json`
 (6 rows), is committed with this branch so it deploys to Laravel
 Cloud with the merge, the same pattern as the 019 import batch; the
 owner runs it from the Laravel Cloud console.
+
+
+## Fix 2026-11-09 (later): chat send must never fail because broadcasting failed
+
+Production log (Ian, minutes after the Join-the-chat fix went live):
+posting in the "Pickleball Open Play" listing chat threw
+`Pusher\PusherException: Invalid socket ID undefined` from
+`ChatService::sendMessage` (the broadcast line) up through the Livewire
+request. His messages WERE saved (verified in the DB: "Anyone else
+going?" and "hi" in the listing conversation) because the message
+create precedes the broadcast and no transaction wraps the send; the
+request still failed, so the send appeared to fail.
+
+Root cause: Livewire copies `Echo.socketId()` into the `X-Socket-Id`
+header on every request. `resources/js/echo.js` configures Echo for
+Reverb via build-time `VITE_REVERB_*` variables, while production
+broadcasting runs the Pusher driver; Echo never connects, `socketId()`
+returns `undefined`, the header arrives as the literal string
+"undefined", Laravel's `BroadcastManager::socket()` passes it verbatim
+to Pusher as the `toOthers()` exclusion, and Pusher validates socket
+ids as `<digits>.<digits>` and throws. Not listing-specific: Echo loads
+globally, so every `toOthers()` broadcast from a Livewire request was
+exposed (message sends in all chat types, plus react/pin
+`ConversationUpdated` broadcasts). The test suite never saw it because
+phpunit pins `BROADCAST_CONNECTION=null`.
+
+Fix (branch `fix/chat-broadcast-socket`):
+- New `App\Http\Middleware\SanitizeSocketId`, registered globally:
+  an `X-Socket-Id` header that is not `<digits>.<digits>` is removed,
+  so a dead Echo can no longer poison any broadcast exclusion; the
+  broadcast then goes to everyone and clients de-duplicate by id.
+- `ChatService::sendMessage`: the `MessageSent` broadcast is wrapped
+  in try/catch with a `Log::warning`, so ANY broadcaster failure
+  (realtime down, network, credentials) leaves the send successful.
+- `ChatComponent`: the two `ConversationUpdated` broadcasts
+  (react/pin) get the same treatment via a private helper.
+
+Regression tests: `tests/Feature/ChatBroadcastResilienceTest.php`
+(middleware strips "undefined"/malformed ids and keeps valid ones;
+service send persists and returns when the broadcaster throws; the
+exact component path, join a listing chat then post, succeeds with a
+throwing broadcaster; a healthy recording broadcaster still receives
+the `MessageSent` event with the socket exclusion intact).
+
+Remaining env-side step (Ian, Laravel Cloud): realtime itself is
+still unconfigured. The frontend expects Reverb (`VITE_REVERB_*` at
+asset build time plus a running Reverb server) while the backend
+broadcasts via Pusher. Pick one stack and set the matching Cloud env
++ rebuild; until then chat works fully, just without live push
+(messages appear on refresh / next interaction).

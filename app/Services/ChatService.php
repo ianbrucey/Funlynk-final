@@ -215,8 +215,18 @@ class ChatService
             }
         }
 
-        // Broadcast the message
-        broadcast(new \App\Events\MessageSent($message))->toOthers();
+        // Broadcast the message. Realtime is best-effort: the message
+        // is already saved, so a broadcaster failure (realtime down,
+        // bad socket id, network error) must never fail the send.
+        try {
+            broadcast(new \App\Events\MessageSent($message))->toOthers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Chat message broadcast failed', [
+                'message_id' => $message->id,
+                'conversation_id' => $conversation->id,
+                'exception' => $e,
+            ]);
+        }
 
         // DMs notify through their own listener; other chats use the chat notifier.
         if ($conversation->type !== 'private') {

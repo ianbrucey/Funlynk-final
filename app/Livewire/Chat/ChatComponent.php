@@ -452,7 +452,7 @@ class ChatComponent extends Component
         $this->chatService->reactToMessage($message, auth()->user(), $emoji);
 
         $this->loadMessages();
-        broadcast(new ConversationUpdated($conversation->id))->toOthers();
+        $this->broadcastConversationUpdated($conversation);
     }
 
     public function pinMessage(?string $messageId): void
@@ -464,7 +464,23 @@ class ChatComponent extends Component
         $this->chatService->pinMessage($conversation, $message, auth()->user());
 
         $this->loadMessages();
-        broadcast(new ConversationUpdated($conversation->id))->toOthers();
+        $this->broadcastConversationUpdated($conversation);
+    }
+
+    /**
+     * Realtime is best-effort: a broadcaster failure must never fail
+     * the action that triggered the update.
+     */
+    private function broadcastConversationUpdated(Conversation $conversation): void
+    {
+        try {
+            broadcast(new ConversationUpdated($conversation->id))->toOthers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Conversation update broadcast failed', [
+                'conversation_id' => $conversation->id,
+                'exception' => $e,
+            ]);
+        }
     }
 
     public function onMessageReceived($event)
