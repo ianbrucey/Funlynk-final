@@ -18,6 +18,11 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
  * admin approves it in Filament. Invalid rows are rejected with a
  * reason and never partially imported. Re-importing the same file is
  * safe: rows dedupe on (source_url, title, start_time).
+ *
+ * Spec 020 (format v2): an optional image_url is downloaded AFTER the
+ * dedupe check (a duplicate never triggers a download), processed and
+ * stored in FunLynk's own storage. An image failure never fails the
+ * row: the listing imports imageless and the report flags it.
  */
 class ImportListingsCommand extends Command
 {
@@ -46,6 +51,9 @@ class ImportListingsCommand extends Command
         $imported = 0;
         $duplicates = 0;
         $rejected = 0;
+        $imagesStored = 0;
+        $imagesFailed = 0;
+        $imageService = app(\App\Services\ListingImageService::class);
 
         foreach ($decoded as $index => $item) {
             $label = 'Row '.($index + 1);
@@ -80,6 +88,23 @@ class ImportListingsCommand extends Command
                 continue;
             }
 
+            // Spec 020 image step: after dedupe, before create. Any
+            // failure is recorded against the row and the listing still
+            // imports, imageless.
+            $images = [];
+            $imageSourceUrl = null;
+            $imageFailure = null;
+            if (isset($item['image_url']) && $item['image_url'] !== '') {
+                try {
+                    $images = [$imageService->storeFromUrl($item['image_url'])];
+                    $imageSourceUrl = (string) $item['image_url'];
+                    $imagesStored++;
+                } catch (\App\Services\ListingImageException $e) {
+                    $imageFailure = $e->getMessage();
+                    $imagesFailed++;
+                }
+            }
+
             Activity::create([
                 'kind' => Activity::KIND_EXTERNAL,
                 'host_id' => null,
@@ -99,13 +124,23 @@ class ImportListingsCommand extends Command
                 'source_name' => $item['source_name'],
                 'source_url' => $item['source_url'],
                 'recurring_schedule_id' => $item['recurring_schedule_id'] ?? null,
-                'images' => [],
+                'images' => $images,
+                'image_source_url' => $imageSourceUrl,
             ]);
 
             $imported++;
+
+            if ($imageFailure !== null) {
+                $title = is_string($item['title'] ?? null) ? $item['title'] : 'listing';
+                $this->warn("{$label} ({$title}): imported, image failed ({$imageFailure}).");
+            }
         }
 
-        $this->info("Listings import complete: {$imported} imported, {$duplicates} duplicates skipped, {$rejected} rejected.");
+        $summary = "Listings import complete: {$imported} imported, {$duplicates} duplicates skipped, {$rejected} rejected.";
+        if ($imagesStored + $imagesFailed > 0) {
+            $summary .= " Images: {$imagesStored} stored, {$imagesFailed} failed.";
+        }
+        $this->info($summary);
 
         return self::SUCCESS;
     }

@@ -39,6 +39,16 @@ class RedirectGuestsToPublicEvent
             return $next($request);
         }
 
+        // Spec 020: a listing's canonical surface IS this detail page
+        // (the public slug page redirects listings back here), so
+        // sending guests to the slug page would loop. Guests pass
+        // through: the detail page shows them the who's-going list and
+        // a sign-in prompt where the chat sits, and 404s unpublished
+        // listings exactly as for signed-in users.
+        if ($activity->isListing()) {
+            return $next($request);
+        }
+
         if (! $activity->is_public) {
             abort(404);
         }

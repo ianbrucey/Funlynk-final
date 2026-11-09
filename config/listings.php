@@ -21,6 +21,13 @@ return [
     'feed_cap' => (int) env('LISTINGS_FEED_CAP', 2),
 
     /*
+    | Spec 020 [O-20-5]: maximum bytes downloaded for one listing image
+    | at import time (default 10 MB). Over-cap responses are an image
+    | failure, never a row failure.
+    */
+    'image_max_bytes' => (int) env('LISTINGS_IMAGE_MAX_BYTES', 10 * 1024 * 1024),
+
+    /*
     | Who may approve, unpublish and edit listings. Same mechanism as
     | the Horizon and Poster admin gates: an email allowlist.
     */

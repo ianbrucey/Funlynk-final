@@ -35,6 +35,10 @@
         <div class="flex-1 min-w-0">
             <p class="font-semibold text-white leading-tight truncate">{{ $event['source_name'] ?? 'Around town' }}</p>
             <p class="text-xs truncate" style="color: #8a93b2;">Listed by FunLynk</p>
+            @if(! empty($event['source_url']))
+                <a href="{{ $event['source_url'] }}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()"
+                   class="text-xs hover:underline" style="color: #67e8f9;">at {{ $event['source_name'] ?? 'the source' }} ↗</a>
+            @endif
         </div>
         @if(($event['price'] ?? null) !== null)
             <span class="text-xs font-semibold" style="color: #8a93b2;">${{ number_format($event['price'], 2) }}</span>
@@ -156,12 +160,7 @@
 
     {{-- Card Actions --}}
     @if($isListing)
-    <div class="grid gap-2.5 mt-3.5" style="grid-template-columns: 1fr auto;">
-        <a href="{{ $event['source_url'] }}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()"
-           class="py-3 rounded-xl font-semibold text-center transition-all hover:scale-[1.02]"
-           style="background: linear-gradient(90deg, #06b6d4, #3b82f6); color: white;">
-            Details ↗
-        </a>
+    <div class="mt-3.5">
         <livewire:listings.interest-toggle
             :activity-id="$event['id']"
             :interested="$event['viewer_interested'] ?? false"
@@ -189,7 +188,7 @@
     @if($isListing)
     <div class="flex justify-between items-center mt-3 pt-3 text-[0.8rem] border-t border-white/10" style="color: #8a93b2;">
         <span>Source: {{ $event['source_name'] ?? 'Organizer' }}</span>
-        <span><span class="font-semibold" style="color: #e8a13a;">{{ $event['interest_count'] ?? 0 }}</span> interested</span>
+        <span><span class="font-semibold" style="color: #e8a13a;">{{ $event['interest_count'] ?? 0 }}</span> going</span>
     </div>
     @else
     <div class="flex justify-between items-center mt-3 pt-3 text-[0.8rem] border-t border-white/10" style="color: #8a93b2;">

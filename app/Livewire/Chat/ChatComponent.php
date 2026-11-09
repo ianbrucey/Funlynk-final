@@ -385,6 +385,34 @@ class ChatComponent extends Component
         $this->notifyLevel = $level;
     }
 
+    /**
+     * Spec 020 moderation: report a message in a listing chat. Creates
+     * a row in the existing reports table naming the message and its
+     * author. There is deliberately no reports admin UI in 020.
+     */
+    public function reportMessage(string $messageId): void
+    {
+        $conversation = Conversation::query()->findOrFail((string) $this->conversationId);
+        $this->authorize('view', $conversation);
+
+        $subject = $conversation->conversationable;
+        if (! $subject instanceof \App\Models\Activity || ! $subject->isListing()) {
+            return;
+        }
+
+        $message = Message::query()->where('conversation_id', $conversation->id)->findOrFail($messageId);
+
+        \App\Models\Report::create([
+            'reporter_id' => auth()->id(),
+            'reported_message_id' => $message->id,
+            'reported_user_id' => $message->user_id,
+            'reason' => 'spam',
+            'status' => 'pending',
+        ]);
+
+        session()->flash('chat-reported', 'Thanks, a moderator will take a look.');
+    }
+
     public function cancelReply()
     {
         $this->replyingTo = null;
@@ -397,6 +425,7 @@ class ChatComponent extends Component
         return view('livewire.chat.chat-component', [
             'canSend' => $conversation && auth()->check() && auth()->user()->can('sendMessage', $conversation),
             'canPin' => $conversation && auth()->check() && auth()->user()->can('pin', $conversation),
+            'isListingChat' => $conversation && $conversation->conversationable instanceof \App\Models\Activity && $conversation->conversationable->isListing(),
             'reactionChoices' => ChatService::REACTIONS,
             'mentionable' => $conversation && auth()->check()
                 ? $conversation->participants->where('id', '!=', auth()->id())->map(fn ($p) => [

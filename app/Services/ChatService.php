@@ -15,9 +15,11 @@ class ChatService
      */
     public function getOrCreateConversation(Model $conversationable): Conversation
     {
-        // Spec 019 (C-11, [O-07]): listings have no event chat in v1.
+        // Spec 020: listings DO have a chat, behind the kill switch and
+        // the published rule, and a recurring series shares ONE
+        // conversation across all its occurrence rows.
         if ($conversationable instanceof \App\Models\Activity && $conversationable->isListing()) {
-            throw new \Illuminate\Auth\Access\AuthorizationException('Chat is not available for listings.');
+            return $this->getOrCreateListingConversation($conversationable);
         }
 
         // Check if conversation already exists
@@ -43,6 +45,47 @@ class ChatService
         ]);
 
         return $conversation;
+    }
+
+    /**
+     * Spec 020 listing resolver: one conversation per listing, shared
+     * across a recurring series. Refuses unpublished listings and all
+     * listings while the kill switch is off, so the chat dies with the
+     * listing and no back door remains (C-20-05).
+     */
+    private function getOrCreateListingConversation(\App\Models\Activity $listing): Conversation
+    {
+        if ($listing->status !== 'published' || ! config('listings.enabled', true)) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('Chat is not available for listings.');
+        }
+
+        if ($listing->recurring_schedule_id !== null) {
+            $seriesIds = \App\Models\Activity::query()
+                ->where('recurring_schedule_id', $listing->recurring_schedule_id)
+                ->pluck('id');
+
+            $existing = Conversation::query()
+                ->where('conversationable_type', get_class($listing))
+                ->whereIn('conversationable_id', $seriesIds)
+                ->first();
+
+            if ($existing !== null) {
+                return $existing;
+            }
+        }
+
+        $conversation = $listing->morphOne(Conversation::class, 'conversationable')->first();
+
+        if ($conversation) {
+            return $conversation;
+        }
+
+        return Conversation::create([
+            'type' => 'group',
+            'conversationable_type' => get_class($listing),
+            'conversationable_id' => $listing->id,
+            'last_message_at' => now(),
+        ]);
     }
 
     /**
@@ -131,6 +174,15 @@ class ChatService
         ?string $replyToMessageId = null,
         array $mentions = []
     ): Message {
+        // Spec 020: listing chats enforce the Going gate here too, for
+        // non-component callers (ConversationPolicy::sendMessage is the
+        // component's gate; ActivityPolicy::chat is the rule).
+        $subject = $conversation->conversationable;
+        if ($subject instanceof \App\Models\Activity && $subject->isListing()
+            && ! $user->can('chat', $subject)) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('Mark Going to join the chat.');
+        }
+
         // Add user as participant if not already
         $this->addParticipant($conversation, $user);
 
