@@ -29,6 +29,9 @@ class CheckoutForm extends Component
 
         Gate::authorize('view', $activity);
 
+        // Spec 019 (C-11): FunLynk never sells tickets for a listing.
+        Gate::authorize('checkout', $activity);
+
         // Check if activity requires online payment
         if ($activity->payment_type !== 'online') {
             return redirect()->route('events.show', $activity);

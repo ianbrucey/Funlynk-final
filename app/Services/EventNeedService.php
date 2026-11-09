@@ -18,6 +18,11 @@ class EventNeedService
 {
     public function isOpen(Activity $activity): bool
     {
+        // Spec 019 (C-11): listings have no needs list.
+        if ($activity->isListing()) {
+            return false;
+        }
+
         return in_array($activity->status, ['published', 'active'], true) && $activity->start_time !== null && \Illuminate\Support\Carbon::parse($activity->start_time)->isFuture();
     }
 

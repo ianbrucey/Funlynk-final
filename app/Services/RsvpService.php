@@ -18,6 +18,11 @@ class RsvpService
      */
     public function createRsvp(Activity $activity, User $user, array $data = []): Rsvp
     {
+        // Spec 019 (C-11): listings never accept RSVPs.
+        if (! $user->can('rsvp', $activity)) {
+            throw new \Illuminate\Auth\Access\AuthorizationException('RSVPs are not available for this event.');
+        }
+
         // Validate activity is accepting RSVPs
         if (! in_array($activity->status, ['published', 'active'])) {
             throw new \Exception('This activity is not accepting RSVPs.');
