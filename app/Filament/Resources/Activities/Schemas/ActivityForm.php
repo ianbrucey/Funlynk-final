@@ -23,8 +23,22 @@ class ActivityForm
                             ->label('Host')
                             ->relationship('host', 'name')
                             ->searchable()
-                            ->required()
+                            // Spec 019: listings have no host; the field
+                            // is only required for hosted events.
+                            ->required(fn ($record) => ! ($record?->isListing() ?? false))
+                            ->disabled(fn ($record) => $record?->isListing() ?? false)
                             ->default(fn () => auth()->id()),
+
+                        TextInput::make('source_name')
+                            ->label('Source name (listings)')
+                            ->maxLength(255)
+                            ->visible(fn ($record) => $record?->isListing() ?? false),
+
+                        TextInput::make('source_url')
+                            ->label('Source URL (listings)')
+                            ->maxLength(2048)
+                            ->rules(['starts_with:https://'])
+                            ->visible(fn ($record) => $record?->isListing() ?? false),
 
                         TextInput::make('title')
                             ->required()
