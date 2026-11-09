@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>017 — Sunset Skate sign-up kiosk — UI mockup (FunLynk)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; color: #e5e7eb; min-height: 100vh; background: radial-gradient(ellipse at 50% 0%, #7c2d12 0%, #4c1d95 38%, #0b0620 80%); }
+  .page { max-width: 1100px; margin: 0 auto; padding: 16px; } h1 { font-size: 1.3rem; } h2 { font-size: 1rem; margin: 26px 0 10px; color: #a5f3fc; }
+  .hint { color: #cbd5e1; font-size: .85rem; margin: 4px 0 12px; }
+  .proposal { border: 1px dashed rgba(232,121,249,.5); background: rgba(232,121,249,.08); border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: .85rem; color: #f5d0fe; line-height: 1.5; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; align-items: center; } .controls span { font-size: .75rem; color: #cbd5e1; text-transform: uppercase; }
+  .controls button { padding: 8px 14px; border-radius: 999px; cursor: pointer; font-size: .8rem; color: #e5e7eb; background: rgba(30,41,59,.5); border: 1px solid rgba(255,255,255,.2); } .controls button.on { border-color: #fb923c; color: #fdba74; }
+  .frame { margin: 0 auto 24px; border: 1px solid rgba(255,255,255,.2); border-radius: 28px; overflow: hidden; background: linear-gradient(180deg, rgba(251,146,60,.18), rgba(11,6,32,.85) 55%); padding: 22px 18px 26px; } .frame.phone { width: 390px; } .frame.tablet { width: 100%; max-width: 760px; border-radius: 18px; padding: 36px 40px 40px; }
+  .brand { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 14px; } .brand img.fl { height: 44px; width: auto; } .brand img.sk { height: 76px; width: 76px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 3px rgba(251,146,60,.6), 0 0 24px rgba(251,146,60,.45); } .brand i { color: #94a3b8; font-style: normal; font-size: 1.4rem; }
+  .tablet .brand img.sk { height: 104px; width: 104px; } .tablet .brand img.fl { height: 56px; }
+  h3 { text-align: center; font-size: 1.45rem; line-height: 1.2; } .sub { text-align: center; color: #fde68a; font-size: .92rem; margin: 6px 0 16px; }
+  label { display: block; font-size: .8rem; color: #e2e8f0; margin-top: 12px; } label small { color: #94a3b8; }
+  input { width: 100%; min-height: 52px; margin-top: 4px; padding: 0 14px; border-radius: 12px; color: #fff; font-size: 1.05rem; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.28); } input:focus { outline: none; border-color: #fb923c; box-shadow: 0 0 0 3px rgba(251,146,60,.3); } input.bad { border-color: #f87171; }
+  .err { color: #fca5a5; font-size: .8rem; margin-top: 4px; }
+  .go { width: 100%; min-height: 56px; margin-top: 18px; border: 0; border-radius: 14px; cursor: pointer; font-size: 1.05rem; font-weight: 700; color: #fff; background: linear-gradient(90deg, #f97316, #ec4899, #8b5cf6); }
+  .fine { text-align: center; color: #94a3b8; font-size: .72rem; line-height: 1.45; margin-top: 12px; }
+  .done { text-align: center; padding: 26px 6px; } .done b { display: block; font-size: 3rem; } .done h3 { margin-top: 8px; } .done p { color: #cbd5e1; margin-top: 8px; font-size: .9rem; }
+  .bar { height: 6px; margin-top: 16px; border-radius: 99px; background: rgba(255,255,255,.15); overflow: hidden; } .bar i { display: block; height: 100%; width: 100%; background: #fb923c; animation: shrink 4s linear forwards; } @keyframes shrink { to { width: 0; } }
+  .qr { display: flex; gap: 12px; align-items: center; margin-top: 18px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15); font-size: .8rem; color: #e2e8f0; } .qr .box { flex: none; width: 76px; height: 76px; border-radius: 8px; background: #fff; display: grid; place-items: center; color: #111; font-size: .6rem; font-weight: 700; text-align: center; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>017 — Sunset Skate sign-up kiosk</h1>
+  <p class="hint">Synthetic data only. The kiosk is one page at a short address. It saves a name and email, shows a short thank-you, then resets for the next person. No password, no account.</p>
+  <div class="proposal"><strong>Proposed [P]:</strong> (1) Real FL logo and Sunset LBC logo at the top. (2) Name and email required, username optional, big 52px fields. (3) Submit shows "You're on the list" for 4 seconds, then a blank form. (4) A small QR code to the full group page for people who want to sign up on their own phone. (5) Leads are saved for the group admins only.</div>
+  <div class="controls" id="c"><span>State</span><button data-v="form" class="on">Form</button><button data-v="error">Validation errors</button><button data-v="done">Thank you (auto-resets)</button></div>
+  <h2>Kiosk · 390px phone</h2><div class="frame phone" id="phone"></div>
+  <h2>Kiosk · tablet or laptop</h2><div class="frame tablet" id="tab"></div>
+</div>
+<script>
+(function () {
+  var state = 'form';
+  var head = '<div class="brand"><img class="fl" src="../../public/images/fl-logo-icon-only.png" alt="FunLynk"><i>×</i><img class="sk" src="../../sunset_skate.jpg" alt="Sunset LBC"></div><h3>Sunset Skate</h3><p class="sub">Tuesdays · Junipero Beach · Long Beach</p>';
+  function form(err) {
+    return head + '<form onsubmit="return false"><label>Your name<input id="n" name="n" autocomplete="off" value="' + (err ? '' : '') + '" class="' + (err ? 'bad' : '') + '"></label>' + (err ? '<div class="err">Enter your name.</div>' : '') +
+      '<label>Email<input id="e" name="e" type="email" autocomplete="off" value="' + (err ? 'dana@' : '') + '" class="' + (err ? 'bad' : '') + '"></label>' + (err ? '<div class="err">That email looks incomplete.</div>' : '') +
+      '<label>Username <small>(optional)</small><input id="u" name="u" autocomplete="off"></label>' +
+      '<button class="go" data-send="1">Join the list</button><p class="fine">We will email you a link to finish joining Sunset Skate on FunLynk. Nothing else, and no password needed tonight.</p>' +
+      '<div class="qr"><div class="box">QR to group page</div><div>Rather do it on your own phone? Scan to join the group now.</div></div></form>';
+  }
+  function done() { return head + '<div class="done"><b>🛼</b><h3>You\'re on the list!</h3><p>Check your email after the session. See you on the rink.</p><div class="bar"><i></i></div></div>'; }
+  function draw() {
+    var html = state === 'done' ? done() : form(state === 'error');
+    ['phone', 'tab'].forEach(function (id) { document.getElementById(id).innerHTML = html; });
+    document.querySelectorAll('#c button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-v') === state); });
+    if (state === 'done') { clearTimeout(window.__t); window.__t = setTimeout(function () { state = 'form'; draw(); }, 4000); }
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('button'); if (!t) return;
+    if (t.hasAttribute('data-v')) state = t.getAttribute('data-v'); else if (t.hasAttribute('data-send')) state = 'done'; else return;
+    draw();
+  });
+  draw();
+})();
+</script>
+</body>
+</html>
